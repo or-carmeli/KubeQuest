@@ -181,18 +181,19 @@ export default function K8sQuestApp() {
       topicCorrectRef.current += 1;
       setFlash(true); setTimeout(() => setFlash(false), 600);
     }
-    setStats(prev => {
-      const streak = correct ? prev.current_streak + 1 : 0;
-      if (isRetryRef.current) return { ...prev, current_streak: streak, max_streak: Math.max(prev.max_streak, streak) };
-      return {
-        ...prev,
-        total_answered: prev.total_answered + 1,
-        total_correct:  correct ? prev.total_correct + 1 : prev.total_correct,
-        total_score:    prev.total_score + (correct ? LEVEL_CONFIG[selectedLevel].points : 0),
-        current_streak: streak,
-        max_streak:     Math.max(prev.max_streak, streak),
-      };
-    });
+    if (!isRetryRef.current) {
+      setStats(prev => {
+        const streak = correct ? prev.current_streak + 1 : 0;
+        return {
+          ...prev,
+          total_answered: prev.total_answered + 1,
+          total_correct:  correct ? prev.total_correct + 1 : prev.total_correct,
+          total_score:    prev.total_score + (correct ? LEVEL_CONFIG[selectedLevel].points : 0),
+          current_streak: streak,
+          max_streak:     Math.max(prev.max_streak, streak),
+        };
+      });
+    }
   };
 
   const nextQuestion = () => {
