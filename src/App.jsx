@@ -387,6 +387,7 @@ const TRANSLATIONS = {
 
 const year = new Date().getFullYear();
 const TIMER_SECONDS = 30;
+const INTERVIEW_DURATIONS = { easy: 20, medium: 30, hard: 40 };
 
 function Confetti() {
   const colors = ["#00D4FF","#A855F7","#FF6B35","#10B981","#F59E0B","#EC4899"];
@@ -470,6 +471,7 @@ export default function K8sQuestApp() {
   const [showReview, setShowReview]                     = useState(false);
   const [timerEnabled, setTimerEnabled]                 = useState(true);
   const [timeLeft, setTimeLeft]                         = useState(TIMER_SECONDS);
+  const [isInterviewMode, setIsInterviewMode]           = useState(() => localStorage.getItem("isInterviewMode_v1") === "true");
   const [showConfetti, setShowConfetti]                 = useState(false);
   const [mixedQuestions, setMixedQuestions]             = useState([]);
 
@@ -563,6 +565,10 @@ export default function K8sQuestApp() {
   useEffect(() => {
     try { localStorage.setItem("topicStats_v1", JSON.stringify(topicStats)); } catch {}
   }, [topicStats]);
+
+  useEffect(() => {
+    localStorage.setItem("isInterviewMode_v1", isInterviewMode);
+  }, [isInterviewMode]);
 
   const loadUserData = async (userId, sessionUser) => {
     const { data } = await supabase.from("user_stats").select("*").eq("user_id", userId).single();
@@ -801,7 +807,7 @@ export default function K8sQuestApp() {
       setSelectedAnswer(null);
       setSubmitted(false);
       setShowExplanation(false);
-      if (timerEnabled) setTimeLeft(TIMER_SECONDS);
+      if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[selectedLevel] || 25) : TIMER_SECONDS);
     }
   };
 
@@ -813,7 +819,7 @@ export default function K8sQuestApp() {
     setShowExplanation(false);
     topicCorrectRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
-    if (timerEnabled) setTimeLeft(TIMER_SECONDS);
+    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[level] || 25) : TIMER_SECONDS);
     setScreen("topic");
     if (isGuest) achievementsLoaded.current = true;
   };
@@ -837,7 +843,7 @@ export default function K8sQuestApp() {
     setShowExplanation(false);
     topicCorrectRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
-    if (timerEnabled) setTimeLeft(TIMER_SECONDS);
+    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? 25 : TIMER_SECONDS);
     setScreen("topic");
   };
 
@@ -1026,9 +1032,11 @@ export default function K8sQuestApp() {
             <p style={{color:"#475569",fontSize:13,margin:"4px 0 10px"}}>{t("greeting")}, {displayName}! 👋 {isGuest&&<span style={{color:"#475569"}}>{t("playingAsGuest")}</span>}</p>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {!isGuest&&<button onClick={()=>{loadLeaderboard();setShowLeaderboard(true);}} style={{padding:"7px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("leaderboardBtn")}</button>}
+              <button onClick={()=>setIsInterviewMode(p=>!p)} style={{padding:"7px 12px",background:isInterviewMode?"rgba(168,85,247,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${isInterviewMode?"rgba(168,85,247,0.4)":"rgba(255,255,255,0.09)"}`,borderRadius:8,color:isInterviewMode?"#A855F7":"#94a3b8",cursor:"pointer",fontSize:13,fontWeight:isInterviewMode?700:400}}>🎯 מצב ראיון</button>
               <button onClick={handleResetProgress} style={{padding:"7px 12px",background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:8,color:"#EF4444",cursor:"pointer",fontSize:13}}>{t("resetProgress")}</button>
               <button onClick={handleLogout} style={{padding:"7px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("logout")}</button>
             </div>
+            {isInterviewMode&&<p style={{color:"#64748b",fontSize:11,margin:"6px 0 0",direction:"rtl"}}>רמזים כבויים, יש טיימר לכל שאלה</p>}
           </div>
           {isGuest&&<div style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:12,padding:"11px 16px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}><span style={{color:"#4a9aba",fontSize:13}}>{t("guestBanner")}</span><button onClick={()=>setUser(null)} style={{padding:"6px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:8,color:"#00D4FF",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{t("signupNow")}</button></div>}
           <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:24}}>
@@ -1122,18 +1130,18 @@ export default function K8sQuestApp() {
                 <div style={{background:"rgba(0,0,0,0.35)",borderRadius:10,padding:"16px 20px"}}>{renderTheory(currentLevelData.theory)}</div>
               </div>
               <div style={{display:"flex",gap:8,marginBottom:0}}>
-                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled)setTimeLeft(TIMER_SECONDS);}} style={{flex:3,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`}}>
+                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):TIMER_SECONDS);}} style={{flex:3,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`}}>
                   {t("startQuiz")} (+{LEVEL_CONFIG[selectedLevel].points} {t("ptsPerQ")})
                 </button>
-                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled)setTimeLeft(TIMER_SECONDS);}} style={{flex:1,padding:15,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#94a3b8",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):TIMER_SECONDS);}} style={{flex:1,padding:15,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#94a3b8",fontSize:13,fontWeight:700,cursor:"pointer"}}>
                   {t("skipTheory")}
                 </button>
               </div>
-              <div style={{display:"flex",justifyContent:"center",marginTop:10}}>
+              {!isInterviewMode&&<div style={{display:"flex",justifyContent:"center",marginTop:10}}>
                 <button onClick={()=>setTimerEnabled(p=>!p)} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400}}>
                   {timerEnabled?t("timerOn"):t("timerOff")}
                 </button>
-              </div>
+              </div>}
             </div>
           ):(
             <div>
@@ -1144,10 +1152,10 @@ export default function K8sQuestApp() {
                     <span style={{color:"#475569",fontSize:13}}>{t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}</span>
                   </div>
                   <div className="quiz-bar-right" style={{display:"flex",gap:10,alignItems:"center"}}>
-                    {timerEnabled&&<span style={{color:timeLeft<=10?"#EF4444":"#F59E0B",fontSize:13,fontWeight:800,minWidth:28,textAlign:"center",direction:"ltr"}}>⏱ {timeLeft}</span>}
-                    <button onClick={()=>setTimerEnabled(p=>!p)} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
+                    {(timerEnabled||isInterviewMode)&&<span style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}>⏱ {timeLeft}</span>}
+                    {!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
                       {timerEnabled?t("timerOn"):t("timerOff")}
-                    </button>
+                    </button>}
                     <span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
                       🔥 {stats.current_streak} {t("streakLabel")}
                     </span>
@@ -1210,6 +1218,16 @@ export default function K8sQuestApp() {
                               ?`${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
                               :t("incorrect")}
                         </div>
+                        <div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{q.explanation}</div>
+                      </div>
+                    );
+                  })()}
+                  {isInterviewMode&&(()=>{
+                    const q = currentQuestions[questionIndex];
+                    return (
+                      <div style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.22)",borderRadius:12,padding:"14px 16px",marginBottom:12,direction:"rtl",animation:"fadeIn 0.3s ease"}}>
+                        <div style={{fontSize:11,fontWeight:700,color:"#A855F7",marginBottom:8,letterSpacing:0.5}}>תשובה אידיאלית</div>
+                        <div style={{color:"#e2e8f0",fontWeight:700,fontSize:14,marginBottom:6}}>{q.options[q.answer]}</div>
                         <div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{q.explanation}</div>
                       </div>
                     );
