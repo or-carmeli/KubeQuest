@@ -18,57 +18,6 @@ const LEVEL_ORDER = ["easy", "medium", "hard"];
 
 const MIXED_TOPIC = { id: "mixed", icon: "🎲", name: "Mixed Quiz", color: "#A855F7", levels: {} };
 
-const THEMES = {
-  dark: {
-    bg:          "#020817",
-    bgGrad:      "linear-gradient(160deg,#020817 0%,#0f172a 60%,#020817 100%)",
-    bgAuth:      "linear-gradient(160deg,#020817,#0f172a)",
-    bgModal:     "#0f172a",
-    bgToast:     "linear-gradient(135deg,#1e293b,#0f172a)",
-    bgCode:      "rgba(0,0,0,0.35)",
-    card:        "rgba(255,255,255,0.02)",
-    cardMid:     "rgba(255,255,255,0.04)",
-    inputBg:     "rgba(255,255,255,0.06)",
-    selectBg:    "rgba(255,255,255,0.04)",
-    sectionBg:   "rgba(255,255,255,0.05)",
-    border:      "rgba(255,255,255,0.07)",
-    borderBtn:   "rgba(255,255,255,0.09)",
-    borderMid:   "rgba(255,255,255,0.12)",
-    borderInput: "rgba(255,255,255,0.18)",
-    text:        "#e2e8f0",
-    textSoft:    "#94a3b8",
-    textMuted:   "#475569",
-    textDim:     "#64748b",
-    textLock:    "#334155",
-    gridLine:    "rgba(0,212,255,0.02)",
-    progressBg:  "rgba(255,255,255,0.06)",
-  },
-  light: {
-    bg:          "#f1f5f9",
-    bgGrad:      "linear-gradient(160deg,#dde6f5 0%,#f1f5f9 60%,#dde6f5 100%)",
-    bgAuth:      "linear-gradient(160deg,#dde6f5,#f1f5f9)",
-    bgModal:     "#ffffff",
-    bgToast:     "linear-gradient(135deg,#ffffff,#f0f8ff)",
-    bgCode:      "rgba(0,0,0,0.05)",
-    card:        "rgba(15,23,42,0.03)",
-    cardMid:     "rgba(15,23,42,0.05)",
-    inputBg:     "rgba(15,23,42,0.06)",
-    selectBg:    "rgba(15,23,42,0.04)",
-    sectionBg:   "rgba(15,23,42,0.05)",
-    border:      "rgba(15,23,42,0.1)",
-    borderBtn:   "rgba(15,23,42,0.13)",
-    borderMid:   "rgba(15,23,42,0.16)",
-    borderInput: "rgba(15,23,42,0.22)",
-    text:        "#0f172a",
-    textSoft:    "#334155",
-    textMuted:   "#64748b",
-    textDim:     "#64748b",
-    textLock:    "#94a3b8",
-    gridLine:    "rgba(15,100,200,0.03)",
-    progressBg:  "rgba(15,23,42,0.08)",
-  },
-};
-
 const ACHIEVEMENTS = [
   { id: "first",    icon: "🌱", name: "ראשית הדרך",   nameEn: "First Steps",     condition: (s) => s.total_answered >= 1 },
   { id: "streak3",  icon: "🔥", name: "שלושה ברצף",   nameEn: "Three in a Row",  condition: (s) => s.max_streak >= 3 },
@@ -455,31 +404,21 @@ function Confetti() {
   );
 }
 
-function ThemeToggle({ theme, setTheme }) {
-  return (
-    <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
-      style={{background:c.cardMid,border:`1px solid ${c.borderMid}`,borderRadius:8,
-        color:c.textSoft,padding:"6px 10px",fontSize:15,cursor:"pointer",lineHeight:1}}>
-      {theme === "dark" ? "☀️" : "🌙"}
-    </button>
-  );
-}
-
-function LangSwitcher({ lang, setLang, c }) {
+function LangSwitcher({ lang, setLang }) {
   return (
     <select value={lang} onChange={e => setLang(e.target.value)}
-      style={{background:c.selectBg,border:`1px solid ${c.borderMid}`,borderRadius:8,color:c.textSoft,padding:"6px 10px",fontSize:13,cursor:"pointer",direction:"ltr"}}>
+      style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"#94a3b8",padding:"6px 10px",fontSize:13,cursor:"pointer",direction:"ltr"}}>
       <option value="he">🇮🇱 עברית</option>
       <option value="en">🇺🇸 English</option>
     </select>
   );
 }
 
-function Footer({ lang, c }) {
+function Footer({ lang }) {
   const txt = TRANSLATIONS[lang] || TRANSLATIONS.he;
   return (
-    <div style={{textAlign:"center",marginTop:28,paddingTop:18,borderTop:`1px solid ${c.border}`}}>
-      <p style={{color:c.textMuted,fontSize:12,margin:0}}>
+    <div style={{textAlign:"center",marginTop:28,paddingTop:18,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+      <p style={{color:"#475569",fontSize:12,margin:0}}>
         © {year} {txt.allRightsReserved}{" "}
         <a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer"
           style={{color:"#0ea5e9",textDecoration:"none",fontWeight:600}}>Or Carmeli</a>
@@ -490,12 +429,8 @@ function Footer({ lang, c }) {
 
 export default function K8sQuestApp() {
   const [lang, setLang]                   = useState("he");
-  const [theme, setTheme] = useState(() => localStorage.getItem("k8s_theme") || "dark");
-  const c = THEMES[theme];
   const t = (key) => TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS.he[key] ?? key;
   const dir = lang === "he" ? "rtl" : "ltr";
-
-  useEffect(() => { localStorage.setItem("k8s_theme", theme); }, [theme]);
 
   const [authChecked, setAuthChecked]     = useState(false);
   const [user, setUser]                   = useState(null);
@@ -937,9 +872,9 @@ export default function K8sQuestApp() {
         <div key={i} style={{fontFamily:"monospace",fontSize:11,color:"#7dd3fc",lineHeight:1.8,
           whiteSpace:"pre",direction:"ltr",textAlign:"left"}}>  {line}</div>
       );
-      if (line.startsWith('🔹')) return <div key={i} style={{color:c.textSoft,fontSize:13,marginBottom:5}}>{line}</div>;
+      if (line.startsWith('🔹')) return <div key={i} style={{color:"#94a3b8",fontSize:13,marginBottom:5}}>{line}</div>;
       if (!line.trim()) return <div key={i} style={{height:6}}/>;
-      return <div key={i} style={{color:c.text,fontSize:15,fontWeight:700,marginBottom:8}}>{line}</div>;
+      return <div key={i} style={{color:"#e2e8f0",fontSize:15,fontWeight:700,marginBottom:8}}>{line}</div>;
     });
   };
 
@@ -947,7 +882,7 @@ export default function K8sQuestApp() {
   const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
 
   if (!authChecked) return (
-    <div style={{minHeight:"100vh",background:c.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
+    <div style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center"}}>
       <div style={{textAlign:"center"}}>
         <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
           style={{animation:"spin 1.4s linear infinite",display:"block",margin:"0 auto 14px"}}>
@@ -956,19 +891,18 @@ export default function K8sQuestApp() {
           <circle cx="50" cy="50" r="44" fill="none" stroke="url(#slg)" strokeWidth="5" opacity="0.8"/>
           <circle cx="50" cy="50" r="6" fill="#00D4FF"/>
         </svg>
-        <div style={{color:c.textMuted,fontSize:13}}>{t("loadingText")}</div>
+        <div style={{color:"#475569",fontSize:13}}>{t("loadingText")}</div>
       </div>
     </div>
   );
 
   if (!user) return (
-    <div style={{minHeight:"100vh",background:c.bgAuth,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817,#0f172a)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}input,button{outline:none;font-family:inherit}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher */}
-        <div style={{display:"flex",justifyContent:"flex-end",direction:"ltr",marginBottom:12,gap:8}}>
-          <ThemeToggle theme={theme} setTheme={setTheme}/>
-          <LangSwitcher lang={lang} setLang={setLang} c={c}/>
+        <div style={{display:"flex",justifyContent:"flex-end",direction:"ltr",marginBottom:12}}>
+          <LangSwitcher lang={lang} setLang={setLang}/>
         </div>
 
         <div style={{textAlign:"center",marginBottom:34}}>
@@ -984,7 +918,7 @@ export default function K8sQuestApp() {
             {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
           </svg>
           <h1 style={{fontSize:33,fontWeight:900,margin:"0 0 6px",background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundSize:"300% auto",animation:"shine 5s linear infinite"}}>K8s Quest</h1>
-          <p style={{color:c.textSoft,fontSize:14,margin:0}}>{t("tagline")}</p>
+          <p style={{color:"#94a3b8",fontSize:14,margin:0}}>{t("tagline")}</p>
         </div>
 
         <button className="gbtn" onClick={()=>setUser(GUEST_USER)}
@@ -994,13 +928,13 @@ export default function K8sQuestApp() {
         <p style={{textAlign:"center",color:"#7dd3fc",opacity:0.75,fontSize:12,margin:"0 0 26px"}}>{t("noRegNoPass")}</p>
 
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
-          <div style={{flex:1,height:1,background:c.borderMid}}/>
-          <span style={{color:c.textSoft,fontSize:12,whiteSpace:"nowrap"}}>{t("saveProgress")}</span>
-          <div style={{flex:1,height:1,background:c.borderMid}}/>
+          <div style={{flex:1,height:1,background:"rgba(255,255,255,0.1)"}}/>
+          <span style={{color:"#94a3b8",fontSize:12,whiteSpace:"nowrap"}}>{t("saveProgress")}</span>
+          <div style={{flex:1,height:1,background:"rgba(255,255,255,0.1)"}}/>
         </div>
 
-        <div style={{background:c.sectionBg,border:`1px solid ${c.borderMid}`,borderRadius:14,padding:"18px 20px"}}>
-          <div style={{display:"flex",marginBottom:16,background:c.cardMid,borderRadius:9,padding:3}}>
+        <div style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,padding:"18px 20px"}}>
+          <div style={{display:"flex",marginBottom:16,background:"rgba(255,255,255,0.04)",borderRadius:9,padding:3}}>
             {["login","signup"].map(s=>(
               <button key={s}
                 onClick={()=>{ setAuthScreen(s); setAuthError(""); }}
@@ -1014,24 +948,24 @@ export default function K8sQuestApp() {
           <form ref={authFormRef} onSubmit={e=>{e.preventDefault();authScreen==="login"?handleLogin():handleSignUp();}} autoComplete="on">
           {authScreen==="signup"&&(
             <div style={{marginBottom:11}}>
-              <label style={{color:c.textMuted,fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("username")}</label>
+              <label style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("username")}</label>
               <input name="username" autoComplete="username" defaultValue="" placeholder="K8s Hero"
-                style={{width:"100%",padding:"12px 14px",background:c.inputBg,border:`1px solid ${c.borderInput}`,borderRadius:8,color:c.text,fontSize:14,boxSizing:"border-box"}}/>
+                style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:14,boxSizing:"border-box"}}/>
             </div>
           )}
           <div style={{marginBottom:11}}>
-            <label style={{color:c.textMuted,fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
+            <label style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
             <input type="email" name="email" autoComplete={authScreen==="login"?"username":"email"} defaultValue="" placeholder="you@example.com"
-              style={{width:"100%",padding:"12px 14px",background:c.inputBg,border:`1px solid ${c.borderInput}`,borderRadius:8,color:c.text,fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
+              style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
           <div style={{marginBottom:14}}>
-            <label style={{color:c.textMuted,fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("password")}</label>
+            <label style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("password")}</label>
             <input type="password" name="password" autoComplete={authScreen==="login"?"current-password":"new-password"} defaultValue="" placeholder="••••••••"
-              style={{width:"100%",padding:"12px 14px",background:c.inputBg,border:`1px solid ${c.borderInput}`,borderRadius:8,color:c.text,fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
+              style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
           {authError&&<div style={{marginBottom:12}}>
             <div style={{color:authError.startsWith("✅")?"#10B981":"#EF4444",fontSize:12,padding:"8px 12px",background:authError.startsWith("✅")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",borderRadius:8}}>{authError}</div>
-            {authScreen==="signup"&&authError.startsWith("✅")&&<div style={{textAlign:"center",marginTop:8,fontSize:12,color:c.textMuted}}>
+            {authScreen==="signup"&&authError.startsWith("✅")&&<div style={{textAlign:"center",marginTop:8,fontSize:12,color:"#475569"}}>
               {t("didntReceive")}{" "}
               <button type="button" onClick={handleResend} disabled={authLoading}
                 style={{background:"none",border:"none",color:"#00D4FF",fontWeight:700,cursor:"pointer",fontSize:12,padding:0,textDecoration:"underline"}}>
@@ -1045,7 +979,7 @@ export default function K8sQuestApp() {
           </button>
           </form>
         </div>
-        <p style={{textAlign:"center",color:c.textMuted,fontSize:11,marginTop:22}}>
+        <p style={{textAlign:"center",color:"#475569",fontSize:11,marginTop:22}}>
           © {year} {t("allRightsReserved")}{" "}
           <a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"#0ea5e9",textDecoration:"none",fontWeight:600}}>Or Carmeli</a>
         </p>
@@ -1054,15 +988,15 @@ export default function K8sQuestApp() {
   );
 
   return (
-    <div style={{minHeight:"100vh",background:c.bgGrad,fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,position:"relative",overflowX:"hidden"}}>
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817 0%,#0f172a 60%,#020817 100%)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,position:"relative",overflowX:"hidden"}}>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}input,button{outline:none;font-family:inherit}@media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr)!important}.page-pad{padding:16px 12px!important}.quiz-bar-right{flex-wrap:wrap!important;gap:6px!important}}`}</style>
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:`linear-gradient(${c.gridLine} 1px,transparent 1px),linear-gradient(90deg,${c.gridLine} 1px,transparent 1px)`,backgroundSize:"48px 48px"}}/>
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(rgba(0,212,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.02) 1px,transparent 1px)",backgroundSize:"48px 48px"}}/>
       {flash&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
       {showConfetti&&<Confetti/>}
-      {newAchievement&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:c.bgToast,border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:c.text,fontSize:14,fontWeight:700}}>{lang==="en"?newAchievement.nameEn:newAchievement.name}</div></div></div>}
+      {newAchievement&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"#e2e8f0",fontSize:14,fontWeight:700}}>{lang==="en"?newAchievement.nameEn:newAchievement.name}</div></div></div>}
       {saveError&&<div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
 
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div onClick={e=>e.stopPropagation()} style={{background:c.bgModal,border:`1px solid ${c.borderMid}`,borderRadius:16,padding:20,width:"min(360px,calc(100vw - 32px))",animation:"fadeIn 0.3s ease",direction:"ltr"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}><h3 style={{margin:0,color:c.text,fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><button onClick={()=>setShowLeaderboard(false)} style={{background:"none",border:"none",color:c.textDim,fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:c.textMuted,textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i===0?"rgba(245,158,11,0.1)":c.card,borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":c.border}`}}><span style={{fontSize:18,width:28}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1}}><div style={{color:c.text,fontWeight:700,fontSize:14}}>{entry.username||t("anonymous")}</div><div style={{color:c.textMuted,fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div></div>)}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div onClick={e=>e.stopPropagation()} style={{background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:20,width:"min(360px,calc(100vw - 32px))",animation:"fadeIn 0.3s ease",direction:"ltr"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}><h3 style={{margin:0,color:"#e2e8f0",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><button onClick={()=>setShowLeaderboard(false)} style={{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"#475569",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i===0?"rgba(245,158,11,0.1)":"rgba(255,255,255,0.03)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"rgba(255,255,255,0.06)"}`}}><span style={{fontSize:18,width:28}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1}}><div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{entry.username||t("anonymous")}</div><div style={{color:"#475569",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div></div>)}</div></div>}
 
       {/* HOME */}
       {screen==="home"&&(
@@ -1070,16 +1004,13 @@ export default function K8sQuestApp() {
           <div style={{marginBottom:20}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}>
               <h1 style={{fontSize:26,fontWeight:900,margin:0,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundSize:"300% auto",animation:"shine 5s linear infinite"}}>☸️ K8s Quest</h1>
-              <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                <ThemeToggle theme={theme} setTheme={setTheme}/>
-                <LangSwitcher lang={lang} setLang={setLang} c={c}/>
-              </div>
+              <LangSwitcher lang={lang} setLang={setLang}/>
             </div>
-            <p style={{color:c.textMuted,fontSize:13,margin:"4px 0 10px"}}>{t("greeting")}, {displayName}! 👋 {isGuest&&<span style={{color:c.textMuted}}>{t("playingAsGuest")}</span>}</p>
+            <p style={{color:"#475569",fontSize:13,margin:"4px 0 10px"}}>{t("greeting")}, {displayName}! 👋 {isGuest&&<span style={{color:"#475569"}}>{t("playingAsGuest")}</span>}</p>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {!isGuest&&<button onClick={()=>{loadLeaderboard();setShowLeaderboard(true);}} style={{padding:"7px 12px",background:c.cardMid,border:`1px solid ${c.borderBtn}`,borderRadius:8,color:c.textSoft,cursor:"pointer",fontSize:13}}>{t("leaderboardBtn")}</button>}
+              {!isGuest&&<button onClick={()=>{loadLeaderboard();setShowLeaderboard(true);}} style={{padding:"7px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("leaderboardBtn")}</button>}
               <button onClick={handleResetProgress} style={{padding:"7px 12px",background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:8,color:"#EF4444",cursor:"pointer",fontSize:13}}>{t("resetProgress")}</button>
-              <button onClick={handleLogout} style={{padding:"7px 12px",background:c.cardMid,border:`1px solid ${c.borderBtn}`,borderRadius:8,color:c.textSoft,cursor:"pointer",fontSize:13}}>{t("logout")}</button>
+              <button onClick={handleLogout} style={{padding:"7px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("logout")}</button>
             </div>
           </div>
           {isGuest&&<div style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:12,padding:"11px 16px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}><span style={{color:"#4a9aba",fontSize:13}}>{t("guestBanner")}</span><button onClick={()=>setUser(null)} style={{padding:"6px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:8,color:"#00D4FF",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{t("signupNow")}</button></div>}
@@ -1090,10 +1021,10 @@ export default function K8sQuestApp() {
               {label:t("streak"),value:stats.current_streak,icon:"🔥",color:"#FF6B35"},
               {label:t("completed"),value:Object.keys(completedTopics).length,icon:"📚",color:"#00D4FF"},
             ].map((s,i)=>(
-              <div key={i} style={{background:c.card,border:`1px solid ${c.border}`,borderRadius:12,padding:"12px 8px",textAlign:"center"}}>
+              <div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"12px 8px",textAlign:"center"}}>
                 <div style={{fontSize:18}}>{s.icon}</div>
                 <div style={{fontSize:20,fontWeight:800,color:s.color}}>{s.value}</div>
-                <div style={{fontSize:12,color:c.textMuted}}>{s.label}</div>
+                <div style={{fontSize:12,color:"#475569"}}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -1103,26 +1034,26 @@ export default function K8sQuestApp() {
               <span style={{fontSize:28}}>🎲</span>
               <div style={{textAlign:"start"}}>
                 <div style={{color:"#A855F7",fontWeight:800,fontSize:15}}>{t("mixedQuizBtn")}</div>
-                <div style={{color:c.textDim,fontSize:12,marginTop:2}}>{t("mixedQuizDesc")}</div>
+                <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{t("mixedQuizDesc")}</div>
               </div>
             </div>
             <span style={{color:"#A855F7",fontSize:20}}>→</span>
           </button>
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {TOPICS.map(topic=>(
-              <div key={topic.id} style={{background:c.card,border:`1px solid ${c.border}`,borderRadius:14,padding:"16px 18px"}}>
+              <div key={topic.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px 18px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
                   <div style={{fontSize:24,width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>{topic.icon}</div>
                   <div style={{flex:1}}>
-                    <div style={{fontWeight:700,color:c.text,fontSize:15}}>{topic.name}</div>
-                    <div style={{color:c.textMuted,fontSize:12}}>{lang==="en"?topic.descriptionEn:topic.description}</div>
+                    <div style={{fontWeight:700,color:"#e2e8f0",fontSize:15}}>{topic.name}</div>
+                    <div style={{color:"#475569",fontSize:12}}>{lang==="en"?topic.descriptionEn:topic.description}</div>
                   </div>
                   {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{display:"flex",alignItems:"center",gap:6}}>
                     <div style={{fontSize:11,color:topic.color,fontWeight:700,whiteSpace:"nowrap"}}>{done}/3</div>
-                    <button onClick={e=>{e.stopPropagation();handleResetTopic(topic.id);}} title={t("resetTopic")} style={{background:"none",border:"none",color:c.textMuted,fontSize:13,cursor:"pointer",padding:"2px 4px",lineHeight:1}} onMouseEnter={e=>e.currentTarget.style.color="#EF4444"} onMouseLeave={e=>e.currentTarget.style.color="#475569"}>↺</button>
+                    <button onClick={e=>{e.stopPropagation();handleResetTopic(topic.id);}} title={t("resetTopic")} style={{background:"none",border:"none",color:"#475569",fontSize:13,cursor:"pointer",padding:"2px 4px",lineHeight:1}} onMouseEnter={e=>e.currentTarget.style.color="#EF4444"} onMouseLeave={e=>e.currentTarget.style.color="#475569"}>↺</button>
                   </div>})()}
                 </div>
-                {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return(<div style={{height:3,background:c.inputBg,borderRadius:2,marginBottom:10}}><div style={{height:"100%",borderRadius:2,width:`${(done/3)*100}%`,background:`linear-gradient(90deg,${topic.color},${topic.color}88)`,transition:"width 0.5s ease"}}/></div>);})()}
+                {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return(<div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:10}}><div style={{height:"100%",borderRadius:2,width:`${(done/3)*100}%`,background:`linear-gradient(90deg,${topic.color},${topic.color}88)`,transition:"width 0.5s ease"}}/></div>);})()}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
                   {Object.entries(LEVEL_CONFIG).map(([lvl,cfg])=>{
                     const key=`${topic.id}_${lvl}`;
@@ -1132,11 +1063,11 @@ export default function K8sQuestApp() {
                       <div key={lvl} className={locked?"":"card-hover"}
                         onClick={()=>!locked&&startTopic(topic,lvl)}
                         style={{padding:"10px 8px",
-                          background:locked?c.card:done?`${cfg.color}12`:c.card,
-                          border:`1px solid ${locked?c.border:done?cfg.color+"44":c.border}`,
+                          background:locked?"rgba(255,255,255,0.01)":done?`${cfg.color}12`:"rgba(255,255,255,0.03)",
+                          border:`1px solid ${locked?"rgba(255,255,255,0.04)":done?cfg.color+"44":"rgba(255,255,255,0.07)"}`,
                           borderRadius:10,textAlign:"center",opacity:locked?0.45:1,cursor:locked?"not-allowed":"pointer"}}>
                         <div style={{fontSize:16}}>{locked?"🔒":cfg.icon}</div>
-                        <div style={{fontSize:12,fontWeight:700,color:locked?"#334155":done?cfg.color:c.textDim}}>{lang==="en"?cfg.labelEn:cfg.label}</div>
+                        <div style={{fontSize:12,fontWeight:700,color:locked?"#334155":done?cfg.color:"#64748b"}}>{lang==="en"?cfg.labelEn:cfg.label}</div>
                         {done&&!locked&&<div style={{fontSize:10,color:done.correct>0?cfg.color:"#EF4444"}}>
                           {done.correct>0?"✓":""} {done.correct}/{done.total}
                         </div>}
@@ -1148,8 +1079,8 @@ export default function K8sQuestApp() {
               </div>
             ))}
           </div>
-          {unlockedAchievements.length>0&&<div style={{marginTop:18,background:c.card,border:`1px solid ${c.border}`,borderRadius:12,padding:"14px 18px"}}><div style={{color:c.textSoft,fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:c.cardMid,borderRadius:20,padding:"5px 12px",fontSize:12,color:c.textSoft}}><span>{a.icon}</span>{lang==="en"?a.nameEn:a.name}</div>)}</div></div>}
-          <Footer lang={lang} c={c}/>
+          {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"#94a3b8",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.04)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"#94a3b8"}}><span>{a.icon}</span>{lang==="en"?a.nameEn:a.name}</div>)}</div></div>}
+          <Footer lang={lang}/>
         </div>
       )}
 
@@ -1157,7 +1088,7 @@ export default function K8sQuestApp() {
       {screen==="topic"&&selectedTopic&&selectedLevel&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:22}}>
-            <button onClick={()=>setScreen("home")} style={{background:c.cardMid,border:`1px solid ${c.borderBtn}`,color:c.textDim,padding:"7px 14px",borderRadius:8,cursor:"pointer",fontSize:13}}>{t("back")}</button>
+            <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#64748b",padding:"7px 14px",borderRadius:8,cursor:"pointer",fontSize:13}}>{t("back")}</button>
             <span style={{fontSize:18}}>{selectedTopic.icon}</span>
             <h2 style={{margin:0,color:selectedTopic.color,fontSize:17,fontWeight:800}}>{selectedTopic.name}</h2>
             <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel].color,background:`${LEVEL_CONFIG[selectedLevel].color}18`,padding:"3px 10px",borderRadius:20,fontWeight:700}}>{LEVEL_CONFIG[selectedLevel].icon} {lang==="en"?LEVEL_CONFIG[selectedLevel].labelEn:LEVEL_CONFIG[selectedLevel].label}</span>
@@ -1165,15 +1096,15 @@ export default function K8sQuestApp() {
 
           {topicScreen==="theory"?(
             <div>
-              <div style={{background:c.card,border:`1px solid ${c.border}`,borderRadius:14,padding:22,marginBottom:18}}>
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:22,marginBottom:18}}>
                 <div style={{fontSize:11,color:selectedTopic.color,fontWeight:800,marginBottom:16,letterSpacing:1}}>{t("theory")}</div>
-                <div style={{background:c.bgCode,borderRadius:10,padding:"16px 20px"}}>{renderTheory(currentLevelData.theory)}</div>
+                <div style={{background:"rgba(0,0,0,0.35)",borderRadius:10,padding:"16px 20px"}}>{renderTheory(currentLevelData.theory)}</div>
               </div>
               <div style={{display:"flex",gap:8,marginBottom:0}}>
                 <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled)setTimeLeft(TIMER_SECONDS);}} style={{flex:3,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`}}>
                   {t("startQuiz")} (+{LEVEL_CONFIG[selectedLevel].points} {t("ptsPerQ")})
                 </button>
-                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled)setTimeLeft(TIMER_SECONDS);}} style={{flex:1,padding:15,background:c.cardMid,border:`1px solid ${c.borderBtn}`,borderRadius:12,color:c.textSoft,fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled)setTimeLeft(TIMER_SECONDS);}} style={{flex:1,padding:15,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#94a3b8",fontSize:13,fontWeight:700,cursor:"pointer"}}>
                   {t("skipTheory")}
                 </button>
               </div>
@@ -1188,8 +1119,8 @@ export default function K8sQuestApp() {
               <div style={{marginBottom:18}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <button onClick={()=>setScreen("home")} style={{background:c.cardMid,border:`1px solid ${c.borderBtn}`,color:c.textDim,padding:"7px 12px",borderRadius:7,cursor:"pointer",fontSize:13}}>{t("back")}</button>
-                    <span style={{color:c.textMuted,fontSize:13}}>{t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}</span>
+                    <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#64748b",padding:"7px 12px",borderRadius:7,cursor:"pointer",fontSize:13}}>{t("back")}</button>
+                    <span style={{color:"#475569",fontSize:13}}>{t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}</span>
                   </div>
                   <div className="quiz-bar-right" style={{display:"flex",gap:10,alignItems:"center"}}>
                     {timerEnabled&&<span style={{color:timeLeft<=10?"#EF4444":"#F59E0B",fontSize:13,fontWeight:800,minWidth:28,textAlign:"center",direction:"ltr"}}>⏱ {timeLeft}</span>}
@@ -1201,7 +1132,7 @@ export default function K8sQuestApp() {
                     </span>
                   </div>
                 </div>
-                <div style={{height:5,background:c.inputBg,borderRadius:4}}>
+                <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4}}>
                   <div style={{height:"100%",borderRadius:4,
                     width:`${((questionIndex+(submitted?1:0))/currentQuestions.length)*100}%`,
                     background:`linear-gradient(90deg,${selectedTopic.color},${selectedTopic.color}88)`,
@@ -1209,15 +1140,15 @@ export default function K8sQuestApp() {
                 </div>
               </div>
 
-              <div style={{background:c.card,border:`1px solid ${c.border}`,borderRadius:14,padding:22,marginBottom:14}}>
-                <div dir={dir} style={{color:c.text,fontSize:16,fontWeight:700,lineHeight:1.65,wordBreak:"break-word"}}>{currentQuestions[questionIndex].q}</div>
+              <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:22,marginBottom:14}}>
+                <div dir={dir} style={{color:"#e2e8f0",fontSize:16,fontWeight:700,lineHeight:1.65,wordBreak:"break-word"}}>{currentQuestions[questionIndex].q}</div>
               </div>
 
               <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:14}}>
                 {currentQuestions[questionIndex].options.map((opt,i)=>{
                   const isCorrect = i===currentQuestions[questionIndex].answer;
                   const isChosen  = i===selectedAnswer;
-                  let borderColor = c.borderBtn, bg = c.card, color = c.textSoft;
+                  let borderColor = "rgba(255,255,255,0.09)", bg = "rgba(255,255,255,0.02)", color = "#94a3b8";
                   if (isChosen && !submitted)  { borderColor = "#00D4FF66"; bg = "rgba(0,212,255,0.06)"; color = "#7dd3fc"; }
                   if (submitted) {
                     if (isCorrect)             { borderColor = "#10B981"; bg = "rgba(16,185,129,0.1)";  color = "#10B981"; }
@@ -1258,7 +1189,7 @@ export default function K8sQuestApp() {
                               ?`${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
                               :t("incorrect")}
                         </div>
-                        <div style={{color:c.textSoft,fontSize:13,lineHeight:1.7}}>{q.explanation}</div>
+                        <div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{q.explanation}</div>
                       </div>
                     );
                   })()}
@@ -1284,8 +1215,8 @@ export default function K8sQuestApp() {
               {allCorrect?"🌟":anyCorrect?"👍":"💪"}
             </div>
             <h2 style={{fontSize:22,fontWeight:900,margin:"0 0 8px",color:selectedTopic.color,wordBreak:"break-word"}}>{selectedTopic.name} – {lang==="en"?LEVEL_CONFIG[selectedLevel].labelEn:LEVEL_CONFIG[selectedLevel].label}</h2>
-            <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:8,background:c.cardMid,borderRadius:30,padding:"8px 20px"}}>
-              <span style={{color:c.text,fontSize:16,fontWeight:700}}>{result?.correct}/{result?.total} {t("correctCount")}</span>
+            <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:8,background:"rgba(255,255,255,0.04)",borderRadius:30,padding:"8px 20px"}}>
+              <span style={{color:"#e2e8f0",fontSize:16,fontWeight:700}}>{result?.correct}/{result?.total} {t("correctCount")}</span>
               {allCorrect&&<span style={{color:"#F59E0B",fontSize:13,fontWeight:700}}>{t("perfect")}</span>}
             </div>
             <div style={{color:"#00D4FF",fontWeight:800,fontSize:18,marginBottom:20}}>
@@ -1306,15 +1237,15 @@ export default function K8sQuestApp() {
                   </button>
                 );
               })()}
-              {quizHistory.length>0&&<button onClick={()=>setShowReview(p=>!p)} style={{padding:13,background:c.cardMid,border:`1px solid ${c.borderBtn}`,borderRadius:12,color:c.textSoft,fontSize:14,fontWeight:700,cursor:"pointer"}}>
+              {quizHistory.length>0&&<button onClick={()=>setShowReview(p=>!p)} style={{padding:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#94a3b8",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                 {showReview?t("hideReview"):t("reviewBtn")}
               </button>}
               <button onClick={()=>selectedTopic.id==="mixed"?startMixedQuiz():startTopic(selectedTopic,selectedLevel)} style={{padding:13,background:`${selectedTopic.color}18`,border:`1px solid ${selectedTopic.color}40`,borderRadius:12,color:selectedTopic.color,fontSize:14,fontWeight:700,cursor:"pointer"}}>{t("tryAgain")}</button>
-              <button onClick={()=>setScreen("home")} style={{padding:13,background:c.cardMid,border:`1px solid ${c.borderBtn}`,borderRadius:12,color:c.text,fontSize:14,fontWeight:700,cursor:"pointer"}}>{t("backToTopics")}</button>
+              <button onClick={()=>setScreen("home")} style={{padding:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#e2e8f0",fontSize:14,fontWeight:700,cursor:"pointer"}}>{t("backToTopics")}</button>
             </div>
             {showReview&&quizHistory.length>0&&(
               <div style={{marginTop:20,textAlign:dir==="rtl"?"right":"left",animation:"fadeIn 0.3s ease"}}>
-                <div style={{color:c.textSoft,fontSize:12,fontWeight:700,marginBottom:12,letterSpacing:1}}>{t("reviewTitle")}</div>
+                <div style={{color:"#94a3b8",fontSize:12,fontWeight:700,marginBottom:12,letterSpacing:1}}>{t("reviewTitle")}</div>
                 <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {quizHistory.map((h,i)=>{
                     const wasCorrect=h.chosen===h.answer;
@@ -1324,14 +1255,14 @@ export default function K8sQuestApp() {
                         <div style={{fontWeight:700,fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
                           {wasCorrect?"✅":"❌"} {t("question")} {i+1}
                         </div>
-                        <div style={{color:c.text,fontSize:13,marginBottom:6}}>{h.q}</div>
+                        <div style={{color:"#e2e8f0",fontSize:13,marginBottom:6}}>{h.q}</div>
                         {timedOut?<div style={{fontSize:13,color:"#F59E0B"}}>{t("timeUp")}</div>:(
                           <div style={{fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
                             {lang==="en"?t("optionLabels")[h.chosen]:t("optionLabels")[h.chosen]}. {h.options[h.chosen]}
                           </div>
                         )}
                         {!wasCorrect&&<div style={{fontSize:13,color:"#10B981"}}>✓ {h.options[h.answer]}</div>}
-                        <div style={{fontSize:12,color:c.textDim,marginTop:4,lineHeight:1.6}}>{h.explanation}</div>
+                        <div style={{fontSize:12,color:"#64748b",marginTop:4,lineHeight:1.6}}>{h.explanation}</div>
                       </div>
                     );
                   })}
