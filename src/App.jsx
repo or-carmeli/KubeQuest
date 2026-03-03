@@ -608,8 +608,7 @@ export default function K8sQuestApp() {
     if (!user || isGuest) return;
     setSaveError("");
     const { error } = await supabase.from("user_stats").upsert({
-      user_id: user.id,git push
-
+      user_id: user.id,
       username: user.user_metadata?.username || user.email?.split("@")[0] || "",
       ...ns, completed_topics: nc, achievements: na,
       updated_at: new Date().toISOString(),
