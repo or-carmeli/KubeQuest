@@ -456,7 +456,7 @@ export default function K8sQuestApp() {
   const [showLeaderboard, setShowLeaderboard]           = useState(false);
   const [quizHistory, setQuizHistory]                   = useState([]);
   const [showReview, setShowReview]                     = useState(false);
-  const [timerEnabled, setTimerEnabled]                 = useState(false);
+  const [timerEnabled, setTimerEnabled]                 = useState(true);
   const [timeLeft, setTimeLeft]                         = useState(TIMER_SECONDS);
   const [showConfetti, setShowConfetti]                 = useState(false);
 
