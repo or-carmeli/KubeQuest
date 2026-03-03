@@ -1024,6 +1024,9 @@ export default function K8sQuestApp() {
                   </div>
                   <div style={{display:"flex",gap:10,alignItems:"center"}}>
                     {timerEnabled&&<span style={{color:timeLeft<=10?"#EF4444":"#F59E0B",fontSize:13,fontWeight:800,minWidth:28,textAlign:"center",direction:"ltr"}}>⏱ {timeLeft}</span>}
+                    <button onClick={()=>setTimerEnabled(p=>!p)} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
+                      {timerEnabled?t("timerOn"):t("timerOff")}
+                    </button>
                     <span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
                       🔥 {stats.current_streak} {t("streakLabel")}
                     </span>
@@ -1073,14 +1076,23 @@ export default function K8sQuestApp() {
 
               {showExplanation&&(
                 <div style={{animation:"fadeIn 0.3s ease"}}>
-                  <div style={{background:selectedAnswer===currentQuestions[questionIndex].answer?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${selectedAnswer===currentQuestions[questionIndex].answer?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
-                    <div style={{fontWeight:800,fontSize:13,marginBottom:6,color:selectedAnswer===currentQuestions[questionIndex].answer?"#10B981":"#EF4444"}}>
-                      {selectedAnswer===currentQuestions[questionIndex].answer
-                        ?`${t("correct")} +${LEVEL_CONFIG[selectedLevel].points} ${t("pts")}`
-                        :t("incorrect")}
-                    </div>
-                    <div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{currentQuestions[questionIndex].explanation}</div>
-                  </div>
+                  {(()=>{
+                    const q = currentQuestions[questionIndex];
+                    const timedOut = selectedAnswer === null;
+                    const isCorrect = !timedOut && selectedAnswer === q.answer;
+                    return (
+                      <div style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
+                        <div style={{fontWeight:800,fontSize:13,marginBottom:6,color:isCorrect?"#10B981":"#EF4444"}}>
+                          {isCorrect
+                            ?`${t("correct")} +${LEVEL_CONFIG[selectedLevel].points} ${t("pts")}`
+                            :timedOut
+                              ?`${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
+                              :t("incorrect")}
+                        </div>
+                        <div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{q.explanation}</div>
+                      </div>
+                    );
+                  })()}
                   <button onClick={nextQuestion} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${selectedTopic.color}cc,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer"}}>
                     {questionIndex>=currentQuestions.length-1?t("finishTopic"):t("nextQuestion")}
                   </button>
