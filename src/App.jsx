@@ -139,8 +139,13 @@ export default function K8sQuestApp() {
     const { error } = await supabase.auth.signUp({
       email, password, options: { data: { username: username || email.split("@")[0] } },
     });
-    if (error) setAuthError(error.message);
-    else setAuthError("✅ נשלח אימייל אימות! בדקי את תיבת הדואר.");
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
+        setAuthError("✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.");
+      else
+        setAuthError(error.message);
+    } else setAuthError("✅ נשלח אימייל אימות! בדקי את תיבת הדואר.");
     setAuthLoading(false);
   };
 
