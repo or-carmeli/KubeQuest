@@ -331,6 +331,7 @@ const TRANSLATIONS = {
     saveErrorText: "⚠️ הנתונים לא נשמרו – בדוק חיבור לאינטרנט",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
     optionLabels: ["א","ב","ג","ד"], guestName: "אורח",
+    resetProgress: "אפס התקדמות", resetConfirm: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
   },
   en: {
     tagline: "Learn Kubernetes in a fun and interactive way",
@@ -372,6 +373,7 @@ const TRANSLATIONS = {
     saveErrorText: "⚠️ Data not saved – check your internet connection",
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
     optionLabels: ["A","B","C","D"], guestName: "Guest",
+    resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
   },
 };
 
@@ -665,6 +667,24 @@ export default function K8sQuestApp() {
     achievementsLoaded.current = false;
   };
 
+  const handleResetProgress = async () => {
+    if (!window.confirm(t("resetConfirm"))) return;
+    const emptyStats = { total_answered:0, total_correct:0, total_score:0, max_streak:0, current_streak:0 };
+    setStats(emptyStats);
+    setCompletedTopics({});
+    setUnlockedAchievements([]);
+    if (isGuest) {
+      try { localStorage.removeItem("k8s_quest_guest"); } catch {}
+    } else if (user) {
+      await supabase.from("user_stats").upsert({
+        user_id: user.id,
+        username: user.user_metadata?.username || user.email?.split("@")[0] || "",
+        ...emptyStats, completed_topics: {}, achievements: [],
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    }
+  };
+
   const handleSelectAnswer = (idx) => {
     if (submitted) return;
     setSelectedAnswer(idx);
@@ -924,6 +944,7 @@ export default function K8sQuestApp() {
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <LangSwitcher lang={lang} setLang={setLang}/>
               {!isGuest&&<button onClick={()=>{loadLeaderboard();setShowLeaderboard(true);}} style={{padding:"8px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("leaderboardBtn")}</button>}
+              <button onClick={handleResetProgress} style={{padding:"8px 14px",background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:8,color:"#EF4444",cursor:"pointer",fontSize:13}}>{t("resetProgress")}</button>
               <button onClick={handleLogout} style={{padding:"8px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("logout")}</button>
             </div>
           </div>
