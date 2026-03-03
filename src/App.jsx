@@ -646,7 +646,14 @@ export default function K8sQuestApp() {
   const handleLogin = async () => {
     setAuthLoading(true); setAuthError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setAuthError(t("wrongCredentials"));
+    if (error) {
+      setAuthError(t("wrongCredentials"));
+    } else if (window.PasswordCredential) {
+      try {
+        const cred = new window.PasswordCredential({ id: email, password });
+        await navigator.credentials.store(cred);
+      } catch {}
+    }
     setAuthLoading(false);
   };
 
