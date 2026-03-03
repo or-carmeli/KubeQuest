@@ -13,6 +13,8 @@ const LEVEL_CONFIG = {
   hard:   { label: "קשה",   labelEn: "Hard",   icon: "🔥", color: "#EF4444", points: 30 },
 };
 
+const LEVEL_ORDER = ["easy", "medium", "hard"];
+
 const ACHIEVEMENTS = [
   { id: "first",    icon: "🌱", name: "ראשית הדרך",   nameEn: "First Steps",     condition: (s) => s.total_answered >= 1 },
   { id: "streak3",  icon: "🔥", name: "שלושה ברצף",   nameEn: "Three in a Row",  condition: (s) => s.max_streak >= 3 },
@@ -262,6 +264,7 @@ const TRANSLATIONS = {
     correctCount: "נכון", perfect: "⭐ מושלם!", points: "נקודות",
     guestSaveHint: "💡 הרשם כדי לשמור את הניקוד!", signupLink: "הרשם עכשיו",
     tryAgain: "🔄 נסה שוב", backToTopics: "→ חזור לנושאים",
+    nextLevelBtn: "🚀 המשך לרמה הבאה", locked: "🔒 נעול",
     loadingText: "טוען...",
     saveErrorText: "⚠️ הנתונים לא נשמרו – בדוק חיבור לאינטרנט",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
@@ -299,6 +302,7 @@ const TRANSLATIONS = {
     correctCount: "correct", perfect: "⭐ Perfect!", points: "points",
     guestSaveHint: "💡 Sign up to save your score!", signupLink: "Sign up now",
     tryAgain: "🔄 Try Again", backToTopics: "← Back to Topics",
+    nextLevelBtn: "🚀 Next Level", locked: "🔒 Locked",
     loadingText: "Loading...",
     saveErrorText: "⚠️ Data not saved – check your internet connection",
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
@@ -375,6 +379,18 @@ export default function K8sQuestApp() {
     theory: lang === "en" ? topic.levels[level].theoryEn : topic.levels[level].theory,
     questions: lang === "en" ? topic.levels[level].questionsEn : topic.levels[level].questions,
   });
+
+  const isLevelLocked = (topicId, level) => {
+    const idx = LEVEL_ORDER.indexOf(level);
+    if (idx === 0) return false;
+    const prevResult = completedTopics[`${topicId}_${LEVEL_ORDER[idx - 1]}`];
+    return !prevResult || prevResult.correct < prevResult.total;
+  };
+
+  const getNextLevel = (level) => {
+    const idx = LEVEL_ORDER.indexOf(level);
+    return idx < LEVEL_ORDER.length - 1 ? LEVEL_ORDER[idx + 1] : null;
+  };
 
   const currentLevelData = selectedTopic && selectedLevel ? getLevelData(selectedTopic, selectedLevel) : null;
   const currentQuestions = currentLevelData?.questions || [];
@@ -731,15 +747,20 @@ export default function K8sQuestApp() {
                   {Object.entries(LEVEL_CONFIG).map(([lvl,cfg])=>{
                     const key=`${topic.id}_${lvl}`;
                     const done=completedTopics[key];
+                    const locked=isLevelLocked(topic.id,lvl);
                     return(
-                      <div key={lvl} className="card-hover" onClick={()=>startTopic(topic,lvl)}
-                        style={{padding:"10px 8px",background:done?`${cfg.color}12`:"rgba(255,255,255,0.03)",border:`1px solid ${done?cfg.color+"44":"rgba(255,255,255,0.07)"}`,borderRadius:10,textAlign:"center"}}>
-                        <div style={{fontSize:16}}>{cfg.icon}</div>
-                        <div style={{fontSize:12,fontWeight:700,color:done?cfg.color:"#64748b"}}>{lang==="en"?cfg.labelEn:cfg.label}</div>
-                        {done&&<div style={{fontSize:10,color:done.correct>0?cfg.color:"#EF4444"}}>
+                      <div key={lvl} className={locked?"":"card-hover"}
+                        onClick={()=>!locked&&startTopic(topic,lvl)}
+                        style={{padding:"10px 8px",
+                          background:locked?"rgba(255,255,255,0.01)":done?`${cfg.color}12`:"rgba(255,255,255,0.03)",
+                          border:`1px solid ${locked?"rgba(255,255,255,0.04)":done?cfg.color+"44":"rgba(255,255,255,0.07)"}`,
+                          borderRadius:10,textAlign:"center",opacity:locked?0.45:1,cursor:locked?"not-allowed":"pointer"}}>
+                        <div style={{fontSize:16}}>{locked?"🔒":cfg.icon}</div>
+                        <div style={{fontSize:12,fontWeight:700,color:locked?"#334155":done?cfg.color:"#64748b"}}>{lang==="en"?cfg.labelEn:cfg.label}</div>
+                        {done&&!locked&&<div style={{fontSize:10,color:done.correct>0?cfg.color:"#EF4444"}}>
                           {done.correct>0?"✓":""} {done.correct}/{done.total}
                         </div>}
-                        <div style={{fontSize:10,color:"#475569"}}>+{cfg.points}{t("pts")}</div>
+                        <div style={{fontSize:10,color:locked?"#1e293b":"#475569"}}>+{cfg.points}{t("pts")}</div>
                       </div>
                     );
                   })}
@@ -867,6 +888,16 @@ export default function K8sQuestApp() {
               <button onClick={()=>setUser(null)} style={{background:"none",border:"none",color:"#00D4FF",fontWeight:700,cursor:"pointer",fontSize:13,textDecoration:"underline"}}>{t("signupLink")}</button>
             </div>}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {allCorrect&&getNextLevel(selectedLevel)&&(()=>{
+                const nextLvl=getNextLevel(selectedLevel);
+                const nextCfg=LEVEL_CONFIG[nextLvl];
+                return(
+                  <button onClick={()=>startTopic(selectedTopic,nextLvl)}
+                    style={{padding:14,background:`linear-gradient(135deg,${nextCfg.color}ee,${nextCfg.color}88)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 20px ${nextCfg.color}55`}}>
+                    {t("nextLevelBtn")} {nextCfg.icon} {lang==="en"?nextCfg.labelEn:nextCfg.label}
+                  </button>
+                );
+              })()}
               <button onClick={()=>startTopic(selectedTopic,selectedLevel)} style={{padding:13,background:`${selectedTopic.color}18`,border:`1px solid ${selectedTopic.color}40`,borderRadius:12,color:selectedTopic.color,fontSize:14,fontWeight:700,cursor:"pointer"}}>{t("tryAgain")}</button>
               <button onClick={()=>setScreen("home")} style={{padding:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#e2e8f0",fontSize:14,fontWeight:700,cursor:"pointer"}}>{t("backToTopics")}</button>
             </div>
