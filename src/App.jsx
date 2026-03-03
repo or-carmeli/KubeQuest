@@ -229,6 +229,211 @@ const TOPICS = [
       },
     }
   },
+  { id:"statefulsets", icon:"📊", name:"StatefulSets", color:"#8B5CF6",
+    description:"ניהול אפליקציות עם מצב", descriptionEn:"Managing stateful applications",
+    levels:{
+      easy:{
+        theory:`StatefulSet כמו Deployment אבל עבור אפליקציות עם מצב.\n🔹 Pods מקבלים שמות קבועים: pod-0, pod-1\n🔹 כל Pod מקבל אחסון קבוע משלו\n🔹 מתאים ל-databases, Kafka, ZooKeeper\nCODE:\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: mysql\nspec:\n  serviceName: mysql\n  replicas: 3`,
+        theoryEn:`StatefulSet is like Deployment but for stateful applications.\n🔹 Pods get fixed names: pod-0, pod-1\n🔹 Each Pod gets its own persistent storage\n🔹 Suitable for databases, Kafka, ZooKeeper\nCODE:\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: mysql\nspec:\n  serviceName: mysql\n  replicas: 3`,
+        questions:[
+          {q:"מה ההבדל המרכזי בין StatefulSet ל-Deployment?",options:["StatefulSet מהיר יותר","Pods ב-StatefulSet מקבלים שמות קבועים ואחסון קבוע","StatefulSet לא יכול לעשות scale","StatefulSet לcluster בלבד"],answer:1,explanation:"ב-StatefulSet לכל Pod יש שם קבוע (pod-0,1,2) ואחסון משלו, בניגוד ל-Deployment שבו Pods זהים."},
+          {q:"לאיזה סוג אפליקציה מתאים StatefulSet?",options:["Web server stateless","Databases ו-message brokers","CI/CD pipelines","Load balancers"],answer:1,explanation:"StatefulSet מתאים לאפליקציות עם מצב כמו MySQL, PostgreSQL, Kafka שצריכות זהות קבועה."},
+        ],
+        questionsEn:[
+          {q:"What is the main difference between StatefulSet and Deployment?",options:["StatefulSet is faster","Pods in StatefulSet get fixed names and storage","StatefulSet cannot scale","StatefulSet is cluster-only"],answer:1,explanation:"In StatefulSet, each Pod has a fixed name (pod-0,1,2) and its own storage, unlike Deployment where Pods are identical."},
+          {q:"What type of application is StatefulSet suitable for?",options:["Stateless web servers","Databases and message brokers","CI/CD pipelines","Load balancers"],answer:1,explanation:"StatefulSet is suitable for stateful applications like MySQL, PostgreSQL, Kafka that need a fixed identity."},
+        ],
+      },
+      medium:{
+        theory:`Headless Service ו-StatefulSet.\n🔹 StatefulSet דורש Headless Service (clusterIP: None)\n🔹 כל Pod מקבל DNS: pod-0.mysql.default.svc.cluster.local\n🔹 volumeClaimTemplates – PVC אוטומטי לכל Pod\nCODE:\napiVersion: v1\nkind: Service\nmetadata:\n  name: mysql\nspec:\n  clusterIP: None\n  selector:\n    app: mysql`,
+        theoryEn:`Headless Service and StatefulSet.\n🔹 StatefulSet requires a Headless Service (clusterIP: None)\n🔹 Each Pod gets DNS: pod-0.mysql.default.svc.cluster.local\n🔹 volumeClaimTemplates – automatic PVC per Pod\nCODE:\napiVersion: v1\nkind: Service\nmetadata:\n  name: mysql\nspec:\n  clusterIP: None\n  selector:\n    app: mysql`,
+        questions:[
+          {q:"מה זה Headless Service?",options:["Service ללא port","Service עם clusterIP: None שלא עושה load balancing","Service מחוץ לcluster","Service לgRPC בלבד"],answer:1,explanation:"Headless Service (clusterIP: None) לא עושה load balancing – מחזיר DNS ישיר לכל Pod. נדרש ל-StatefulSet."},
+          {q:"מה זה volumeClaimTemplates ב-StatefulSet?",options:["Template לService","Template שיוצר PVC אוטומטי לכל Pod","Template לConfigMap","Template לIngress"],answer:1,explanation:"volumeClaimTemplates יוצר PersistentVolumeClaim חדש עבור כל Pod ב-StatefulSet אוטומטית."},
+        ],
+        questionsEn:[
+          {q:"What is a Headless Service?",options:["Service without a port","Service with clusterIP: None that doesn't load balance","Service outside the cluster","Service for gRPC only"],answer:1,explanation:"Headless Service (clusterIP: None) doesn't load balance – returns direct DNS to each Pod. Required for StatefulSet."},
+          {q:"What is volumeClaimTemplates in StatefulSet?",options:["Template for Service","Template that auto-creates a PVC per Pod","Template for ConfigMap","Template for Ingress"],answer:1,explanation:"volumeClaimTemplates creates a new PersistentVolumeClaim for each Pod in the StatefulSet automatically."},
+        ],
+      },
+      hard:{
+        theory:`StatefulSet Ordering ו-Update Strategies.\n🔹 בעת יצירה: pod-0 קודם, אחר pod-1, pod-2\n🔹 בעת מחיקה: הפוך – pod-2 ראשון\n🔹 updateStrategy: RollingUpdate מהסוף להתחלה\n🔹 podManagementPolicy: Parallel – כולם ביחד\nCODE:\nspec:\n  podManagementPolicy: OrderedReady\n  updateStrategy:\n    type: RollingUpdate\n    rollingUpdate:\n      partition: 0`,
+        theoryEn:`StatefulSet Ordering and Update Strategies.\n🔹 On creation: pod-0 first, then pod-1, pod-2\n🔹 On deletion: reverse – pod-2 first\n🔹 updateStrategy: RollingUpdate from end to start\n🔹 podManagementPolicy: Parallel – all at once\nCODE:\nspec:\n  podManagementPolicy: OrderedReady\n  updateStrategy:\n    type: RollingUpdate\n    rollingUpdate:\n      partition: 0`,
+        questions:[
+          {q:"באיזה סדר נמחקים Pods ב-StatefulSet?",options:["pod-0 ראשון","pod-N (האחרון) ראשון","בסדר אקראי","כולם ביחד"],answer:1,explanation:"ב-StatefulSet, Pods נמחקים בסדר הפוך: האחרון קודם (pod-N → pod-0)."},
+          {q:"מה זה partition ב-StatefulSet RollingUpdate?",options:["מספר replicas","Pods עם ordinal >= partition יעודכנו, השאר לא","גודל batch","מספר namespace"],answer:1,explanation:"partition מאפשר canary releases – רק Pods עם ordinal >= partition יקבלו את הגרסה החדשה."},
+        ],
+        questionsEn:[
+          {q:"In what order are Pods deleted in a StatefulSet?",options:["pod-0 first","pod-N (last) first","Random order","All at once"],answer:1,explanation:"In StatefulSet, Pods are deleted in reverse order: last first (pod-N → pod-0)."},
+          {q:"What is partition in StatefulSet RollingUpdate?",options:["Number of replicas","Pods with ordinal >= partition will update, others won't","Batch size","Namespace count"],answer:1,explanation:"partition enables canary releases – only Pods with ordinal >= partition will receive the new version."},
+        ],
+      },
+    }
+  },
+  { id:"rbac", icon:"🔐", name:"RBAC", color:"#EC4899",
+    description:"בקרת גישה מבוססת תפקידים", descriptionEn:"Role-based access control",
+    levels:{
+      easy:{
+        theory:`RBAC – Role-Based Access Control.\n🔹 מי יכול לעשות מה על אילו משאבים?\n🔹 Role – הרשאות בNamespace אחד\n🔹 ClusterRole – הרשאות לכל הCluster\n🔹 RoleBinding – קושר Role למשתמש\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nmetadata:\n  name: pod-reader\nrules:\n- apiGroups: [""]\n  resources: ["pods"]\n  verbs: ["get","list"]`,
+        theoryEn:`RBAC – Role-Based Access Control.\n🔹 Who can do what on which resources?\n🔹 Role – permissions in one Namespace\n🔹 ClusterRole – permissions across the Cluster\n🔹 RoleBinding – binds Role to a user\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nmetadata:\n  name: pod-reader\nrules:\n- apiGroups: [""]\n  resources: ["pods"]\n  verbs: ["get","list"]`,
+        questions:[
+          {q:"מה ההבדל בין Role ל-ClusterRole?",options:["אין הבדל","Role מוגבל לNamespace, ClusterRole לכל הCluster","ClusterRole חזק יותר תמיד","Role לusers, ClusterRole לgroups"],answer:1,explanation:"Role מגדיר הרשאות בNamespace ספציפי. ClusterRole מגדיר הרשאות ברמת הCluster כולו."},
+          {q:"מה זה RoleBinding?",options:["יצירת Role חדש","חיבור בין Role למשתמש/ServiceAccount","העתקת Role","מחיקת Role"],answer:1,explanation:"RoleBinding קושר Role למשתמש, group, או ServiceAccount – מעניק להם את ההרשאות שהוגדרו ב-Role."},
+        ],
+        questionsEn:[
+          {q:"What is the difference between Role and ClusterRole?",options:["No difference","Role is limited to a Namespace, ClusterRole to the whole Cluster","ClusterRole is always stronger","Role for users, ClusterRole for groups"],answer:1,explanation:"Role defines permissions in a specific Namespace. ClusterRole defines permissions at the entire Cluster level."},
+          {q:"What is a RoleBinding?",options:["Creating a new Role","Binding a Role to a user/ServiceAccount","Copying a Role","Deleting a Role"],answer:1,explanation:"RoleBinding binds a Role to a user, group, or ServiceAccount – granting them the permissions defined in the Role."},
+        ],
+      },
+      medium:{
+        theory:`ServiceAccounts ו-RBAC.\n🔹 ServiceAccount – זהות לPod בתוך הCluster\n🔹 כל Pod מקבל default ServiceAccount\n🔹 RBAC קובע מה ServiceAccount יכול לעשות\nCODE:\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: my-sa\n---\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: read-pods\nsubjects:\n- kind: ServiceAccount\n  name: my-sa`,
+        theoryEn:`ServiceAccounts and RBAC.\n🔹 ServiceAccount – identity for a Pod within the Cluster\n🔹 Every Pod gets a default ServiceAccount\n🔹 RBAC determines what a ServiceAccount can do\nCODE:\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: my-sa\n---\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: read-pods\nsubjects:\n- kind: ServiceAccount\n  name: my-sa`,
+        questions:[
+          {q:"מה זה ServiceAccount?",options:["חשבון למשתמש אנושי","זהות לPod/תהליך בתוך הCluster","שם לService","חשבון billing"],answer:1,explanation:"ServiceAccount מספק זהות לPods ותהליכים בתוך הCluster לצורך אימות מול Kubernetes API."},
+          {q:"מה קורה לPod ללא ServiceAccount מוגדר?",options:["הPod לא עולה","מקבל ServiceAccount 'default' אוטומטית","מקבל הרשאות admin","הPod רץ ללא הרשאות"],answer:1,explanation:"כל Pod מקבל את ServiceAccount 'default' של הNamespace שלו אוטומטית אם לא מוגדר אחד."},
+        ],
+        questionsEn:[
+          {q:"What is a ServiceAccount?",options:["Account for a human user","Identity for a Pod/process within the Cluster","Name for a Service","Billing account"],answer:1,explanation:"ServiceAccount provides identity to Pods and processes inside the Cluster for authentication with the Kubernetes API."},
+          {q:"What happens to a Pod with no ServiceAccount defined?",options:["Pod won't start","Gets 'default' ServiceAccount automatically","Gets admin permissions","Pod runs without permissions"],answer:1,explanation:"Every Pod automatically gets the 'default' ServiceAccount of its Namespace if none is defined."},
+        ],
+      },
+      hard:{
+        theory:`RBAC מתקדם – Verbs ו-Least Privilege.\n🔹 Verbs: get, list, watch, create, update, patch, delete\n🔹 watch – stream שינויים בזמן אמת\n🔹 Principle of Least Privilege – רק ההרשאות הנחוצות\nCODE:\nrules:\n- apiGroups: ["apps"]\n  resources: ["deployments"]\n  verbs: ["get","list","watch","create","update"]\n- apiGroups: ["*"]\n  resources: ["*"]\n  verbs: ["*"]  # admin`,
+        theoryEn:`Advanced RBAC – Verbs and Least Privilege.\n🔹 Verbs: get, list, watch, create, update, patch, delete\n🔹 watch – stream changes in real time\n🔹 Principle of Least Privilege – only necessary permissions\nCODE:\nrules:\n- apiGroups: ["apps"]\n  resources: ["deployments"]\n  verbs: ["get","list","watch","create","update"]\n- apiGroups: ["*"]\n  resources: ["*"]\n  verbs: ["*"]  # admin`,
+        questions:[
+          {q:"מה verb צריך כדי לעקוב אחרי שינויים בזמן אמת?",options:["get","list","watch","monitor"],answer:2,explanation:"verb 'watch' מאפשר לקבל stream של שינויים בזמן אמת (כמו kubectl get pods -w)."},
+          {q:"מה עיקרון Least Privilege ב-RBAC?",options:["לתת הרשאות admin לכולם","לתת לכל entity רק את ההרשאות המינימליות שהיא צריכה","לא לתת הרשאות בכלל","לתת הרשאות לפי שם"],answer:1,explanation:"Least Privilege – כל משתמש/ServiceAccount מקבל רק את ההרשאות שהוא צריך ולא יותר. עיקרון אבטחה בסיסי."},
+        ],
+        questionsEn:[
+          {q:"What verb is needed to watch for changes in real time?",options:["get","list","watch","monitor"],answer:2,explanation:"The 'watch' verb allows receiving a stream of changes in real time (like kubectl get pods -w)."},
+          {q:"What is the Least Privilege principle in RBAC?",options:["Give admin permissions to everyone","Give each entity only the minimum permissions it needs","Give no permissions at all","Give permissions by name"],answer:1,explanation:"Least Privilege – each user/ServiceAccount receives only the permissions it needs and no more. A fundamental security principle."},
+        ],
+      },
+    }
+  },
+  { id:"helm", icon:"⚓", name:"Helm", color:"#14B8A6",
+    description:"מנהל חבילות לKubernetes", descriptionEn:"Package manager for Kubernetes",
+    levels:{
+      easy:{
+        theory:`Helm הוא מנהל החבילות של Kubernetes.\n🔹 Chart – חבילת Helm עם templates ו-values\n🔹 Release – instance של Chart מותקן\n🔹 Repository – מאגר של Charts\nCODE:\nhelm repo add bitnami https://charts.bitnami.com/bitnami\nhelm install my-nginx bitnami/nginx\nhelm list\nhelm uninstall my-nginx`,
+        theoryEn:`Helm is the package manager for Kubernetes.\n🔹 Chart – a Helm package with templates and values\n🔹 Release – an installed instance of a Chart\n🔹 Repository – a collection of Charts\nCODE:\nhelm repo add bitnami https://charts.bitnami.com/bitnami\nhelm install my-nginx bitnami/nginx\nhelm list\nhelm uninstall my-nginx`,
+        questions:[
+          {q:"מה זה Helm Chart?",options:["Docker image","חבילה של Kubernetes manifests עם תבניות","רשת Kubernetes","גרסה של kubectl"],answer:1,explanation:"Helm Chart הוא חבילה המכילה templates, values, ומטה-נתונים להתקנת אפליקציה על Kubernetes."},
+          {q:"מה הפקודה להתקנת Chart?",options:["helm deploy","helm install","helm run","helm apply"],answer:1,explanation:"'helm install [release-name] [chart]' מתקין Chart ויוצר Release חדש בCluster."},
+        ],
+        questionsEn:[
+          {q:"What is a Helm Chart?",options:["A Docker image","A package of Kubernetes manifests with templates","A Kubernetes network","A version of kubectl"],answer:1,explanation:"A Helm Chart is a package containing templates, values, and metadata for installing an application on Kubernetes."},
+          {q:"What command installs a Chart?",options:["helm deploy","helm install","helm run","helm apply"],answer:1,explanation:"'helm install [release-name] [chart]' installs a Chart and creates a new Release in the Cluster."},
+        ],
+      },
+      medium:{
+        theory:`Helm Values ו-Templating.\n🔹 values.yaml – ברירות מחדל הניתנות לשינוי\n🔹 --set flag – שינוי value מהcommand line\n🔹 --values – העלאת קובץ values מותאם\n🔹 Template syntax: {{ .Values.replicaCount }}\nCODE:\nhelm install my-app ./my-chart \\\n  --set replicaCount=3 \\\n  --set image.tag=v2.0\nhelm upgrade my-app ./my-chart -f prod-values.yaml`,
+        theoryEn:`Helm Values and Templating.\n🔹 values.yaml – defaults that can be overridden\n🔹 --set flag – override value from command line\n🔹 --values – load a custom values file\n🔹 Template syntax: {{ .Values.replicaCount }}\nCODE:\nhelm install my-app ./my-chart \\\n  --set replicaCount=3 \\\n  --set image.tag=v2.0\nhelm upgrade my-app ./my-chart -f prod-values.yaml`,
+        questions:[
+          {q:"איך משנים value ב-Helm מה-command line?",options:["helm change","helm --override","helm install --set key=value","helm config"],answer:2,explanation:"--set key=value מאפשר לעקוף values.yaml בזמן install/upgrade מה-command line."},
+          {q:"מה הפקודה לעדכן Release קיים?",options:["helm update","helm upgrade","helm patch","helm redeploy"],answer:1,explanation:"'helm upgrade [release] [chart]' מעדכן Release קיים לגרסה או לconfigurations חדשות."},
+        ],
+        questionsEn:[
+          {q:"How do you change a value in Helm from the command line?",options:["helm change","helm --override","helm install --set key=value","helm config"],answer:2,explanation:"--set key=value allows overriding values.yaml at install/upgrade time from the command line."},
+          {q:"What command updates an existing Release?",options:["helm update","helm upgrade","helm patch","helm redeploy"],answer:1,explanation:"'helm upgrade [release] [chart]' updates an existing Release to new versions or configurations."},
+        ],
+      },
+      hard:{
+        theory:`Helm Hooks ו-Tests.\n🔹 Hooks – פעולות בשלבים: pre-install, post-upgrade\n🔹 helm test – הרצת בדיקות לאחר installation\n🔹 Library Chart – chart לשיתוף helpers, לא ניתן להתקנה\n🔹 Subcharts – תלויות בתוך chart\nCODE:\nannotations:\n  "helm.sh/hook": pre-install\n  "helm.sh/hook-weight": "0"\n  "helm.sh/hook-delete-policy": hook-succeeded`,
+        theoryEn:`Helm Hooks and Tests.\n🔹 Hooks – actions at lifecycle points: pre-install, post-upgrade\n🔹 helm test – runs tests after installation\n🔹 Library Chart – chart for sharing helpers, not installable\n🔹 Subcharts – dependencies inside a chart\nCODE:\nannotations:\n  "helm.sh/hook": pre-install\n  "helm.sh/hook-weight": "0"\n  "helm.sh/hook-delete-policy": hook-succeeded`,
+        questions:[
+          {q:"מה זה Helm Hook?",options:["כלי לdebug","פעולה שרצה בשלב מסוים במחזור חיי Release","type של Chart","אלטרנטיבה לRollback"],answer:1,explanation:"Helm Hooks מאפשרים להריץ Jobs/Pods בשלבים מסוימים: pre-install, post-upgrade, pre-delete וכו'."},
+          {q:"מה זה Helm test?",options:["בדיקת syntax של YAML","הרצת Pod לאימות שהRelease פועל כמצופה","unit test ל-Go","בדיקת connectivity לinternet"],answer:1,explanation:"helm test מריץ Pods מסומנים כ-helm.sh/hook: test כדי לאמת שההתקנה הצליחה."},
+        ],
+        questionsEn:[
+          {q:"What is a Helm Hook?",options:["A debug tool","An action that runs at a specific lifecycle point","A type of Chart","An alternative to Rollback"],answer:1,explanation:"Helm Hooks allow running Jobs/Pods at specific points: pre-install, post-upgrade, pre-delete, etc."},
+          {q:"What is helm test?",options:["YAML syntax check","Running a Pod to verify the Release works as expected","Unit test for Go","Internet connectivity check"],answer:1,explanation:"helm test runs Pods marked as helm.sh/hook: test to verify that the installation succeeded."},
+        ],
+      },
+    }
+  },
+  { id:"storage", icon:"💾", name:"Storage (PV/PVC)", color:"#6366F1",
+    description:"אחסון מתמיד לKubernetes", descriptionEn:"Persistent storage for Kubernetes",
+    levels:{
+      easy:{
+        theory:`PersistentVolume (PV) ו-PersistentVolumeClaim (PVC).\n🔹 PV – יחידת אחסון בCluster (admin מגדיר)\n🔹 PVC – בקשה לאחסון מ-Pod (developer מגדיר)\n🔹 StorageClass – provisioner אוטומטי לPV\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: my-pvc\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi`,
+        theoryEn:`PersistentVolume (PV) and PersistentVolumeClaim (PVC).\n🔹 PV – a storage unit in the Cluster (defined by admin)\n🔹 PVC – a request for storage by a Pod (defined by developer)\n🔹 StorageClass – automatic PV provisioner\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: my-pvc\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi`,
+        questions:[
+          {q:"מה ההבדל בין PV ל-PVC?",options:["אין הבדל","PV הוא האחסון, PVC הוא הבקשה לאחסון","PVC לproduction, PV לdev","PV לLinux, PVC לWindows"],answer:1,explanation:"PV הוא יחידת האחסון הפיזית שמנהל הCluster מגדיר. PVC היא הבקשה של האפליקציה לאחסון מסוג מסוים."},
+          {q:"מה זה AccessMode ReadWriteOnce?",options:["קריאה בלבד","כתיבה מNode אחד בלבד","קריאה וכתיבה מ-node אחד בו-זמנית","קריאה מכל הNodes"],answer:2,explanation:"ReadWriteOnce (RWO) – ה-PV יכול להיות mounted לקריאה וכתיבה על ידי node אחד בלבד בכל זמן."},
+        ],
+        questionsEn:[
+          {q:"What is the difference between PV and PVC?",options:["No difference","PV is the storage, PVC is the request for storage","PVC for production, PV for dev","PV for Linux, PVC for Windows"],answer:1,explanation:"PV is the physical storage unit defined by the cluster admin. PVC is the application's request for a certain type of storage."},
+          {q:"What is AccessMode ReadWriteOnce?",options:["Read-only","Write from one Node only","Read and write from one node at a time","Read from all Nodes"],answer:2,explanation:"ReadWriteOnce (RWO) – the PV can be mounted for read and write by only one node at a time."},
+        ],
+      },
+      medium:{
+        theory:`StorageClass ו-Dynamic Provisioning.\n🔹 StorageClass מגדיר סוג אחסון וprovisioner\n🔹 Dynamic Provisioning – PV נוצר אוטומטית\n🔹 Reclaim Policy: Retain, Delete, Recycle\nCODE:\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nprovisioner: kubernetes.io/aws-ebs\nparameters:\n  type: gp3\nreclaimPolicy: Delete`,
+        theoryEn:`StorageClass and Dynamic Provisioning.\n🔹 StorageClass defines storage type and provisioner\n🔹 Dynamic Provisioning – PV created automatically\n🔹 Reclaim Policy: Retain, Delete, Recycle\nCODE:\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nprovisioner: kubernetes.io/aws-ebs\nparameters:\n  type: gp3\nreclaimPolicy: Delete`,
+        questions:[
+          {q:"מה זה Dynamic Provisioning?",options:["הקצאת CPU דינמית","PV נוצר אוטומטית כשנוצר PVC","שינוי גודל Volume אוטומטי","migration אוטומטי"],answer:1,explanation:"Dynamic Provisioning – כשנוצר PVC עם StorageClass, ה-provisioner יוצר PV אוטומטית. אין צורך ב-admin לכל PV."},
+          {q:"מה Reclaim Policy 'Delete' עושה?",options:["מוחק רק את הPVC","מוחק את ה-PV ואת האחסון הפיזי כשהPVC נמחק","שומר את הנתונים לשימוש עתידי","מעביר את הנתונים לbackup"],answer:1,explanation:"Reclaim Policy Delete – כשPVC נמחק, ה-PV והאחסון הפיזי (דיסק בcloud) נמחקים אוטומטית."},
+        ],
+        questionsEn:[
+          {q:"What is Dynamic Provisioning?",options:["Dynamic CPU allocation","PV created automatically when a PVC is created","Automatic volume resizing","Automatic migration"],answer:1,explanation:"Dynamic Provisioning – when a PVC with a StorageClass is created, the provisioner creates a PV automatically. No admin needed per PV."},
+          {q:"What does Reclaim Policy 'Delete' do?",options:["Deletes only the PVC","Deletes the PV and physical storage when PVC is deleted","Keeps data for future use","Moves data to backup"],answer:1,explanation:"Reclaim Policy Delete – when a PVC is deleted, the PV and physical storage (cloud disk) are automatically deleted."},
+        ],
+      },
+      hard:{
+        theory:`Volume Snapshots ו-CSI.\n🔹 CSI – Container Storage Interface, standard לdrivers\n🔹 VolumeSnapshot – גיבוי נקודתי של Volume\n🔹 allowVolumeExpansion – הגדלת Volume ללא downtime\n🔹 ReadWriteMany (RWX) – NFS/EFS – כתיבה ממספר Nodes\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nmetadata:\n  name: my-snapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc`,
+        theoryEn:`Volume Snapshots and CSI.\n🔹 CSI – Container Storage Interface, standard for drivers\n🔹 VolumeSnapshot – point-in-time backup of a Volume\n🔹 allowVolumeExpansion – grow Volume without downtime\n🔹 ReadWriteMany (RWX) – NFS/EFS – write from multiple Nodes\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nmetadata:\n  name: my-snapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc`,
+        questions:[
+          {q:"מה AccessMode ReadWriteMany מאפשר?",options:["קריאה בלבד","כתיבה מ-Node אחד","קריאה וכתיבה מכמה Nodes בו-זמנית","הגדלה אוטומטית"],answer:2,explanation:"ReadWriteMany (RWX) מאפשר ל-Nodes מרובים לקרוא ולכתוב בו-זמנית. מתאים ל-NFS/EFS."},
+          {q:"מה זה CSI?",options:["Container Security Interface","Container Storage Interface – סטנדרט לdrivers של אחסון","Cloud Storage Integration","Cluster Sync Infrastructure"],answer:1,explanation:"CSI (Container Storage Interface) הוא סטנדרט שמאפשר לvendors לכתוב storage drivers עבור Kubernetes בצורה אחידה."},
+        ],
+        questionsEn:[
+          {q:"What does AccessMode ReadWriteMany allow?",options:["Read-only","Write from one Node","Read and write from multiple Nodes simultaneously","Auto-expansion"],answer:2,explanation:"ReadWriteMany (RWX) allows multiple Nodes to read and write simultaneously. Suitable for NFS/EFS."},
+          {q:"What is CSI?",options:["Container Security Interface","Container Storage Interface – standard for storage drivers","Cloud Storage Integration","Cluster Sync Infrastructure"],answer:1,explanation:"CSI (Container Storage Interface) is a standard that allows vendors to write storage drivers for Kubernetes in a uniform way."},
+        ],
+      },
+    }
+  },
+  { id:"daemonsets", icon:"👾", name:"DaemonSets", color:"#84CC16",
+    description:"Pod אחד על כל Node", descriptionEn:"One Pod per Node",
+    levels:{
+      easy:{
+        theory:`DaemonSet מבטיח שPod רץ על כל Node.\n🔹 כשNode חדש נוסף – Pod נוצר אוטומטית\n🔹 כשNode מוסר – Pod נמחק אוטומטית\n🔹 שימושים: logging, monitoring, network agents\nCODE:\napiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: node-exporter\nspec:\n  selector:\n    matchLabels:\n      app: node-exporter`,
+        theoryEn:`A DaemonSet ensures a Pod runs on every Node.\n🔹 When a new Node is added – Pod is created automatically\n🔹 When a Node is removed – Pod is deleted automatically\n🔹 Uses: logging, monitoring, network agents\nCODE:\napiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: node-exporter\nspec:\n  selector:\n    matchLabels:\n      app: node-exporter`,
+        questions:[
+          {q:"מה DaemonSet מבטיח?",options:["שPod רץ פעם אחת","שPod רץ על כל Node","שPod רץ על Node ספציפי","שPod רץ כל דקה"],answer:1,explanation:"DaemonSet מבטיח שעותק אחד של ה-Pod רץ על כל Node בCluster. בNode חדש – Pod נוסף אוטומטית."},
+          {q:"מהו שימוש נפוץ ב-DaemonSet?",options:["Web server","Database","Log collector על כל Node","Batch job חד-פעמי"],answer:2,explanation:"DaemonSets נפוצים ל: Fluentd/Filebeat ל-log collection, Prometheus Node Exporter ל-monitoring, CNI plugins."},
+        ],
+        questionsEn:[
+          {q:"What does a DaemonSet guarantee?",options:["Pod runs once","Pod runs on every Node","Pod runs on a specific Node","Pod runs every minute"],answer:1,explanation:"A DaemonSet ensures one copy of the Pod runs on every Node in the Cluster. On a new Node – Pod is added automatically."},
+          {q:"What is a common use for DaemonSet?",options:["Web server","Database","Log collector on every Node","One-time batch job"],answer:2,explanation:"DaemonSets are common for: Fluentd/Filebeat for log collection, Prometheus Node Exporter for monitoring, CNI plugins."},
+        ],
+      },
+      medium:{
+        theory:`DaemonSet עם NodeSelector ו-Tolerations.\n🔹 nodeSelector – רץ רק על Nodes עם label מסוים\n🔹 Tolerations – רץ על Nodes עם taints\n🔹 updateStrategy: RollingUpdate\nCODE:\nspec:\n  template:\n    spec:\n      nodeSelector:\n        disk-type: ssd\n      tolerations:\n      - key: node-role.kubernetes.io/control-plane\n        effect: NoSchedule`,
+        theoryEn:`DaemonSet with NodeSelector and Tolerations.\n🔹 nodeSelector – runs only on Nodes with a specific label\n🔹 Tolerations – runs on Nodes with taints\n🔹 updateStrategy: RollingUpdate\nCODE:\nspec:\n  template:\n    spec:\n      nodeSelector:\n        disk-type: ssd\n      tolerations:\n      - key: node-role.kubernetes.io/control-plane\n        effect: NoSchedule`,
+        questions:[
+          {q:"מה Toleration מאפשר?",options:["הגדרת resources","לרוץ על Node עם Taint","לחסום Node","להגביל CPU"],answer:1,explanation:"Toleration מאפשר לPod לרוץ על Node שיש לו Taint. בלי Toleration, הPod לא יתוזמן לאותו Node."},
+          {q:"כיצד DaemonSet מעדכן Pods?",options:["מוחק הכל ויוצר מחדש","RollingUpdate – מעדכן Pod אחד בכל פעם","לא מעדכן","דורש kubectl apply לכל Node"],answer:1,explanation:"DaemonSet תומך ב-updateStrategy: RollingUpdate שמעדכן Pod אחד בכל פעם, בדומה ל-Deployment."},
+        ],
+        questionsEn:[
+          {q:"What does a Toleration allow?",options:["Setting resources","Running on a Node with a Taint","Blocking a Node","Limiting CPU"],answer:1,explanation:"A Toleration allows a Pod to run on a Node that has a Taint. Without a Toleration, the Pod won't be scheduled on that Node."},
+          {q:"How does a DaemonSet update Pods?",options:["Deletes all and recreates","RollingUpdate – updates one Pod at a time","Doesn't update","Requires kubectl apply per Node"],answer:1,explanation:"DaemonSet supports updateStrategy: RollingUpdate which updates one Pod at a time, similar to Deployment."},
+        ],
+      },
+      hard:{
+        theory:`DaemonSets מתקדם – HostNetwork ו-Privileged.\n🔹 hostNetwork: true – Pod משתמש ב-Network של Node\n🔹 hostPID: true – Pod רואה processes של Node\n🔹 privileged: true – גישה מלאה לNode (זהירות!)\n🔹 שימוש: CNI plugins, storage agents, security tools\nCODE:\nspec:\n  hostNetwork: true\n  hostPID: true\n  containers:\n  - securityContext:\n      privileged: true`,
+        theoryEn:`Advanced DaemonSets – HostNetwork and Privileged.\n🔹 hostNetwork: true – Pod uses the Node's network\n🔹 hostPID: true – Pod sees Node processes\n🔹 privileged: true – full Node access (caution!)\n🔹 Uses: CNI plugins, storage agents, security tools\nCODE:\nspec:\n  hostNetwork: true\n  hostPID: true\n  containers:\n  - securityContext:\n      privileged: true`,
+        questions:[
+          {q:"למה DaemonSet של CNI צריך hostNetwork: true?",options:["לחיסכון בזיכרון","כדי לנהל את הרשת של הNode עצמו","לאבטחה","לביצועים טובים יותר"],answer:1,explanation:"CNI plugins מנהלים את הרשת ברמת ה-Node, לכן הם צריכים גישה לinterface הרשת של ה-Node עצמו."},
+          {q:"מה הסיכון של privileged: true?",options:["Pod רץ לאט יותר","Pod מקבל גישה מלאה לNode, סיכון אבטחה גדול","Pod לא יכול לעצור","Pod גוזל יותר זיכרון"],answer:1,explanation:"privileged: true נותן לקונטיינר הרשאות root של ה-Node. יש להשתמש רק כשנחוץ לחלוטין."},
+        ],
+        questionsEn:[
+          {q:"Why does a CNI DaemonSet need hostNetwork: true?",options:["To save memory","To manage the Node's own network","For security","For better performance"],answer:1,explanation:"CNI plugins manage networking at the Node level, so they need access to the Node's own network interfaces."},
+          {q:"What is the risk of privileged: true?",options:["Pod runs slower","Pod gets full Node access, major security risk","Pod can't stop","Pod uses more memory"],answer:1,explanation:"privileged: true gives the container root permissions on the Node. Use only when absolutely necessary."},
+        ],
+      },
+    }
+  },
 ];
 
 const TRANSLATIONS = {
@@ -265,6 +470,9 @@ const TRANSLATIONS = {
     guestSaveHint: "💡 הרשם כדי לשמור את הניקוד!", signupLink: "הרשם עכשיו",
     tryAgain: "🔄 נסה שוב", backToTopics: "→ חזור לנושאים",
     nextLevelBtn: "🚀 המשך לרמה הבאה", locked: "🔒 נעול",
+    skipTheory: "⚡ דלג לחידון",
+    timerOn: "⏱ כבה טיימר", timerOff: "⏱ הפעל טיימר", timeUp: "⏰ הזמן נגמר!",
+    reviewBtn: "📋 צפה בסקירה", hideReview: "הסתר סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
     saveErrorText: "⚠️ הנתונים לא נשמרו – בדוק חיבור לאינטרנט",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
@@ -303,6 +511,9 @@ const TRANSLATIONS = {
     guestSaveHint: "💡 Sign up to save your score!", signupLink: "Sign up now",
     tryAgain: "🔄 Try Again", backToTopics: "← Back to Topics",
     nextLevelBtn: "🚀 Next Level", locked: "🔒 Locked",
+    skipTheory: "⚡ Skip to Quiz",
+    timerOn: "⏱ Timer On", timerOff: "⏱ Timer Off", timeUp: "⏰ Time's Up!",
+    reviewBtn: "📋 View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
     loadingText: "Loading...",
     saveErrorText: "⚠️ Data not saved – check your internet connection",
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
@@ -311,6 +522,24 @@ const TRANSLATIONS = {
 };
 
 const year = new Date().getFullYear();
+const TIMER_SECONDS = 30;
+
+function Confetti() {
+  const colors = ["#00D4FF","#A855F7","#FF6B35","#10B981","#F59E0B","#EC4899"];
+  return (
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9000,overflow:"hidden"}}>
+      {Array.from({length:60},(_,i)=>{
+        const color=colors[i%colors.length];
+        const left=Math.round(Math.random()*100);
+        const delay=(Math.random()*2).toFixed(2);
+        const size=6+Math.round(Math.random()*8);
+        const dur=(2+Math.random()*2).toFixed(2);
+        const isCircle=Math.random()>0.5;
+        return <div key={i} style={{position:"absolute",left:`${left}%`,top:"-20px",width:size,height:size,background:color,borderRadius:isCircle?"50%":"2px",animation:`confettiFall ${dur}s ${delay}s ease-in both`}}/>;
+      })}
+    </div>
+  );
+}
 
 function LangSwitcher({ lang, setLang }) {
   return (
@@ -371,6 +600,11 @@ export default function K8sQuestApp() {
   const [newAchievement, setNewAchievement]             = useState(null);
   const [leaderboard, setLeaderboard]                   = useState([]);
   const [showLeaderboard, setShowLeaderboard]           = useState(false);
+  const [quizHistory, setQuizHistory]                   = useState([]);
+  const [showReview, setShowReview]                     = useState(false);
+  const [timerEnabled, setTimerEnabled]                 = useState(false);
+  const [timeLeft, setTimeLeft]                         = useState(TIMER_SECONDS);
+  const [showConfetti, setShowConfetti]                 = useState(false);
 
   const isGuest = user?.id === "guest";
   const achievementsLoaded = useRef(false);
@@ -430,6 +664,29 @@ export default function K8sQuestApp() {
       setTimeout(() => setNewAchievement(null), 3000);
     }
   }, [stats, completedTopics]);
+
+  // Load guest progress from localStorage
+  useEffect(() => {
+    if (!isGuest) return;
+    try {
+      const saved = localStorage.getItem("k8s_quest_guest");
+      if (saved) {
+        const { stats: s, completedTopics: c, unlockedAchievements: u } = JSON.parse(saved);
+        if (s) setStats(s);
+        if (c) setCompletedTopics(c);
+        if (u) setUnlockedAchievements(u);
+      }
+    } catch {}
+    achievementsLoaded.current = true;
+  }, [isGuest]);
+
+  // Save guest progress to localStorage
+  useEffect(() => {
+    if (!isGuest) return;
+    try {
+      localStorage.setItem("k8s_quest_guest", JSON.stringify({ stats, completedTopics, unlockedAchievements }));
+    } catch {}
+  }, [isGuest, stats, completedTopics, unlockedAchievements]);
 
   const loadUserData = async (userId) => {
     const { data } = await supabase.from("user_stats").select("*").eq("user_id", userId).single();
@@ -517,11 +774,13 @@ export default function K8sQuestApp() {
     if (selectedAnswer === null || submitted) return;
     setSubmitted(true);
     setShowExplanation(true);
-    const correct = selectedAnswer === currentQuestions[questionIndex].answer;
+    const q = currentQuestions[questionIndex];
+    const correct = selectedAnswer === q.answer;
     if (correct) {
       topicCorrectRef.current += 1;
       setFlash(true); setTimeout(() => setFlash(false), 600);
     }
+    setQuizHistory(prev => [...prev, { q: q.q, options: q.options, answer: q.answer, chosen: selectedAnswer, explanation: q.explanation }]);
     if (!isRetryRef.current) {
       setStats(prev => {
         const streak = correct ? prev.current_streak + 1 : 0;
@@ -552,12 +811,19 @@ export default function K8sQuestApp() {
       ];
       setCompletedTopics(newCompleted); setStats(newStats); setUnlockedAchievements(newAch);
       saveUserData(newStats, newCompleted, newAch);
+      // Confetti if all 3 levels of this topic are now perfect
+      const allPerfect = LEVEL_ORDER.every(lvl => {
+        const r = newCompleted[`${selectedTopic.id}_${lvl}`];
+        return r && r.correct === r.total;
+      });
+      if (allPerfect) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 4000); }
       setScreen("topicComplete");
     } else {
       setQuestionIndex(p => p + 1);
       setSelectedAnswer(null);
       setSubmitted(false);
       setShowExplanation(false);
+      if (timerEnabled) setTimeLeft(TIMER_SECONDS);
     }
   };
 
@@ -568,9 +834,48 @@ export default function K8sQuestApp() {
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
     setShowExplanation(false);
     topicCorrectRef.current = 0;
+    setQuizHistory([]); setShowReview(false); setShowConfetti(false);
+    if (timerEnabled) setTimeLeft(TIMER_SECONDS);
     setScreen("topic");
     if (isGuest) achievementsLoaded.current = true;
   };
+
+  // Keyboard shortcuts: 1-4 to pick answer, Enter to confirm/next
+  useEffect(() => {
+    if (screen !== "topic" || topicScreen !== "quiz") return;
+    const handler = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (!submitted) { handleSubmit(); } else { nextQuestion(); }
+        return;
+      }
+      const idx = ["1","2","3","4"].indexOf(e.key);
+      if (!submitted && idx !== -1 && currentQuestions[questionIndex] && idx < currentQuestions[questionIndex].options.length) {
+        setSelectedAnswer(idx);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [screen, topicScreen, submitted, selectedAnswer, questionIndex]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (screen !== "topic" || topicScreen !== "quiz" || !timerEnabled || submitted || timeLeft <= 0) return;
+    const id = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [screen, topicScreen, timerEnabled, submitted, timeLeft]);
+
+  // Timer expired – force-submit as missed
+  useEffect(() => {
+    if (timeLeft !== 0 || submitted || screen !== "topic" || topicScreen !== "quiz" || !timerEnabled) return;
+    const q = currentQuestions[questionIndex];
+    setSubmitted(true);
+    setShowExplanation(true);
+    setQuizHistory(prev => [...prev, { q: q.q, options: q.options, answer: q.answer, chosen: -1, explanation: q.explanation }]);
+    if (!isRetryRef.current) {
+      setStats(prev => ({ ...prev, total_answered: prev.total_answered + 1, current_streak: 0 }));
+    }
+  }, [timeLeft]);
 
   const renderTheory = (text) => {
     let inCode = false;
@@ -699,9 +1004,10 @@ export default function K8sQuestApp() {
 
   return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817 0%,#0f172a 60%,#020817 100%)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,position:"relative"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}input,button{outline:none;font-family:inherit}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}input,button{outline:none;font-family:inherit}@media(max-width:520px){.stats-grid{grid-template-columns:repeat(2,1fr)!important}}`}</style>
       <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(rgba(0,212,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.02) 1px,transparent 1px)",backgroundSize:"48px 48px"}}/>
       {flash&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
+      {showConfetti&&<Confetti/>}
       {newAchievement&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"#e2e8f0",fontSize:14,fontWeight:700}}>{lang==="en"?newAchievement.nameEn:newAchievement.name}</div></div></div>}
       {saveError&&<div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
 
@@ -722,7 +1028,7 @@ export default function K8sQuestApp() {
             </div>
           </div>
           {isGuest&&<div style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:12,padding:"11px 16px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}><span style={{color:"#4a9aba",fontSize:13}}>{t("guestBanner")}</span><button onClick={()=>setUser(null)} style={{padding:"6px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:8,color:"#00D4FF",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{t("signupNow")}</button></div>}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:24}}>
+          <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:24}}>
             {[
               {label:t("score"),value:stats.total_score,icon:"⭐",color:"#F59E0B"},
               {label:t("accuracy"),value:`${accuracy}%`,icon:"🎯",color:"#10B981"},
@@ -739,10 +1045,15 @@ export default function K8sQuestApp() {
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {TOPICS.map(topic=>(
               <div key={topic.id} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px 18px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
                   <div style={{fontSize:24,width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>{topic.icon}</div>
-                  <div><div style={{fontWeight:700,color:"#e2e8f0",fontSize:15}}>{topic.name}</div><div style={{color:"#475569",fontSize:12}}>{lang==="en"?topic.descriptionEn:topic.description}</div></div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,color:"#e2e8f0",fontSize:15}}>{topic.name}</div>
+                    <div style={{color:"#475569",fontSize:12}}>{lang==="en"?topic.descriptionEn:topic.description}</div>
+                  </div>
+                  {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{fontSize:11,color:topic.color,fontWeight:700,whiteSpace:"nowrap"}}>{done}/3</div>})()}
                 </div>
+                {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return(<div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:10}}><div style={{height:"100%",borderRadius:2,width:`${(done/3)*100}%`,background:`linear-gradient(90deg,${topic.color},${topic.color}88)`,transition:"width 0.5s ease"}}/></div>);})()}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
                   {Object.entries(LEVEL_CONFIG).map(([lvl,cfg])=>{
                     const key=`${topic.id}_${lvl}`;
@@ -789,18 +1100,31 @@ export default function K8sQuestApp() {
                 <div style={{fontSize:11,color:selectedTopic.color,fontWeight:800,marginBottom:16,letterSpacing:1}}>{t("theory")}</div>
                 <div style={{background:"rgba(0,0,0,0.35)",borderRadius:10,padding:"16px 20px"}}>{renderTheory(currentLevelData.theory)}</div>
               </div>
-              <button onClick={()=>setTopicScreen("quiz")} style={{width:"100%",padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`}}>
-                {t("startQuiz")} (+{LEVEL_CONFIG[selectedLevel].points} {t("ptsPerQ")})
-              </button>
+              <div style={{display:"flex",gap:8,marginBottom:0}}>
+                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled)setTimeLeft(TIMER_SECONDS);}} style={{flex:3,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`}}>
+                  {t("startQuiz")} (+{LEVEL_CONFIG[selectedLevel].points} {t("ptsPerQ")})
+                </button>
+                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled)setTimeLeft(TIMER_SECONDS);}} style={{flex:1,padding:15,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#94a3b8",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                  {t("skipTheory")}
+                </button>
+              </div>
+              <div style={{display:"flex",justifyContent:"center",marginTop:10}}>
+                <button onClick={()=>setTimerEnabled(p=>!p)} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400}}>
+                  {timerEnabled?t("timerOn"):t("timerOff")}
+                </button>
+              </div>
             </div>
           ):(
             <div>
               <div style={{marginBottom:18}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                   <span style={{color:"#475569",fontSize:12}}>{t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}</span>
-                  <span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
-                    🔥 {stats.current_streak} {t("streakLabel")}
-                  </span>
+                  <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                    {timerEnabled&&<span style={{color:timeLeft<=10?"#EF4444":"#F59E0B",fontSize:13,fontWeight:800,minWidth:28,textAlign:"center",direction:"ltr"}}>⏱ {timeLeft}</span>}
+                    <span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
+                      🔥 {stats.current_streak} {t("streakLabel")}
+                    </span>
+                  </div>
                 </div>
                 <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4}}>
                   <div style={{height:"100%",borderRadius:4,
@@ -898,9 +1222,38 @@ export default function K8sQuestApp() {
                   </button>
                 );
               })()}
+              {quizHistory.length>0&&<button onClick={()=>setShowReview(p=>!p)} style={{padding:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#94a3b8",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                {showReview?t("hideReview"):t("reviewBtn")}
+              </button>}
               <button onClick={()=>startTopic(selectedTopic,selectedLevel)} style={{padding:13,background:`${selectedTopic.color}18`,border:`1px solid ${selectedTopic.color}40`,borderRadius:12,color:selectedTopic.color,fontSize:14,fontWeight:700,cursor:"pointer"}}>{t("tryAgain")}</button>
               <button onClick={()=>setScreen("home")} style={{padding:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#e2e8f0",fontSize:14,fontWeight:700,cursor:"pointer"}}>{t("backToTopics")}</button>
             </div>
+            {showReview&&quizHistory.length>0&&(
+              <div style={{marginTop:20,textAlign:dir==="rtl"?"right":"left",animation:"fadeIn 0.3s ease"}}>
+                <div style={{color:"#94a3b8",fontSize:11,fontWeight:700,marginBottom:12,letterSpacing:1}}>{t("reviewTitle")}</div>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {quizHistory.map((h,i)=>{
+                    const wasCorrect=h.chosen===h.answer;
+                    const timedOut=h.chosen===-1;
+                    return(
+                      <div key={i} style={{background:wasCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",border:`1px solid ${wasCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"12px 14px"}}>
+                        <div style={{fontWeight:700,fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
+                          {wasCorrect?"✅":"❌"} {t("question")} {i+1}
+                        </div>
+                        <div style={{color:"#e2e8f0",fontSize:13,marginBottom:6}}>{h.q}</div>
+                        {timedOut?<div style={{fontSize:12,color:"#F59E0B"}}>{t("timeUp")}</div>:(
+                          <div style={{fontSize:12,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
+                            {lang==="en"?t("optionLabels")[h.chosen]:t("optionLabels")[h.chosen]}. {h.options[h.chosen]}
+                          </div>
+                        )}
+                        {!wasCorrect&&<div style={{fontSize:12,color:"#10B981"}}>✓ {h.options[h.answer]}</div>}
+                        <div style={{fontSize:11,color:"#64748b",marginTop:4,lineHeight:1.5}}>{h.explanation}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
