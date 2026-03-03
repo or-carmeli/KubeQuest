@@ -281,7 +281,7 @@ export default function K8sQuestApp() {
             {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
           </svg>
           <h1 style={{fontSize:33,fontWeight:900,margin:"0 0 6px",background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundSize:"300% auto",animation:"shine 5s linear infinite"}}>K8s Quest</h1>
-          <p style={{color:"#475569",fontSize:14,margin:0}}>למד Kubernetes בצורה כיפית ואינטראקטיבית</p>
+          <p style={{color:"#94a3b8",fontSize:14,margin:0}}>למד Kubernetes בצורה כיפית ואינטראקטיבית</p>
         </div>
 
         {/* FIX #6: guest button color matches "ללא הרשמה" subtitle */}
@@ -294,11 +294,11 @@ export default function K8sQuestApp() {
 
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
           <div style={{flex:1,height:1,background:"rgba(255,255,255,0.1)"}}/>
-          <span style={{color:"#64748b",fontSize:12,whiteSpace:"nowrap"}}>רוצה לשמור את ההתקדמות?</span>
+          <span style={{color:"#94a3b8",fontSize:12,whiteSpace:"nowrap"}}>רוצה לשמור את ההתקדמות?</span>
           <div style={{flex:1,height:1,background:"rgba(255,255,255,0.1)"}}/>
         </div>
 
-        <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"18px 20px"}}>
+        <div style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,padding:"18px 20px"}}>
           <div style={{display:"flex",marginBottom:16,background:"rgba(255,255,255,0.04)",borderRadius:9,padding:3}}>
             {/* FIX #8a: clicking signup tab keeps you on signup */}
             {["login","signup"].map(s=>(
@@ -315,19 +315,19 @@ export default function K8sQuestApp() {
             <div style={{marginBottom:11}}>
               <label style={{color:"#475569",fontSize:11,fontWeight:600,display:"block",marginBottom:5}}>שם משתמש</label>
               <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="K8s Hero"
-                style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#e2e8f0",fontSize:13,boxSizing:"border-box"}}/>
+                style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:13,boxSizing:"border-box"}}/>
             </div>
           )}
           <div style={{marginBottom:11}}>
             <label style={{color:"#475569",fontSize:11,fontWeight:600,display:"block",marginBottom:5}}>אימייל</label>
             <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"
-              style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#e2e8f0",fontSize:13,boxSizing:"border-box"}}/>
+              style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:13,boxSizing:"border-box"}}/>
           </div>
           <div style={{marginBottom:14}}>
             <label style={{color:"#475569",fontSize:11,fontWeight:600,display:"block",marginBottom:5}}>סיסמה</label>
             <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••"
               onKeyDown={e=>e.key==="Enter"&&(authScreen==="login"?handleLogin():handleSignUp())}
-              style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#e2e8f0",fontSize:13,boxSizing:"border-box"}}/>
+              style={{width:"100%",padding:"9px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:13,boxSizing:"border-box"}}/>
           </div>
           {authError&&<div style={{color:authError.startsWith("✅")?"#10B981":"#EF4444",fontSize:12,marginBottom:12,padding:"8px 12px",background:authError.startsWith("✅")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",borderRadius:8}}>{authError}</div>}
           <button onClick={authScreen==="login"?handleLogin:handleSignUp} disabled={authLoading}
