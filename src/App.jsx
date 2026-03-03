@@ -500,8 +500,13 @@ export default function K8sQuestApp() {
       if (session) { setUser(session.user); loadUserData(session.user.id, session.user); }
       setAuthChecked(true);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) { setUser(session.user); loadUserData(session.user.id, session.user); }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setUser(session.user);
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          loadUserData(session.user.id, session.user);
+        }
+      }
       setAuthChecked(true);
     });
     return () => subscription.unsubscribe();
@@ -601,9 +606,6 @@ export default function K8sQuestApp() {
       updated_at: new Date().toISOString(),
     });
     if (error) {
-      if (error.message?.includes("session") || error.code === "PGRST301") {
-        setUser(null);
-      }
       setSaveError(t("saveErrorText"));
     }
   };
