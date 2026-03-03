@@ -335,6 +335,7 @@ const TRANSLATIONS = {
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
     optionLabels: ["א","ב","ג","ד"], guestName: "אורח",
     resetProgress: "אפס התקדמות", resetConfirm: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
+    resetTopic: "אפס נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
     mixedQuizBtn: "🎲 חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
   },
   en: {
@@ -378,6 +379,7 @@ const TRANSLATIONS = {
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
     optionLabels: ["A","B","C","D"], guestName: "Guest",
     resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
+    resetTopic: "Reset Topic", resetTopicConfirm: "Reset progress for this topic?",
     mixedQuizBtn: "🎲 Mixed Quiz", mixedQuizDesc: "10 random questions from all topics",
   },
 };
@@ -708,6 +710,21 @@ export default function K8sQuestApp() {
     }
   };
 
+  const handleResetTopic = async (topicId) => {
+    if (!window.confirm(t("resetTopicConfirm"))) return;
+    const newCompleted = { ...completedTopics };
+    LEVEL_ORDER.forEach(lvl => delete newCompleted[`${topicId}_${lvl}`]);
+    setCompletedTopics(newCompleted);
+    if (!isGuest && user) {
+      await supabase.from("user_stats").upsert({
+        user_id: user.id,
+        username: user.user_metadata?.username || user.email?.split("@")[0] || "",
+        ...stats, completed_topics: newCompleted, achievements: unlockedAchievements,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    }
+  };
+
   const handleSelectAnswer = (idx) => {
     if (submitted) return;
     setSelectedAnswer(idx);
@@ -1031,7 +1048,10 @@ export default function K8sQuestApp() {
                     <div style={{fontWeight:700,color:"#e2e8f0",fontSize:15}}>{topic.name}</div>
                     <div style={{color:"#475569",fontSize:12}}>{lang==="en"?topic.descriptionEn:topic.description}</div>
                   </div>
-                  {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{fontSize:11,color:topic.color,fontWeight:700,whiteSpace:"nowrap"}}>{done}/3</div>})()}
+                  {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <div style={{fontSize:11,color:topic.color,fontWeight:700,whiteSpace:"nowrap"}}>{done}/3</div>
+                    <button onClick={e=>{e.stopPropagation();handleResetTopic(topic.id);}} title={t("resetTopic")} style={{background:"none",border:"none",color:"#475569",fontSize:13,cursor:"pointer",padding:"2px 4px",lineHeight:1}} onMouseEnter={e=>e.currentTarget.style.color="#EF4444"} onMouseLeave={e=>e.currentTarget.style.color="#475569"}>↺</button>
+                  </div>})()}
                 </div>
                 {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return(<div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:10}}><div style={{height:"100%",borderRadius:2,width:`${(done/3)*100}%`,background:`linear-gradient(90deg,${topic.color},${topic.color}88)`,transition:"width 0.5s ease"}}/></div>);})()}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
