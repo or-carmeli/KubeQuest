@@ -240,6 +240,7 @@ const TRANSLATIONS = {
     loginBtn: "התחבר", signupBtn: "הירשם", loading: "⏳ רגע...",
     emailAlreadySent: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
     emailSent: "✅ נשלח אימייל אימות! בדקי את תיבת הדואר.",
+    otpExpired: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
     wrongCredentials: "אימייל או סיסמה שגויים",
     greeting: "שלום", playingAsGuest: "· משחק כאורח",
     leaderboardBtn: "🏆 טבלה", logout: "יציאה",
@@ -273,6 +274,7 @@ const TRANSLATIONS = {
     loginBtn: "Sign In", signupBtn: "Register", loading: "⏳ Loading...",
     emailAlreadySent: "✅ Verification email already sent! Check your inbox.",
     emailSent: "✅ Verification email sent! Check your inbox.",
+    otpExpired: "❌ Verification link has expired. Please sign up again to receive a new link.",
     wrongCredentials: "Incorrect email or password",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
     leaderboardBtn: "🏆 Leaderboard", logout: "Logout",
@@ -372,6 +374,18 @@ export default function K8sQuestApp() {
   const currentQuestions = currentLevelData?.questions || [];
 
   useEffect(() => {
+    // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link)
+    const hash = window.location.hash;
+    if (hash && hash.includes("error=")) {
+      const params = new URLSearchParams(hash.slice(1));
+      const code = params.get("error_code");
+      if (code === "otp_expired" || code === "access_denied") {
+        setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired);
+        setAuthScreen("signup");
+      }
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) { setUser(session.user); loadUserData(session.user.id); }
       setAuthChecked(true);
@@ -427,7 +441,10 @@ export default function K8sQuestApp() {
   const handleSignUp = async () => {
     setAuthLoading(true); setAuthError("");
     const { error } = await supabase.auth.signUp({
-      email, password, options: { data: { username: username || email.split("@")[0] } },
+      email, password, options: {
+        data: { username: username || email.split("@")[0] },
+        emailRedirectTo: window.location.origin,
+      },
     });
     if (error) {
       const msg = error.message.toLowerCase();
