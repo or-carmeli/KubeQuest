@@ -34,7 +34,7 @@ function Footer() {
   return (
     <div style={{textAlign:"center",marginTop:28,paddingTop:18,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
       <p style={{color:"#475569",fontSize:12,margin:0}}>
-        © {year} כל הזכויות שמורות לـ{" "}
+        © {year} כל הזכויות שמורות ל{" "}
         <a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer"
           style={{color:"#0ea5e9",textDecoration:"none",fontWeight:600}}>Or Carmeli</a>
       </p>
@@ -346,7 +346,7 @@ export default function K8sQuestApp() {
           </button>
         </div>
         <p style={{textAlign:"center",color:"#475569",fontSize:11,marginTop:22}}>
-          © {year} כל הזכויות שמורות לـ{" "}
+          © {year} כל הזכויות שמורות ל{" "}
           <a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"#0ea5e9",textDecoration:"none",fontWeight:600}}>Or Carmeli</a>
         </p>
       </div>
