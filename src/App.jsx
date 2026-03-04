@@ -269,7 +269,7 @@ function Footer({ lang }) {
 
 export default function K8sQuestApp() {
   const [lang, setLang]                   = useState("he");
-  const [gender, setGender]               = useState(() => localStorage.getItem("gender_v1") || "f");
+  const [gender, setGender]               = useState(() => localStorage.getItem("gender_v1") || "m");
   const handleSetGender = (g) => { setGender(g); localStorage.setItem("gender_v1", g); };
   const t = (key) => {
     if (lang === "he" && gender === "m" && TRANSLATIONS.he[key + "_m"]) return TRANSLATIONS.he[key + "_m"];
