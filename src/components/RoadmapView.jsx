@@ -91,7 +91,7 @@ export default function RoadmapView({
           style={{width:"100%",marginBottom:20,padding:"14px 20px",background:"linear-gradient(135deg,rgba(0,212,255,0.1),rgba(168,85,247,0.1))",border:"1px solid rgba(0,212,255,0.3)",borderRadius:14,cursor:"pointer",color:"#00D4FF",fontWeight:800,fontSize:15,direction:dir,transition:"transform 0.2s"}}
           onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
           onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-          {t("roadmapContinue")}
+          {overallProgress === 0 ? t("roadmapStart") : t("roadmapContinue")}
         </button>
       )}
 
@@ -216,7 +216,7 @@ export default function RoadmapView({
                     style={{width:"100%",padding:"8px",background:`linear-gradient(135deg,${topic.color}20,${topic.color}10)`,border:`1px solid ${topic.color}40`,borderRadius:10,color:topic.color,fontSize:13,fontWeight:700,cursor:"pointer",transition:"transform 0.15s",direction:dir}}
                     onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
                     onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-                    {t("roadmapContinueHere")}
+                    {progress === 0 ? t("roadmapStartHere") : t("roadmapContinueHere")}
                   </button>
                 ) : null}
 
