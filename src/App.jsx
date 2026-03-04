@@ -1072,13 +1072,26 @@ export default function K8sQuestApp() {
   const [homeTab, setHomeTab]                           = useState("roadmap");
   const [showConfetti, setShowConfetti]                 = useState(false);
   const [mixedQuestions, setMixedQuestions]             = useState([]);
+  const [sessionScore, setSessionScore]                 = useState(0);
+  const [retryMode, setRetryMode]                       = useState(false);
+  const [allowNextLevel, setAllowNextLevel]             = useState(false);
 
   const isGuest = user?.id === "guest";
   const achievementsLoaded = useRef(false);
 
+  // Shuffle answer options so the correct answer isn't predictably the longest/same position
+  const shuffleOptions = (questions) => questions.map(q => {
+    const order = [0, 1, 2, 3].slice(0, q.options.length);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return { ...q, options: order.map(i => q.options[i]), answer: order.indexOf(q.answer) };
+  });
+
   const getLevelData = (topic, level) => ({
     theory: lang === "en" ? topic.levels[level].theoryEn : topic.levels[level].theory,
-    questions: lang === "en" ? topic.levels[level].questionsEn : topic.levels[level].questions,
+    questions: shuffleOptions(lang === "en" ? topic.levels[level].questionsEn : topic.levels[level].questions),
   });
 
   const isLevelLocked = (topicId, level) => {
@@ -1102,8 +1115,8 @@ export default function K8sQuestApp() {
       const lvl = key.split("_").slice(-1)[0];
       return sum + (res.correct * (LEVEL_CONFIG[lvl]?.points ?? 0));
     }, 0);
-  const currentLevelData = selectedTopic && selectedLevel && !isFreeMode(selectedTopic.id) ? getLevelData(selectedTopic, selectedLevel) : null;
-  const currentQuestions = isFreeMode(selectedTopic?.id) ? mixedQuestions : (currentLevelData?.questions || []);
+  const currentLevelData = selectedTopic && selectedLevel && !isFreeMode(selectedTopic.id) && !retryMode ? getLevelData(selectedTopic, selectedLevel) : null;
+  const currentQuestions = isFreeMode(selectedTopic?.id) || retryMode ? mixedQuestions : (currentLevelData?.questions || []);
 
   useEffect(() => {
     // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link)
@@ -1368,6 +1381,7 @@ export default function K8sQuestApp() {
     if (correct) {
       topicCorrectRef.current += 1;
       setFlash(true); setTimeout(() => setFlash(false), 600);
+      if (!isRetryRef.current) setSessionScore(p => p + (LEVEL_CONFIG[selectedLevel]?.points ?? 0));
     }
     setQuizHistory(prev => [...prev, { q: q.q, options: q.options, answer: q.answer, chosen: selectedAnswer, explanation: q.explanation }]);
     if (!isRetryRef.current) {
@@ -1395,6 +1409,25 @@ export default function K8sQuestApp() {
     const isLast = questionIndex >= currentQuestions.length - 1;
     if (isLast) {
       const finalCorrect = topicCorrectRef.current;
+
+      // Retry-wrong-answers mode: if all retried questions answered correctly, mark level 100%
+      if (retryMode) {
+        setRetryMode(false);
+        if (finalCorrect === currentQuestions.length) {
+          // Upgrade stored result to 100% (score stays the same — only marks as complete)
+          const key = `${selectedTopic.id}_${selectedLevel}`;
+          const prevResult = completedTopics[key];
+          if (prevResult) {
+            const newCompleted = { ...completedTopics, [key]: { correct: prevResult.total, total: prevResult.total } };
+            setCompletedTopics(newCompleted);
+            if (!isFreeMode(selectedTopic.id)) saveUserData(stats, newCompleted, unlockedAchievements);
+          }
+          setAllowNextLevel(true);
+        }
+        setScreen("topicComplete");
+        return;
+      }
+
       const key = `${selectedTopic.id}_${selectedLevel}`;
       const prevResult = completedTopics[key];
       const bestCorrect = prevResult ? Math.min(Math.max(prevResult.correct, finalCorrect), currentQuestions.length) : Math.min(finalCorrect, currentQuestions.length);
@@ -1405,6 +1438,7 @@ export default function K8sQuestApp() {
         ...unlockedAchievements,
         ...ACHIEVEMENTS.filter(a => !unlockedAchievements.includes(a.id) && a.condition(newStats, newCompleted)).map(a => a.id),
       ];
+      setSessionScore(0);
       setCompletedTopics(newCompleted); setStats(newStats); setUnlockedAchievements(newAch);
       if (!isFreeMode(selectedTopic.id)) {
         saveUserData(newStats, newCompleted, newAch);
@@ -1432,6 +1466,8 @@ export default function K8sQuestApp() {
     setShowExplanation(false);
     topicCorrectRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
+    setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setStats(prev => ({ ...prev, current_streak: 0 }));
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[level] || 25) : TIMER_SECONDS);
     setScreen("topic");
     if (isGuest) achievementsLoaded.current = true;
@@ -1449,13 +1485,15 @@ export default function K8sQuestApp() {
       const j = Math.floor(Math.random() * (i + 1));
       [all[i], all[j]] = [all[j], all[i]];
     }
-    setMixedQuestions(all.slice(0, 10));
+    setMixedQuestions(shuffleOptions(all.slice(0, 10)));
     isRetryRef.current = false;
     setSelectedTopic(MIXED_TOPIC); setSelectedLevel("mixed"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
     setShowExplanation(false);
     topicCorrectRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
+    setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setStats(prev => ({ ...prev, current_streak: 0 }));
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? 25 : TIMER_SECONDS);
     setScreen("topic");
   };
@@ -1475,13 +1513,15 @@ export default function K8sQuestApp() {
     const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
     const numWindows = Math.floor(shuffled.length / 5);
     const startIdx = (dayOfYear % numWindows) * 5;
-    setMixedQuestions(shuffled.slice(startIdx, startIdx + 5));
+    setMixedQuestions(shuffleOptions(shuffled.slice(startIdx, startIdx + 5)));
     isRetryRef.current = false;
     setSelectedTopic(DAILY_TOPIC); setSelectedLevel("daily"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
     setShowExplanation(false);
     topicCorrectRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
+    setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setStats(prev => ({ ...prev, current_streak: 0 }));
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? 25 : TIMER_SECONDS);
     setScreen("topic");
   };
@@ -1826,7 +1866,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       🔥 {stats.current_streak} {t("streakLabel")}
                     </span>
                     <span style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
-                      ⭐ {stats.total_score} {t("pts")}
+                      ⭐ {stats.total_score + sessionScore} {t("pts")}
                     </span>
                   </div>
                 </div>
@@ -1916,8 +1956,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="topicComplete"&&selectedTopic&&selectedLevel&&(()=>{
         const key=`${selectedTopic.id}_${selectedLevel}`;
         const result=completedTopics[key];
+        const effectivelyComplete = (result?.correct === result?.total) || allowNextLevel;
         const allCorrect = result?.correct === result?.total;
         const anyCorrect = result?.correct > 0;
+        const wrongQs = quizHistory.filter(h=>h.chosen!==h.answer&&h.chosen!==-1);
+        // Next topic: all levels of this topic complete at 100%
+        const nextTopicIdx = selectedTopic.id!=="mixed"&&selectedTopic.id!=="daily" ? (() => {
+          const allPerfectNow = LEVEL_ORDER.every(lvl=>{const r=completedTopics[`${selectedTopic.id}_${lvl}`];return r&&r.correct===r.total;});
+          if (!allPerfectNow) return -1;
+          return TOPICS.findIndex(t=>t.id===selectedTopic.id)+1;
+        })() : -1;
         return(
           <div style={{maxWidth:480,margin:"30px auto",padding:"0 14px",textAlign:"center",animation:"fadeIn 0.5s ease"}}>
             <div style={{fontSize:52,marginBottom:10,animation:"popIn 1s ease"}}>
@@ -1936,7 +1984,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <button onClick={()=>setUser(null)} style={{background:"none",border:"none",color:"#00D4FF",fontWeight:700,cursor:"pointer",fontSize:13,textDecoration:"underline"}}>{t("signupLink")}</button>
             </div>}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {selectedTopic.id!=="mixed"&&allCorrect&&getNextLevel(selectedLevel)&&(()=>{
+              {/* Next topic button (all levels 100%) */}
+              {nextTopicIdx>0&&nextTopicIdx<TOPICS.length&&(()=>{
+                const nt=TOPICS[nextTopicIdx];
+                return<button onClick={()=>startTopic(nt,"easy")}
+                  style={{padding:14,background:`linear-gradient(135deg,${nt.color}ee,${nt.color}88)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 20px ${nt.color}55`}}>
+                  🚀 {lang==="en"?"Next Topic":"נושא הבא"}: {nt.icon} {nt.name}
+                </button>;
+              })()}
+              {/* Next level button */}
+              {selectedTopic.id!=="mixed"&&effectivelyComplete&&getNextLevel(selectedLevel)&&(()=>{
                 const nextLvl=getNextLevel(selectedLevel);
                 const nextCfg=LEVEL_CONFIG[nextLvl];
                 return(
@@ -1946,6 +2003,27 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </button>
                 );
               })()}
+              {/* Retry wrong answers */}
+              {!isFreeMode(selectedTopic.id)&&wrongQs.length>0&&(
+                <button onClick={()=>{
+                  const qs=shuffleOptions(wrongQs.map(h=>({q:h.q,options:h.options,answer:h.answer,explanation:h.explanation})));
+                  setMixedQuestions(qs);
+                  setRetryMode(true);
+                  isRetryRef.current=true;
+                  setAllowNextLevel(false);
+                  setTopicScreen("quiz");
+                  setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
+                  setShowExplanation(false);
+                  topicCorrectRef.current=0;
+                  setQuizHistory([]); setShowReview(false);
+                  setStats(prev=>({...prev,current_streak:0}));
+                  if (timerEnabled||isInterviewMode) setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):TIMER_SECONDS);
+                  setScreen("topic");
+                }}
+                  style={{padding:13,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:12,color:"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                  🔄 {lang==="en"?`Retry ${wrongQs.length} wrong answer${wrongQs.length>1?"s":""}`:`תרגלי ${wrongQs.length} שאלה${wrongQs.length>1?"ות":""} שגויות`}
+                </button>
+              )}
               {quizHistory.length>0&&<button onClick={()=>setShowReview(p=>!p)} style={{padding:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:12,color:"#94a3b8",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                 {showReview?t("hideReview"):t("reviewBtn")}
               </button>}

@@ -13,13 +13,13 @@ const LVL_ORDER = ["easy", "medium", "hard"];
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function stageProgress(topicId, completedTopics) {
-  const QUESTIONS_PER_LEVEL = 10;
-  const totalQ = LVL_ORDER.length * QUESTIONS_PER_LEVEL;
-  const correctQ = LVL_ORDER.reduce((sum, lvl) => {
+  let totalQ = 0, correctQ = 0;
+  LVL_ORDER.forEach(lvl => {
     const r = completedTopics[`${topicId}_${lvl}`];
-    return sum + (r ? r.correct : 0);
-  }, 0);
-  return Math.round((correctQ / totalQ) * 100);
+    if (r) { totalQ += r.total; correctQ += Math.min(r.correct, r.total); }
+  });
+  if (totalQ === 0) return 0;
+  return Math.min(100, Math.round((correctQ / totalQ) * 100));
 }
 
 function isStageCompleted(topicId, completedTopics) {
