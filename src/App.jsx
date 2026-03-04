@@ -1486,6 +1486,9 @@ export default function K8sQuestApp() {
                     <span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
                       🔥 {stats.current_streak} {t("streakLabel")}
                     </span>
+                    <span style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
+                      ⭐ {stats.total_score} {t("pts")}
+                    </span>
                   </div>
                 </div>
                 <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4}}>
