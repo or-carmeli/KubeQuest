@@ -211,12 +211,12 @@ export default function RoadmapView({
                   <button disabled style={{width:"100%",padding:"8px",background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.18)",borderRadius:10,color:"#10B981",fontSize:13,fontWeight:700,cursor:"default",opacity:0.8,direction:dir}}>
                     {t("roadmapDone")}
                   </button>
-                ) : recLvl ? (
+                ) : recLvl && !(overallProgress === 0 && isCurrent) ? (
                   <button onClick={()=>startTopic(topic,recLvl)}
                     style={{width:"100%",padding:"8px",background:`linear-gradient(135deg,${topic.color}20,${topic.color}10)`,border:`1px solid ${topic.color}40`,borderRadius:10,color:topic.color,fontSize:13,fontWeight:700,cursor:"pointer",transition:"transform 0.15s",direction:dir}}
                     onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
                     onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-                    {progress === 0 ? t("roadmapStartHere") : t("roadmapContinueHere")}
+                    {t("roadmapContinueHere")}
                   </button>
                 ) : null}
 
