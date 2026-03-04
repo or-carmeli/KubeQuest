@@ -59,7 +59,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Pod הוא יחידת הריצה הבסיסית. מכיל קונטיינר אחד או יותר שחולקים IP ו-storage.",
+              "Pod הוא יחידת הריצה הבסיסית ב-Kubernetes. כל קונטיינרי ה-Pod חולקים כתובת IP אחת, network namespace, ו-volumes. Kubernetes מנהל Pods, לא קונטיינרים ישירות.",
           },
           {
             q: "מה קורה כש-Pod מת?",
@@ -70,7 +70,7 @@ export const TOPICS = [
               "ה-Service המחובר אליו עובר אוטומטית ל-Pod אחר ב-Namespace",
             ],
             answer: 2,
-            explanation: "Pods אפמריאלים – כשמתים, Kubernetes יוצר חדש עם IP חדש.",
+            explanation: "Pods הם ephemeral — לא נועדו לחיות לנצח. כשPod נמחק או קורס, ה-Deployment Controller יוצר Pod חדש עם IP חדש. לכן לא מתחברים לIP של Pod ישירות אלא דרך Service שמעדכן את ה-Endpoints אוטומטית.",
           },
           {
             q: "מה Deployment עושה?",
@@ -81,7 +81,7 @@ export const TOPICS = [
               "מנהל אחסון מתמיד עבור StatefulSets ו-Databases",
             ],
             answer: 1,
-            explanation: "Deployment מנהל את מחזור חיי ה-Pods ומבטיח שמספר הרצוי רץ תמיד.",
+            explanation: "Deployment מנהל קבוצת Pods זהים דרך ReplicaSet. הוא מבטיח שמספר ה-replicas הרצוי רץ תמיד, ומספק rolling updates ו-rollback מובנים. אם Pod נמחק, Deployment יוצר אחד חדש אוטומטית.",
           },
           {
             q: "מה זה replicas?",
@@ -92,7 +92,7 @@ export const TOPICS = [
               "volumes שמשותפים בין Pods שונים באותו Namespace",
             ],
             answer: 1,
-            explanation: "Replicas הם עותקים זהים של ה-Pod שרצים במקביל לזמינות גבוהה.",
+            explanation: "Replicas הם עותקים זהים של ה-Pod שרצים במקביל. הם מספקים זמינות גבוהה — אם Pod אחד נכשל, האחרים ממשיכים לקבל traffic. ה-Scheduler מנסה לפזר replicas על Nodes שונים למניעת נקודת כשל יחידה.",
           },
           {
             q: "מה זה init container?",
@@ -543,7 +543,7 @@ export const TOPICS = [
               "מגביל את מספר הPods המחוברים ל-Service בזמן עדכון",
             ],
             answer: 1,
-            explanation: "Rolling Update מעדכן Pod אחד בכל פעם, כך שתמיד יש Pods זמינים.",
+            explanation: "Rolling Update מחליף Pods בהדרגה — Pod חדש עולה ורק אז Pod ישן יורד. כך תמיד יש Pods זמינים ואין downtime. בשונה מ-Recreate שמוחק הכל ואז יוצר מחדש ויגרום לdowntime.",
           },
           {
             q: "כיצד מבצעים rollback?",
@@ -554,7 +554,7 @@ export const TOPICS = [
               'kubectl patch deployment my-app --type=json -p \'[{"op":"replace"}]\'',
             ],
             answer: 1,
-            explanation: "kubectl rollout undo מחזיר את ה-Deployment לגרסה הקודמת.",
+            explanation: "kubectl rollout undo deployment/my-app מחזיר את ה-Deployment ל-revision הקודם באמצעות יצירת ReplicaSet חדש עם ה-image הקודם. ניתן גם לציין revision ספציפי: kubectl rollout undo deployment/my-app --to-revision=2.",
           },
           {
             q: "מה ההבדל בין StatefulSet ל-Deployment?",
@@ -565,7 +565,7 @@ export const TOPICS = [
               "StatefulSet תומך רק בcloud providers ולא ב-on-premise clusters",
             ],
             answer: 1,
-            explanation: "ב-StatefulSet לכל Pod יש שם קבוע (pod-0,1,2) ואחסון משלו.",
+            explanation: "ב-StatefulSet לכל Pod יש שם קבוע ורציף (pod-0, pod-1, pod-2) ו-PVC ייחודי משלו. Pods עולים בסדר, Pod-0 ראשון. בשונה מ-Deployment, Pods ב-StatefulSet אינם זהים לחלוטין — לכל אחד זהות קבועה גם לאחר restart.",
           },
           {
             q: "לאיזה אפליקציה מתאים StatefulSet?",
@@ -576,7 +576,7 @@ export const TOPICS = [
               "Load balancers שמנהלים traffic בין Namespaces",
             ],
             answer: 1,
-            explanation: "StatefulSet מתאים לאפליקציות עם מצב כמו MySQL, Kafka שצריכות זהות קבועה.",
+            explanation: "אפליקציות stateful כמו MySQL, PostgreSQL, Kafka, ו-ZooKeeper דורשות שכל instance יזכר מי הוא, ומי ה-primary ומי ה-replica. StatefulSet מספק זהות רציפה ואחסון קבוע, שלא כמו Deployment שמייצר Pods אנונימיים ואינטרchangeable.",
           },
           {
             q: "מה PodDisruptionBudget עושה?",
@@ -588,7 +588,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PDB מגדיר כמה Pods חייבים להיות זמינים בזמן disruptions מתוכננות כמו node drain.",
+              "PodDisruptionBudget מגדיר כמה Pods חייבים להיות זמינים בזמן disruptions מתוכננות כמו kubectl drain. עם minAvailable: 2 ו-3 replicas, ניתן לגרש מקסימום Pod אחד בו-זמנית. זה מגן על הזמינות של אפליקציות חשובות בזמן maintenance.",
           },
           {
             q: "מה nodeSelector?",
@@ -600,7 +600,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "nodeSelector שדה בPod spec שמגביל את ה-Scheduler לבחור רק Nodes עם labels ספציפיים.",
+              "nodeSelector הוא הדרך הפשוטה ביותר לבחור על איזה Node Pod יתזמן. ה-Scheduler יסנן רק Nodes עם ה-labels שצוינו. לדוגמה: nodeSelector: {gpu: 'true'} מאלץ Pod לרוץ רק על Nodes עם label gpu=true. לצרכים מורכבים יותר, השתמש ב-nodeAffinity.",
           },
           {
             q: "מה ההבדל בין affinity ל-anti-affinity?",
@@ -612,7 +612,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "affinity מושך Pods לNodeים מסוימים. anti-affinity מבטיח שPods לא ירוצו ביחד לzones זהות.",
+              "affinity מגדיר העדפה או חובה לתזמן Pod ליד resources מסוימים (Nodes, Zones, Pods אחרים). anti-affinity עושה ההפך — מבטיח שPods לא ירוצו על אותו Node או Zone. שימוש נפוץ ב-anti-affinity: פיזור replicas לזמינות גבוהה.",
           },
           {
             q: "מה resource limits?",
@@ -624,7 +624,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "limits מגדיר את המקסימום. חריגה מ-memory limit גורמת ל-OOMKill, חריגה מ-CPU throttling.",
+              "limits מגדיר את הגבול המקסימלי שקונטיינר יכול לצרוך. חריגה מ-memory limit גורמת ל-OOMKill מיידי (exit code 137). חריגה מ-CPU limit גורמת ל-throttling — ה-CPU של הקונטיינר מוגבל אבל הוא לא מסתיים. להבדיל מ-requests שמשמשים לתזמון.",
           },
           {
             q: "מה הפקודה לראות rollout history?",
@@ -635,7 +635,7 @@ export const TOPICS = [
               "kubectl get rollout deployment/myapp -o revisions",
             ],
             answer: 1,
-            explanation: "kubectl rollout history deployment/myapp מציג את היסטוריית ה-revisions.",
+            explanation: "kubectl rollout history deployment/myapp מציג את כל ה-revisions השמורים עם timestamps. ניתן לראות את ה-spec של revision ספציפי: kubectl rollout history deployment/myapp --revision=2. כדי לחזור לrevision ספציפי: kubectl rollout undo deployment/myapp --to-revision=2.",
           },
           {
             q: "מה maxSurge ב-Rolling Update?",
@@ -647,7 +647,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "maxSurge מגדיר כמה Pods נוספים מעל ה-replicas ניתן ליצור בזמן rolling update.",
+              "maxSurge מגדיר כמה Pods נוספים מעל ה-desired replicas מותר ליצור בזמן rolling update. עם replicas:5 ו-maxSurge:2, מותר להיות עד 7 Pods בו-זמנית. ערך גבוה מאפשר update מהיר יותר, אבל מצריך יותר resources זמניים.",
           },
           {
             q: "מה strategy: Recreate עושה ב-Deployment?",
@@ -671,7 +671,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "maxUnavailable מגדיר כמה Pods יכולים להיות unavailable בו-זמנית בזמן rolling update. 0 אומר אפס downtime.",
+              "maxUnavailable מגדיר כמה Pods מותרים להיות לא זמינים בו-זמנית בזמן rolling update. ערך 0 אומר שאף Pod לא ייסגר לפני שPod חדש מוכן — אפס downtime, אבל update איטי יותר ומצריך maxSurge גדול מ-0.",
           },
           {
             q: "מה taints ו-tolerations פותרים?",
@@ -683,7 +683,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Taint על Node מונע תזמון Pods שלא מגדירים Toleration תואם. משמש לייחוד Nodes ל-workloads מסוימים (GPU, spot instances).",
+              "Taint על Node הוא כמו שלט 'כניסה אסורה' שחוסם Pods שלא מגדירים Toleration תואם. Toleration ב-Pod spec 'מתיר' לPod להתעלם מה-taint ולרוץ על ה-Node. משמש לייחוד Nodes ל-workloads מסוימים כמו GPU workloads או spot instances.",
           },
           {
             q: "מה ההבדל בין requiredDuringScheduling ל-preferredDuringScheduling ב-affinity?",
@@ -707,7 +707,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Forbid: אם Job קודם עדיין רץ, ה-CronJob מדלג על הריצה הבאה. Allow (ברירת מחדל): Jobs מקבילים. Replace: Job ישן נמחק ונוצר חדש.",
+              "concurrencyPolicy: Forbid גורם ל-CronJob לדלג על הריצה הבאה אם Job קודם עדיין לא הסתיים. Allow (ברירת מחדל) מאפשר Jobs מקבילים. Replace מוחק את ה-Job הרץ ומתחיל חדש. Forbid מונע עומס יתר מJobs ארוכים.",
           },
           {
             q: "מה Job backoffLimit מגדיר?",
@@ -719,7 +719,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "backoffLimit מגדיר כמה פעמים Kubernetes ינסה מחדש לפני שJob מסומן Failed. ברירת מחדל: 6.",
+              "backoffLimit מגדיר כמה פעמים Job ינסה מחדש לפני שיסומן כFailed. ברירת מחדל: 6. ה-Kubernetes מוסיף back-off exponential בין ניסיונות (10s, 20s, 40s...). Job שכשל עם backoffLimit=0 לא ינסה שוב.",
           },
           {
             q: "מה שלוש קלאסות QoS של Pod?",
@@ -731,7 +731,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Guaranteed: requests=limits. Burstable: requests<limits. BestEffort: ללא requests/limits. בלחץ זיכרון, BestEffort מפונה ראשון.",
+              "ה-QoS class נקבע אוטומטית לפי requests ו-limits: Guaranteed כשrequests=limits (הכי מוגן), Burstable כשrequests>0 אבל לא שווה לlimits, BestEffort כשאין requests/limits כלל (ראשון להיגרש). Guaranteed Pods הם האחרונים להיגרש בMemoryPressure.",
           },
           {
             q: "מה kubectl rollout pause עושה?",
@@ -780,7 +780,7 @@ export const TOPICS = [
               "Prevents the Service from routing to unhealthy Pods during upgrade",
             ],
             answer: 1,
-            explanation: "Rolling Update updates one Pod at a time, so Pods are always available.",
+            explanation: "A Rolling Update replaces Pods gradually — a new Pod starts and only then does an old Pod stop. This means there are always running Pods serving traffic and the update causes zero downtime.",
           },
           {
             q: "How do you perform a rollback?",
@@ -791,7 +791,7 @@ export const TOPICS = [
               "kubectl patch deployment my-app to restore the previous image tag",
             ],
             answer: 1,
-            explanation: "kubectl rollout undo returns the Deployment to the previous version.",
+            explanation: "kubectl rollout undo deployment/my-app rolls back to the previous revision by activating the previous ReplicaSet. Use kubectl rollout history deployment/my-app first to see available revisions.",
           },
           {
             q: "What is the main difference between StatefulSet and Deployment?",
@@ -803,7 +803,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "In StatefulSet, each Pod has a fixed name (pod-0,1,2) and its own storage.",
+              "In a StatefulSet, each Pod gets a stable, predictable name (pod-0, pod-1, pod-2) and its own dedicated PersistentVolumeClaim. Pods start in order and the identity is preserved across restarts, unlike Deployment Pods which are interchangeable.",
           },
           {
             q: "What type of app is StatefulSet suitable for?",
@@ -815,7 +815,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "StatefulSet is suitable for stateful apps like MySQL, Kafka that need a fixed identity.",
+              "Databases and message brokers like MySQL, PostgreSQL, or Kafka require stable network identities and persistent storage that survives Pod restarts — exactly what StatefulSet provides. Stateless apps (web servers, APIs) use Deployments instead.",
           },
           {
             q: "What does a PodDisruptionBudget do?",
@@ -874,7 +874,7 @@ export const TOPICS = [
               "kubectl get rollout deployment/myapp -o revisions",
             ],
             answer: 1,
-            explanation: "kubectl rollout history deployment/myapp shows the revision history.",
+            explanation: "kubectl rollout history deployment/myapp lists all saved revisions with their timestamps and change-cause. To inspect the full spec of a specific revision: kubectl rollout history deployment/myapp --revision=2. Use kubectl rollout undo deployment/myapp --to-revision=2 to roll back to it.",
           },
           {
             q: "What is maxSurge in a Rolling Update?",
@@ -1035,7 +1035,7 @@ export const TOPICS = [
               "Helm Package Archive – פורמט שמירה של Helm charts",
             ],
             answer: 1,
-            explanation: "HPA מגדיל/מקטין את מספר ה-Pods אוטומטית לפי עומס CPU/Memory.",
+            explanation: "HPA (Horizontal Pod Autoscaler) עוקב אחרי מדדים כמו CPU ו-Memory ומשנה את מספר ה-replicas אוטומטית. כשהעומס עולה — הוא מוסיף Pods; כשיורד — הוא מסיר. דורש metrics-server מותקן ב-Cluster.",
           },
           {
             q: "מה משמעות CrashLoopBackOff?",
@@ -1046,7 +1046,7 @@ export const TOPICS = [
               "אין מספיק זיכרון פנוי ב-Node לתזמון הPod",
             ],
             answer: 1,
-            explanation: "CrashLoopBackOff – הקונטיינר מנסה לעלות, קורס, ומנסה שוב.",
+            explanation: "CrashLoopBackOff פירושו שהקונטיינר עולה, קורס מיד, ו-Kubernetes מנסה להפעיל אותו שוב — אבל מוסיף המתנה הולכת וגדלה (10s, 20s, 40s...) בין ניסיונות. הסיבות הנפוצות: קוד ב-entrypoint קורס, חסר env var חיוני, או קובץ config חסר.",
           },
           {
             q: "מה זה OOMKilled?",
@@ -1057,7 +1057,7 @@ export const TOPICS = [
               "שגיאת הרשאות שמונעת מהקונטיינר לגשת ל-volume",
             ],
             answer: 1,
-            explanation: "OOMKilled אומר שהקונטיינר צרך יותר זיכרון ממה שהוגדר לו.",
+            explanation: "OOMKilled (exit code 137) אומר שה-Linux kernel הרג את הקונטיינר כי חרג ממגבלת ה-memory שהוגדרה ב-resources.limits.memory. הפתרון: הגדל את ה-memory limit, או חפש memory leak בקוד.",
           },
           {
             q: "מה pod preemption?",
@@ -1274,7 +1274,7 @@ export const TOPICS = [
               "Helm Package Archive — the storage format for packaged Helm charts",
             ],
             answer: 1,
-            explanation: "HPA automatically scales the number of Pods based on CPU/Memory load.",
+            explanation: "HPA (Horizontal Pod Autoscaler) watches metrics like CPU and Memory usage and automatically adjusts the replica count. When load increases it adds Pods; when load drops it removes them. Requires metrics-server to be installed in the cluster.",
           },
           {
             q: "What does CrashLoopBackOff mean?",
@@ -1517,7 +1517,7 @@ export const TOPICS = [
               "כדי לגבות קונפיגורציה של Pod לפני מחיקה",
             ],
             answer: 1,
-            explanation: "כשPod מת ונוצר מחדש מקבל IP חדש. Service נותן כתובת קבועה.",
+            explanation: "כל Pod ב-Kubernetes מקבל IP דינמי שמשתנה בכל פעם שהוא נוצר מחדש. Service מספק IP וירטואלי (ClusterIP) קבוע שלא משתנה, ו-kube-proxy מנתב את ה-traffic לאחד מה-Pods הבריאים מאחוריו.",
           },
           {
             q: "איזה Service מתאים לגישה חיצונית ב-cloud?",
@@ -1528,7 +1528,7 @@ export const TOPICS = [
               "ExternalName – ממפה ל-DNS חיצוני ומאפשר גישה דרך CNAME",
             ],
             answer: 2,
-            explanation: "LoadBalancer יוצר Load Balancer ב-cloud ומקצה IP חיצוני.",
+            explanation: "Service מסוג LoadBalancer מבקש מה-cloud provider (AWS, GCP, Azure) ליצור Load Balancer חיצוני ולהקצות לו IP ציבורי. ה-LB מנתב traffic לכל ה-Nodes ב-Cluster דרך NodePort. מתאים לייצור (production) כשצריך גישה חיצונית ישירה.",
           },
           {
             q: "מה Service מסוג ClusterIP?",
@@ -1539,7 +1539,7 @@ export const TOPICS = [
               "VPN שמחבר Pods ב-Clusters שונים לתקשורת מאובטחת",
             ],
             answer: 1,
-            explanation: "ClusterIP הוא ברירת המחדל – מאפשר גישה רק בתוך הCluster.",
+            explanation: "ClusterIP הוא סוג ה-Service הדיפולטי — מקצה IP וירטואלי פנימי שנגיש רק מתוך ה-Cluster. Pods אחרים יכולים לגשת אליו לפי שם ב-DNS (my-service.my-ns.svc.cluster.local). אינו נגיש מחוץ לCluster ללא Ingress או port-forward.",
           },
           {
             q: "כיצד Service מוצא את ה-Pods שלו?",
@@ -1550,7 +1550,7 @@ export const TOPICS = [
               "לפי port שה-Pod מאזין עליו ו-Service מתאים",
             ],
             answer: 1,
-            explanation: "Service משתמש ב-selector כדי למצוא Pods עם labels תואמים.",
+            explanation: "Service מגדיר selector עם key-value labels. ה-Endpoints controller מוצא את כל ה-Pods שמתאימים ל-selector ומוסיף את ה-IPs שלהם לאובייקט Endpoints. kube-proxy מנתב traffic לאחד מה-Endpoints האלה.",
           },
           {
             q: "מה טווח הפורטים של NodePort?",
@@ -1779,7 +1779,7 @@ export const TOPICS = [
               "A VPN tunnel connecting Pods in different Clusters for secure communication",
             ],
             answer: 1,
-            explanation: "ClusterIP is the default – allows access only within the Cluster.",
+            explanation: "ClusterIP is the default Service type — it assigns a virtual internal IP reachable only from within the Cluster. Other Pods can reach it by DNS name (my-service.my-ns.svc.cluster.local). It is not reachable from outside the Cluster without an Ingress or port-forward.",
           },
           {
             q: "How does a Service find its Pods?",
@@ -1790,7 +1790,7 @@ export const TOPICS = [
               "By the port the Pod listens on, matched against the Service's targetPort",
             ],
             answer: 1,
-            explanation: "A Service uses a selector to find Pods with matching labels.",
+            explanation: "A Service defines a label selector (key-value pairs). The Endpoints controller continuously watches for Pods matching the selector and adds their IPs to the Endpoints object. kube-proxy then routes traffic to one of those endpoints.",
           },
           {
             q: "What port range does NodePort use?",
@@ -1994,7 +1994,7 @@ export const TOPICS = [
             q: "מה ה-DNS name של service בשם 'api' ב-namespace 'prod'?",
             options: ["api.prod", "api.prod.svc", "api.prod.svc.cluster.local", "prod.api.local"],
             answer: 2,
-            explanation: "Format: service.namespace.svc.cluster.local – זה ה-FQDN המלא.",
+            explanation: "ה-FQDN המלא הוא service.namespace.svc.cluster.local. CoreDNS מפתח שמות אלו ל-ClusterIP של ה-Service. בתוך אותו Namespace אפשר להשתמש בשם קצר (api.prod) — CoreDNS מוסיף אוטומטית את הסיומת.",
           },
           {
             q: "מה היתרון של Ingress על פני LoadBalancer?",
@@ -2005,7 +2005,7 @@ export const TOPICS = [
               "יותר מאובטח כי הוא מצפין תנועה ב-mTLS בין Services",
             ],
             answer: 1,
-            explanation: "Ingress מאפשר ניתוב חכם דרך כניסה אחת, חוסך LoadBalancers רבים.",
+            explanation: "Ingress מאפשר לנהל ניתוב HTTP/S חכם (לפי host, path) דרך נקודת כניסה אחת. במקום LoadBalancer נפרד לכל Service (עלות גבוהה ב-cloud), Ingress מנתב מה-IP אחד לשירותים שונים. תומך גם ב-TLS termination ב-מקום אחד.",
           },
           {
             q: "מה זה Ingress Controller?",
@@ -2028,7 +2028,7 @@ export const TOPICS = [
               "כתובות DNS שמוקצות אוטומטית לכל Service ב-Cluster",
             ],
             answer: 1,
-            explanation: "Endpoints הם רשימת IPs של ה-Pods שה-Service מנתב אליהם, מתעדכן אוטומטית.",
+            explanation: "Endpoints הוא אובייקט K8s שמכיל את רשימת IPs ופורטים של ה-Pods שה-Service מנתב אליהם. הוא מתעדכן אוטומטית כש-Pods עולים ויורדים. אפשר לראותו עם kubectl get endpoints my-service.",
           },
           {
             q: "כיצד מגדירים TLS ב-Ingress?",
@@ -2063,7 +2063,7 @@ export const TOPICS = [
               "מגביל bandwidth של Pod לפי annotations",
             ],
             answer: 1,
-            explanation: "egress NetworkPolicy מגדיר לאיזה יעדים Pod מורשה לשלוח תנועה.",
+            explanation: "NetworkPolicy עם policyTypes: [Egress] מגדיר לאיזה יעדים Pod מורשה לשלוח תנועה. ללא egress rules, כל היציאות חסומות. שימוש נפוץ: לאפשר יציאה רק ל-DNS (port 53) ולDB ספציפי, וחסום את כל השאר.",
           },
           {
             q: "מה service mesh פותר?",
@@ -2227,7 +2227,7 @@ export const TOPICS = [
             q: "What is the DNS name of service 'api' in namespace 'prod'?",
             options: ["api.prod", "api.prod.svc", "api.prod.svc.cluster.local", "prod.api.local"],
             answer: 2,
-            explanation: "Format: service.namespace.svc.cluster.local – this is the full FQDN.",
+            explanation: "The full FQDN is service.namespace.svc.cluster.local. CoreDNS resolves this to the Service's ClusterIP. Within the same Namespace you can use the short name (api.prod) — CoreDNS automatically appends the suffix.",
           },
           {
             q: "What is the advantage of Ingress over LoadBalancer?",
@@ -2472,7 +2472,7 @@ export const TOPICS = [
               "רק תנועת HTTPS מותרת ותנועת HTTP נחסמת",
             ],
             answer: 1,
-            explanation: "ברירת מחדל ב-Kubernetes היא allow-all.",
+            explanation: "כשאין NetworkPolicy ב-Namespace, ה-default הוא allow-all — כל Pod יכול לדבר עם כל Pod ב-Cluster. ברגע שמוסיפים NetworkPolicy שמכסה Pod מסוים, כל traffic שלא מורשה במפורש — חסום.",
           },
           {
             q: "מה נדרש כדי ש-NetworkPolicy יעבוד?",
@@ -2483,7 +2483,7 @@ export const TOPICS = [
               "cloud provider מיוחד שתומך ב-Network Policy API",
             ],
             answer: 1,
-            explanation: "NetworkPolicy דורש CNI plugin תומך. kubenet לא מממש NetworkPolicies!",
+            explanation: "NetworkPolicy היא רק spec — יישום בפועל תלוי ב-CNI plugin. Calico, Cilium, ו-Weave תומכים בה. kubenet (ה-CNI הדיפולטי ב-minikube/kind) לא מממש NetworkPolicies בכלל — ה-policies יוצרות אבל לא נאכפות.",
           },
           {
             q: "מה מטרת Namespace?",
@@ -2494,7 +2494,7 @@ export const TOPICS = [
               "DNS גלובלי שמשתף names בין כל ה-Clusters",
             ],
             answer: 1,
-            explanation: "Namespaces מספקים בידוד לוגי – הפרדה בין צוותים, פרויקטים, או סביבות.",
+            explanation: "Namespace מספק בידוד לוגי בתוך Cluster אחד — Resources ב-Namespace אחד לא נגישים ישירות מ-Namespace אחר. משמש להפרדת צוותים (dev/ops), פרויקטים, או סביבות (dev/staging/prod). ResourceQuota ו-RBAC מוגדרים ברמת ה-Namespace.",
           },
           {
             q: "מה ResourceQuota עושה?",
@@ -2505,7 +2505,7 @@ export const TOPICS = [
               "מחלק resources שווה בין כל ה-Pods ב-Namespace",
             ],
             answer: 1,
-            explanation: "ResourceQuota מגביל את סך ה-CPU, Memory, Pods שNamespace יכול לצרוך.",
+            explanation: "ResourceQuota מגדיר תקרות לצריכה ב-Namespace: מקסימום CPU, Memory, מספר Pods, Services, PVCs ועוד. כשהתקרה מלאה — Pod חדש נדחה עם שגיאה. שימושי למניעת namespace אחד מלבלוע את כל משאבי ה-Cluster.",
           },
           {
             q: "מה CNI?",
@@ -2710,7 +2710,7 @@ export const TOPICS = [
               "Only HTTPS traffic is allowed while HTTP is blocked by default",
             ],
             answer: 1,
-            explanation: "By default in Kubernetes it is allow-all.",
+            explanation: "Without any NetworkPolicy, the default is allow-all — every Pod can talk to every other Pod in the Cluster. Once you apply a NetworkPolicy selecting a Pod, all traffic not explicitly allowed is blocked for that Pod.",
           },
           {
             q: "What is required for NetworkPolicy to work?",
@@ -2965,7 +2965,7 @@ export const TOPICS = [
               "Secret מיועד רק לpasswords ולא לסוגי sensitive data אחרים",
             ],
             answer: 1,
-            explanation: "Secret מיועד לנתונים רגישים. ConfigMap לקונפיגורציה רגילה.",
+            explanation: "Secret מיועד לנתונים רגישים (סיסמאות, tokens, TLS keys) ומאוחסן ב-etcd כ-base64 (ניתן להצפין Encryption at Rest). ConfigMap לקונפיגורציה רגילה שאין בה מידע רגיש. שניהם ניתנים להזרקה כ-env variables או volume.",
           },
           {
             q: "האם Secrets מוצפנים לחלוטין?",
@@ -2988,7 +2988,7 @@ export const TOPICS = [
               "לא ניתן – Pod ניגש ל-ConfigMap רק דרך Kubernetes API call",
             ],
             answer: 2,
-            explanation: "ConfigMap ניתן לטעון כenv variables, כvolume עם קבצים, או דרך API.",
+            explanation: "ישנן שלוש דרכים לצרוך ConfigMap ב-Pod: 1) envFrom/env — טוען values כ-env variables. 2) volumeMounts — מהר ConfigMap כספרייה, כל key הופך לקובץ. 3) דרך Kubernetes API ישירות מהקוד. שינוי ב-volume יתעדכן אוטומטית (עם השהייה), שינוי ב-env מצריך restart.",
           },
           {
             q: "מה זה imagePullSecrets?",
@@ -3011,7 +3011,7 @@ export const TOPICS = [
               "kubectl generate configmap my-cm --input=config.properties",
             ],
             answer: 1,
-            explanation: "--from-file יוצר ConfigMap שמפתח הוא שם הקובץ והערך הוא תוכנו.",
+            explanation: "--from-file יוצר ConfigMap שבו כל קובץ שמוזן הופך לkey (שם הקובץ) עם value (תוכנו). שימושי לטעינת קבצי config שלמים (nginx.conf, app.properties). ניתן גם לציין key מותאם: --from-file=my-key=./my-file.conf.",
           },
           {
             q: "מה ה-ServiceAccount הברירת מחדל?",
@@ -3034,7 +3034,7 @@ export const TOPICS = [
               "Secret שמיועד לpasswords בלבד ולא לסוגי data אחרים",
             ],
             answer: 1,
-            explanation: "Opaque הוא ה-type הברירת מחדל לSecrets – לכל נתון שרירותי בbase64.",
+            explanation: "Opaque הוא ה-type הדיפולטי לSecrets — מאחסן נתונים שרירותיים כ-base64. סוגים אחרים: kubernetes.io/tls (לcertificates), kubernetes.io/dockerconfigjson (לimagePullSecrets), kubernetes.io/service-account-token. לכל type יש validation ייעודי.",
           },
           {
             q: "כיצד מזריקים את כל keys של ConfigMap כ-env variables?",
@@ -3461,7 +3461,7 @@ export const TOPICS = [
               "מחיקת Role",
             ],
             answer: 1,
-            explanation: "RoleBinding קושר Role למשתמש, group, או ServiceAccount.",
+            explanation: "RoleBinding קושר Role (רשימת הרשאות) ל-subject: User, Group, או ServiceAccount — בתוך Namespace מסוים. לגישה בכל ה-Cluster משתמשים ב-ClusterRoleBinding. בלי RoleBinding, ה-Role לא נאכף על אף ישות.",
           },
           {
             q: "מה זה ServiceAccount?",
@@ -3472,13 +3472,13 @@ export const TOPICS = [
               "חשבון billing",
             ],
             answer: 1,
-            explanation: "ServiceAccount מספק זהות לPods בתוך הCluster לאימות מול Kubernetes API.",
+            explanation: "ServiceAccount הוא זהות מכונה (machine identity) עבור Pods — לא למשתמשים אנושיים. Kubernetes מזריק token אוטומטית לכל Pod, שבאמצעותו הPod יכול לאמת את עצמו מול ה-API server ולקבל הרשאות לפי RBAC. לכל Namespace יש ServiceAccount בשם 'default'.",
           },
           {
             q: "מה verb מאפשר מעקב בזמן אמת?",
             options: ["get", "list", "watch", "monitor"],
             answer: 2,
-            explanation: "verb 'watch' מאפשר stream של שינויים בזמן אמת (כמו kubectl get pods -w).",
+            explanation: "ה-verb 'watch' מאפשר לקבל stream מתמשך של שינויים בזמן אמת מה-API server — כמו kubectl get pods -w. בלי watch, צריך לעשות polling חוזר. Controllers כמו Deployment controller משתמשים ב-watch כדי להגיב לשינויים מיידית.",
           },
           {
             q: "מה Pod Security Admission?",
@@ -3695,7 +3695,7 @@ export const TOPICS = [
               "Deleting a Role",
             ],
             answer: 1,
-            explanation: "RoleBinding binds a Role to a user, group, or ServiceAccount.",
+            explanation: "RoleBinding binds a Role (a list of permissions) to a subject — User, Group, or ServiceAccount — within a specific Namespace. For cluster-wide access, use ClusterRoleBinding. Without a RoleBinding, a Role has no effect on any identity.",
           },
           {
             q: "What is a ServiceAccount?",
@@ -3923,7 +3923,7 @@ export const TOPICS = [
               "הרשאות לפי שם",
             ],
             answer: 1,
-            explanation: "Least Privilege – כל entity מקבל רק את ההרשאות שהוא צריך.",
+            explanation: "Least Privilege (הרשאות מינימליות) — עיקרון האבטחה שלפיו כל ישות (Pod, ServiceAccount, משתמש) מקבלת רק את ההרשאות הנדרשות לה בדיוק, ולא יותר. ב-Kubernetes: לא לתת cluster-admin כשמספיק Role ב-Namespace אחד.",
           },
           {
             q: "מה External Secrets Operator עושה?",
@@ -3946,7 +3946,7 @@ export const TOPICS = [
               "הצפנת images",
             ],
             answer: 1,
-            explanation: "Encryption at Rest מצפין את etcd שבו K8s שומר את כל ה-secrets.",
+            explanation: "ב-Kubernetes, Secrets מאוחסנים ב-etcd כ-base64 — לא מוצפנים כברירת מחדל. Encryption at Rest מפעיל הצפנת AES-GCM על הנתונים לפני שמירה ב-etcd, כך שגם מי שגונב את מסד ה-etcd לא יוכל לקרוא את ה-Secrets.",
           },
           {
             q: "מה Sealed Secrets מאפשר?",
@@ -3957,7 +3957,7 @@ export const TOPICS = [
               "שיתוף בין clusters",
             ],
             answer: 1,
-            explanation: "Sealed Secrets מצפין secrets כך שניתן לשמור אותם ב-git בבטחה.",
+            explanation: "Sealed Secrets (של Bitnami) מצפין Secret רגיל ל-SealedSecret עם המפתח הציבורי של ה-Cluster. ה-SealedSecret המוצפן בטוח לשמירה ב-git repo. רק ה-controller בתוך ה-Cluster שמחזיק את המפתח הפרטי יכול לפענח ולצור את ה-Secret האמיתי.",
           },
           {
             q: "מה שלוש רמות Pod Security Standards?",
@@ -4157,7 +4157,7 @@ export const TOPICS = [
               "Permissions by name",
             ],
             answer: 1,
-            explanation: "Least Privilege – each entity receives only the permissions it needs.",
+            explanation: "Least Privilege means every entity (Pod, ServiceAccount, user) gets only the exact permissions it requires — nothing more. In Kubernetes: prefer a scoped Role in one Namespace over cluster-admin. If compromised, a low-privilege account limits the blast radius.",
           },
           {
             q: "What does External Secrets Operator do?",
@@ -4407,7 +4407,7 @@ export const TOPICS = [
               "PV לLinux, PVC לWindows",
             ],
             answer: 1,
-            explanation: "PV הוא יחידת האחסון שה-admin מגדיר. PVC היא הבקשה של האפליקציה לאחסון.",
+            explanation: "PersistentVolume (PV) הוא יחידת אחסון שה-admin מגדיר מראש — גודל, access modes, ו-storage backend (EBS, NFS, GCS). PersistentVolumeClaim (PVC) היא הבקשה של ה-Pod לאחסון. ה-K8s matcher מחבר בין PVC ל-PV שמתאים לדרישות.",
           },
           {
             q: "מה AccessMode ReadWriteOnce?",
@@ -4418,7 +4418,7 @@ export const TOPICS = [
               "קריאה מכל הNodes",
             ],
             answer: 2,
-            explanation: "ReadWriteOnce (RWO) – mounted לקריאה וכתיבה על ידי node אחד בלבד.",
+            explanation: "ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה על ידי Node אחד בלבד בו-זמנית. מתאים לרוב ה-databases. ReadWriteMany (RWX) מאפשר כמה Nodes במקביל — נדרש NFS/EFS. ReadOnlyMany (ROX) קריאה בלבד ממספר Nodes.",
           },
           {
             q: "מה זה Helm Chart?",
@@ -4436,7 +4436,7 @@ export const TOPICS = [
             q: "מה הפקודה להתקנת Helm Chart?",
             options: ["helm deploy", "helm install", "helm run", "helm apply"],
             answer: 1,
-            explanation: "helm install [release-name] [chart] מתקין Chart ויוצר Release חדש.",
+            explanation: "helm install [release-name] [chart] מתקין Chart ויוצר Release. Helm עוקב אחרי ה-Release ב-Cluster (כ-Secret) לניהול upgrades ו-rollbacks. ניתן להוסיף --set key=value לעקוף ערכים ב-values.yaml, או -f myvalues.yaml לקובץ ערכים מותאם.",
           },
           {
             q: "מה emptyDir?",
@@ -4879,7 +4879,7 @@ export const TOPICS = [
               "מעביר לbackup",
             ],
             answer: 1,
-            explanation: "Reclaim Policy Delete – כשPVC נמחק, ה-PV והדיסק בcloud נמחקים אוטומטית.",
+            explanation: "Reclaim Policy: Delete אומר שכאשר ה-PVC נמחק, ה-PV ואחסון ה-cloud הפיזי (EBS volume, GCS disk) נמחקים אוטומטית. מתאים לnon-persistent workloads. להבדיל מ-Retain שמשמר את הנתונים גם אחרי מחיקת ה-PVC.",
           },
           {
             q: "איך משנים Helm value מה-command line?",
@@ -4890,13 +4890,13 @@ export const TOPICS = [
               "helm config",
             ],
             answer: 2,
-            explanation: "--set key=value עוקף values.yaml בזמן install/upgrade.",
+            explanation: "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade. מאפשר לשנות הגדרות ספציפיות בלי לערוך קבצים. לשינויים מרובים: השתמש ב--values (-f) עם קובץ YAML מותאם. ערכי --set עוקפים ערכי -f.",
           },
           {
             q: "מה הפקודה לעדכן Helm Release?",
             options: ["helm update", "helm upgrade", "helm patch", "helm redeploy"],
             answer: 1,
-            explanation: "helm upgrade [release] [chart] מעדכן Release קיים.",
+            explanation: "helm upgrade [release] [chart] מעדכן Release קיים לגרסה חדשה. Helm שומר את ה-revision הקודם — ניתן לחזור עם helm rollback. הוסף --install כדי לבצע install אם ה-release לא קיים עדיין (יוצר או מעדכן).",
           },
           {
             q: "מה Reclaim Policy Retain?",
@@ -5125,13 +5125,13 @@ export const TOPICS = [
               "helm config",
             ],
             answer: 2,
-            explanation: "--set key=value overrides values.yaml at install/upgrade time.",
+            explanation: "--set key=value overrides specific values from values.yaml at install/upgrade time. For multiple overrides, use --values (-f) with a custom YAML file. Values from --set take precedence over -f files.",
           },
           {
             q: "What command updates an existing Helm Release?",
             options: ["helm update", "helm upgrade", "helm patch", "helm redeploy"],
             answer: 1,
-            explanation: "helm upgrade [release] [chart] updates an existing Release.",
+            explanation: "helm upgrade [release] [chart] updates an existing Release to a new version. Helm stores the previous revision — you can roll back with helm rollback. Add --install to create the Release if it doesn't exist yet (upsert behavior).",
           },
           {
             q: "What is the Retain reclaim policy?",
@@ -5352,7 +5352,7 @@ export const TOPICS = [
               "Cluster Sync",
             ],
             answer: 1,
-            explanation: "CSI הוא סטנדרט שמאפשר לvendors לכתוב storage drivers עבור Kubernetes.",
+            explanation: "CSI (Container Storage Interface) הוא סטנדרט פתוח שמאפשר לvendors לכתוב storage drivers עבור Kubernetes (ו-Mesos, Nomad). כל vendor כותב CSI driver משלו (AWS EBS, Azure Disk, GCS, Ceph) שנפרס כ-DaemonSet/Deployment ב-Cluster.",
           },
           {
             q: "מה Helm Hook?",
@@ -5375,7 +5375,7 @@ export const TOPICS = [
               "גיבוי ConfigMap",
             ],
             answer: 1,
-            explanation: "VolumeSnapshot יוצר גיבוי נקודתי של PV, מאפשר restore לנקודת זמן.",
+            explanation: "VolumeSnapshot יוצר גיבוי נקודתי (point-in-time) של PersistentVolume. ניתן לשחזר ממנו PVC חדש עם הנתונים מאותה נקודה — שימושי לפני upgrade של DB. דורש CSI driver עם תמיכת snapshot ו-snapshot-controller מותקן.",
           },
           {
             q: "כיצד StatefulSet מנהל storage?",
@@ -5604,7 +5604,7 @@ export const TOPICS = [
               "Alternative to Rollback",
             ],
             answer: 1,
-            explanation: "Helm Hooks run Jobs/Pods at: pre-install, post-upgrade, pre-delete.",
+            explanation: "Helm Hooks are special resources (Jobs/Pods) that run at specific lifecycle points: pre-install (before Chart resources are created), post-install, pre-upgrade, post-upgrade, pre-delete, and post-rollback. Common use cases: running DB migrations before upgrade or sending a Slack notification after deploy.",
           },
           {
             q: "What is a VolumeSnapshot?",
@@ -5796,10 +5796,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Secrets in values.yaml are visible in git! Correct approaches: 1) helm-secrets with SOPS encryption. 2) External Secrets Operator pulling from Vault/AWS. 3) Sealed Secrets.",
+              "Storing secrets directly in values.yaml exposes them in git history, where anyone with repository access can read them. The safe patterns are: the helm-secrets plugin with SOPS to encrypt values before committing, the External Secrets Operator to pull secrets at runtime from Vault or AWS Secrets Manager, or Sealed Secrets for GitOps workflows. Base64 in values.yaml is not encryption.",
           },
           {
-            q: "kubectl describe pv data-pv shows:\nStatus: Released\nClaimRef: prod/data-pvc\nReclaim Policy: Retain\nWhat does this mean and how do you reuse it?",
+            q: "kubectl describe pv data-pv shows:\n\nStatus: Released\nClaimRef: prod/data-pvc\nReclaim Policy: Retain\n\nWhat does this mean and how do you reuse it?",
             options: [
               "PV is automatically freed",
               'PV was retained after PVC deletion. To reuse: clear the ClaimRef: kubectl patch pv data-pv -p \'{"spec":{"claimRef":null}}\'',
@@ -5808,7 +5808,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              'Released = the PV was bound to a deleted PVC and was kept by the Retain policy. Data is preserved. To reuse: kubectl patch pv data-pv -p \'{"spec":{"claimRef":null}}\' — PV returns to Available and can bind to a new PVC.',
+              "Status Released means the PVC that was bound to this PV was deleted, but the Retain reclaim policy preserved the PV and its data instead of deleting them. To make the PV bindable again, clear the ClaimRef with: kubectl patch pv data-pv -p '{\"spec\":{\"claimRef\":null}}'. The PV then returns to Available status and can be claimed by a new PVC.",
           },
         ],
       },
@@ -5895,7 +5895,7 @@ export const TOPICS = [
               "kubectl pods --node",
             ],
             answer: 1,
-            explanation: "kubectl get pod -o wide מציג עמודות נוספות כמו Node, IP, nominated node.",
+            explanation: "kubectl get pod -o wide מוסיף עמודות: NODE (על איזה Node רץ), IP (Pod IP), NOMINATED NODE (אם Pod ממתין בגלל preemption), ו-READINESS GATES. שימושי לאבחון בעיות scheduling ורשת.",
           },
           {
             q: "מה ההבדל בין Running ל-Ready?",
@@ -6318,7 +6318,7 @@ export const TOPICS = [
             options: ["Terminating", "CrashLoopBackOff", "OOMKilled", "ErrImagePull"],
             answer: 1,
             explanation:
-              "CrashLoopBackOff מציין שהקונטיינר מנסה לעלות, קורס, ו-Kubernetes ממשיך לנסות. השתמש ב-kubectl logs [pod] --previous כדי לראות מה קרה לפני ה-crash.",
+              "CrashLoopBackOff מציין שהקונטיינר מנסה לעלות, קורס מיד, וKubernetes ממשיך לנסות עם המתנה גוברת בין ניסיונות. ה-flag --previous ב-kubectl logs מאפשר לראות את הlogs של ה-crash האחרון לפני ה-restart.",
           },
           {
             q: "ה-Pod נמצא ב-ImagePullBackOff. מה שתי הסיבות הנפוצות ביותר?",
@@ -6330,7 +6330,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ImagePullBackOff אומר ש-K8s לא מצליח להוריד את ה-image. הסיבות הכי נפוצות: טעות בשם/tag של ה-image, או credentials חסרים (imagePullSecrets) עבור registry פרטי.",
+              "ImagePullBackOff אומר שKubernetes לא מצליח להוריד את ה-image, ומחכה יותר ויותר בין כל ניסיון. שתי הסיבות הכי נפוצות הן: שגיאת הקלדה בשם ה-image או ה-tag, או היעדר imagePullSecrets לאימות מול registry פרטי.",
           },
           {
             q: "Pod רץ שעות, ואז מסתיים לפתע. kubectl describe מראה 'Reason: OOMKilled'. מה קרה ומה הפתרון?",
@@ -6342,7 +6342,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "OOMKilled = Out Of Memory Killed. הקונטיינר השתמש ביותר זיכרון ממה שהוגדר ב-limits.memory. הגדל את המגבלה, או בדוק דליפות זיכרון באפליקציה.",
+              "OOMKilled (Out Of Memory Killed) קורה כשהקונטיינר צורך יותר זיכרון מה-limits.memory שהוגדר לו, וה-Linux kernel ממית אותו עם exit code 137. הגדל את limits.memory, או בדוק אם יש memory leak באפליקציה באמצעות kubectl top pod.",
           },
           {
             q: "Pod נשאר ב-Pending. kubectl describe מראה: '0/3 nodes are available: 3 Insufficient cpu'. מה הגורם השורשי?",
@@ -6354,7 +6354,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "Pending עם 'Insufficient cpu' אומר שאף Node לא יכול לספק את ה-CPU שה-Pod ביקש ב-requests.cpu. הקטן את ה-cpu request, או הוסף Nodes נוספים לאשכול.",
+              "כש-Scheduler מדווח 'Insufficient cpu' על כל ה-Nodes, משמעות הדבר שה-CPU request של ה-Pod (requests.cpu) גדול מהcapacity הפנוי בכל Node. הקטן את ה-cpu request לפי actual usage, או הוסף Nodes עם capacity פנוי.",
           },
           {
             q: "מה ההבדל בין ErrImagePull ל-ImagePullBackOff?",
@@ -6366,7 +6366,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ErrImagePull הוא השגיאה הראשונה. ImagePullBackOff מציין שK8s נמצא ב-backoff לפני ניסיון נוסף. שתיהן אותה בעיה.",
+              "ErrImagePull היא השגיאה שמופיעה בפעם הראשונה שה-pull נכשל. אחרי כמה ניסיונות, Kubernetes עובר לסטטוס ImagePullBackOff שמציין שהוא ממתין בין ניסיונות עם back-off גוברת. שתיהן אותה בעיה יסודית — שגיאה בhורדת ה-image.",
           },
           {
             q: "מה Pod בסטטוס Evicted?",
@@ -6378,7 +6378,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Evicted Pod פונה ע״י Node kubelet בגלל disk pressure, memory pressure, או PID pressure. Pod נמחק אבל הObject נשאר לmessage.",
+              "Evicted אומר שה-kubelet על ה-Node הכריח את ה-Pod לעזוב בגלל לחץ משאבים: disk pressure, memory pressure, או PID pressure. ה-Pod Object נשאר כדי לאפשר לבדוק את הסיבה, אבל ה-Pod עצמו לא רץ יותר.",
           },
           {
             q: "מה קורה כשliveness probe נכשל?",
@@ -6390,7 +6390,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "כשliveness probe נכשל failureThreshold פעמים, K8s ממית את הקונטיינר ומפעיל אותו מחדש לפי restartPolicy.",
+              "liveness probe בודק האם הקונטיינר עדיין \"חי\" ומגיב. כשהוא נכשל failureThreshold פעמים ברציפות, Kubernetes ממית את הקונטיינר ומפעיל אותו מחדש לפי ה-restartPolicy. שלא כמו readiness probe, כישלון liveness probe לא מסיר מה-Service — הוא מבצע restart.",
           },
           {
             q: "מה kubectl port-forward משמש לצורך?",
@@ -6402,7 +6402,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl port-forward pod/mypod 8080:80 מעביר port 8080 מ-local machine ל-port 80 של ה-Pod. מצוין לdebug.",
+              "kubectl port-forward יוצר tunnel SSH-like דרך ה-API server בין ה-machine המקומי ל-Pod. הפקודה kubectl port-forward pod/mypod 8080:80 מאפשרת לגשת ל-Pod על port 80 דרך localhost:8080 מבלי לפתוח Service ציבורי.",
           },
           {
             q: "מה RunContainerError אומר?",
@@ -6414,7 +6414,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "RunContainerError – הקונטיינר התחיל לרוץ אבל נכשל מיד. בדוק kubectl describe ו-logs לסיבה.",
+              "RunContainerError אומר שה-container runtime הצליח לעלות את הקונטיינר אבל הוא יצא מיד עם שגיאה — לא אותו דבר כמו ImagePullBackOff שקורה לפני ההפעלה. הסיבות הנפוצות: mountPath שגוי, env var חסר, או entrypoint שגוי. בדוק kubectl describe ו-kubectl logs.",
           },
           {
             q: "Pod נמצא ב-ContainerCreating זמן רב. מה הסיבות האפשריות?",
@@ -6426,7 +6426,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ContainerCreating לאורך זמן: PVC לא bound, Secret/ConfigMap חסר, image גדול שמוריד, או בעיה ב-CNI network setup.",
+              "ContainerCreating הוא שלב נורמלי, אבל כשהוא נמשך זמן רב מציין בעיה. הסיבות הנפוצות הן: PVC שעדיין לא Bound, Secret או ConfigMap שמוזכרים ב-spec אבל לא קיימים, image גדול שנמשך להורדה, או בעיה ב-CNI שלא מצליח להגדיר network interface.",
           },
           {
             q: "Pod מצב Terminating ולא נמחק. kubectl delete pod my-pod --grace-period=0 לא עוזר. מה הסיבה?",
@@ -6438,10 +6438,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              'finalizer מונע מחיקת Pod עד שlogic חיצוני מנקה אותו. kubectl patch pod my-pod -p \'{"metadata":{"finalizers":null}}\' יסיר ידנית.',
+              "Finalizer הוא שדה ב-metadata שמונע מחיקת resource עד שlogic חיצוני מנקה אותו (בד\"כ controller). כשהcontroller לא זמין, ה-Pod תקוע ב-Terminating. כדי לפתור: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' מסיר את כל ה-finalizers ידנית.",
           },
           {
-            q: "Pod CrashLoopBackOff. kubectl logs מציג:\nError: ECONNREFUSED 10.96.5.21:5432\nמה ניתן להסיק?",
+            q: "Pod CrashLoopBackOff.\n\nkubectl logs מציג:\nError: ECONNREFUSED 10.96.5.21:5432\n\nמה ניתן להסיק?",
             options: [
               "DNS שגוי",
               "האפליקציה לא יכולה להתחבר לDB שב-IP 10.96.5.21:5432 – Service או DB לא זמין",
@@ -6450,10 +6450,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ECONNREFUSED = connection נדחית. IP 10.96.5.21 הוא ClusterIP של Service. בדוק: kubectl get svc, kubectl get endpoints, האם DB Pod רץ.",
+              "ECONNREFUSED אומר שה-TCP connection נדחית — השרת בצד השני לא מאזין על ה-port. IP מסוג 10.96.x.x הוא ClusterIP של Service. בדוק kubectl get svc ו-kubectl get endpoints לוודא שה-DB Service קיים עם Endpoints, וש-Pod ה-DB עצמו רץ.",
           },
           {
-            q: "Pod ב-Error. kubectl describe מציג:\nEvents: Warning Failed: Failed to create pod sandbox: ... cni plugin not initialized\nמה הבעיה?",
+            q: "Pod ב-Error.\n\nkubectl describe מציג:\nEvents: Warning Failed: Failed to create pod sandbox: ... cni plugin not initialized\n\nמה הבעיה?",
             options: [
               "image שגוי",
               "CNI plugin לא מוגדר נכון או לא רץ על ה-Node",
@@ -6462,10 +6462,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "CNI plugin אחראי להגדרת רשת ל-Pod. אם Plugin לא אותחל, Pod לא יכול לקבל IP. בדוק את ה-CNI DaemonSet ב-kube-system namespace.",
+              "ה-CNI plugin אחראי להגדרת network interface ל-Pod. אם הוא לא אותחל (בד\"כ בגלל שה-DaemonSet לא רץ על ה-Node), Pod לא יכול לקבל IP כתובת ו-sandbox היצירה נכשלת. בדוק kubectl get ds -n kube-system לוודא שה-CNI DaemonSet רץ.",
           },
           {
-            q: "Node ב-DiskPressure. kubectl describe node מציג:\nConditions:\n  DiskPressure True\nמה הסיבות הנפוצות?",
+            q: "Node ב-DiskPressure.\n\nkubectl describe node מציג:\nConditions:\n  DiskPressure True\n\nמה הסיבות הנפוצות?",
             options: [
               "RAM מלא",
               "logs שצברו מקום, images ישנים, או disk של Node מלא",
@@ -6474,10 +6474,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "DiskPressure = disk בNode מלא. בדוק: df -h על ה-Node. נקה images: docker image prune. logs ישנים: journalctl --vacuum-time=2d. ייתכן שPVC מלא.",
+              "DiskPressure מופיע כש-kubelet מזהה שה-disk של ה-Node מגיע לסף מלאות. הסיבות הנפוצות הן: logs שהצטברו, container images ישנים שלא נוקו, ו-emptyDir volumes גדולים. נקה עם docker image prune וjournalctl --vacuum-time=2d, או הרחב את הdisk.",
           },
           {
-            q: "Pod לא מתזמן. kubectl describe pod מציג:\nWarning  FailedScheduling  0/3 nodes: 1 node(s) Insufficient memory, 2 node(s) had taint {node.kubernetes.io/not-ready}\nמה הבעיה?",
+            q: "Pod לא מתזמן.\n\nkubectl describe pod מציג:\nWarning  FailedScheduling  0/3 nodes: 1 node(s) Insufficient memory, 2 node(s) had taint {node.kubernetes.io/not-ready}\n\nמה הבעיה?",
             options: [
               "image שגוי",
               "רק Node אחד עם מספיק memory אבל הוא NotReady; 2 Nodes ב-not-ready",
@@ -6486,7 +6486,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Scheduler מדווח: 1 Node לא pass בגלל memory, 2 Nodes ב-not-ready taint. צריך לתקן את Nodes הNotReady או להוסיף Node עם מספיק memory.",
+              "ה-Scheduler בוחן את כל ה-Nodes ומדווח מדוע כל אחד נפסל: Node אחד עם מספיק memory אבל הוא NotReady ולא זמין, שניים נוספים עם taint not-ready. הפתרון הוא לתקן את ה-Nodes ה-NotReady, או להוסיף Node בריא עם מספיק memory.",
           },
           {
             q: "Deployment עם 5 replicas. כולם ב-Pending. kubectl describe pod מציג:\nInsufficientCPU: 500m requested, 200m available\nמה הפתרון הטוב ביותר לlong-term?",
@@ -6498,10 +6498,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Pending עם InsufficientCPU = Cluster מלא. Short-term: הקטן requests. Long-term: הוסף Nodes (cluster autoscaler), או השתמש ב-VPA לoptimize requests.",
+              "כשכל 5 replicas ב-Pending עם InsufficientCPU, ה-Cluster מיצה את ה-CPU הפנוי. לטווח הקצר: הקטן את cpu requests לפי actual usage (kubectl top pods). לטווח הארוך: הוסף Nodes לCluster (ידנית או עם Cluster Autoscaler), או השתמש ב-VPA להמלצות מדויקות.",
           },
           {
-            q: "Pod עם initContainer. kubectl get pods מציג:\nNAME    READY  STATUS\napp-1   0/1    Init:0/1\nמה זה אומר?",
+            q: "Pod עם initContainer.\n\nkubectl get pods מציג:\nNAME    READY  STATUS\napp-1   0/1    Init:0/1\n\nמה זה אומר?",
             options: [
               "Main container crashed",
               "initContainer ראשון עדיין לא סיים – Pod לא יתקדם לmain container עד שכל initContainers יסיימו",
@@ -6510,7 +6510,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Init:0/1 = initContainer ראשון מהסך הכולל עדיין לא הסתיים. בדוק: kubectl logs app-1 -c init-container-name לראות מה הinitContainer עושה.",
+              "Init:0/1 אומר שה-initContainer הראשון מתוך 1 לא סיים עדיין. Pod לא יעלה את ה-main container עד שכל initContainers יסיימו בהצלחה. בדוק kubectl logs app-1 -c <init-container-name> לראות מה הוא עושה ולמה הוא תקוע.",
           },
           {
             q: "Service חדש לא עובד. kubectl run test-pod --image=busybox -- wget -qO- http://my-service מחזיר timeout. מה בודקים?",
@@ -6522,7 +6522,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "timeout בגישה לService: 1) בדוק endpoints – ריק = selector mismatch. 2) בדוק Pod ports תואמים targetPort. 3) בדוק NetworkPolicy. 4) בדוק service port.",
+              "timeout בגישה לService אומר שהתנועה לא מגיעה ל-Pod. הצעד הראשון הוא kubectl get endpoints my-service: רשימה ריקה אומרת selector mismatch (label של Pod לא תואם ל-selector של Service). אם Endpoints קיימים, בדוק שה-targetPort תואם ל-containerPort ב-Pod.",
           },
           {
             q: "Node ב-MemoryPressure. Pods מפונים. מה kubelet עושה?",
@@ -6534,7 +6534,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "MemoryPressure גורם לkubelet לגרש Pods לפי סדר QoS: 1. BestEffort (ללא requests/limits). 2. Burstable (requests < limits). 3. Guaranteed (requests=limits) – אחרונים להיגרש.",
+              "כש-Node ב-MemoryPressure, ה-kubelet מגרש Pods לפי רמת QoS מהנמוכה לגבוהה: BestEffort (ללא requests/limits) מגורשים ראשונים, אחריהם Burstable (requests קטן מlimits), ולבסוף Guaranteed (requests שווה לimits). הדרך לאבטח Pod חשוב הוא להגדיר requests=limits.",
           },
           {
             q: "מה kubectl top pod --sort-by=memory עושה?",
@@ -6546,7 +6546,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl top pod --sort-by=memory (או cpu) מציג Pods לפי שימוש במשאבים. שימושי לזיהוי Pods שצורכים הכי הרבה resources ועלולים לגרום לבעיות.",
+              "kubectl top pod --sort-by=memory ממיין את כל ה-Pods לפי צריכת הזיכרון הנוכחית (גבוה לנמוך). זה כלי שימושי לאבחון בעיות MemoryPressure — הPod בראש הרשימה הוא המועמד הראשון לעצירה אם ה-Node מגיע ל-memory limit.",
           },
         ],
         questionsEn: [
@@ -6555,7 +6555,7 @@ export const TOPICS = [
             options: ["Terminating", "CrashLoopBackOff", "OOMKilled", "ErrImagePull"],
             answer: 1,
             explanation:
-              "CrashLoopBackOff means the container tries to start, crashes, and Kubernetes keeps retrying. Use kubectl logs [pod] --previous to see what happened before the crash.",
+              "CrashLoopBackOff means the container starts, crashes immediately, and Kubernetes retries with an exponentially increasing back-off delay. The --previous flag on kubectl logs retrieves logs from the last crashed container instance, which is essential for diagnosing the cause.",
           },
           {
             q: "A pod is stuck in ImagePullBackOff. What are the two most common causes?",
@@ -6567,7 +6567,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ImagePullBackOff means K8s can't download the image. Most common causes: typo in image name or tag, or missing credentials (imagePullSecrets) for a private registry.",
+              "ImagePullBackOff means Kubernetes failed to pull the container image and is waiting with an increasing delay before retrying. The two most common causes are a typo in the image name or tag, and missing imagePullSecrets credentials for a private registry.",
           },
           {
             q: "A pod ran fine for hours then suddenly terminated. kubectl describe shows 'Reason: OOMKilled'. What happened and what is the fix?",
@@ -6579,7 +6579,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "OOMKilled = Out Of Memory Killed. The container used more memory than its limits.memory setting. Increase the limit, or investigate memory leaks in your application.",
+              "OOMKilled (Out Of Memory Killed) happens when a container exceeds its limits.memory setting — the Linux kernel terminates it with exit code 137 (SIGKILL). Increase the memory limit in the Pod spec, or use kubectl top pod to identify a memory leak in the application.",
           },
           {
             q: "A pod stays Pending. kubectl describe shows: '0/3 nodes are available: 3 Insufficient cpu'. What is the root cause?",
@@ -6591,7 +6591,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "Pending with 'Insufficient cpu' means no node has enough free CPU to satisfy the pod's requests.cpu. Reduce the CPU request in the pod spec, or add more nodes to the cluster.",
+              "When the Scheduler reports Insufficient cpu on every Node, the cluster has no available CPU capacity to place the Pod. Lower requests.cpu in the Pod spec to what the workload actually needs (use kubectl top pods to measure), or expand the cluster with more Nodes.",
           },
           {
             q: "What is the difference between ErrImagePull and ImagePullBackOff?",
@@ -6603,7 +6603,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ErrImagePull is the first failure. ImagePullBackOff means K8s is in backoff before trying again. Both indicate the same underlying problem.",
+              "ErrImagePull is the immediate error on the first failed pull attempt. After a few failures, Kubernetes transitions to ImagePullBackOff to avoid hammering the registry, waiting progressively longer between retries. Both indicate the same root problem with pulling the image.",
           },
           {
             q: "What is an Evicted Pod?",
@@ -6615,7 +6615,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "An evicted Pod was terminated by the Node kubelet due to disk pressure, memory pressure, or PID pressure. The Pod object remains with an eviction message.",
+              "An Evicted Pod was forcibly terminated by kubelet because the Node was under resource pressure (disk, memory, or PID). The Pod object is kept in the cluster so you can inspect the eviction reason, but the workload is no longer running and needs to reschedule to a healthy Node.",
           },
           {
             q: "What happens when a liveness probe fails?",
@@ -6627,7 +6627,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "When a liveness probe fails failureThreshold times, K8s kills the container and restarts it according to the restartPolicy.",
+              "A liveness probe tells Kubernetes whether the container is still alive and responsive. When the probe fails consecutively for failureThreshold times, Kubernetes kills the container and restarts it following the Pod's restartPolicy. Unlike a readiness probe failure, a liveness failure triggers a full container restart.",
           },
           {
             q: "What is kubectl port-forward used for?",
@@ -6639,7 +6639,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl port-forward pod/mypod 8080:80 tunnels port 8080 on your local machine to port 80 of the Pod — great for debugging.",
+              "kubectl port-forward creates a tunnel through the API server between your local machine and a Pod or Service. The command kubectl port-forward pod/mypod 8080:80 makes the Pod's port 80 accessible at localhost:8080 without creating a public Service — ideal for debugging.",
           },
           {
             q: "What does RunContainerError mean?",
@@ -6651,7 +6651,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "RunContainerError — the container started but immediately failed. Check kubectl describe and logs for the cause.",
+              "RunContainerError occurs after the image is pulled successfully but the container exits immediately upon startup — unlike ImagePullBackOff which fails before starting. Common causes are a missing env var, wrong mountPath, or an entrypoint command that does not exist in the image. Check kubectl describe and kubectl logs for details.",
           },
           {
             q: "A Pod is in ContainerCreating for a long time. What are the likely causes?",
@@ -6663,7 +6663,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Long ContainerCreating: PVC not bound, missing Secret/ConfigMap, large image downloading, or CNI network setup failure.",
+              "ContainerCreating is normal briefly, but when prolonged it indicates a blocker. Common causes are: a PVC that is still Pending, a Secret or ConfigMap referenced in the spec that does not exist, a large image still downloading, or a CNI plugin failing to configure the Pod's network interface.",
           },
           {
             q: "A Pod is stuck in Terminating and kubectl delete pod my-pod --grace-period=0 doesn't help. What is the cause?",
@@ -6675,10 +6675,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              'A finalizer prevents Pod deletion until external logic clears it. kubectl patch pod my-pod -p \'{"metadata":{"finalizers":null}}\' removes it manually.',
+              "A finalizer is a field in metadata that blocks deletion of a resource until an external controller removes it. If that controller is unavailable, the Pod stays stuck in Terminating indefinitely. To force removal: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' clears all finalizers and lets deletion proceed.",
           },
           {
-            q: "A Pod is in CrashLoopBackOff. kubectl logs shows:\nError: ECONNREFUSED 10.96.5.21:5432\nWhat can you infer?",
+            q: "A Pod is in CrashLoopBackOff.\n\nkubectl logs shows:\nError: ECONNREFUSED 10.96.5.21:5432\n\nWhat can you infer?",
             options: [
               "DNS misconfiguration",
               "The app cannot connect to the DB at IP 10.96.5.21:5432 — Service or DB Pod is unavailable",
@@ -6687,10 +6687,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ECONNREFUSED = connection refused. 10.96.5.21 is a ClusterIP. Check: kubectl get svc, kubectl get endpoints, and whether the DB Pod is Running and Ready.",
+              "ECONNREFUSED means the TCP connection was actively rejected — nothing is listening on that port. IP addresses in the 10.96.x.x range are Kubernetes Service ClusterIPs. Check kubectl get svc and kubectl get endpoints to confirm the DB Service exists with live Endpoints, and that the DB Pod is actually Running.",
           },
           {
-            q: "A Pod is in Error. kubectl describe shows:\nEvents: Warning Failed: Failed to create pod sandbox: ... cni plugin not initialized\nWhat is the problem?",
+            q: "A Pod is in Error.\n\nkubectl describe shows:\nEvents: Warning Failed: Failed to create pod sandbox: ... cni plugin not initialized\n\nWhat is the problem?",
             options: [
               "Wrong image",
               "CNI plugin is misconfigured or not running on the Node",
@@ -6699,10 +6699,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "The CNI plugin is responsible for setting up network for the Pod. If not initialized the Pod can't get an IP. Check the CNI DaemonSet in the kube-system namespace.",
+              "The CNI plugin runs on each Node and configures the network interface for every new Pod. If it has not been initialized on a Node — usually because the CNI DaemonSet Pod is missing or crashed — new Pods on that Node cannot get an IP address and sandbox creation fails. Check kubectl get ds -n kube-system.",
           },
           {
-            q: "A Node shows DiskPressure. kubectl describe node shows:\nConditions:\n  DiskPressure True\nWhat are the common causes?",
+            q: "A Node shows DiskPressure.\n\nkubectl describe node shows:\nConditions:\n  DiskPressure True\n\nWhat are the common causes?",
             options: [
               "RAM is full",
               "Accumulated logs, old images, or a full Node disk",
@@ -6711,10 +6711,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "DiskPressure = disk on the Node is full. Check: df -h on the Node. Clean images: docker image prune. Old logs: journalctl --vacuum-time=2d. A full PVC may also be the cause.",
+              "DiskPressure is set by kubelet when the Node disk usage crosses a threshold. The most common culprits are accumulated container logs, stale container images, and large emptyDir volumes. Clean up with docker image prune and journalctl --vacuum-time=2d, or expand the Node disk.",
           },
           {
-            q: "A Pod won't schedule. kubectl describe pod shows:\nWarning  FailedScheduling  0/3 nodes: 1 Insufficient memory, 2 had taint {node.kubernetes.io/not-ready}\nWhat is happening?",
+            q: "A Pod won't schedule.\n\nkubectl describe pod shows:\nWarning  FailedScheduling  0/3 nodes: 1 Insufficient memory, 2 had taint {node.kubernetes.io/not-ready}\n\nWhat is happening?",
             options: [
               "Wrong image",
               "Only one Node has enough memory but it is NotReady; 2 Nodes have the not-ready taint",
@@ -6723,10 +6723,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "The Scheduler reports: 1 Node fails on memory, 2 Nodes have the not-ready taint. Fix the NotReady Nodes, or add a Node with sufficient memory.",
+              "The Scheduler explains each Node's rejection individually: the one Node with enough memory is NotReady and cannot accept Pods, while the other two carry the not-ready taint. Fix the unhealthy Nodes or add a healthy Node with enough free memory to unblock scheduling.",
           },
           {
-            q: "A Deployment with 5 replicas — all Pending. kubectl describe pod shows:\nInsufficientCPU: 500m requested, 200m available\nWhat is the best long-term fix?",
+            q: "A Deployment with 5 replicas — all Pending.\n\nkubectl describe pod shows:\nInsufficientCPU: 500m requested, 200m available\n\nWhat is the best long-term fix?",
             options: [
               "Delete Pods",
               "Add Nodes to the cluster, or reduce CPU requests based on actual usage (kubectl top pods)",
@@ -6735,10 +6735,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Pending with InsufficientCPU = cluster is full. Short-term: reduce requests. Long-term: add Nodes (cluster autoscaler) or use VPA to optimize requests automatically.",
+              "When all replicas are Pending with InsufficientCPU, the cluster has no remaining CPU capacity. Short-term, lower the CPU requests in the Pod spec closer to actual usage (check kubectl top pods). Long-term, add Nodes to the cluster — ideally via a Cluster Autoscaler — or use VPA to right-size requests automatically.",
           },
           {
-            q: "A Pod with an initContainer. kubectl get pods shows:\nNAME    READY  STATUS\napp-1   0/1    Init:0/1\nWhat does this mean?",
+            q: "A Pod with an initContainer.\n\nkubectl get pods shows:\nNAME    READY  STATUS\napp-1   0/1    Init:0/1\n\nWhat does this mean?",
             options: [
               "Main container crashed",
               "The first initContainer has not finished yet — the Pod won't start the main container until all initContainers complete",
@@ -6747,7 +6747,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Init:0/1 = the first initContainer of one total has not finished. Run kubectl logs app-1 -c init-container-name to see what the initContainer is doing.",
+              "Init:0/1 means the first (and only) initContainer has not completed. Kubernetes runs initContainers sequentially and will not start the main container until all of them exit with code 0. Check kubectl logs app-1 -c <init-container-name> to see what it is doing and why it is stuck.",
           },
           {
             q: "A new Service is not working. kubectl run test-pod --image=busybox -- wget -qO- http://my-service returns a timeout. What do you check?",
@@ -6759,7 +6759,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Service timeout: 1) Check endpoints — empty = selector mismatch. 2) Check Pod ports match targetPort. 3) Check NetworkPolicy. 4) Check service port mapping.",
+              "A timeout when connecting to a Service means traffic is not reaching any Pod. Start with kubectl get endpoints my-service: an empty list means the Service selector does not match any Pod's labels. If Endpoints exist, verify that targetPort in the Service matches containerPort in the Pod spec.",
           },
           {
             q: "A Node has MemoryPressure. Pods are being evicted. What order does the kubelet evict them?",
@@ -6771,7 +6771,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "MemoryPressure causes the kubelet to evict Pods by QoS: 1. BestEffort (no requests/limits). 2. Burstable (requests < limits). 3. Guaranteed (requests=limits) — last to be evicted.",
+              "Under MemoryPressure, kubelet evicts Pods in QoS order from least to most protected: BestEffort Pods (no requests or limits) go first, then Burstable Pods (requests less than limits), and Guaranteed Pods (requests equal limits) are evicted last. Setting requests=limits on critical Pods gives them the highest eviction protection.",
           },
           {
             q: "What does kubectl top pod --sort-by=memory do?",
@@ -6783,7 +6783,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl top pod --sort-by=memory (or cpu) lists Pods ordered by resource consumption. Useful for quickly identifying Pods that are using the most resources and may be causing issues.",
+              "kubectl top pod --sort-by=memory ranks all Pods from highest to lowest memory consumption in real time (requires metrics-server). This quickly surfaces the biggest consumers on a cluster experiencing MemoryPressure or frequent OOMKills.",
           },
         ],
       },
@@ -6801,7 +6801,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "תמיד חוקרים לפני שמחזירים גרסה. kubectl logs --previous מראה מה גרם ל-crash, kubectl describe מראה את ה-events. רק אחרי שמבינים את הסיבה מחליטים – לתקן או rollback.",
+              "לפני rollback חשוב להבין מה שתשתנה. kubectl logs <new-pod> --previous מציג את הoutput של ה-crash, וkubectl describe pod מציג את ה-Events שהובילו לו. רק אחרי שמבינים את הסיבה מחליטים — לתקן את הcode ולדחוף גרסה חדשה, או לבצע rollout undo לגרסה הקודמת.",
           },
           {
             q: "Deployment Upgrade נעצר: 5 מתוך 10 Pods על v2 ו-5 נשארים על v1. kubectl rollout status מראה 'Waiting for rollout to finish'. מה הסיבה הסבירה ביותר?",
@@ -6813,7 +6813,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Rolling update נעצר כמעט תמיד בגלל שה-Pods החדשים לא עוברים readiness probe. K8s לא יקדם את ה-rollout עד שהם Ready. תקן את האפליקציה, או הרץ kubectl rollout undo להחזיר לגרסה הקודמת.",
+              "Rolling update נעצר כמעט תמיד בגלל שה-Pods החדשים לא עוברים את ה-readiness probe. Kubernetes לא יקדם את ה-rollout עד שמספיק Pods חדשים הם Ready, וגם לא ימחק Pods ישנים מעבר ל-maxUnavailable. הפתרון הוא לתקן את האפליקציה/probe, או להרץ kubectl rollout undo.",
           },
           {
             q: "Service קיים עם selector 'app: backend'. Pods עם label 'app: backend-api' רצים ובריאים. משתמשים מקבלים connection refused. מה הבעיה?",
@@ -6825,7 +6825,7 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation:
-              "Classic selector mismatch – ה-Service מחפש Pods עם 'app: backend' אבל ה-Pods מתוייגים 'app: backend-api'. הרץ kubectl describe service ו-kubectl get pods --show-labels להשוואה, ותקן את ה-selector.",
+              "ה-Service selector 'app: backend' לא תואם ל-label 'app: backend-api' של ה-Pods — הם מחרוזות שונות. כתוצאה, ה-Endpoints ריקים ו-kube-proxy אין לאן לנתב. הרץ kubectl get endpoints <service> לאישור ו-kubectl get pods --show-labels להשוואה, ואז תקן את ה-selector.",
           },
           {
             q: "Node מראה NotReady ב-kubectl get nodes. Pods מפונים ממנו. מה שתי הפעולות הראשונות שלך?",
@@ -6837,7 +6837,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "kubectl describe node מציג memory/disk pressure, שגיאות kubelet, ו-conditions. לאחר מכן SSH ל-Node ובדוק את ה-kubelet – הסיבות הנפוצות הן: kubelet נפל, תעודת SSL פגה, או disk pressure.",
+              "kubectl describe node <name> מציג את ה-Conditions (MemoryPressure, DiskPressure, Ready) ואת ה-Events האחרונים — המקום הראשון לחפש. לאחר מכן SSH ל-Node ו-systemctl status kubelet לוודא שהתהליך רץ. הסיבות הנפוצות ל-NotReady: kubelet נפל, תעודת TLS פגה, או disk/memory pressure.",
           },
           {
             q: "מה kubectl drain עושה ומתי משתמשים בו?",
@@ -6849,7 +6849,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl drain [node] מפנה Pods בצורה graceful, מכבד PodDisruptionBudgets. משתמשים לפני maintenance על Node.",
+              "kubectl drain מפנה את כל ה-Pods מ-Node בצורה graceful ומסמן אותו כunschedulable. הוא מכבד PodDisruptionBudgets ומחכה שה-Pods יעלו במקום אחר לפני שממשיך. משתמשים בו לפני maintenance (upgrade, reboot) כדי למנוע downtime.",
           },
           {
             q: "מה kubectl cordon עושה?",
@@ -6861,7 +6861,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl cordon [node] מסמן SchedulingDisabled. Pods קיימים ממשיכים לרוץ, רק חדשים לא יתזמנו שם.",
+              "kubectl cordon מסמן Node כ-SchedulingDisabled, כלומר ה-Scheduler לא יניח Pods חדשים עליו. שלא כמו drain, cordon לא מגרש Pods קיימים — הם ממשיכים לרוץ. שימושי כשרוצים למנוע תזמון חדש בלי לשבש workloads קיימים.",
           },
           {
             q: "מה ephemeral debug container?",
@@ -6873,7 +6873,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl debug -it [pod] --image=busybox --target=[container] מוסיף קונטיינר debug לPod רץ. שימושי כשlimage חסר כלי debug.",
+              "kubectl debug -it [pod] --image=busybox --target=[container] מוסיף ephemeral container לPod רץ בלי לאתחל אותו מחדש. שימושי כשה-image של ה-Pod מינימלי ולא מכיל כלי debug כמו curl, dig, או netcat.",
           },
           {
             q: "כיצד מאבחנים בעיות DNS ב-Kubernetes?",
@@ -6885,7 +6885,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "מריצים nslookup/dig מתוך Pod לבדוק resolution. בודקים CoreDNS Pods ב-kube-system namespace ו-ConfigMap של CoreDNS.",
+              "לבדיקת DNS מתוך Pod: kubectl exec <pod> -- nslookup kubernetes.default מוודא שCoreDNS מגיב. אם נכשל, בדוק kubectl get pods -n kube-system לוודא שCoreDNS Pods רצים ובדוק kubectl logs <coredns-pod> -n kube-system לשגיאות.",
           },
           {
             q: "מה הפקודה לגיבוי etcd?",
@@ -6897,7 +6897,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "etcdctl snapshot save יוצר snapshot של etcd. חיוני לDR. צריך לציין endpoint, cert, key, cacert.",
+              "etcdctl snapshot save backup.db מייצר snapshot מלא של etcd — ה-database שמכיל את כל מצב הCluster. זהו הכלי הראשי ל-Disaster Recovery. חייבים לציין --endpoints, --cacert, --cert, ו--key לאימות מול ה-etcd cluster.",
           },
           {
             q: "Service לא מנתב traffic לPods. kubectl get endpoints מציג <none>. מה הגורם הסביר?",
@@ -6909,10 +6909,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "<none> ב-Endpoints אומר שה-Service לא מוצא Pods תואמים. הכי נפוץ: selector mismatch. הרץ kubectl get pods --show-labels והשווה ל-selector של ה-Service.",
+              "Endpoints ריקים (<none>) אומרים שה-Service selector לא תואם ל-labels של אף Pod בריא. הדבר גורם לkube-proxy לא לייצר iptables rules לnicotine הPods, כך שכל תנועה לService תיפול. הרץ kubectl get pods --show-labels והשווה בדקדוק ל-selector של ה-Service.",
           },
           {
-            q: "kubectl apply נכשל עם:\nerror: error validating 'deployment.yaml': error validating data: ValidationError(Deployment.spec.template.spec.containers[0]): unknown field 'resoruces'\nמה הבעיה?",
+            q: "kubectl apply נכשל עם:\n\nerror: error validating 'deployment.yaml': error validating data: ValidationError(Deployment.spec.template.spec.containers[0]): unknown field 'resoruces'\n\nמה הבעיה?",
             options: [
               "RBAC שגוי",
               "שגיאת typo ב-YAML – 'resoruces' במקום 'resources' – Kubernetes דוחה fields לא מוכרים",
@@ -6921,10 +6921,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "K8s validation דוחה fields לא מוכרים. טעויות typo כמו 'resoruces' גורמות לValidationError. השתמש ב-kubectl apply --dry-run=client לgotcha לפני apply.",
+              "Kubernetes מבצע schema validation על כל manifest שמוגש. השדה 'resoruces' לא מוכר (הname הנכון הוא 'resources'), כך שה-validation נכשל עם ValidationError. הרץ kubectl apply --dry-run=client -f deployment.yaml לפני apply לתפוס שגיאות YAML מבלי להשפיע על הCluster.",
           },
           {
-            q: "Pod רץ אבל ה-liveness probe נכשל כל הזמן. kubectl describe מציג:\nLiveness probe failed: HTTP probe failed with statuscode: 404\nמה בודקים?",
+            q: "Pod רץ אבל ה-liveness probe נכשל כל הזמן.\n\nkubectl describe מציג:\nLiveness probe failed: HTTP probe failed with statuscode: 404\n\nמה בודקים?",
             options: [
               "DNS שגוי",
               "ה-probe path שגוי – /healthz שגוי, בדוק איזה endpoint האפליקציה חושפת",
@@ -6933,10 +6933,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "HTTP liveness probe עם 404 = ה-path שגוי. בדוק ב-code/docs איזה health endpoint חושפת האפליקציה (/health, /ping, /ready). עדכן livenessProbe.httpGet.path.",
+              "404 ב-HTTP liveness probe אומר שה-path שמוגדר ב-livenessProbe.httpGet.path לא קיים באפליקציה. ה-Pod עצמו רץ — הבעיה היא הגדרת ה-probe בלבד. בדוק בdocumentation של האפליקציה איזה endpoint health היא חושפת (/health, /ping, /livez) ועדכן את ה-path.",
           },
           {
-            q: "kubectl exec -it my-pod -- bash מחזיר:\nError from server: container not found ('bash')\nמה הפתרון?",
+            q: "kubectl exec -it my-pod -- bash מחזיר:\n\nError from server: container not found ('bash')\n\nמה הפתרון?",
             options: [
               "Pod לא Running",
               "הimage לא מכיל bash – נסה /bin/sh או kubectl debug עם image busybox",
@@ -6945,10 +6945,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "containers מינימליים כמו Alpine אין להם bash. נסה: kubectl exec -it my-pod -- /bin/sh. אם גם זה נכשל, השתמש ב-kubectl debug -it my-pod --image=busybox.",
+              "images מינימליים כמו Alpine, distroless, או scratch לא מכילים bash. נסה /bin/sh במקום: kubectl exec -it my-pod -- /bin/sh. אם גם /bin/sh לא קיים, השתמש ב-kubectl debug -it my-pod --image=busybox שמוסיף ephemeral container עם כלי debug.",
           },
           {
-            q: "PodDisruptionBudget מוגדר עם minAvailable: 3. Cluster יש 3 replicas. kubectl drain נכשל:\nerror: cannot evict pod as it would violate the pod's disruption budget\nמה עושים?",
+            q: "PodDisruptionBudget מוגדר עם minAvailable: 3. Cluster יש 3 replicas.\n\nkubectl drain נכשל:\nerror: cannot evict pod as it would violate the pod's disruption budget\n\nמה עושים?",
             options: [
               "מוחקים PDB",
               "הוסף replica לפחות אחד (scale to 4) לפני kubectl drain, ואז drain",
@@ -6957,10 +6957,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PDB עם minAvailable:3 ו-3 replicas = לא ניתן לגרש אף Pod. הוסף replica: kubectl scale deployment app --replicas=4. עכשיו ניתן לגרש Pod אחד ועדיין עומדים ב-minAvailable:3.",
+              "PDB עם minAvailable:3 מגן על 3 Pods בכל זמן נתון. כשיש בדיוק 3 replicas, אי אפשר לגרש אף Pod מבלי להפר את ה-PDB. הפתרון: הוסף replica אחד לפחות (kubectl scale deployment app --replicas=4), ואז ה-drain יוכל לגרש Pod אחד ועדיין לשמור על 3 פעילים.",
           },
           {
-            q: "kubectl logs my-pod מחזיר:\nError from server (BadRequest): container 'my-container' in pod 'my-pod' is not running\nמה עושים?",
+            q: "kubectl logs my-pod מחזיר:\n\nError from server (BadRequest): container 'my-container' in pod 'my-pod' is not running\n\nמה עושים?",
             options: [
               "Pod Running בטח",
               "Pod לא Running – בדוק kubectl get pod my-pod לראות סטטוס, ואז kubectl describe pod my-pod לEvents",
@@ -6969,10 +6969,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "לא ניתן לקרוא logs מcontainer שלא רץ. בדוק סטטוס: kubectl get pod. אם Pod ב-CrashLoopBackOff, השתמש ב--previous. אם Init:Error, בדוק initContainer logs.",
+              "Kubernetes לא יכול לקרוא logs מcontainer שלא רץ. בדוק kubectl get pod my-pod לסטטוס: אם CrashLoopBackOff השתמש ב-kubectl logs my-pod --previous ללוגים מה-crash האחרון. אם הסטטוס הוא Init:Error, בדוק kubectl logs my-pod -c <init-container-name>.",
           },
           {
-            q: "Cluster חדש. kubectl get nodes מחזיר:\nNAME    STATUS   ROLES   AGE\nmaster  NotReady  control-plane  5m\nמה הצעד הראשון?",
+            q: "Cluster חדש.\n\nkubectl get nodes מחזיר:\nNAME    STATUS   ROLES   AGE\nmaster  NotReady  control-plane  5m\n\nמה הצעד הראשון?",
             options: [
               "מחק Node",
               "CNI plugin עדיין לא מותקן – בדוק kubectl get pods -n kube-system ואז התקן CNI (Calico/Flannel)",
@@ -6981,7 +6981,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Node חדש NotReady בדרך כלל = CNI plugin לא מותקן. ב-kube-system תראה CoreDNS ב-Pending. התקן CNI: kubectl apply -f https://raw.githubusercontent.com/.../calico.yaml.",
+              "Node חדש שנשאר NotReady בדרך כלל = CNI plugin לא מותקן. Kubernetes דורש CNI לפני שיכול להגדיר network לPods, וללא CNI ה-Node לא יכול להיות Ready. הסימן: CoreDNS Pods ב-kube-system יהיו ב-Pending. התקן CNI (Calico, Flannel, וכו') להמשך.",
           },
           {
             q: "Helm upgrade כשל באמצע. Pods על גרסה ישנה. Release ב-failed. kubectl get pods מציג Pods ישנים עדיין רצים. מה הסטטוס של ה-Release?",
@@ -6993,7 +6993,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "helm upgrade שכשל משאיר Release ב-FAILED. Pods הישנים ממשיכים לרוץ (K8s לא מוחק deployment שעובד). השתמש ב-helm rollback my-release N לחזרה למצב תקין.",
+              "כש-helm upgrade נכשל, ה-Release עובר לסטטוס FAILED. Pods הישנים ממשיכים לרוץ כי Kubernetes לא מוחק Deployment עובד. ה-Release Object עצמו נשאר כדי לאפשר rollback: helm rollback my-release N מחזיר את כל ה-resources ל-revision N.",
           },
           {
             q: "Pod רץ עם ENV VAR מ-ConfigMap. שינית את ConfigMap. ה-Pod עדיין משתמש בערך ישן. מה הסיבה?",
@@ -7005,10 +7005,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "env vars מוזרקים ב-Pod creation. שינוי ConfigMap לא מעדכן Pods רצים. פתרון: kubectl rollout restart deployment/my-app יגרום ל-Pods חדשים לטעון ערכים חדשים.",
+              "כשPod מטעין env vars מConfigMap, הוא קורא אותם פעם אחת בלבד — בזמן הפעלת הPod. שינוי ב-ConfigMap אחרי שה-Pod רץ לא מגיע אליו. הפתרון הוא kubectl rollout restart deployment/my-app שיוצר Pods חדשים שטוענים את ה-ConfigMap המעודכן.",
           },
           {
-            q: "Pod לא עולה. kubectl describe מציג:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: /var/lib/kubelet/pods/.../volumes/.../my-secret\nמה הסיבה?",
+            q: "Pod לא עולה.\n\nkubectl describe מציג:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: /var/lib/kubelet/pods/.../volumes/.../my-secret\n\nמה הסיבה?",
             options: [
               "image שגוי",
               "Secret 'my-secret' לא קיים ב-Namespace – Pod לא יכול ל-mount volume של Secret שלא קיים",
@@ -7017,10 +7017,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Pod מנסה לmount Secret שלא קיים. K8s נכשל ב-container creation. בדוק: kubectl get secret my-secret -n <namespace>. אם לא קיים – צור אותו.",
+              "Kubernetes מנסה לmount את ה-Secret כvolume לפני שמפעיל את הcontainer. אם ה-Secret לא קיים ב-Namespace, ה-volume mount נכשל ו-containerd לא יכול להתחיל את ה-task. בדוק kubectl get secret my-secret -n <namespace> ואם חסר — צור אותו.",
           },
           {
-            q: "kubectl get pods מציג Pod ב-Terminating 20 דקות. Node שבו רץ ה-Pod NotReady. מה עושים?",
+            q: "kubectl get pods מציג Pod ב-Terminating כבר 20 דקות. Node שבו רץ ה-Pod NotReady.\n\nמה עושים?",
             options: [
               "מחכים",
               "kubectl delete pod my-pod --grace-period=0 --force – Node NotReady אומר שkubelet לא מדווח, Pod לא יצא gracefully",
@@ -7029,7 +7029,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "כש-Node NotReady, kubelet לא מבצע graceful termination. --force --grace-period=0 מאלץ מחיקה מה-API server. K8s יודע שה-Pod לא רץ יותר.",
+              "כש-Node NotReady, ה-kubelet לא יכול להשלים את תהליך ה-termination הgraceful ו-Pod נשאר תקוע. הפתרון הוא kubectl delete pod my-pod --grace-period=0 --force שמוחק את ה-Pod Object ישירות מה-API server. Kubernetes מניח שה-Pod אינו רץ עוד ומתנהג בהתאם.",
           },
         ],
         questionsEn: [
@@ -7043,7 +7043,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "Always investigate before reverting. kubectl logs --previous shows the crash reason, kubectl describe shows events. Only after you understand the cause do you decide whether to fix it or roll back.",
+              "Rolling back without understanding the cause can mask the problem. kubectl logs <new-pod> --previous shows what the container printed before crashing, and kubectl describe pod shows the Events timeline. Only after understanding the cause should you decide whether to fix the code or run kubectl rollout undo.",
           },
           {
             q: "A Deployment upgrade stalled: 5 of 10 pods are on v2 and 5 remain on v1. kubectl rollout status shows 'Waiting for rollout to finish'. What is the most likely cause?",
@@ -7055,7 +7055,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A stalled rolling update almost always means the new pods are not passing readiness probes. K8s won't advance the rollout until they are Ready. Fix the app/probe config, or run kubectl rollout undo to revert.",
+              "A rolling update stalls when new Pods fail their readiness probe, because Kubernetes will not advance until enough new Pods are Ready and will not remove old Pods beyond maxUnavailable. Fix the application or readiness probe config so new Pods become Ready, or run kubectl rollout undo to revert to the working version.",
           },
           {
             q: "A Service has selector 'app: backend'. Pods labeled 'app: backend-api' are Running and healthy. Users get connection refused. What is wrong?",
@@ -7067,7 +7067,7 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation:
-              "Classic selector mismatch — the Service is looking for pods with 'app: backend' but pods are labeled 'app: backend-api'. Run kubectl describe service and kubectl get pods --show-labels to compare, then fix the selector.",
+              "The strings 'app: backend' and 'app: backend-api' do not match, so the Service Endpoints list is empty and kube-proxy has no Pod IPs to forward traffic to. Run kubectl get endpoints <service> to confirm, then kubectl get pods --show-labels to see the actual labels, and fix the selector in the Service spec.",
           },
           {
             q: "A Node shows NotReady in kubectl get nodes. Pods on it are being evicted. What are your first two steps?",
@@ -7079,7 +7079,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "kubectl describe node shows memory/disk pressure, kubelet errors, and conditions. Then SSH into the node and check kubelet — common causes are: kubelet crashed, SSL cert expired, or disk pressure causing the node to become unresponsive.",
+              "kubectl describe node <name> is the first diagnostic step — it shows all Conditions (Ready, MemoryPressure, DiskPressure), recent Events, and allocated resources. Then SSH in and run systemctl status kubelet to check if the kubelet process is running. Common root causes: kubelet crashed, TLS cert expired, or disk/memory pressure.",
           },
           {
             q: "What does kubectl drain do and when is it used?",
@@ -7091,7 +7091,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl drain [node] gracefully evicts Pods, respecting PodDisruptionBudgets. Used before performing Node maintenance.",
+              "kubectl drain evicts all Pods from a Node gracefully, honoring PodDisruptionBudgets and waiting for each Pod to terminate before proceeding. It also cordons the Node so no new Pods are scheduled during maintenance. Use it before Node upgrades, reboots, or decommissioning.",
           },
           {
             q: "What does kubectl cordon do?",
@@ -7103,7 +7103,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl cordon [node] sets SchedulingDisabled. Existing Pods keep running; only new Pods won't be scheduled there.",
+              "kubectl cordon marks a Node as SchedulingDisabled, preventing the Scheduler from placing new Pods on it. Unlike drain, existing Pods continue running undisturbed. It is useful when you want to stop new workloads from landing on a Node without disrupting what is already there.",
           },
           {
             q: "What is an ephemeral debug container?",
@@ -7115,7 +7115,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl debug -it [pod] --image=busybox --target=[container] injects a debug container into a running Pod. Useful when the main image lacks debugging tools.",
+              "An ephemeral container is a short-lived container injected into a running Pod without restarting it. kubectl debug -it [pod] --image=busybox --target=[container] adds a container with debugging tools like curl, dig, and netcat. This is especially valuable when the application image is minimal (distroless, scratch, Alpine) and lacks shells or debugging utilities.",
           },
           {
             q: "How do you diagnose DNS issues in Kubernetes?",
@@ -7127,7 +7127,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Run nslookup/dig from inside a Pod to test resolution. Check CoreDNS Pods in kube-system and the CoreDNS ConfigMap.",
+              "To test DNS from inside a Pod: kubectl exec <pod> -- nslookup kubernetes.default verifies that CoreDNS is responding. If that fails, check kubectl get pods -n kube-system to confirm CoreDNS Pods are Running, then kubectl logs <coredns-pod> -n kube-system for error details.",
           },
           {
             q: "What is the command to back up etcd?",
@@ -7139,7 +7139,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "etcdctl snapshot save creates an etcd snapshot — essential for disaster recovery. Specify endpoint, cert, key, and cacert.",
+              "etcdctl snapshot save backup.db creates a point-in-time snapshot of etcd, which contains the entire cluster state. This is the standard backup method for disaster recovery. You must provide --endpoints, --cacert, --cert, and --key flags to authenticate with the etcd cluster.",
           },
           {
             q: "A Service routes no traffic to Pods. kubectl get endpoints shows <none>. What is the likely cause?",
@@ -7151,10 +7151,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "<none> in Endpoints means the Service found no matching Pods. Most common cause: selector mismatch. Run kubectl get pods --show-labels and compare to the Service selector.",
+              "Empty Endpoints (<none>) mean the Service selector matched zero Pods. Without Endpoint entries, kube-proxy has no IP addresses to forward traffic to, so all connections are dropped or refused. Run kubectl get pods --show-labels and compare the output carefully against the Service's spec.selector.",
           },
           {
-            q: "kubectl apply fails with:\nerror: error validating 'deployment.yaml': unknown field 'resoruces'\nWhat is wrong?",
+            q: "kubectl apply fails with:\n\nerror: error validating 'deployment.yaml': unknown field 'resoruces'\n\nWhat is wrong?",
             options: [
               "Wrong RBAC",
               "Typo in YAML — 'resoruces' instead of 'resources' — Kubernetes rejects unknown fields",
@@ -7163,10 +7163,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "K8s strict validation rejects unknown fields. Typos like 'resoruces' cause ValidationError. Use kubectl apply --dry-run=client to catch mistakes before applying.",
+              "Kubernetes validates every manifest against the API schema and rejects fields it does not recognize. The typo 'resoruces' (instead of 'resources') is an unknown field and causes a hard ValidationError. Use kubectl apply --dry-run=client -f deployment.yaml to catch these errors before they hit the cluster.",
           },
           {
-            q: "A Pod is running but the liveness probe keeps failing. kubectl describe shows:\nLiveness probe failed: HTTP probe failed with statuscode: 404\nWhat do you check?",
+            q: "A Pod is running but the liveness probe keeps failing.\n\nkubectl describe shows:\nLiveness probe failed: HTTP probe failed with statuscode: 404\n\nWhat do you check?",
             options: [
               "DNS misconfiguration",
               "Wrong probe path — /healthz is incorrect, find which endpoint the app actually exposes",
@@ -7175,10 +7175,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "HTTP liveness probe returning 404 = wrong path. Check the app's docs or code to find the real health endpoint (/health, /ping, /ready). Update livenessProbe.httpGet.path.",
+              "A 404 from the liveness probe means the path configured in livenessProbe.httpGet.path does not exist on the application — the Pod itself is healthy, only the probe config is wrong. Check the application's documentation or source code to find which health endpoint it exposes (/health, /ping, /livez), then update the path in the Pod spec.",
           },
           {
-            q: "kubectl exec -it my-pod -- bash returns:\nError from server: container not found ('bash')\nWhat is the fix?",
+            q: "kubectl exec -it my-pod -- bash returns:\n\nError from server: container not found ('bash')\n\nWhat is the fix?",
             options: [
               "Pod not Running",
               "The image has no bash — try /bin/sh or kubectl debug with a busybox image",
@@ -7187,10 +7187,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Minimal images like Alpine don't include bash. Try: kubectl exec -it my-pod -- /bin/sh. If that also fails, use kubectl debug -it my-pod --image=busybox to inject a debug container.",
+              "Minimal images (Alpine, distroless, scratch) often do not include bash. Try /bin/sh first: kubectl exec -it my-pod -- /bin/sh. If even sh is absent, use kubectl debug -it my-pod --image=busybox to inject an ephemeral container that has a full shell and common utilities.",
           },
           {
-            q: "A PodDisruptionBudget sets minAvailable: 3. The cluster has 3 replicas. kubectl drain fails:\nerror: cannot evict pod as it would violate the pod's disruption budget\nWhat do you do?",
+            q: "A PodDisruptionBudget sets minAvailable: 3. The cluster has 3 replicas.\n\nkubectl drain fails:\nerror: cannot evict pod as it would violate the pod's disruption budget\n\nWhat do you do?",
             options: [
               "Delete the PDB",
               "Scale to at least 4 replicas first, then kubectl drain",
@@ -7199,10 +7199,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PDB with minAvailable:3 and 3 replicas = no Pod can be evicted. Scale up: kubectl scale deployment app --replicas=4. Now one Pod can be evicted while still satisfying minAvailable:3.",
+              "With minAvailable:3 and exactly 3 replicas, evicting any single Pod would drop the available count below 3, violating the PDB. The solution is to scale up first: kubectl scale deployment app --replicas=4, then run kubectl drain. Now one Pod can be evicted while still keeping 3 available to satisfy the budget.",
           },
           {
-            q: "kubectl logs my-pod returns:\nError from server (BadRequest): container 'my-container' in pod 'my-pod' is not running\nWhat do you do?",
+            q: "kubectl logs my-pod returns:\n\nError from server (BadRequest): container 'my-container' in pod 'my-pod' is not running\n\nWhat do you do?",
             options: [
               "The Pod is definitely Running",
               "Pod is not Running — check kubectl get pod my-pod for status, then kubectl describe pod my-pod for Events",
@@ -7211,10 +7211,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Logs cannot be read from a non-running container. Check status: kubectl get pod. If in CrashLoopBackOff, use --previous. If Init:Error, check initContainer logs.",
+              "Kubernetes can only stream logs from a container that is currently running. The error means the container is not in a running state. Run kubectl get pod my-pod to see the status: if CrashLoopBackOff use kubectl logs my-pod --previous to read the last crashed instance; if the status is Init:Error check the initContainer logs with kubectl logs my-pod -c <init-container-name>.",
           },
           {
-            q: "A new cluster. kubectl get nodes shows:\nNAME    STATUS    ROLES\nmaster  NotReady  control-plane\nWhat is the first step?",
+            q: "A new cluster.\n\nkubectl get nodes shows:\nNAME    STATUS    ROLES\nmaster  NotReady  control-plane\n\nWhat is the first step?",
             options: [
               "Delete the Node",
               "CNI plugin is not yet installed — check kubectl get pods -n kube-system then install a CNI (Calico/Flannel)",
@@ -7223,7 +7223,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A newly created node NotReady usually means CNI is not installed. CoreDNS will also be Pending in kube-system. Install CNI: kubectl apply -f calico.yaml or equivalent.",
+              "On a freshly initialized cluster, NotReady on the control-plane Node almost always means the CNI plugin has not been installed yet. Without CNI, Nodes cannot set up Pod networking and stay NotReady. CoreDNS Pods in kube-system will also be Pending. Install a CNI like Calico or Flannel to unblock the cluster.",
           },
           {
             q: "helm upgrade failed midway. Release is in 'failed' status. Old Pods are still running. What is the state of the Release?",
@@ -7235,7 +7235,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A failed helm upgrade leaves the Release in FAILED state. Old Pods keep running (K8s preserves working deployments). Use helm rollback my-release N to return to a good state.",
+              "When helm upgrade fails, the Release is marked FAILED but Kubernetes keeps the existing working Pods running — it does not automatically roll back or delete them. The Release object persists so you can recover: run helm history my-release to find revision numbers and helm rollback my-release N to restore a clean state.",
           },
           {
             q: "A Pod uses an env var from a ConfigMap. You updated the ConfigMap. The Pod still uses the old value. Why?",
@@ -7247,10 +7247,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "env vars are injected at Pod creation time. Changing a ConfigMap doesn't update running Pods. Fix: kubectl rollout restart deployment/my-app — new Pods will pick up the new values.",
+              "Environment variables sourced from a ConfigMap (via envFrom or env.valueFrom) are injected once at Pod creation and never updated while the Pod runs. Editing the ConfigMap changes the stored data but does not reach the existing Pod. Run kubectl rollout restart deployment/my-app to create new Pods that read the updated ConfigMap.",
           },
           {
-            q: " A Pod won't start. kubectl describe shows:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: .../volumes/.../my-secret\nWhat is the cause?",
+            q: "A Pod won't start.\n\nkubectl describe shows:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: .../volumes/.../my-secret\n\nWhat is the cause?",
             options: [
               "Wrong image",
               "Secret 'my-secret' does not exist in the Namespace — Pod cannot mount a missing Secret volume",
@@ -7259,10 +7259,10 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "The Pod is trying to mount a Secret that doesn't exist. K8s fails at container creation. Check: kubectl get secret my-secret -n <namespace>. If missing — create it.",
+              "Kubernetes mounts Secret volumes before starting the container. When the Secret does not exist in the Namespace, kubelet cannot find the files to mount and container creation fails with the 'no such file or directory' error. Run kubectl get secret my-secret -n <namespace> to check, and create the Secret if it is missing.",
           },
           {
-            q: " kubectl get pods shows a Pod stuck in Terminating for 20 minutes. The Node it ran on is NotReady. What do you do?",
+            q: "kubectl get pods shows a Pod stuck in Terminating for 20 minutes. The Node it ran on is NotReady.\n\nWhat do you do?",
             options: [
               "Wait it out",
               "kubectl delete pod my-pod --grace-period=0 --force — a NotReady Node means kubelet is not reporting, graceful termination won't happen",
@@ -7271,7 +7271,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "When a Node is NotReady, the kubelet cannot perform graceful termination. --force --grace-period=0 removes the Pod object from the API server. K8s knows the Pod is no longer running.",
+              "Graceful termination relies on the kubelet to signal the container and wait for it to exit cleanly. When the Node is NotReady the kubelet is unresponsive, so graceful termination never completes. kubectl delete pod my-pod --grace-period=0 --force removes the Pod object directly from the API server, telling Kubernetes to stop tracking it.",
           },
         ],
       },
