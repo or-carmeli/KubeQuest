@@ -71,25 +71,25 @@ export default function RoadmapView({
 
       {/* ── Summary header ── */}
       <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px 18px",marginBottom:16}}>
-        <div style={{fontWeight:800,color:"#e2e8f0",fontSize:16,marginBottom:4}}>ההתקדמות במסלול</div>
+        <div style={{fontWeight:800,color:"#e2e8f0",fontSize:16,marginBottom:4}}>{t("roadmapTitle")}</div>
         <div style={{color:"#94a3b8",fontSize:13,marginBottom:10}}>
           {allDone
-            ? "🎉 השלמת את כל השלבים!"
-            : `את בשלב ${currentStageNum} מתוך ${topics.length}`}
+            ? t("roadmapAllDone")
+            : `${t("roadmapStage")} ${currentStageNum} ${t("roadmapStageOf")} ${topics.length}`}
         </div>
         <div style={{height:6,background:"rgba(255,255,255,0.06)",borderRadius:4,marginBottom:6}}>
           <div style={{height:"100%",borderRadius:4,width:`${overallProgress}%`,background:"linear-gradient(90deg,#00D4FF,#A855F7)",transition:"width 0.5s ease"}}/>
         </div>
-        <div style={{fontSize:12,color:"#94a3b8",textAlign:"center"}}>{overallProgress}% הושלם</div>
+        <div style={{fontSize:12,color:"#94a3b8",textAlign:"center"}}>{overallProgress}% {t("roadmapCompletedPct")}</div>
       </div>
 
       {/* ── Global continue ── */}
       {!allDone&&(
         <button onClick={handleGlobalContinue}
-          style={{width:"100%",marginBottom:20,padding:"14px 20px",background:"linear-gradient(135deg,rgba(0,212,255,0.1),rgba(168,85,247,0.1))",border:"1px solid rgba(0,212,255,0.3)",borderRadius:14,cursor:"pointer",color:"#00D4FF",fontWeight:800,fontSize:15,direction:"rtl",transition:"transform 0.2s"}}
+          style={{width:"100%",marginBottom:20,padding:"14px 20px",background:"linear-gradient(135deg,rgba(0,212,255,0.1),rgba(168,85,247,0.1))",border:"1px solid rgba(0,212,255,0.3)",borderRadius:14,cursor:"pointer",color:"#00D4FF",fontWeight:800,fontSize:15,direction:dir,transition:"transform 0.2s"}}
           onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
           onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-          🚀 המשיכי לשלב הבא
+          {t("roadmapContinue")}
         </button>
       )}
 
@@ -117,7 +117,7 @@ export default function RoadmapView({
             : "rgba(255,255,255,0.07)";
 
           return (
-            <div key={topic.id} style={{display:"flex",alignItems:"stretch",gap:14,direction:"rtl"}}>
+            <div key={topic.id} style={{display:"flex",alignItems:"stretch",gap:14,direction:dir}}>
 
               {/* ── Node column (RTL: right side = first child) ── */}
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:42,flexShrink:0,paddingTop:2}}>
@@ -162,7 +162,7 @@ export default function RoadmapView({
                 {/* Stage header */}
                 <div
                   onClick={()=>{ if (!locked) setExpandedStage(isExpanded ? null : topic.id); }}
-                  style={{cursor:locked?"default":"pointer",display:"flex",alignItems:"center",gap:10,marginBottom:8,direction:"rtl"}}>
+                  style={{cursor:locked?"default":"pointer",display:"flex",alignItems:"center",gap:10,marginBottom:8,direction:dir}}>
                   <div style={{fontSize:20,width:36,height:36,borderRadius:9,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>
                     {topic.icon}
                   </div>
@@ -191,25 +191,25 @@ export default function RoadmapView({
 
                 {/* CTA */}
                 {locked ? (
-                  <div style={{color:"#334155",fontSize:12,textAlign:"center",padding:"6px 0",direction:"rtl"}}>
-                    🔒 נפתח אחרי השלמת השלב הקודם
+                  <div style={{color:"#334155",fontSize:12,textAlign:"center",padding:"6px 0",direction:dir}}>
+                    {t("roadmapLocked")}
                   </div>
                 ) : completed ? (
                   <button disabled style={{width:"100%",padding:"8px",background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.18)",borderRadius:10,color:"#10B981",fontSize:13,fontWeight:700,cursor:"default",opacity:0.8}}>
-                    ✅ הושלם
+                    {t("roadmapDone")}
                   </button>
                 ) : recLvl ? (
                   <button onClick={()=>startTopic(topic,recLvl)}
-                    style={{width:"100%",padding:"8px",background:`linear-gradient(135deg,${topic.color}20,${topic.color}10)`,border:`1px solid ${topic.color}40`,borderRadius:10,color:topic.color,fontSize:13,fontWeight:700,cursor:"pointer",transition:"transform 0.15s",direction:"rtl"}}
+                    style={{width:"100%",padding:"8px",background:`linear-gradient(135deg,${topic.color}20,${topic.color}10)`,border:`1px solid ${topic.color}40`,borderRadius:10,color:topic.color,fontSize:13,fontWeight:700,cursor:"pointer",transition:"transform 0.15s",direction:dir}}
                     onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
                     onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-                    ▶ המשיכי מכאן
+                    {t("roadmapContinueHere")}
                   </button>
                 ) : null}
 
                 {/* Expanded difficulty grid */}
                 {isExpanded&&(
-                  <div style={{marginTop:10,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,direction:"rtl"}}>
+                  <div style={{marginTop:10,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,direction:dir}}>
                     {Object.entries(levelConfig).filter(([lvl]) => lvl !== "mixed" && lvl !== "daily").map(([lvl, cfg]) => {
                       const key     = `${topic.id}_${lvl}`;
                       const done    = completedTopics[key];

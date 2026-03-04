@@ -355,6 +355,21 @@ const TRANSLATIONS = {
     resetProgress: "אפס התקדמות", resetConfirm: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
     resetTopic: "אפס נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
     mixedQuizBtn: "🎲 חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
+    roadmapTitle: "ההתקדמות במסלול",
+    roadmapAllDone: "🎉 השלמת את כל השלבים!",
+    roadmapStage: "את בשלב", roadmapStageOf: "מתוך",
+    roadmapCompletedPct: "הושלם",
+    roadmapContinue: "🚀 המשיכי לשלב הבא",
+    roadmapLocked: "🔒 נפתח אחרי השלמת השלב הקודם",
+    roadmapDone: "✅ הושלם",
+    roadmapContinueHere: "▶ המשיכי מכאן",
+    weakAreaTitle: "📉 האזור החלש שלך",
+    weakAreaEmpty: "עדיין אין מספיק נתונים, התחילי לענות כדי שנמליץ מה לחזק.",
+    allPerfectTitle: "🔥 הכל בשליטה",
+    allPerfectMsg: "כל הנושאים עם דיוק מלא. רוצה להמשיך לאתגר הבא?",
+    advancedPractice: "לתרגול מתקדם",
+    accuracyLabel: "דיוק",
+    goBackToTopic: "חזרי לנושא הזה",
   },
   en: {
     tagline: "Learn Kubernetes in a fun and interactive way",
@@ -399,6 +414,21 @@ const TRANSLATIONS = {
     resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
     resetTopic: "Reset Topic", resetTopicConfirm: "Reset progress for this topic?",
     mixedQuizBtn: "🎲 Mixed Quiz", mixedQuizDesc: "10 random questions from all topics",
+    roadmapTitle: "Roadmap Progress",
+    roadmapAllDone: "🎉 You completed all stages!",
+    roadmapStage: "You're on stage", roadmapStageOf: "of",
+    roadmapCompletedPct: "completed",
+    roadmapContinue: "🚀 Continue to Next Stage",
+    roadmapLocked: "🔒 Unlocks after completing the previous stage",
+    roadmapDone: "✅ Completed",
+    roadmapContinueHere: "▶ Continue from here",
+    weakAreaTitle: "📉 Your Weak Area",
+    weakAreaEmpty: "Not enough data yet, start answering to get recommendations.",
+    allPerfectTitle: "🔥 All Under Control",
+    allPerfectMsg: "All topics at 100% accuracy. Ready for the next challenge?",
+    advancedPractice: "Advanced Practice",
+    accuracyLabel: "accuracy",
+    goBackToTopic: "Go back to this topic",
   },
 };
 
@@ -1103,7 +1133,7 @@ export default function K8sQuestApp() {
               </div>
             ))}
           </div>
-          <WeakAreaCard topicStats={topicStats} onGoToTopic={(id) => {
+          <WeakAreaCard topicStats={topicStats} t={t} dir={dir} onGoToTopic={(id) => {
             const el = document.getElementById(`topic-card-${id}`);
             if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); setHighlightTopic(id); setTimeout(() => setHighlightTopic(null), 1500); }
           }}/>

@@ -13,16 +13,16 @@ function indicatorColor(accuracy) {
   return "#10B981";
 }
 
-export default function WeakAreaCard({ topicStats, onGoToTopic }) {
+export default function WeakAreaCard({ topicStats, onGoToTopic, t, dir }) {
   // Only consider topics the user has actually answered at least once.
   const entries = Object.entries(topicStats).filter(([, v]) => v.answered > 0);
 
   // ── Empty state ────────────────────────────────────────────────────────────
   if (entries.length === 0) {
     return (
-      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"14px 18px",marginBottom:16,direction:"rtl"}}>
-        <div style={{fontSize:12,fontWeight:700,color:"#94a3b8",marginBottom:8,letterSpacing:0.5}}>📉 האזור החלש שלך</div>
-        <p style={{color:"#475569",fontSize:13,margin:0}}>עדיין אין מספיק נתונים, התחילי לענות כדי שנמליץ מה לחזק.</p>
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"14px 18px",marginBottom:16,direction:dir}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#94a3b8",marginBottom:8,letterSpacing:0.5}}>{t("weakAreaTitle")}</div>
+        <p style={{color:"#475569",fontSize:13,margin:0}}>{t("weakAreaEmpty")}</p>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export default function WeakAreaCard({ topicStats, onGoToTopic }) {
     borderRadius: 14,
     padding: "14px 18px",
     marginBottom: 16,
-    direction: "rtl",
+    direction: dir,
   };
 
   // ── All-perfect variant ───────────────────────────────────────────────────
@@ -62,9 +62,9 @@ export default function WeakAreaCard({ topicStats, onGoToTopic }) {
         border: "1px solid rgba(16,185,129,0.18)",
         borderRight: `3px solid ${color}`,
       }}>
-        <div style={{fontSize:12,fontWeight:700,color:"#94a3b8",marginBottom:10,letterSpacing:0.5}}>🔥 הכל בשליטה</div>
+        <div style={{fontSize:12,fontWeight:700,color:"#94a3b8",marginBottom:10,letterSpacing:0.5}}>{t("allPerfectTitle")}</div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
-          <span style={{color:"#e2e8f0",fontSize:13}}>כל הנושאים עם דיוק מלא. רוצה להמשיך לאתגר הבא?</span>
+          <span style={{color:"#e2e8f0",fontSize:13}}>{t("allPerfectMsg")}</span>
           <button
             onClick={() => {
               // Scroll to the top of the categories list (first topic card).
@@ -73,7 +73,7 @@ export default function WeakAreaCard({ topicStats, onGoToTopic }) {
                 ?.scrollIntoView({ behavior: "smooth", block: "center" });
             }}
             style={{padding:"8px 16px",background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.3)",borderRadius:8,color:"#10B981",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
-            לתרגול מתקדם
+            {t("advancedPractice")}
           </button>
         </div>
       </div>
@@ -88,15 +88,15 @@ export default function WeakAreaCard({ topicStats, onGoToTopic }) {
       border: "1px solid rgba(239,68,68,0.15)",
       borderRight: `3px solid ${color}`,
     }}>
-      <div style={{fontSize:12,fontWeight:700,color:"#94a3b8",marginBottom:10,letterSpacing:0.5}}>📉 האזור החלש שלך</div>
+      <div style={{fontSize:12,fontWeight:700,color:"#94a3b8",marginBottom:10,letterSpacing:0.5}}>{t("weakAreaTitle")}</div>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={{color:"#e2e8f0",fontWeight:700,fontSize:15}}>{name}</span>
-          <span style={{color,fontSize:13,fontWeight:600}}>{accuracy}% דיוק</span>
+          <span style={{color,fontSize:13,fontWeight:600}}>{accuracy}% {t("accuracyLabel")}</span>
         </div>
         <button onClick={() => onGoToTopic(weakId)}
           style={{padding:"8px 16px",background:`${color}1a`,border:`1px solid ${color}4d`,borderRadius:8,color,fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
-          חזרי לנושא הזה
+          {t("goBackToTopic")}
         </button>
       </div>
     </div>
