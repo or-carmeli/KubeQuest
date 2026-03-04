@@ -1127,21 +1127,21 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 {currentQuestions[questionIndex].options.map((opt,i)=>{
                   const isCorrect = i===currentQuestions[questionIndex].answer;
                   const isChosen  = i===selectedAnswer;
-                  let borderColor = "rgba(255,255,255,0.09)", bg = "rgba(255,255,255,0.02)", color = "#94a3b8";
-                  if (isChosen && !submitted)  { borderColor = "#00D4FF66"; bg = "rgba(0,212,255,0.06)"; color = "#7dd3fc"; }
+                  let borderColor = "rgba(255,255,255,0.09)", bg = "rgba(255,255,255,0.02)", color = "#cbd5e1", labelBg = "rgba(255,255,255,0.07)", labelColor = "#94a3b8";
+                  if (isChosen && !submitted)  { borderColor = "#00D4FF66"; bg = "rgba(0,212,255,0.06)"; color = "#7dd3fc"; labelBg = "rgba(0,212,255,0.15)"; labelColor = "#00D4FF"; }
                   if (submitted) {
-                    if (isCorrect)             { borderColor = "#10B981"; bg = "rgba(16,185,129,0.1)";  color = "#10B981"; }
-                    else if (isChosen)          { borderColor = "#EF4444"; bg = "rgba(239,68,68,0.1)";   color = "#EF4444"; }
+                    if (isCorrect)             { borderColor = "#10B981"; bg = "rgba(16,185,129,0.1)";  color = "#10B981"; labelBg = "rgba(16,185,129,0.2)";  labelColor = "#10B981"; }
+                    else if (isChosen)          { borderColor = "#EF4444"; bg = "rgba(239,68,68,0.1)";   color = "#EF4444"; labelBg = "rgba(239,68,68,0.2)";   labelColor = "#EF4444"; }
                   }
                   const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
                   return (
                     <button key={i} className="opt-btn"
                       onClick={()=>handleSelectAnswer(i)}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"15px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:submitted?"default":"pointer",lineHeight:1.5,display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
-                      <span style={{opacity:0.4,fontSize:12,flexShrink:0}}>{t("optionLabels")[i]}.</span>
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:submitted?"default":"pointer",lineHeight:1.55,display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
+                      <span style={{flexShrink:0,width:24,height:24,borderRadius:6,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
                       <span dir={optDir} style={{flex:1}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
-                      {submitted&&isCorrect&&<span>✓</span>}
-                      {submitted&&isChosen&&!isCorrect&&<span>✗</span>}
+                      {submitted&&isCorrect&&<span style={{flexShrink:0,fontSize:16}}>✓</span>}
+                      {submitted&&isChosen&&!isCorrect&&<span style={{flexShrink:0,fontSize:16}}>✗</span>}
                     </button>
                   );
                 })}
