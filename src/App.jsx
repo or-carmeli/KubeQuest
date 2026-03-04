@@ -732,6 +732,14 @@ export default function K8sQuestApp() {
   };
 
   const isFreeMode = (id) => id === "mixed" || id === "daily";
+
+  // Derive total_score canonically from completedTopics so it can never be gamed.
+  // Each topic/level key is "topicId_level" (e.g. "workloads_easy").
+  const computeScore = (completed) =>
+    Object.entries(completed).reduce((sum, [key, res]) => {
+      const lvl = key.split("_").slice(-1)[0];
+      return sum + (res.correct * (LEVEL_CONFIG[lvl]?.points ?? 0));
+    }, 0);
   const currentLevelData = selectedTopic && selectedLevel && !isFreeMode(selectedTopic.id) ? getLevelData(selectedTopic, selectedLevel) : null;
   const currentQuestions = isFreeMode(selectedTopic?.id) ? mixedQuestions : (currentLevelData?.questions || []);
 
@@ -783,8 +791,8 @@ export default function K8sQuestApp() {
       const saved = localStorage.getItem("k8s_quest_guest");
       if (saved) {
         const { stats: s, completedTopics: c, unlockedAchievements: u } = JSON.parse(saved);
-        if (s) setStats(s);
         if (c) setCompletedTopics(c);
+        if (s) setStats({ ...s, total_score: computeScore(c || {}) });
         if (u) setUnlockedAchievements(u);
       }
     } catch {}
@@ -822,14 +830,6 @@ export default function K8sQuestApp() {
     const gc = guestSaved?.completedTopics || {};
     const ga = guestSaved?.unlockedAchievements || [];
 
-    const mergedStats = {
-      total_answered: (base.total_answered || 0) + (gs.total_answered || 0),
-      total_correct:  (base.total_correct  || 0) + (gs.total_correct  || 0),
-      total_score:    (base.total_score    || 0) + (gs.total_score    || 0),
-      max_streak:     Math.max(base.max_streak || 0, gs.max_streak || 0),
-      current_streak: Math.max(base.current_streak || 0, gs.current_streak || 0),
-    };
-
     const mergedCompleted = { ...(base.completed_topics || {}) };
     Object.entries(gc).forEach(([key, val]) => {
       if (!mergedCompleted[key] || val.correct > mergedCompleted[key].correct)
@@ -837,6 +837,15 @@ export default function K8sQuestApp() {
     });
 
     const mergedAch = [...new Set([...(base.achievements || []), ...ga])];
+
+    const mergedStats = {
+      total_answered: (base.total_answered || 0) + (gs.total_answered || 0),
+      total_correct:  (base.total_correct  || 0) + (gs.total_correct  || 0),
+      // Always recompute from mergedCompleted — single source of truth, fixes any legacy drift
+      total_score:    computeScore(mergedCompleted),
+      max_streak:     Math.max(base.max_streak || 0, gs.max_streak || 0),
+      current_streak: Math.max(base.current_streak || 0, gs.current_streak || 0),
+    };
 
     setStats(mergedStats);
     setCompletedTopics(mergedCompleted);
@@ -968,12 +977,15 @@ export default function K8sQuestApp() {
     if (!window.confirm(t("resetTopicConfirm"))) return;
     const newCompleted = { ...completedTopics };
     LEVEL_ORDER.forEach(lvl => delete newCompleted[`${topicId}_${lvl}`]);
+    const newScore = computeScore(newCompleted);
+    const newStats = { ...stats, total_score: newScore };
     setCompletedTopics(newCompleted);
+    setStats(newStats);
     if (!isGuest && user) {
       await supabase.from("user_stats").upsert({
         user_id: user.id,
         username: user.user_metadata?.username || user.email?.split("@")[0] || "",
-        ...stats, completed_topics: newCompleted, achievements: unlockedAchievements,
+        ...newStats, completed_topics: newCompleted, achievements: unlockedAchievements,
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
     }
@@ -1002,7 +1014,7 @@ export default function K8sQuestApp() {
           ...prev,
           total_answered: prev.total_answered + 1,
           total_correct:  correct ? prev.total_correct + 1 : prev.total_correct,
-          total_score:    prev.total_score + (correct ? LEVEL_CONFIG[selectedLevel].points : 0),
+          // total_score is NOT updated here — it is derived from completedTopics at quiz end
           current_streak: streak,
           max_streak:     Math.max(prev.max_streak, streak),
         };
@@ -1024,7 +1036,8 @@ export default function K8sQuestApp() {
       const prevResult = completedTopics[key];
       const bestCorrect = prevResult ? Math.min(Math.max(prevResult.correct, finalCorrect), currentQuestions.length) : Math.min(finalCorrect, currentQuestions.length);
       const newCompleted = { ...completedTopics, [key]: { correct: bestCorrect, total: currentQuestions.length } };
-      const newStats = { ...stats };
+      // Recompute score from the full completedTopics snapshot — single source of truth
+      const newStats = { ...stats, total_score: computeScore(newCompleted) };
       const newAch = [
         ...unlockedAchievements,
         ...ACHIEVEMENTS.filter(a => !unlockedAchievements.includes(a.id) && a.condition(newStats, newCompleted)).map(a => a.id),
