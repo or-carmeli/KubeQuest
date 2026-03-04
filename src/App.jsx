@@ -201,7 +201,7 @@ const TRANSLATIONS = {
 };
 
 const year = new Date().getFullYear();
-const TIMER_SECONDS = 30;
+const TIMER_DURATIONS    = { easy: 30, medium: 45, hard: 60, mixed: 45, daily: 45 };
 const INTERVIEW_DURATIONS = { easy: 20, medium: 30, hard: 40 };
 
 function Confetti() {
@@ -327,7 +327,7 @@ export default function K8sQuestApp() {
   const [quizHistory, setQuizHistory]                   = useState([]);
   const [showReview, setShowReview]                     = useState(false);
   const [timerEnabled, setTimerEnabled]                 = useState(true);
-  const [timeLeft, setTimeLeft]                         = useState(TIMER_SECONDS);
+  const [timeLeft, setTimeLeft]                         = useState(TIMER_DURATIONS.easy);
   const [isInterviewMode, setIsInterviewMode]           = useState(() => localStorage.getItem("isInterviewMode_v1") === "true");
   const [homeTab, setHomeTab]                           = useState("roadmap");
   const [showConfetti, setShowConfetti]                 = useState(false);
@@ -707,7 +707,7 @@ export default function K8sQuestApp() {
       setSelectedAnswer(null);
       setSubmitted(false);
       setShowExplanation(false);
-      if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[selectedLevel] || 25) : TIMER_SECONDS);
+      if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[selectedLevel] || 25) : (TIMER_DURATIONS[selectedLevel] || 30));
     }
   };
 
@@ -721,7 +721,7 @@ export default function K8sQuestApp() {
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
     setStats(prev => ({ ...prev, current_streak: 0 }));
-    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[level] || 25) : TIMER_SECONDS);
+    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[level] || 25) : (TIMER_DURATIONS[level] || 30));
     setScreen("topic");
     if (isGuest) achievementsLoaded.current = true;
   };
@@ -747,7 +747,7 @@ export default function K8sQuestApp() {
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
     setStats(prev => ({ ...prev, current_streak: 0 }));
-    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? 25 : TIMER_SECONDS);
+    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? 25 : TIMER_DURATIONS.mixed);
     setScreen("topic");
   };
 
@@ -775,7 +775,7 @@ export default function K8sQuestApp() {
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
     setStats(prev => ({ ...prev, current_streak: 0 }));
-    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? 25 : TIMER_SECONDS);
+    if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? 25 : TIMER_DURATIONS.daily);
     setScreen("topic");
   };
 
@@ -1140,7 +1140,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{background:"rgba(0,0,0,0.35)",borderRadius:10,padding:"16px 20px"}}>{renderTheory(currentLevelData.theory)}</div>
               </div>
               <div style={{display:"flex",gap:8,marginBottom:0}}>
-                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):TIMER_SECONDS);}} style={{flex:1,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`,lineHeight:1.4}}>
+                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));}} style={{flex:1,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`,lineHeight:1.4}}>
                   <div style={{fontSize:15}}>{t("startQuiz")}</div>
                   <div style={{fontSize:12,opacity:0.85,fontWeight:600}}>(+{LEVEL_CONFIG[selectedLevel].points} {t("ptsPerQ")})</div>
                 </button>
@@ -1319,7 +1319,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   topicCorrectRef.current=0;
                   setQuizHistory([]); setShowReview(false);
                   setStats(prev=>({...prev,current_streak:0}));
-                  if (timerEnabled||isInterviewMode) setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):TIMER_SECONDS);
+                  if (timerEnabled||isInterviewMode) setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));
                   setScreen("topic");
                 }}
                   style={{padding:13,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:12,color:"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer"}}>
