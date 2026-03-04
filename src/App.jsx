@@ -848,7 +848,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}input,button{outline:none;font-family:inherit}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher */}
-        <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",direction:"ltr",marginBottom:12,gap:8}}>
+        <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:12,gap:8}}>
           {lang==="he"&&<GenderToggle gender={gender} setGender={handleSetGender}/>}
           <LangSwitcher lang={lang} setLang={setLang}/>
         </div>
