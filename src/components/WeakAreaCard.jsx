@@ -43,7 +43,7 @@ export default function WeakAreaCard({ topicStats, onGoToTopic, t, dir }) {
   const accuracy  = Math.round(weakData.correct / weakData.answered * 100);
   const color     = indicatorColor(accuracy);
   const name      = TOPIC_NAMES[weakId] || weakId;
-  const allPerfect = accuracy === 100;
+  const allPerfect = accuracy === 100 && entries.length >= Object.keys(TOPIC_NAMES).length;
 
   // Shared card wrapper style — borderRight acts as the RTL-side indicator bar.
   const cardBase = {
