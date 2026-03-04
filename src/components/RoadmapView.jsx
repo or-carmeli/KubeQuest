@@ -45,8 +45,8 @@ export default function RoadmapView({
   startTopic, startMixedQuiz, lang, t, dir,
 }) {
   const [expandedStage, setExpandedStage] = useState(null);
+  const rowDir = dir === "rtl" ? "row-reverse" : "row";
 
-  // Stage is locked if the previous stage isn't fully completed
   const isRoadmapStageLocked = (idx) =>
     idx > 0 && !isStageCompleted(topics[idx - 1].id, completedTopics);
 
@@ -72,7 +72,7 @@ export default function RoadmapView({
     <div style={{animation:"fadeIn 0.4s ease"}}>
 
       {/* ── Summary header ── */}
-      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px 18px",marginBottom:16}}>
+      <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px 18px",marginBottom:16,direction:dir}}>
         <div style={{fontWeight:800,color:"#e2e8f0",fontSize:16,marginBottom:4}}>{t("roadmapTitle")}</div>
         <div style={{color:"#94a3b8",fontSize:13,marginBottom:10}}>
           {allDone
@@ -118,22 +118,23 @@ export default function RoadmapView({
             : "rgba(255,255,255,0.07)";
 
           return (
-            <div key={topic.id} style={{display:"flex",alignItems:"stretch",gap:14,direction:dir,minWidth:0,overflow:"hidden"}}>
+            // Use flexDirection:row-reverse for RTL instead of direction:rtl
+            // to avoid RTL flex overflow bugs in mobile browsers
+            <div key={topic.id} style={{display:"flex",flexDirection:rowDir,alignItems:"stretch",gap:14}}>
 
-              {/* ── Node column (RTL: right side = first child) ── */}
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:42,flexShrink:0,paddingTop:2}}>
+              {/* ── Node column ── */}
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:36,flexShrink:0,paddingTop:2}}>
                 {/* Circle node */}
                 <div style={{
-                  width:38,height:38,borderRadius:"50%",
+                  width:34,height:34,borderRadius:"50%",
                   border:nodeBorder,
                   background:completed?"rgba(16,185,129,0.12)":isCurrent&&!locked?`${topic.color}14`:"rgba(255,255,255,0.03)",
                   boxShadow:nodeGlow,
                   display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:completed?18:locked?14:13,
+                  fontSize:completed?16:locked?12:12,
                   fontWeight:800,color:nodeFg,
                   flexShrink:0,
                   transition:"box-shadow 0.3s",
-                  zIndex:1,
                 }}>
                   {nodeLabel}
                 </div>
@@ -152,35 +153,41 @@ export default function RoadmapView({
               <div style={{
                 flex:1,
                 minWidth:0,
-                overflow:"hidden",
                 marginBottom: isLast ? 0 : 12,
                 opacity: locked ? 0.45 : 1,
                 background: isCurrent&&!locked ? `${topic.color}07` : "rgba(255,255,255,0.02)",
                 border:`1px solid ${isCurrent&&!locked ? `${topic.color}30` : "rgba(255,255,255,0.07)"}`,
                 borderRadius:14,
-                padding:"14px 16px",
+                padding:"12px 14px",
                 transition:"opacity 0.2s,border-color 0.2s",
               }}>
 
                 {/* Stage header */}
                 <div
                   onClick={()=>{ if (!locked) setExpandedStage(isExpanded ? null : topic.id); }}
-                  style={{cursor:locked?"default":"pointer",display:"flex",alignItems:"center",gap:10,marginBottom:8,direction:dir}}>
-                  <div style={{fontSize:20,width:36,height:36,borderRadius:9,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>
+                  style={{cursor:locked?"default":"pointer",display:"flex",flexDirection:rowDir,alignItems:"center",gap:8,marginBottom:8}}>
+
+                  {/* Icon */}
+                  <div style={{fontSize:18,width:32,height:32,borderRadius:8,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>
                     {topic.icon}
                   </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontWeight:700,color:"#e2e8f0",fontSize:14,display:"flex",alignItems:"center",gap:6}}>
-                      {topic.name}{completed&&<span>✅</span>}
+
+                  {/* Text — takes remaining space, clips instead of wrapping */}
+                  <div style={{flex:1,minWidth:0,direction:dir}}>
+                    <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
+                      <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topic.name}</span>
+                      {completed&&<span style={{flexShrink:0}}>✅</span>}
                     </div>
                     <div style={{color:"#475569",fontSize:11,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                       {STAGE_SUBTITLES[topic.id]}
                     </div>
                   </div>
+
+                  {/* Progress % + expand arrow */}
                   {!locked&&(
-                    <div style={{textAlign:"center",flexShrink:0}}>
+                    <div style={{flexShrink:0,textAlign:"center",minWidth:36}}>
                       <div style={{color:completed?"#10B981":isCurrent?topic.color:"#64748b",fontWeight:700,fontSize:12}}>{progress}%</div>
-                      <div style={{color:"#475569",fontSize:10,marginTop:1}}>{isExpanded?"▲":"▼"}</div>
+                      <div style={{color:"#475569",fontSize:10}}>{isExpanded?"▲":"▼"}</div>
                     </div>
                   )}
                 </div>
@@ -212,10 +219,10 @@ export default function RoadmapView({
 
                 {/* Expanded difficulty grid */}
                 {isExpanded&&(
-                  <div style={{marginTop:10,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,direction:dir}}>
+                  <div style={{marginTop:10,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
                     {Object.entries(levelConfig).filter(([lvl]) => lvl !== "mixed" && lvl !== "daily").map(([lvl, cfg]) => {
-                      const key     = `${topic.id}_${lvl}`;
-                      const done    = completedTopics[key];
+                      const key       = `${topic.id}_${lvl}`;
+                      const done      = completedTopics[key];
                       const lvlLocked = isLevelLocked(topic.id, lvl);
                       return (
                         <div key={lvl} className={lvlLocked?"":"card-hover"}
