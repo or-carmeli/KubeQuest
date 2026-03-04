@@ -535,6 +535,10 @@ const TRANSLATIONS = {
     resetProgress: "אפס התקדמות", resetConfirm: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
     resetTopic: "אפס נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
     mixedQuizBtn: "🎲 חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
+    tabTopics: "📚 נושאים", tabRoadmap: "🗺️ מסלול",
+    interviewMode: "🎯 מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה",
+    dailyChallengeTitle: "אתגר יומי", dailyChallengeNew: "חדש היום",
+    dailyChallengeDesc: "10 שאלות מכל הנושאים · מתחלף כל יום",
     roadmapTitle: "ההתקדמות במסלול",
     roadmapAllDone: "🎉 השלמת את כל השלבים!",
     roadmapStage: "את בשלב", roadmapStageOf: "מתוך",
@@ -609,6 +613,10 @@ const TRANSLATIONS = {
     advancedPractice: "Advanced Practice",
     accuracyLabel: "accuracy",
     goBackToTopic: "Go back to this topic",
+    tabTopics: "📚 Topics", tabRoadmap: "🗺️ Roadmap",
+    interviewMode: "🎯 Interview Mode", interviewModeHint: "Hints off, timer on for every question",
+    dailyChallengeTitle: "Daily Challenge", dailyChallengeNew: "NEW DAILY",
+    dailyChallengeDesc: "10 mixed questions · resets every day",
   },
 };
 
@@ -1286,15 +1294,15 @@ export default function K8sQuestApp() {
             <p style={{color:"#475569",fontSize:13,margin:"4px 0 10px"}}>{t("greeting")}, {displayName}! 👋 {isGuest&&<span style={{color:"#475569"}}>{t("playingAsGuest")}</span>}</p>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {!isGuest&&<button onClick={()=>{loadLeaderboard();setShowLeaderboard(true);}} style={{padding:"7px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("leaderboardBtn")}</button>}
-              <button onClick={()=>setIsInterviewMode(p=>!p)} style={{padding:"7px 12px",background:isInterviewMode?"rgba(168,85,247,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${isInterviewMode?"rgba(168,85,247,0.4)":"rgba(255,255,255,0.09)"}`,borderRadius:8,color:isInterviewMode?"#A855F7":"#94a3b8",cursor:"pointer",fontSize:13,fontWeight:isInterviewMode?700:400}}>🎯 מצב ראיון</button>
+              <button onClick={()=>setIsInterviewMode(p=>!p)} style={{padding:"7px 12px",background:isInterviewMode?"rgba(168,85,247,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${isInterviewMode?"rgba(168,85,247,0.4)":"rgba(255,255,255,0.09)"}`,borderRadius:8,color:isInterviewMode?"#A855F7":"#94a3b8",cursor:"pointer",fontSize:13,fontWeight:isInterviewMode?700:400}}>{t("interviewMode")}</button>
               <button onClick={handleResetProgress} style={{padding:"7px 12px",background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:8,color:"#EF4444",cursor:"pointer",fontSize:13}}>{t("resetProgress")}</button>
               <button onClick={handleLogout} style={{padding:"7px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:8,color:"#94a3b8",cursor:"pointer",fontSize:13}}>{t("logout")}</button>
             </div>
-            {isInterviewMode&&<p style={{color:"#64748b",fontSize:11,margin:"6px 0 0",direction:"rtl"}}>רמזים כבויים, יש טיימר לכל שאלה</p>}
+            {isInterviewMode&&<p style={{color:"#64748b",fontSize:11,margin:"6px 0 0",direction:dir}}>{t("interviewModeHint")}</p>}
           </div>
           {isGuest&&<div style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:12,padding:"11px 16px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}><span style={{color:"#4a9aba",fontSize:13}}>{t("guestBanner")}</span><button onClick={()=>setUser(null)} style={{padding:"6px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:8,color:"#00D4FF",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{t("signupNow")}</button></div>}
           <div style={{display:"flex",gap:6,marginBottom:16,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:3}}>
-            {[{key:"categories",label:"📚 נושאים"},{key:"roadmap",label:"🗺️ מסלול"}].map(tab=>(
+            {[{key:"categories",label:t("tabTopics")},{key:"roadmap",label:t("tabRoadmap")}].map(tab=>(
               <button key={tab.key} onClick={()=>setHomeTab(tab.key)} style={{flex:1,padding:"8px",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700,background:homeTab===tab.key?"rgba(0,212,255,0.12)":"transparent",color:homeTab===tab.key?"#00D4FF":"#475569",transition:"all 0.2s"}}>{tab.label}</button>
             ))}
           </div>
@@ -1323,10 +1331,10 @@ export default function K8sQuestApp() {
               <span style={{fontSize:28}}>🔥</span>
               <div style={{textAlign:"start"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{color:"#F59E0B",fontWeight:800,fontSize:15}}>{lang==="en"?"Daily Challenge":"אתגר יומי"}</span>
-                  <span style={{background:"rgba(245,158,11,0.2)",color:"#F59E0B",fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5}}>{lang==="en"?"NEW DAILY":"חדש היום"}</span>
+                  <span style={{color:"#F59E0B",fontWeight:800,fontSize:15}}>{t("dailyChallengeTitle")}</span>
+                  <span style={{background:"rgba(245,158,11,0.2)",color:"#F59E0B",fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5}}>{t("dailyChallengeNew")}</span>
                 </div>
-                <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{lang==="en"?"10 mixed questions · resets every day":"10 שאלות מכל הנושאים · מתחלף כל יום"}</div>
+                <div style={{color:"#64748b",fontSize:12,marginTop:2}}>{t("dailyChallengeDesc")}</div>
               </div>
             </div>
             <span style={{color:"#F59E0B",fontSize:20}}>→</span>
