@@ -722,7 +722,7 @@ export default function K8sQuestApp() {
   const [topicStats, setTopicStats] = useState(() => {
     try { return JSON.parse(localStorage.getItem("topicStats_v1")) || {}; } catch { return {}; }
   });
-  const [highlightTopic, setHighlightTopic] = useState(null);
+  const [highlightTopic, setHighlightTopic]             = useState(null);
   const [completedTopics, setCompletedTopics]           = useState({});
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
   const [newAchievement, setNewAchievement]             = useState(null);
@@ -1017,6 +1017,7 @@ export default function K8sQuestApp() {
     }
   };
 
+
   const handleSelectAnswer = (idx) => {
     if (submitted) return;
     setSelectedAnswer(idx);
@@ -1202,8 +1203,7 @@ export default function K8sQuestApp() {
     });
   };
 
-  const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
-  const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
+const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
 
   if (!authChecked) return (
     <div style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -1219,6 +1219,8 @@ export default function K8sQuestApp() {
       </div>
     </div>
   );
+
+  const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
 
   if (!user) return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817,#0f172a)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
