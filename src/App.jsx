@@ -258,11 +258,17 @@ function Footer({ lang }) {
   const txt = TRANSLATIONS[lang] || TRANSLATIONS.he;
   return (
     <div style={{textAlign:"center",marginTop:28,paddingTop:18,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
-      <p style={{color:"#475569",fontSize:12,margin:0}}>
+      <p style={{color:"#475569",fontSize:12,margin:"0 0 8px 0"}}>
         © {year} {txt.allRightsReserved}{" "}
         <a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer"
           style={{color:"#0ea5e9",textDecoration:"none",fontWeight:600}}>Or Carmeli</a>
       </p>
+      <a href="mailto:ocarmeli7@gmail.com?subject=KubeQuest%20Feedback"
+        style={{display:"inline-flex",alignItems:"center",gap:5,color:"#64748b",fontSize:11,textDecoration:"none",padding:"5px 12px",border:"1px solid rgba(255,255,255,0.07)",borderRadius:20,transition:"color 0.2s,border-color 0.2s"}}
+        onMouseEnter={e=>{e.currentTarget.style.color="#e2e8f0";e.currentTarget.style.borderColor="rgba(255,255,255,0.2)";}}
+        onMouseLeave={e=>{e.currentTarget.style.color="#64748b";e.currentTarget.style.borderColor="rgba(255,255,255,0.07)";}}>
+        ✉ {lang==="en"?"Contact me":"צור קשר"}
+      </a>
     </div>
   );
 }
