@@ -10,10 +10,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const GUEST_USER = { id: "guest", email: "guest", user_metadata: { username: "Guest" } };
 
 const LEVEL_CONFIG = {
-  easy:   { label: "קל",     labelEn: "Easy",   icon: "🌱", color: "#10B981", points: 10 },
-  medium: { label: "בינוני", labelEn: "Medium", icon: "⚡", color: "#F59E0B", points: 20 },
-  hard:   { label: "קשה",   labelEn: "Hard",   icon: "🔥", color: "#EF4444", points: 30 },
-  mixed:  { label: "מיקס",  labelEn: "Mixed",  icon: "🎲", color: "#A855F7", points: 15 },
+  easy:   { label: "קל",        labelEn: "Easy",             icon: "🌱", color: "#10B981", points: 10 },
+  medium: { label: "בינוני",    labelEn: "Medium",           icon: "⚡", color: "#F59E0B", points: 20 },
+  hard:   { label: "קשה",      labelEn: "Hard",             icon: "🔥", color: "#EF4444", points: 30 },
+  mixed:  { label: "מיקס",     labelEn: "Mixed",            icon: "🎲", color: "#A855F7", points: 15 },
+  daily:  { label: "אתגר יומי", labelEn: "Daily Challenge",  icon: "🔥", color: "#F59E0B", points: 15 },
 };
 
 const LEVEL_ORDER = ["easy", "medium", "hard"];
@@ -1147,7 +1148,7 @@ export default function K8sQuestApp() {
                 </div>
                 {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return(<div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:10}}><div style={{height:"100%",borderRadius:2,width:`${(done/3)*100}%`,background:`linear-gradient(90deg,${topic.color},${topic.color}88)`,transition:"width 0.5s ease"}}/></div>);})()}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-                  {Object.entries(LEVEL_CONFIG).map(([lvl,cfg])=>{
+                  {Object.entries(LEVEL_CONFIG).filter(([lvl])=>lvl!=="mixed"&&lvl!=="daily").map(([lvl,cfg])=>{
                     const key=`${topic.id}_${lvl}`;
                     const done=completedTopics[key];
                     const locked=isLevelLocked(topic.id,lvl);
