@@ -790,47 +790,47 @@ const TOPICS = [
 ];
 const TRANSLATIONS = {
   he: {
-    tagline: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying: "🚀 התחל לשחק עכשיו",
+    tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
+    startPlaying: "🚀 התחילי לשחק עכשיו",
     noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
     saveProgress: "רוצה לשמור את ההתקדמות?",
     username: "שם משתמש", email: "אימייל", password: "סיסמה",
     loginTab: "התחברות", signupTab: "הרשמה",
-    loginBtn: "התחבר", signupBtn: "הירשם", loading: "⏳ רגע...",
-    emailAlreadySent: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
+    loginBtn: "התחברי", signupBtn: "הירשמי", loading: "⏳ רגע...",
+    emailAlreadySent: "✅ אימייל אימות כבר נשלח! בדקי את תיבת הדואר שלך.",
     emailSent: "✅ נשלח אימייל אימות! בדקי את תיבת הדואר.",
-    otpExpired: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
+    otpExpired: "❌ קישור האימות פג תוקף. אנא הירשמי שוב כדי לקבל קישור חדש.",
     wrongCredentials: "אימייל או סיסמה שגויים",
     didntReceive: "לא קיבלת את המייל?", resendBtn: "שלח שוב",
-    resendSuccess: "✅ אימייל חדש נשלח! בדוק את תיבת הדואר.",
-    resendError: "❌ שגיאה בשליחה מחדש. נסה שוב.",
-    greeting: "שלום", playingAsGuest: "· משחק כאורח",
+    resendSuccess: "✅ אימייל חדש נשלח! בדקי את תיבת הדואר.",
+    resendError: "❌ שגיאה בשליחה מחדש. נסי שוב.",
+    greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
     leaderboardBtn: "🏆 טבלה", logout: "יציאה",
-    guestBanner: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
-    signupNow: "הרשם",
+    guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
+    signupNow: "הירשמי",
     score: "ניקוד", accuracy: "דיוק", streak: "רצף", completed: "הושלמו",
     pts: "נק׳",
     achievementsTitle: "🏅 הישגים",
     leaderboardTitle: "🏆 לוח תוצאות", noData: "אין נתונים עדיין", anonymous: "אנונימי",
-    back: "→ חזור", theory: "📖 תיאוריה",
-    startQuiz: "🎯 התחל חידון!", ptsPerQ: "נק׳ לשאלה",
+    back: "→ חזרי", theory: "📖 תיאוריה",
+    startQuiz: "🎯 התחילי חידון!", ptsPerQ: "נק׳ לשאלה",
     question: "שאלה", of: "/", streakLabel: "רצף",
-    confirmAnswer: "✔ אשר תשובה",
+    confirmAnswer: "✔ אשרי תשובה",
     correct: "✅ נכון!", incorrect: "❌ לא נכון",
-    finishTopic: "🎉 סיים נושא!", nextQuestion: "שאלה הבאה ←",
+    finishTopic: "🎉 סיימי נושא!", nextQuestion: "שאלה הבאה ←",
     correctCount: "נכון", perfect: "⭐ מושלם!", points: "נקודות",
-    guestSaveHint: "💡 הרשם כדי לשמור את הניקוד!", signupLink: "הרשם עכשיו",
-    tryAgain: "🔄 נסה שוב", backToTopics: "→ חזור לנושאים",
-    nextLevelBtn: "🚀 המשך לרמה הבאה", locked: "🔒 נעול",
-    skipTheory: "⚡ דלג לחידון",
-    timerOn: "⏱ כבה טיימר", timerOff: "⏱ הפעל טיימר", timeUp: "⏰ הזמן נגמר!",
-    reviewBtn: "📋 צפה בסקירה", hideReview: "הסתר סקירה", reviewTitle: "סקירת שאלות",
+    guestSaveHint: "💡 הירשמי כדי לשמור את הניקוד!", signupLink: "הירשמי עכשיו",
+    tryAgain: "🔄 נסי שוב", backToTopics: "→ חזרי לנושאים",
+    nextLevelBtn: "🚀 המשיכי לרמה הבאה", locked: "🔒 נעול",
+    skipTheory: "⚡ דלגי לחידון",
+    timerOn: "⏱ כבי טיימר", timerOff: "⏱ הפעילי טיימר", timeUp: "⏰ הזמן נגמר!",
+    reviewBtn: "📋 צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
-    saveErrorText: "⚠️ הנתונים לא נשמרו – בדוק חיבור לאינטרנט",
+    saveErrorText: "⚠️ הנתונים לא נשמרו – בדקי חיבור לאינטרנט",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
-    optionLabels: ["א","ב","ג","ד"], guestName: "אורח",
-    resetProgress: "אפס התקדמות", resetConfirm: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
-    resetTopic: "אפס נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
+    optionLabels: ["א","ב","ג","ד"], guestName: "אורחת",
+    resetProgress: "אפסי התקדמות", resetConfirm: "האם את בטוחה? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
+    resetTopic: "אפסי נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
     mixedQuizBtn: "🎲 חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
     tabTopics: "📚 נושאים", tabRoadmap: "🗺️ מסלול",
     interviewMode: "🎯 מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה",
@@ -847,11 +847,36 @@ const TRANSLATIONS = {
     weakAreaTitle: "📉 האזור החלש שלך",
     weakAreaEmpty: "עדיין אין מספיק נתונים, התחילי לענות כדי שנמליץ מה לחזק.",
     allPerfectTitle: "🔥 הכל בשליטה",
-    allPerfectMsg: "כל הנושאים עם דיוק מלא. רוצה להמשיך לאתגר הבא?",
+    allPerfectMsg: "כל הנושאים עם דיוק מלא. רוצי להמשיך לאתגר הבא?",
     advancedPractice: "לתרגול מתקדם",
     accuracyLabel: "דיוק",
     goBackToTopic: "חזרי לנושא הזה",
     // Male-form overrides (used when gender === "m")
+    tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
+    startPlaying_m: "🚀 התחל לשחק עכשיו",
+    loginBtn_m: "התחבר", signupBtn_m: "הירשם",
+    emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
+    otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
+    resendSuccess_m: "✅ אימייל חדש נשלח! בדוק את תיבת הדואר.",
+    resendError_m: "❌ שגיאה בשליחה מחדש. נסה שוב.",
+    playingAsGuest_m: "· משחק כאורח",
+    guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
+    signupNow_m: "הרשם",
+    back_m: "→ חזור",
+    startQuiz_m: "🎯 התחל חידון!",
+    confirmAnswer_m: "✔ אשר תשובה",
+    finishTopic_m: "🎉 סיים נושא!",
+    guestSaveHint_m: "💡 הרשם כדי לשמור את הניקוד!", signupLink_m: "הרשם עכשיו",
+    tryAgain_m: "🔄 נסה שוב", backToTopics_m: "→ חזור לנושאים",
+    nextLevelBtn_m: "🚀 המשך לרמה הבאה",
+    skipTheory_m: "⚡ דלג לחידון",
+    timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
+    reviewBtn_m: "📋 צפה בסקירה", hideReview_m: "הסתר סקירה",
+    saveErrorText_m: "⚠️ הנתונים לא נשמרו – בדוק חיבור לאינטרנט",
+    guestName_m: "אורח",
+    resetProgress_m: "אפס התקדמות", resetConfirm_m: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
+    resetTopic_m: "אפס נושא",
+    allPerfectMsg_m: "כל הנושאים עם דיוק מלא. רוצה להמשיך לאתגר הבא?",
     roadmapStage_m: "אתה בשלב",
     roadmapContinue_m: "🚀 המשך לשלב הבא",
     roadmapContinueHere_m: "▶ המשך מכאן",
@@ -966,6 +991,20 @@ function GenderToggle({ gender, setGender }) {
         </button>
       ))}
     </div>
+  );
+}
+
+const hasHebrew = (text) => /[\u05D0-\u05EA]/.test(text ?? "");
+
+// Wraps inline English/Latin sequences in <span dir="ltr"> for correct bidi rendering
+// in RTL Hebrew paragraphs. Returns text unchanged for English mode.
+function renderBidi(text, lang) {
+  if (!text || lang !== "he") return text;
+  if (!/[A-Za-z]/.test(text)) return text;
+  const parts = text.split(/((?:[A-Za-z][A-Za-z0-9\-_.:/]*(?:\s+(?=[A-Za-z]))?)+)/);
+  if (parts.length <= 1) return text;
+  return parts.map((part, i) =>
+    /^[A-Za-z]/.test(part) ? <span key={i} dir="ltr">{part}</span> : part
   );
 }
 
@@ -1800,7 +1839,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
 
               <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:22,marginBottom:14}}>
-                <div dir={dir} style={{color:"#e2e8f0",fontSize:16,fontWeight:700,lineHeight:1.65,wordBreak:"break-word"}}>{currentQuestions[questionIndex].q}</div>
+                {(()=>{const qText=currentQuestions[questionIndex].q;const qDir=hasHebrew(qText)?dir:"ltr";return<div dir={qDir} style={{color:"#e2e8f0",fontSize:16,fontWeight:700,lineHeight:1.65,wordBreak:"break-word",textAlign:qDir==="ltr"?"left":"right"}}>{renderBidi(qText,lang)}</div>;})()}
               </div>
 
               <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:14}}>
@@ -1813,12 +1852,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     if (isCorrect)             { borderColor = "#10B981"; bg = "rgba(16,185,129,0.1)";  color = "#10B981"; }
                     else if (isChosen)          { borderColor = "#EF4444"; bg = "rgba(239,68,68,0.1)";   color = "#EF4444"; }
                   }
+                  const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
                   return (
                     <button key={i} className="opt-btn"
                       onClick={()=>handleSelectAnswer(i)}
-                      style={{width:"100%",textAlign:dir==="rtl"?"right":"left",padding:"15px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:submitted?"default":"pointer",lineHeight:1.5,display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"15px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:submitted?"default":"pointer",lineHeight:1.5,display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
                       <span style={{opacity:0.4,fontSize:12,flexShrink:0}}>{t("optionLabels")[i]}.</span>
-                      <span dir={dir} style={{flex:1}}>{opt}</span>
+                      <span dir={optDir} style={{flex:1}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
                       {submitted&&isCorrect&&<span>✓</span>}
                       {submitted&&isChosen&&!isCorrect&&<span>✗</span>}
                     </button>
@@ -1848,7 +1888,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               ?`${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
                               :t("incorrect")}
                         </div>
-                        {!isInterviewMode&&<div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{q.explanation}</div>}
+                        {!isInterviewMode&&<div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{renderBidi(q.explanation,lang)}</div>}
                       </div>
                     );
                   })()}
@@ -1924,14 +1964,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         <div style={{fontWeight:700,fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
                           {wasCorrect?"✅":"❌"} {t("question")} {i+1}
                         </div>
-                        <div style={{color:"#e2e8f0",fontSize:13,marginBottom:6}}>{h.q}</div>
+                        <div style={{color:"#e2e8f0",fontSize:13,marginBottom:6}}>{renderBidi(h.q,lang)}</div>
                         {timedOut?<div style={{fontSize:13,color:"#F59E0B"}}>{t("timeUp")}</div>:(
-                          <div style={{fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
-                            {lang==="en"?t("optionLabels")[h.chosen]:t("optionLabels")[h.chosen]}. {h.options[h.chosen]}
+                          <div style={{fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4,dir:hasHebrew(h.options[h.chosen])?"rtl":"ltr",textAlign:hasHebrew(h.options[h.chosen])?"right":"left"}}>
+                            {t("optionLabels")[h.chosen]}. {h.options[h.chosen]}
                           </div>
                         )}
-                        {!wasCorrect&&<div style={{fontSize:13,color:"#10B981"}}>✓ {h.options[h.answer]}</div>}
-                        <div style={{fontSize:12,color:"#64748b",marginTop:4,lineHeight:1.6}}>{h.explanation}</div>
+                        {!wasCorrect&&<div style={{fontSize:13,color:"#10B981",dir:hasHebrew(h.options[h.answer])?"rtl":"ltr",textAlign:hasHebrew(h.options[h.answer])?"right":"left"}}>✓ {h.options[h.answer]}</div>}
+                        <div style={{fontSize:12,color:"#64748b",marginTop:4,lineHeight:1.6}}>{renderBidi(h.explanation,lang)}</div>
                       </div>
                     );
                   })}
