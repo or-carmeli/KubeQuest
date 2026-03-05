@@ -437,6 +437,8 @@ export default function K8sQuestApp() {
   const achievementsLoaded = useRef(false);
   const quizRunIdRef  = useRef(null);
   const liveIndexRef  = useRef(0);   // highest question index reached; never decremented
+  const questionRef   = useRef(null); // focus target when question changes
+  const nextBtnRef    = useRef(null); // focus target after submitting an answer
   const [resumeData, setResumeData] = useState(null);
 
   // Shuffle answer options so the correct answer isn't predictably the longest/same position
@@ -567,6 +569,22 @@ export default function K8sQuestApp() {
       localStorage.setItem("k8s_quest_guest", JSON.stringify({ stats, completedTopics, unlockedAchievements }));
     } catch {}
   }, [isGuest, stats, completedTopics, unlockedAchievements]);
+
+  // Move focus to the question container whenever the question changes so screen
+  // readers announce the new question automatically.
+  useEffect(() => {
+    if (screen === "topic" && topicScreen === "quiz") {
+      questionRef.current?.focus();
+    }
+  }, [questionIndex, screen, topicScreen]);
+
+  // After submitting, move focus to the Next/Finish button so keyboard users
+  // don't have to hunt for it after the Confirm Answer button disappears.
+  useEffect(() => {
+    if (submitted && screen === "topic" && topicScreen === "quiz") {
+      nextBtnRef.current?.focus();
+    }
+  }, [submitted]);
 
   useEffect(() => {
     try { localStorage.setItem("topicStats_v1", JSON.stringify(topicStats)); } catch {}
@@ -1263,7 +1281,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
           {authError&&<div style={{marginBottom:12}}>
-            <div style={{color:authError.startsWith("✅")?"#10B981":"#EF4444",fontSize:12,padding:"8px 12px",background:authError.startsWith("✅")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",borderRadius:8}}>{authError}</div>
+            <div role="alert" aria-live="assertive" style={{color:authError.startsWith("✅")?"#10B981":"#EF4444",fontSize:12,padding:"8px 12px",background:authError.startsWith("✅")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",borderRadius:8}}>{authError}</div>
             {authScreen==="signup"&&authError.startsWith("✅")&&<div style={{textAlign:"center",marginTop:8,fontSize:12,color:"#475569"}}>
               {t("didntReceive")}{" "}
               <button type="button" onClick={handleResend} disabled={authLoading}
@@ -1315,7 +1333,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
       {resumeData&&(
         <div onClick={handleDiscardResume} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:5002,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
-          <div role="dialog" aria-modal="true" onClick={e=>e.stopPropagation()} style={{background:"#0f172a",border:"1px solid rgba(0,212,255,0.25)",borderRadius:18,padding:"24px 22px",width:"min(380px,100%)",animation:"fadeIn 0.3s ease",direction:dir}}>
+          <div role="dialog" aria-modal="true" onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"#0f172a",border:"1px solid rgba(0,212,255,0.25)",borderRadius:18,padding:"24px 22px",width:"min(380px,100%)",animation:"fadeIn 0.3s ease",direction:dir}}>
             <div style={{fontSize:32,textAlign:"center",marginBottom:10}}>⏸️</div>
             <div style={{fontWeight:800,color:"#e2e8f0",fontSize:18,marginBottom:8,textAlign:"center"}}>{t("resumeTitle")}</div>
             <div style={{color:"#94a3b8",fontSize:13,marginBottom:16,textAlign:"center"}}>{t("resumeBody")}</div>
@@ -1344,7 +1362,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         </div>
       )}
 
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} style={{background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:20,width:"min(360px,calc(100vw - 32px))",animation:"fadeIn 0.3s ease",direction:"ltr"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}><h3 style={{margin:0,color:"#e2e8f0",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><button onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"#475569",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i===0?"rgba(245,158,11,0.1)":"rgba(255,255,255,0.03)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"rgba(255,255,255,0.06)"}`}}><span style={{fontSize:18,width:28}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1}}><div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{entry.username ? (entry.username.includes("@") ? entry.username.split("@")[0] : entry.username) : t("anonymous")}</div><div style={{color:"#475569",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div></div>)}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:20,width:"min(360px,calc(100vw - 32px))",animation:"fadeIn 0.3s ease",direction:"ltr"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}><h3 style={{margin:0,color:"#e2e8f0",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"#475569",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i===0?"rgba(245,158,11,0.1)":"rgba(255,255,255,0.03)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"rgba(255,255,255,0.06)"}`}}><span style={{fontSize:18,width:28}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1}}><div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{entry.username ? (entry.username.includes("@") ? entry.username.split("@")[0] : entry.username) : t("anonymous")}</div><div style={{color:"#475569",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div></div>)}</div></div>}
 
       {/* Dropdown menu — rendered outside <main> so CSS zoom never affects it */}
       {showMenu&&(<>
@@ -1477,11 +1495,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {TOPICS.map(topic=>(
-              <div key={topic.id} id={`topic-card-${topic.id}`} className={highlightTopic===topic.id?"pulseHighlight":undefined} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px 18px"}}>
+              <section key={topic.id} id={`topic-card-${topic.id}`} aria-label={topic.name} className={highlightTopic===topic.id?"pulseHighlight":undefined} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px 18px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
-                  <div style={{fontSize:24,width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>{topic.icon}</div>
+                  <div aria-hidden="true" style={{fontSize:24,width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>{topic.icon}</div>
                   <div style={{flex:1}}>
-                    <div style={{fontWeight:700,color:"#e2e8f0",fontSize:15}}>{topic.name}</div>
+                    <h3 style={{margin:0,fontWeight:700,color:"#e2e8f0",fontSize:15}}>{topic.name}</h3>
                     <div style={{color:"#475569",fontSize:12}}>{lang==="en"?topic.descriptionEn:topic.description}</div>
                   </div>
                   {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -1514,7 +1532,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     );
                   })}
                 </div>
-              </div>
+              </section>
             ))}
           </div>
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"#94a3b8",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.04)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"#94a3b8"}}><span>{a.icon}</span>{lang==="en"?a.nameEn:a.name}</div>)}</div></div>}
@@ -1566,10 +1584,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         {t("prevQuestion")}
                       </button>
                     )}
-                    <span style={{color:"#475569",fontSize:13}}>
+                    <span aria-live="polite" aria-atomic="true" style={{color:"#475569",fontSize:13}}>
                       {t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}
                       {isInHistoryMode && !tryAgainActive && <span style={{marginInlineStart:6,fontSize:11,color:"#A855F7",fontWeight:700}}>{t("reviewing")}</span>}
-                      {tryAgainActive && <span style={{marginInlineStart:6,fontSize:11,color:"#F59E0B",fontWeight:700}}>🔁 {t("tryAgainBadge")}</span>}
+                      {tryAgainActive && <span style={{marginInlineStart:6,fontSize:11,color:"#F59E0B",fontWeight:700}}>{t("tryAgainBadge")}</span>}
                     </span>
                   </div>
                   <div className="quiz-bar-right" style={{display:"flex",gap:10,alignItems:"center"}}>
@@ -1577,11 +1595,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     {!isInHistoryMode&&!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} aria-pressed={timerEnabled} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
                       {timerEnabled?t("timerOn"):t("timerOff")}
                     </button>}
-                    {!isInHistoryMode&&<span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
-                      🔥 {stats.current_streak} {t("streakLabel")}
+                    {!isInHistoryMode&&<span aria-label={`${stats.current_streak} ${t("streakLabel")}`} style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
+                      <span aria-hidden="true">🔥 {stats.current_streak} {t("streakLabel")}</span>
                     </span>}
-                    {!isInHistoryMode&&<span style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
-                      ⭐ {stats.total_score + sessionScore} {t("pts")}
+                    {!isInHistoryMode&&<span aria-label={`${stats.total_score + sessionScore} ${t("pts")}`} style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
+                      <span aria-hidden="true">⭐ {stats.total_score + sessionScore} {t("pts")}</span>
                     </span>}
                   </div>
                 </div>
@@ -1593,7 +1611,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
               </div>
 
-              <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"20px 22px",marginBottom:14}}>
+              <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
+                style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"20px 22px",marginBottom:14,outline:"none"}}>
                 {renderQuestion(currentQuestions[questionIndex].q, lang)}
               </div>
 
@@ -1690,7 +1709,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       {t("exitTryAgain")}
                     </button>
                   ) : (
-                    <button
+                    <button ref={nextBtnRef}
                       onClick={isInHistoryMode ? ()=>setQuestionIndex(p=>p+1) : nextQuestion}
                       style={{width:"100%",padding:15,background:`linear-gradient(135deg,${selectedTopic.color}cc,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer"}}>
                       {isInHistoryMode
@@ -1787,14 +1806,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {showReview&&quizHistory.length>0&&(
               <div style={{marginTop:20,textAlign:dir==="rtl"?"right":"left",animation:"fadeIn 0.3s ease"}}>
                 <div style={{color:"#94a3b8",fontSize:12,fontWeight:700,marginBottom:12,letterSpacing:1}}>{t("reviewTitle")}</div>
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <ol style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column",gap:10}}>
                   {quizHistory.map((h,i)=>{
                     const wasCorrect=h.chosen===h.answer;
                     const timedOut=h.chosen===-1;
                     return(
-                      <div key={i} style={{background:wasCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",border:`1px solid ${wasCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"12px 14px"}}>
+                      <li key={i} aria-label={`${t("question")} ${i+1}: ${wasCorrect?(lang==="en"?"correct":"נכון"):(lang==="en"?"incorrect":"לא נכון")}`}
+                        style={{background:wasCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",border:`1px solid ${wasCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"12px 14px"}}>
                         <div style={{fontWeight:700,fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
-                          {wasCorrect?"✅":"❌"} {t("question")} {i+1}
+                          <span aria-hidden="true">{wasCorrect?"✅":"❌"} </span>{t("question")} {i+1}
                         </div>
                         <div style={{color:"#e2e8f0",fontSize:13,marginBottom:6}}>{renderBidi(h.q,lang)}</div>
                         {timedOut?<div style={{fontSize:13,color:"#F59E0B"}}>{t("timeUp")}</div>:(
@@ -1802,12 +1822,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             {t("optionLabels")[h.chosen]}. {h.options[h.chosen]}
                           </div>
                         )}
-                        {!wasCorrect&&<div style={{fontSize:13,color:"#10B981",dir:hasHebrew(h.options[h.answer])?"rtl":"ltr",textAlign:hasHebrew(h.options[h.answer])?"right":"left"}}>✓ {h.options[h.answer]}</div>}
+                        {!wasCorrect&&<div style={{fontSize:13,color:"#10B981",dir:hasHebrew(h.options[h.answer])?"rtl":"ltr",textAlign:hasHebrew(h.options[h.answer])?"right":"left"}}><span aria-hidden="true">✓ </span>{h.options[h.answer]}</div>}
                         <div style={{fontSize:12,color:"#64748b",marginTop:4,lineHeight:1.6}}>{renderBidi(h.explanation,lang)}</div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ol>
               </div>
             )}
           </div>
