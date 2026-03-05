@@ -1437,7 +1437,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   setTopicScreen("quiz");
                   setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
                   setShowExplanation(false);
-                  topicCorrectRef.current=0;
+                  topicCorrectRef.current=0; lastSessionScoreRef.current=0;
+                  setSessionScore(0);
                   setQuizHistory([]); setShowReview(false);
                   setStats(prev=>({...prev,current_streak:0}));
                   if (timerEnabled||isInterviewMode) setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));
