@@ -448,6 +448,11 @@ export default function K8sQuestApp() {
     localStorage.setItem("isInterviewMode_v1", isInterviewMode);
   }, [isInterviewMode]);
 
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir  = lang === "he" ? "rtl" : "ltr";
+  }, [lang]);
+
   const loadUserData = async (userId, sessionUser) => {
     const { data } = await supabase.from("user_stats").select("*").eq("user_id", userId).single();
 
@@ -870,7 +875,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (!user) return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817,#0f172a)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}input,button{outline:none;font-family:inherit}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher */}
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:12,gap:8}}>
@@ -921,19 +926,19 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <form ref={authFormRef} onSubmit={e=>{e.preventDefault();authScreen==="login"?handleLogin():handleSignUp();}} autoComplete="on">
           {authScreen==="signup"&&(
             <div style={{marginBottom:11}}>
-              <label style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("username")}</label>
-              <input name="username" autoComplete="username" defaultValue="" placeholder="K8s Hero"
+              <label htmlFor="auth-username" style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("username")}</label>
+              <input id="auth-username" name="username" autoComplete="username" defaultValue="" placeholder="K8s Hero"
                 style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:14,boxSizing:"border-box"}}/>
             </div>
           )}
           <div style={{marginBottom:11}}>
-            <label style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
-            <input type="email" name="email" autoComplete={authScreen==="login"?"username":"email"} defaultValue="" placeholder="you@example.com"
+            <label htmlFor="auth-email" style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
+            <input id="auth-email" type="email" name="email" autoComplete={authScreen==="login"?"username":"email"} defaultValue="" placeholder="you@example.com"
               style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
           <div style={{marginBottom:14}}>
-            <label style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("password")}</label>
-            <input type="password" name="password" autoComplete={authScreen==="login"?"current-password":"new-password"} defaultValue="" placeholder="••••••••"
+            <label htmlFor="auth-password" style={{color:"#475569",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("password")}</label>
+            <input id="auth-password" type="password" name="password" autoComplete={authScreen==="login"?"current-password":"new-password"} defaultValue="" placeholder="••••••••"
               style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:8,color:"#e2e8f0",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
           {authError&&<div style={{marginBottom:12}}>
@@ -962,7 +967,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817 0%,#0f172a 60%,#020817 100%)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,position:"relative",overflowX:"hidden"}}>
-      <style>{`${a11y.reduceMotion?"*{animation-duration:0.001ms!important;transition-duration:0.001ms!important}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}input,button{outline:none;font-family:inherit}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation-duration:0.001ms!important;transition-duration:0.001ms!important}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar{flex-wrap:wrap!important;row-gap:6px!important}
@@ -986,11 +991,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(rgba(0,212,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.02) 1px,transparent 1px)",backgroundSize:"48px 48px"}}/>
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
       {showConfetti&&!a11y.reduceMotion&&<Confetti/>}
-      {newAchievement&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"#e2e8f0",fontSize:14,fontWeight:700}}>{lang==="en"?newAchievement.nameEn:newAchievement.name}</div></div></div>}
-      {saveError&&<div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
+      {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span aria-hidden="true" style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"#e2e8f0",fontSize:14,fontWeight:700}}>{lang==="en"?newAchievement.nameEn:newAchievement.name}</div></div></div>}
+      {saveError&&<div role="alert" aria-live="assertive" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
 
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div onClick={e=>e.stopPropagation()} style={{background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:20,width:"min(360px,calc(100vw - 32px))",animation:"fadeIn 0.3s ease",direction:"ltr"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}><h3 style={{margin:0,color:"#e2e8f0",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><button onClick={()=>setShowLeaderboard(false)} style={{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"#475569",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i===0?"rgba(245,158,11,0.1)":"rgba(255,255,255,0.03)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"rgba(255,255,255,0.06)"}`}}><span style={{fontSize:18,width:28}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1}}><div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{entry.username||t("anonymous")}</div><div style={{color:"#475569",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div></div>)}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} style={{background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:20,width:"min(360px,calc(100vw - 32px))",animation:"fadeIn 0.3s ease",direction:"ltr"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}><h3 style={{margin:0,color:"#e2e8f0",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><button onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"#475569",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i===0?"rgba(245,158,11,0.1)":"rgba(255,255,255,0.03)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"rgba(255,255,255,0.06)"}`}}><span style={{fontSize:18,width:28}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1}}><div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{entry.username||t("anonymous")}</div><div style={{color:"#475569",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div></div>)}</div></div>}
 
+      <main id="main-content">
       {/* HOME */}
       {screen==="home"&&(
         <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
@@ -1013,8 +1019,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </h1>
               {/* Burger button */}
               <button onClick={()=>setShowMenu(p=>!p)}
+                aria-label={lang==="en"?"Open menu":"פתח תפריט"}
+                aria-expanded={showMenu}
+                aria-haspopup="menu"
                 style={{position:"absolute",[lang==="en"?"left":"right"]:0,top:"50%",transform:"translateY(-50%)",width:40,height:40,background:showMenu?"rgba(0,212,255,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${showMenu?"rgba(0,212,255,0.3)":"rgba(255,255,255,0.1)"}`,borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,zIndex:201,transition:"all 0.2s"}}>
-                {[0,1,2].map(i=><span key={i} style={{display:"block",width:18,height:2,borderRadius:2,background:showMenu?"#00D4FF":"#94a3b8",transition:"background 0.2s"}}/>)}
+                {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:18,height:2,borderRadius:2,background:showMenu?"#00D4FF":"#94a3b8",transition:"background 0.2s"}}/>)}
               </button>
               {/* Dropdown menu */}
               {showMenu&&(<>
@@ -1033,6 +1042,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <div style={{display:"flex",gap:4}}>
                         {[["normal","A",12],["large","A+",14],["xl","A++",16]].map(([sz,label,sz_px])=>(
                           <button key={sz} onClick={()=>updateA11y("fontSize",sz)}
+                            aria-pressed={a11y.fontSize===sz}
+                            aria-label={`${t("a11yFontSize")}: ${label}`}
                             style={{flex:1,padding:"5px 0",fontSize:sz_px,fontWeight:a11y.fontSize===sz?800:500,background:a11y.fontSize===sz?"rgba(0,212,255,0.12)":"rgba(255,255,255,0.04)",border:`1px solid ${a11y.fontSize===sz?"rgba(0,212,255,0.4)":"rgba(255,255,255,0.08)"}`,borderRadius:6,color:a11y.fontSize===sz?"#00D4FF":"#64748b",cursor:"pointer"}}>
                             {label}
                           </button>
@@ -1042,6 +1053,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     <div style={{display:"flex",gap:4}}>
                       {(["reduceMotion","highContrast"]).map((key,i)=>(
                         <button key={key} onClick={()=>updateA11y(key,!a11y[key])}
+                          aria-pressed={a11y[key]}
                           style={{flex:1,padding:"6px 4px",background:a11y[key]?"rgba(0,212,255,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${a11y[key]?"rgba(0,212,255,0.35)":"rgba(255,255,255,0.08)"}`,borderRadius:6,color:a11y[key]?"#00D4FF":"#64748b",fontSize:11,cursor:"pointer",fontWeight:a11y[key]?700:400}}>
                           {i===0?t("a11yReduceMotion"):t("a11yHighContrast")}{a11y[key]?" ✓":""}
                         </button>
@@ -1050,10 +1062,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </div>
                   {/* Menu items */}
                   {!isGuest&&<button onClick={()=>{loadLeaderboard();setShowLeaderboard(true);setShowMenu(false);}} style={{width:"100%",padding:"11px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,255,255,0.05)",color:"#94a3b8",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10}}>{t("leaderboardBtn")}</button>}
-                  <button onClick={()=>{setIsInterviewMode(p=>!p);}} style={{width:"100%",padding:"11px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,255,255,0.05)",color:isInterviewMode?"#A855F7":"#94a3b8",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10,fontWeight:isInterviewMode?700:400}}>{t("interviewMode")}{isInterviewMode&&<span style={{marginLeft:"auto",fontSize:10,color:"#A855F7"}}>ON</span>}</button>
-                  <button onClick={()=>{handleResetProgress();setShowMenu(false);}} style={{width:"100%",padding:"11px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,255,255,0.05)",color:"#EF4444",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10}}><span>🗑</span>{t("resetProgress")}</button>
+                  <button onClick={()=>{setIsInterviewMode(p=>!p);}} aria-pressed={isInterviewMode} style={{width:"100%",padding:"11px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,255,255,0.05)",color:isInterviewMode?"#A855F7":"#94a3b8",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10,fontWeight:isInterviewMode?700:400}}>{t("interviewMode")}{isInterviewMode&&<span aria-hidden="true" style={{marginLeft:"auto",fontSize:10,color:"#A855F7"}}>ON</span>}</button>
+                  <button onClick={()=>{handleResetProgress();setShowMenu(false);}} style={{width:"100%",padding:"11px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,255,255,0.05)",color:"#EF4444",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10}}><span aria-hidden="true">🗑</span>{t("resetProgress")}</button>
                   <a href="mailto:ocarmeli7@gmail.com?subject=KubeQuest%20Feedback" style={{width:"100%",padding:"11px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,255,255,0.05)",color:"#64748b",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10,textDecoration:"none"}}><span>✉️</span>{lang==="en"?"Contact":"צור קשר"}</a>
-                  <button onClick={()=>{handleLogout();setShowMenu(false);}} style={{width:"100%",padding:"11px 16px",background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10}}><span>🚪</span>{t("logout")}</button>
+                  <button onClick={()=>{handleLogout();setShowMenu(false);}} style={{width:"100%",padding:"11px 16px",background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:13,textAlign:"right",display:"flex",alignItems:"center",gap:10}}><span aria-hidden="true">🚪</span>{t("logout")}</button>
                 </div>
               </>)}
             </div>
@@ -1164,7 +1176,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="topic"&&selectedTopic&&selectedLevel&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease"}}>
           <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:22,minHeight:36}}>
-            {topicScreen==="theory"&&<button onClick={()=>setScreen("home")} style={{position:"absolute",[dir==="rtl"?"right":"left"]:0,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{dir==="rtl"?"→":"←"}</button>}
+            {topicScreen==="theory"&&<button onClick={()=>setScreen("home")} aria-label={t("back")} style={{position:"absolute",[dir==="rtl"?"right":"left"]:0,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}} aria-hidden="false"><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>}
             <div style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}>
               <span style={{fontSize:18}}>{selectedTopic.icon}</span>
               <h2 style={{margin:0,color:selectedTopic.color,fontSize:17,fontWeight:800,textAlign:"center"}}>{selectedTopic.name}</h2>
@@ -1185,7 +1197,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </button>
               </div>
               {!isInterviewMode&&<div style={{display:"flex",justifyContent:"center",marginTop:10}}>
-                <button onClick={()=>setTimerEnabled(p=>!p)} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400}}>
+                <button onClick={()=>setTimerEnabled(p=>!p)} aria-pressed={timerEnabled} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400}}>
                   {timerEnabled?t("timerOn"):t("timerOff")}
                 </button>
               </div>}
@@ -1199,8 +1211,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     <span style={{color:"#475569",fontSize:13}}>{t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}</span>
                   </div>
                   <div className="quiz-bar-right" style={{display:"flex",gap:10,alignItems:"center"}}>
-                    {(timerEnabled||isInterviewMode)&&<span style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}>⏱ {timeLeft}</span>}
-                    {!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
+                    {(timerEnabled||isInterviewMode)&&<span aria-live="off" aria-label={`${timeLeft} ${lang==="en"?"seconds":"שניות"}`} style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}><span aria-hidden="true">⏱ {timeLeft}</span></span>}
+                    {!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} aria-pressed={timerEnabled} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
                       {timerEnabled?t("timerOn"):t("timerOff")}
                     </button>}
                     <span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
@@ -1261,7 +1273,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     const timedOut = selectedAnswer === null;
                     const isCorrect = !timedOut && selectedAnswer === q.answer;
                     return (
-                      <div style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
+                      <div role="status" aria-live="polite" style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
                         <div style={{fontWeight:800,fontSize:13,marginBottom:6,color:isCorrect?"#10B981":"#EF4444"}}>
                           {isCorrect
                             ?`${t("correct")} +${LEVEL_CONFIG[selectedLevel].points} ${t("pts")}`
@@ -1400,6 +1412,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
         );
       })()}
+      </main>
     </div>
   );
 }
