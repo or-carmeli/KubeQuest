@@ -139,6 +139,8 @@ const TRANSLATIONS = {
     resumeBody_m: "נמצא חידון שלא הסתיים. רוצה להמשיך מהיכן שהפסקת?",
     resumeBtn: "המשיכי", resumeBtn_m: "המשך",
     resumeDiscard: "התחילי מחדש", resumeDiscard_m: "התחל מחדש",
+    prevQuestion: "קודמת ←", backToCurrent: "→ חזרי לחידון", backToCurrent_m: "→ חזור לחידון",
+    reviewing: "📖 סקירה",
   },
   en: {
     tagline: "Learn Kubernetes in a fun and interactive way",
@@ -209,6 +211,8 @@ const TRANSLATIONS = {
     resumeBody: "You have an unfinished quiz. Continue where you left off?",
     resumeBtn: "Continue",
     resumeDiscard: "Start Fresh",
+    prevQuestion: "← Prev", backToCurrent: "Back to Quiz →",
+    reviewing: "📖 Review",
   },
 };
 
@@ -411,7 +415,8 @@ export default function K8sQuestApp() {
 
   const isGuest = user?.id === "guest";
   const achievementsLoaded = useRef(false);
-  const quizRunIdRef = useRef(null);
+  const quizRunIdRef  = useRef(null);
+  const liveIndexRef  = useRef(0);   // highest question index reached; never decremented
   const [resumeData, setResumeData] = useState(null);
 
   // Shuffle answer options so the correct answer isn't predictably the longest/same position
@@ -545,7 +550,7 @@ export default function K8sQuestApp() {
       topicIcon:     selectedTopic.icon,
       level:         selectedLevel,
       questions:     currentQuestions,
-      questionIndex,
+      questionIndex: liveIndexRef.current,
       submitted,
       selectedAnswer,
       showExplanation,
@@ -573,6 +578,13 @@ export default function K8sQuestApp() {
     document.documentElement.lang = lang;
     document.documentElement.dir  = lang === "he" ? "rtl" : "ltr";
   }, [lang]);
+
+  // When navigating back to home, show resume modal if there's a saved in-progress quiz
+  useEffect(() => {
+    if (screen !== "home" || !user) return;
+    const saved = loadQuizState();
+    if (saved && saved.userId === (user.id || "guest")) setResumeData(saved);
+  }, [screen]);
 
   const loadUserData = async (userId, sessionUser) => {
     const { data } = await supabase.from("user_stats").select("*").eq("user_id", userId).single();
@@ -815,6 +827,7 @@ export default function K8sQuestApp() {
     isRetryRef.current  = saved.isRetry  || false;
     topicCorrectRef.current = saved.topicCorrect || 0;
     quizRunIdRef.current    = saved.quizRunId;
+    liveIndexRef.current    = saved.questionIndex ?? 0;
 
     // Timer: if mid-question reset to full, if on explanation screen restore saved value
     const fullTime = isInterviewMode
@@ -940,6 +953,7 @@ export default function K8sQuestApp() {
       }
       setScreen("topicComplete");
     } else {
+      liveIndexRef.current = questionIndex + 1;
       setQuestionIndex(p => p + 1);
       setSelectedAnswer(null);
       setSubmitted(false);
@@ -950,6 +964,7 @@ export default function K8sQuestApp() {
 
   const startTopic = (topic, level) => {
     quizRunIdRef.current = Date.now().toString(36);
+    liveIndexRef.current = 0;
     clearQuizState();
     const key = `${topic.id}_${level}`;
     isRetryRef.current = !!(completedTopics[key]);
@@ -969,6 +984,7 @@ export default function K8sQuestApp() {
 
   const startMixedQuiz = () => {
     quizRunIdRef.current = Date.now().toString(36);
+    liveIndexRef.current = 0;
     clearQuizState();
     const all = [];
     TOPICS.forEach(topic => {
@@ -995,6 +1011,7 @@ export default function K8sQuestApp() {
 
   const startDailyChallenge = () => {
     quizRunIdRef.current = Date.now().toString(36);
+    liveIndexRef.current = 0;
     clearQuizState();
     const pool = lang === "en" ? DAILY_QUESTIONS.en : DAILY_QUESTIONS.he;
     // Shuffle once per year with a fixed annual seed (same order for all users)
@@ -1024,7 +1041,7 @@ export default function K8sQuestApp() {
 
   // Keyboard shortcuts: 1-4 to pick answer, Enter to confirm/next
   useEffect(() => {
-    if (screen !== "topic" || topicScreen !== "quiz") return;
+    if (screen !== "topic" || topicScreen !== "quiz" || isInHistoryMode) return;
     const handler = (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -1042,14 +1059,14 @@ export default function K8sQuestApp() {
 
   // Timer countdown
   useEffect(() => {
-    if (screen !== "topic" || topicScreen !== "quiz" || !timerEnabled || submitted || timeLeft <= 0) return;
+    if (screen !== "topic" || topicScreen !== "quiz" || !timerEnabled || submitted || timeLeft <= 0 || isInHistoryMode) return;
     const id = setTimeout(() => setTimeLeft(t => t - 1), 1000);
     return () => clearTimeout(id);
   }, [screen, topicScreen, timerEnabled, submitted, timeLeft]);
 
   // Timer expired – force-submit as missed
   useEffect(() => {
-    if (timeLeft !== 0 || submitted || screen !== "topic" || topicScreen !== "quiz" || !timerEnabled) return;
+    if (timeLeft !== 0 || submitted || screen !== "topic" || topicScreen !== "quiz" || !timerEnabled || isInHistoryMode) return;
     const q = currentQuestions[questionIndex];
     setSubmitted(true);
     setShowExplanation(true);
@@ -1102,6 +1119,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
   const FONT_SCALES = { normal: 1, large: 1.2, xl: 1.4 };
   const fs = FONT_SCALES[a11y.fontSize] || 1;
+
+  // History navigation: questionIndex can go below liveIndexRef.current to review past answers
+  const isInHistoryMode    = questionIndex < liveIndexRef.current;
+  const dispSubmitted      = isInHistoryMode ? true : submitted;
+  const dispSelectedAnswer = isInHistoryMode ? (quizHistory[questionIndex]?.chosen ?? -1) : selectedAnswer;
+  const dispShowExplanation = isInHistoryMode ? true : showExplanation;
 
   if (!user) return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817,#0f172a)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
@@ -1467,26 +1490,35 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <div>
               <div style={{marginBottom:18}}>
                 <div className="quiz-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#64748b",padding:"7px 12px",borderRadius:7,cursor:"pointer",fontSize:13}}>{t("back")}</button>
-                    <span style={{color:"#475569",fontSize:13}}>{t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}</span>
+                    {questionIndex > 0 && (
+                      <button onClick={()=>setQuestionIndex(p=>p-1)}
+                        style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",padding:"7px 10px",borderRadius:7,cursor:"pointer",fontSize:13}}>
+                        {t("prevQuestion")}
+                      </button>
+                    )}
+                    <span style={{color:"#475569",fontSize:13}}>
+                      {t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}
+                      {isInHistoryMode && <span style={{marginInlineStart:6,fontSize:11,color:"#A855F7",fontWeight:700}}>{t("reviewing")}</span>}
+                    </span>
                   </div>
                   <div className="quiz-bar-right" style={{display:"flex",gap:10,alignItems:"center"}}>
-                    {(timerEnabled||isInterviewMode)&&<span aria-live="off" aria-label={`${timeLeft} ${lang==="en"?"seconds":"שניות"}`} style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}><span aria-hidden="true">⏱ {timeLeft}</span></span>}
-                    {!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} aria-pressed={timerEnabled} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
+                    {!isInHistoryMode&&(timerEnabled||isInterviewMode)&&<span aria-live="off" aria-label={`${timeLeft} ${lang==="en"?"seconds":"שניות"}`} style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}><span aria-hidden="true">⏱ {timeLeft}</span></span>}
+                    {!isInHistoryMode&&!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} aria-pressed={timerEnabled} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"#475569",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
                       {timerEnabled?t("timerOn"):t("timerOff")}
                     </button>}
-                    <span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
+                    {!isInHistoryMode&&<span style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
                       🔥 {stats.current_streak} {t("streakLabel")}
-                    </span>
-                    <span style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
+                    </span>}
+                    {!isInHistoryMode&&<span style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
                       ⭐ {stats.total_score + sessionScore} {t("pts")}
-                    </span>
+                    </span>}
                   </div>
                 </div>
                 <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4}}>
                   <div style={{height:"100%",borderRadius:4,
-                    width:`${((questionIndex+(submitted?1:0))/currentQuestions.length)*100}%`,
+                    width:`${((liveIndexRef.current+(submitted&&!isInHistoryMode?1:0))/currentQuestions.length)*100}%`,
                     background:`linear-gradient(90deg,${selectedTopic.color},${selectedTopic.color}88)`,
                     transition:"width 0.4s ease"}}/>
                 </div>
@@ -1499,45 +1531,45 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:14}}>
                 {currentQuestions[questionIndex].options.map((opt,i)=>{
                   const isCorrect = i===currentQuestions[questionIndex].answer;
-                  const isChosen  = i===selectedAnswer;
+                  const isChosen  = i===dispSelectedAnswer;
                   let borderColor = "rgba(255,255,255,0.09)", bg = "rgba(255,255,255,0.02)", color = "#cbd5e1", labelBg = "rgba(255,255,255,0.07)", labelColor = "#94a3b8";
-                  if (isChosen && !submitted)  { borderColor = "#00D4FF66"; bg = "rgba(0,212,255,0.06)"; color = "#7dd3fc"; labelBg = "rgba(0,212,255,0.15)"; labelColor = "#00D4FF"; }
-                  if (submitted) {
+                  if (isChosen && !dispSubmitted)  { borderColor = "#00D4FF66"; bg = "rgba(0,212,255,0.06)"; color = "#7dd3fc"; labelBg = "rgba(0,212,255,0.15)"; labelColor = "#00D4FF"; }
+                  if (dispSubmitted) {
                     if (isCorrect)             { borderColor = "#10B981"; bg = "rgba(16,185,129,0.1)";  color = "#10B981"; labelBg = "rgba(16,185,129,0.2)";  labelColor = "#10B981"; }
                     else if (isChosen)          { borderColor = "#EF4444"; bg = "rgba(239,68,68,0.1)";   color = "#EF4444"; labelBg = "rgba(239,68,68,0.2)";   labelColor = "#EF4444"; }
                   }
                   const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
                   return (
                     <button key={i} className="opt-btn"
-                      onClick={()=>handleSelectAnswer(i)}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:submitted?"default":"pointer",lineHeight:1.55,display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
+                      onClick={()=>!isInHistoryMode&&handleSelectAnswer(i)}
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:dispSubmitted?"default":"pointer",lineHeight:1.55,display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
                       <span style={{flexShrink:0,width:24,height:24,borderRadius:6,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
                       <span dir={optDir} style={{flex:1}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
-                      {submitted&&isCorrect&&<span style={{flexShrink:0,fontSize:16}}>✓</span>}
-                      {submitted&&isChosen&&!isCorrect&&<span style={{flexShrink:0,fontSize:16}}>✗</span>}
+                      {dispSubmitted&&isCorrect&&<span style={{flexShrink:0,fontSize:16}}>✓</span>}
+                      {dispSubmitted&&isChosen&&!isCorrect&&<span style={{flexShrink:0,fontSize:16}}>✗</span>}
                     </button>
                   );
                 })}
               </div>
 
-              {!submitted&&selectedAnswer!==null&&(
+              {!dispSubmitted&&dispSelectedAnswer!==null&&!isInHistoryMode&&(
                 <button onClick={handleSubmit}
                   style={{width:"100%",padding:"15px",background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:10,boxShadow:`0 4px 16px ${selectedTopic.color}44`}}>
                   {t("confirmAnswer")}
                 </button>
               )}
 
-              {showExplanation&&(
+              {dispShowExplanation&&(
                 <div style={{animation:"fadeIn 0.3s ease"}}>
                   {(()=>{
                     const q = currentQuestions[questionIndex];
-                    const timedOut = selectedAnswer === null;
-                    const isCorrect = !timedOut && selectedAnswer === q.answer;
+                    const timedOut = dispSelectedAnswer === null || dispSelectedAnswer === -1;
+                    const isCorrect = !timedOut && dispSelectedAnswer === q.answer;
                     return (
                       <div role="status" aria-live="polite" style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
                         <div style={{fontWeight:800,fontSize:13,marginBottom:6,color:isCorrect?"#10B981":"#EF4444"}}>
                           {isCorrect
-                            ?`${t("correct")} +${LEVEL_CONFIG[selectedLevel].points} ${t("pts")}`
+                            ?`${t("correct")}${isInHistoryMode?"":" +"+LEVEL_CONFIG[selectedLevel].points+" "+t("pts")}`
                             :timedOut
                               ?`${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
                               :t("incorrect")}
@@ -1566,8 +1598,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       </div>
                     );
                   })()}
-                  <button onClick={nextQuestion} style={{width:"100%",padding:15,background:`linear-gradient(135deg,${selectedTopic.color}cc,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer"}}>
-                    {questionIndex>=currentQuestions.length-1?t("finishTopic"):t("nextQuestion")}
+                  <button
+                    onClick={isInHistoryMode ? ()=>setQuestionIndex(p=>p+1) : nextQuestion}
+                    style={{width:"100%",padding:15,background:`linear-gradient(135deg,${selectedTopic.color}cc,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer"}}>
+                    {isInHistoryMode
+                      ? (questionIndex >= liveIndexRef.current - 1 ? t("backToCurrent") : t("nextQuestion"))
+                      : (questionIndex>=currentQuestions.length-1 ? t("finishTopic") : t("nextQuestion"))}
                   </button>
                 </div>
               )}
