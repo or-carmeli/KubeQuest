@@ -362,6 +362,7 @@ export default function K8sQuestApp() {
   const dir = lang === "he" ? "rtl" : "ltr";
 
   const [authChecked, setAuthChecked]     = useState(false);
+  const [dataLoaded,  setDataLoaded]      = useState(false);
   const [user, setUser]                   = useState(null);
   const [authScreen, setAuthScreen]       = useState("login");
   const authFormRef                       = useRef(null);
@@ -477,8 +478,12 @@ export default function K8sQuestApp() {
       window.history.replaceState(null, "", window.location.pathname);
     }
 
+    // Fallback: if Supabase never responds, unblock the UI after 10 s
+    const authTimeout = setTimeout(() => { setAuthChecked(true); setDataLoaded(true); }, 10000);
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(authTimeout);
       if (session) { setUser(session.user); loadUserData(session.user.id, session.user); }
+      else          { setDataLoaded(true); }   // no session → nothing to load
       setAuthChecked(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -518,6 +523,7 @@ export default function K8sQuestApp() {
       }
     } catch {}
     achievementsLoaded.current = true;
+    setDataLoaded(true);
     // Check for a saved in-progress quiz for the guest session
     const savedQuiz = loadQuizState();
     if (savedQuiz && savedQuiz.userId === "guest") setResumeData(savedQuiz);
@@ -651,6 +657,7 @@ export default function K8sQuestApp() {
     }
 
     achievementsLoaded.current = true;
+    setDataLoaded(true);   // ← data is now in state; no more flash of 0%
 
     // Check for a saved in-progress quiz belonging to this user
     const savedQuiz = loadQuizState();
@@ -740,11 +747,13 @@ export default function K8sQuestApp() {
   };
 
   const handleLogout = async () => {
+    setDataLoaded(false);
     if (isGuest) {
       setUser(null);
       setStats({ total_answered:0, total_correct:0, total_score:0, max_streak:0, current_streak:0 });
       setCompletedTopics({}); setUnlockedAchievements([]);
       achievementsLoaded.current = false;
+      setDataLoaded(true); // guest has no async load
       return;
     }
     await supabase.auth.signOut(); setUser(null);
@@ -1101,7 +1110,7 @@ export default function K8sQuestApp() {
 
 const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
 
-  if (!authChecked) return (
+  if (!authChecked || (!!user && !isGuest && !dataLoaded)) return (
     <div style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center"}}>
       <div style={{textAlign:"center"}}>
         <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
