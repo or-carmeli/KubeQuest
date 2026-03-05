@@ -934,13 +934,16 @@ export default function K8sQuestApp() {
     return next;
   });
 
-  const speakQuestion = () => {
-    if (!window.speechSynthesis) return;
-    if (isSpeaking) { window.speechSynthesis.cancel(); setIsSpeaking(false); return; }
-    const q = currentQuestions?.[questionIndex]?.q;
-    if (!q) return;
+  const buildQuestionText = (qObj) => {
+    if (!qObj) return null;
+    const labels = lang === "he" ? ["א","ב","ג","ד"] : ["A","B","C","D"];
+    const optionsText = (qObj.options || []).map((opt, i) => `${labels[i]}: ${opt}`).join(". ");
+    return `${qObj.q}. ${optionsText}`;
+  };
+
+  const speakText = (text) => {
     window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(q);
+    const utt = new SpeechSynthesisUtterance(text);
     utt.lang = lang === "he" ? "he-IL" : "en-US";
     utt.onend = () => setIsSpeaking(false);
     utt.onerror = () => setIsSpeaking(false);
@@ -948,19 +951,22 @@ export default function K8sQuestApp() {
     window.speechSynthesis.speak(utt);
   };
 
+  const speakQuestion = () => {
+    if (!window.speechSynthesis) return;
+    if (isSpeaking) { window.speechSynthesis.cancel(); setIsSpeaking(false); return; }
+    const text = buildQuestionText(currentQuestions?.[questionIndex]);
+    if (!text) return;
+    speakText(text);
+  };
+
   useEffect(() => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
     if (a11y.autoRead && screen === "topic" && topicScreen === "quiz") {
-      const q = currentQuestions?.[questionIndex]?.q;
-      if (!q) return;
-      const utt = new SpeechSynthesisUtterance(q);
-      utt.lang = lang === "he" ? "he-IL" : "en-US";
-      utt.onend = () => setIsSpeaking(false);
-      utt.onerror = () => setIsSpeaking(false);
-      setIsSpeaking(true);
-      window.speechSynthesis.speak(utt);
+      const text = buildQuestionText(currentQuestions?.[questionIndex]);
+      if (!text) return;
+      speakText(text);
     }
   }, [questionIndex, screen, topicScreen]); // eslint-disable-line react-hooks/exhaustive-deps
 
