@@ -1129,7 +1129,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PriorityClass קובע את עדיפות ה-Pod. Pods עם priorityClassName גבוה יוקצו ראשונים ויכולים לגרום לpreemption.",
+              "PriorityClass הוא משאב ב-Kubernetes שמגדיר מספר עדיפות לPod (למשל: 1000 גבוה מ-500). Scheduler תמיד ינסה לתזמן קודם Pods עם עדיפות גבוהה יותר. Preemption: אם ל-Cluster אין מספיק משאבים לPod בעדיפות גבוהה, Kubernetes יפנה מקום ב-Node על ידי פינוי (eviction) של Pods בעדיפות נמוכה יותר — זה נקרא preemption. כך Pods קריטיים כמו מערכת ניטור תמיד יקבלו משאבים, גם כשה-Cluster עמוס.",
           },
           {
             q: "Pod נשאר Pending.\n\nkubectl describe מראה:\nEvents:\n  Warning  FailedScheduling  0/3 nodes are available: 3 node(s) had untolerated taint {dedicated:gpu}.\n\nמה הפתרון?",
@@ -1370,7 +1370,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PriorityClass sets a Pod's priority. Pods with a higher priorityClassName are scheduled first and can trigger preemption.",
+              "PriorityClass is a Kubernetes resource that assigns a numeric priority to a Pod (e.g. 1000 outranks 500). The scheduler always tries to place higher-priority Pods first. Preemption: if the cluster lacks resources for a high-priority Pod, Kubernetes evicts lower-priority Pods from a Node to make room — that is called preemption. This ensures critical Pods (e.g. monitoring, system services) always get resources, even under heavy load.",
           },
           {
             q: "A Pod stays Pending.\n\nkubectl describe shows:\nEvents:\n  Warning  FailedScheduling  0/3 nodes available: 3 node(s) had untolerated taint {dedicated:gpu}.\n\nWhat is the fix?",

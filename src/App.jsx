@@ -252,16 +252,70 @@ function GenderToggle({ gender, setGender }) {
 
 const hasHebrew = (text) => /[\u05D0-\u05EA]/.test(text ?? "");
 
+// Render a question text that may contain \n\n paragraphs and code blocks.
+// Paragraphs with inner \n are rendered as monospace code blocks.
+function renderQuestion(qText, lang) {
+  if (!qText) return null;
+  const paragraphs = qText.split(/\n\n+/);
+  if (paragraphs.length <= 1) {
+    const qDir = hasHebrew(qText) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
+    return (
+      <div dir={qDir} style={{color:"#e2e8f0",fontSize:17,fontWeight:700,lineHeight:1.75,wordBreak:"break-word",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>
+        {renderBidi(qText, lang)}
+      </div>
+    );
+  }
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {paragraphs.map((para, idx) => {
+        const isCode = para.includes("\n");
+        if (isCode) {
+          return (
+            <pre key={idx} style={{margin:0,background:"rgba(0,0,0,0.45)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 14px",fontFamily:"monospace",fontSize:13,color:"#7dd3fc",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",textAlign:"left",direction:"ltr"}}>
+              {para}
+            </pre>
+          );
+        }
+        const isLast = idx === paragraphs.length - 1;
+        const pDir = hasHebrew(para) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
+        return (
+          <div key={idx} dir={pDir} style={{color:"#e2e8f0",fontSize:isLast?17:15,fontWeight:isLast?700:400,lineHeight:1.7,wordBreak:"break-word",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>
+            {renderBidi(para, lang)}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Shuffle quiz options while remapping the answer index
+function shuffleOptions(questions) {
+  return questions.map(q => {
+    if (!q.options || q.options.length <= 1) return q;
+    const indices = q.options.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return { ...q, options: indices.map(i => q.options[i]), answer: indices.indexOf(q.answer) };
+  });
+}
+
 // Wraps inline English/Latin sequences in <span dir="ltr"> for correct bidi rendering
 // in RTL Hebrew paragraphs. Returns text unchanged for English mode.
 function renderBidi(text, lang) {
   if (!text || lang !== "he") return text;
   if (!/[A-Za-z]/.test(text)) return text;
-  const parts = text.split(/((?:[A-Za-z][A-Za-z0-9\-_.:/]*(?:\s+(?=[A-Za-z]))?)+[?!.,;]?)/);
+  // Do NOT capture trailing punctuation inside the LTR span — leave ?!.,; in the RTL flow.
+  const parts = text.split(/((?:[A-Za-z][A-Za-z0-9\-_.:/]*(?:\s+(?=[A-Za-z]))?)+)/);
   if (parts.length <= 1) return text;
-  return parts.map((part, i) =>
-    /^[A-Za-z]/.test(part) ? <span key={i} dir="ltr">{part}</span> : part
-  );
+  return parts.map((part, i) => {
+    if (/^[A-Za-z]/.test(part)) return <span key={i} dir="ltr">{part}</span>;
+    // Insert RLM (U+200F) before punctuation that immediately follows an LTR span so
+    // the Unicode bidi algorithm places it at the visual end of the RTL sentence.
+    if (i > 0 && /^[A-Za-z]/.test(parts[i - 1])) return "\u200F" + part;
+    return part;
+  });
 }
 
 function Footer({ lang }) {
@@ -336,6 +390,7 @@ export default function K8sQuestApp() {
   const [mixedQuestions, setMixedQuestions]             = useState([]);
   const [sessionScore, setSessionScore]                 = useState(0);
   const [retryMode, setRetryMode]                       = useState(false);
+  const [topicQuestions, setTopicQuestions]             = useState([]);
   const [allowNextLevel, setAllowNextLevel]             = useState(false);
   const [showMenu, setShowMenu]                         = useState(false);
   const [a11y, setA11y] = useState(() => {
@@ -356,7 +411,7 @@ export default function K8sQuestApp() {
     const idx = LEVEL_ORDER.indexOf(level);
     if (idx === 0) return false;
     const prevResult = completedTopics[`${topicId}_${LEVEL_ORDER[idx - 1]}`];
-    return !prevResult || prevResult.correct < prevResult.total;
+    return !prevResult || (prevResult.correct < prevResult.total && !prevResult.retryComplete);
   };
 
   const getNextLevel = (level) => {
@@ -374,7 +429,7 @@ export default function K8sQuestApp() {
       return sum + (res.correct * (LEVEL_CONFIG[lvl]?.points ?? 0));
     }, 0);
   const currentLevelData = selectedTopic && selectedLevel && !isFreeMode(selectedTopic.id) && !retryMode ? getLevelData(selectedTopic, selectedLevel) : null;
-  const currentQuestions = isFreeMode(selectedTopic?.id) || retryMode ? mixedQuestions : (currentLevelData?.questions || []);
+  const currentQuestions = isFreeMode(selectedTopic?.id) || retryMode ? mixedQuestions : (topicQuestions.length > 0 ? topicQuestions : (currentLevelData?.questions || []));
 
   useEffect(() => {
     // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link)
@@ -731,6 +786,8 @@ export default function K8sQuestApp() {
   const startTopic = (topic, level) => {
     const key = `${topic.id}_${level}`;
     isRetryRef.current = !!(completedTopics[key]);
+    const rawQs = lang === "en" ? topic.levels[level].questionsEn : topic.levels[level].questions;
+    setTopicQuestions(shuffleOptions(rawQs || []));
     setSelectedTopic(topic); setSelectedLevel(level); setTopicScreen("theory");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
     setShowExplanation(false);
@@ -755,7 +812,7 @@ export default function K8sQuestApp() {
       const j = Math.floor(Math.random() * (i + 1));
       [all[i], all[j]] = [all[j], all[i]];
     }
-    setMixedQuestions(all.slice(0, 10));
+    setMixedQuestions(shuffleOptions(all.slice(0, 10)));
     isRetryRef.current = false;
     setSelectedTopic(MIXED_TOPIC); setSelectedLevel("mixed"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
@@ -783,7 +840,7 @@ export default function K8sQuestApp() {
     const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
     const numWindows = Math.floor(shuffled.length / 5);
     const startIdx = (dayOfYear % numWindows) * 5;
-    setMixedQuestions(shuffled.slice(startIdx, startIdx + 5));
+    setMixedQuestions(shuffleOptions(shuffled.slice(startIdx, startIdx + 5)));
     isRetryRef.current = false;
     setSelectedTopic(DAILY_TOPIC); setSelectedLevel("daily"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
@@ -1230,7 +1287,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
 
               <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"20px 22px",marginBottom:14}}>
-                {(()=>{const qText=currentQuestions[questionIndex].q;const qDir=hasHebrew(qText)?dir:"ltr";return<div dir={qDir} style={{color:"#e2e8f0",fontSize:17,fontWeight:700,lineHeight:1.75,wordBreak:"break-word",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>{renderBidi(qText,lang)}</div>;})()}
+                {renderQuestion(currentQuestions[questionIndex].q, lang)}
               </div>
 
               <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:14}}>
@@ -1279,7 +1336,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               ?`${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
                               :t("incorrect")}
                         </div>
-                        {!isInterviewMode&&<div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{renderBidi(q.explanation,lang)}</div>}
+                        {!isInterviewMode&&<div style={{display:"flex",flexDirection:"column",gap:5}}>
+                          {q.explanation.split(/\. /).map((s,idx,arr)=>(
+                            <div key={idx} style={{color:"#94a3b8",fontSize:13,lineHeight:1.7,direction:dir}}>
+                              {renderBidi(s+(idx<arr.length-1?".":""),lang)}
+                            </div>
+                          ))}
+                        </div>}
                       </div>
                     );
                   })()}
@@ -1289,7 +1352,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <div style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.22)",borderRadius:12,padding:"14px 16px",marginBottom:12,direction:"rtl",animation:"fadeIn 0.3s ease"}}>
                         <div style={{fontSize:11,fontWeight:700,color:"#A855F7",marginBottom:8,letterSpacing:0.5}}>תשובה אידיאלית</div>
                         <div style={{color:"#e2e8f0",fontWeight:700,fontSize:14,marginBottom:6}}>{q.options[q.answer]}</div>
-                        <div style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{q.explanation}</div>
+                        <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                          {q.explanation.split(/\. /).map((s,idx,arr)=>(
+                            <div key={idx} style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{s+(idx<arr.length-1?".":"")}</div>
+                          ))}
+                        </div>
                       </div>
                     );
                   })()}
@@ -1311,12 +1378,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const allCorrect = result?.correct === result?.total;
         const anyCorrect = result?.correct > 0;
         const wrongQs = quizHistory.filter(h=>h.chosen!==h.answer);
-        // Next topic: all levels of this topic complete at 100%
-        const nextTopicIdx = selectedTopic.id!=="mixed"&&selectedTopic.id!=="daily" ? (() => {
-          const allPerfectNow = LEVEL_ORDER.every(lvl=>{const r=completedTopics[`${selectedTopic.id}_${lvl}`];return r&&r.correct===r.total;});
-          if (!allPerfectNow) return -1;
-          return TOPICS.findIndex(t=>t.id===selectedTopic.id)+1;
-        })() : -1;
+        // Next topic: show after finishing any level of this topic
+        const nextTopicIdx = selectedTopic.id!=="mixed"&&selectedTopic.id!=="daily"
+          ? TOPICS.findIndex(t=>t.id===selectedTopic.id)+1
+          : -1;
         return(
           <div style={{maxWidth:480,margin:"30px auto",padding:"0 14px",textAlign:"center",animation:"fadeIn 0.5s ease"}}>
             <div style={{fontSize:52,marginBottom:10,animation:"popIn 1s ease"}}>
