@@ -1390,7 +1390,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             ))}
           </div>
-          <WeakAreaCard topicStats={topicStats} t={t} dir={dir} onGoToTopic={(id) => {
+          <WeakAreaCard topicStats={topicStats} completedTopics={completedTopics} t={t} dir={dir} onGoToTopic={(id) => {
             const el = document.getElementById(`topic-card-${id}`);
             if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); setHighlightTopic(id); setTimeout(() => setHighlightTopic(null), 1500); }
           }}/>

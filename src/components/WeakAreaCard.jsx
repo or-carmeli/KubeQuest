@@ -13,9 +13,27 @@ function indicatorColor(accuracy) {
   return "#10B981";
 }
 
-export default function WeakAreaCard({ topicStats, onGoToTopic, t, dir }) {
+const LEVELS = ["easy", "medium", "hard"];
+
+export default function WeakAreaCard({ topicStats, completedTopics, onGoToTopic, t, dir }) {
+  // If topicStats is empty (e.g. user completed topics before per-question tracking was added),
+  // derive accuracy from completedTopics as a fallback.
+  let effectiveStats = topicStats;
+  if (Object.keys(topicStats).length === 0 && completedTopics && Object.keys(completedTopics).length > 0) {
+    const derived = {};
+    Object.keys(TOPIC_NAMES).forEach(topicId => {
+      let answered = 0, correct = 0;
+      LEVELS.forEach(lvl => {
+        const r = completedTopics[`${topicId}_${lvl}`];
+        if (r) { answered += (r.total || 0); correct += (r.correct || 0); }
+      });
+      if (answered > 0) derived[topicId] = { answered, correct };
+    });
+    if (Object.keys(derived).length > 0) effectiveStats = derived;
+  }
+
   // Only consider topics the user has actually answered at least once.
-  const entries = Object.entries(topicStats).filter(([, v]) => v.answered > 0);
+  const entries = Object.entries(effectiveStats).filter(([, v]) => v.answered > 0);
   const totalAnswered = entries.reduce((sum, [, v]) => sum + v.answered, 0);
 
   // ── Empty state ────────────────────────────────────────────────────────────
