@@ -11,13 +11,19 @@ Learn Kubernetes concepts through quizzes, earn points, track your progress, and
 
 - 5 topics: Workloads, Networking, Config & Security, Storage & Helm, Troubleshooting
 - 3 difficulty levels per topic: Easy → Medium → Hard (levels unlock progressively)
-- 🎲 Mixed Quiz mode — 10 random questions from all topics
-- ⏱ Countdown timer per question (toggleable)
+- 🗺️ Roadmap view — guided learning path through all topics and levels
+- 🎲 Mixed Quiz — 10 random questions from all topics
+- 🔥 Daily Challenge — 5 new questions every day
+- 🎯 Interview Mode — mandatory timer, hints disabled, exam-style experience
+- ⏱ Countdown timer per question (toggleable in regular mode)
+- ↩️ Quiz resume — continue where you left off after refresh or navigation
+- 🔁 History navigation — go back to previous questions and try again (no score impact)
+- 📉 Weak Area card — highlights your lowest-accuracy topic
 - 🏆 Leaderboard with top scores
 - 🏅 Achievements system
 - 📋 Question review after each quiz
 - Guest mode (no registration required) with localStorage progress
-- Full auth (sign up / login) via Supabase with progress saved to DB
+- Full auth (sign up / login) via Supabase with progress synced across devices
 - Hebrew / English language support (RTL + LTR)
 - Fully responsive
 
@@ -29,7 +35,6 @@ Learn Kubernetes concepts through quizzes, earn points, track your progress, and
 |-------|-----------|
 | Frontend | React 18 + Vite |
 | Auth & DB | Supabase (PostgreSQL + Auth) |
-| Hosting | Vercel |
 | Styling | Inline React styles |
 
 ---
@@ -71,6 +76,7 @@ Create a `user_stats` table with the following columns:
 | `current_streak` | `int4` |
 | `completed_topics` | `jsonb` |
 | `achievements` | `jsonb` |
+| `topic_stats` | `jsonb` |
 | `updated_at` | `timestamptz` |
 
 Enable Row Level Security and add a policy:
