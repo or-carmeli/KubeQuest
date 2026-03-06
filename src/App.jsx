@@ -2124,18 +2124,21 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             })()}
             {/* Separator */}
             <div style={{width:"100%",borderBottom:"1px solid rgba(255,255,255,0.06)",margin:"10px 0"}}/>
-            {/* Greeting block */}
+            {/* Greeting block — compact */}
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-              <div style={{color:"#64748b",fontSize:13,lineHeight:1,direction:dir}}>{t("greeting")}</div>
-              <div style={{color:"#e2e8f0",fontSize:18,fontWeight:700,lineHeight:1.2,maxWidth:"90%",wordBreak:"break-word",overflowWrap:"anywhere"}}>
-                <span dir="ltr">{displayName}</span>
+              {/* Row 1: שלום / Hello + username + optional guest label — all inline */}
+              <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",justifyContent:"center"}}>
+                <span style={{color:"#64748b",fontSize:13,lineHeight:1,direction:dir}}>{t("greeting")}</span>
+                <span style={{color:"#e2e8f0",fontSize:15,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap"}}>{displayName}</span>
+                {isGuest&&<span style={{color:"#475569",fontSize:11}}>{t("playingAsGuest")}</span>}
               </div>
-              {isGuest&&<p style={{color:"#475569",fontSize:11,margin:"2px 0 0"}}>{t("playingAsGuest")}</p>}
-              <p style={{color:"#64748b",fontSize:12,margin:"2px 0 0",maxWidth:"90%",lineHeight:1.4,direction:dir}}>
+              {/* Row 2: tagline / mode hint — smaller and dimmer */}
+              <p style={{color:"#64748b",fontSize:11,margin:0,lineHeight:1.3,textAlign:"center",direction:dir}}>
                 {isInterviewMode?t("interviewModeHint"):t("tagline")}
               </p>
+              {/* Row 3: streak */}
               {dailyStreak.streak > 0 && (
-                <div style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:14,padding:"5px 14px",fontSize:13,color:"#F59E0B",fontWeight:700,marginTop:6}}>
+                <div style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:14,padding:"4px 12px",fontSize:12,color:"#F59E0B",fontWeight:700,marginTop:2}}>
                   🔥 {dailyStreak.streak} {t("dailyStreak")}
                 </div>
               )}
