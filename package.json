@@ -1,10 +1,32 @@
 {
-  "name": "k8s-quest",
+  "name": "kubequest",
   "version": "1.0.0",
+  "description": "Interactive Kubernetes learning game — quizzes, incident scenarios, leaderboard, and progress tracking",
+  "author": "Or Carmeli <https://github.com/or-carmeli>",
+  "license": "MIT",
+  "homepage": "https://www.kubequest.online",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/or-carmeli/KubeQuest.git"
+  },
+  "keywords": [
+    "kubernetes",
+    "k8s",
+    "quiz",
+    "learning",
+    "react",
+    "vite",
+    "supabase",
+    "education",
+    "devops"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
