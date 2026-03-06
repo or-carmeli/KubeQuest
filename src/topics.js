@@ -1814,19 +1814,19 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "port is the port the Service exposes. targetPort is the port the container listens on. They can differ.",
+              "port is the port that the Service exposes to the rest of the cluster (e.g., 80). targetPort is the port the container inside the Pod is actually listening on (e.g., 8080). They can be different — for example, your application might listen on port 8080, but you expose it as port 80 via the Service so callers use the conventional HTTP port.",
           },
           {
             q: "What is a headless Service?",
             options: [
               "A Service without a selector that allows manual management of the Endpoints object",
-              "A Service with clusterIP: None — returns Pod IPs directly",
+              "A Service with clusterIP: None — returns Pod IPs directly instead of a single load-balanced IP",
               "A Service defined without a port that is used for tunneling between Namespaces",
               "A Service that supports only IPv6 and rejects IPv4 connections",
             ],
             answer: 1,
             explanation:
-              "A headless Service (clusterIP: None) provides no load balancing — DNS returns Pod IPs directly. Used with StatefulSets.",
+              "A headless Service is created by setting clusterIP: None. Unlike a normal Service, it has no shared virtual IP. Instead, DNS returns the individual IP addresses of each Pod directly. This is mainly used with StatefulSets — workloads like databases (e.g., MySQL, Cassandra) where each Pod has its own identity and needs to be addressable individually, rather than through a shared load-balanced IP.",
           },
           {
             q: "What is an ExternalName Service?",
@@ -1874,7 +1874,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kube-proxy maintains iptables/IPVS rules that route traffic from a Service ClusterIP to Pod IPs. It runs on every Node.",
+              "kube-proxy is a networking agent that runs on every Node. When you create a Service, kube-proxy programs the node's kernel networking rules (using iptables or IPVS — two Linux packet-routing mechanisms) so that traffic sent to the Service's stable IP is automatically redirected to one of the actual Pod IPs. Without kube-proxy, Service IPs would not route to any Pod.",
           },
           {
             q: "What is the purpose of an Ingress in Kubernetes?",
@@ -1886,7 +1886,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Ingress exposes Services over HTTP/HTTPS with routing by path (/api, /web) or hostname (api.example.com). Saves one LoadBalancer per Service.",
+              "An Ingress is an HTTP/HTTPS router at the edge of your cluster. Instead of creating a separate cloud load balancer for every Service, you define routing rules in one Ingress resource: send requests for /api to service-api, and /web to service-web. A component called the Ingress Controller (e.g., nginx) reads these rules and performs the actual routing. This lets many Services share a single external IP, saving cost.",
           },
           {
             q: "What is a NetworkPolicy in Kubernetes?",
@@ -1898,7 +1898,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "NetworkPolicy defines access rules: ingress (who can reach the Pod) and egress (where the Pod can send traffic). Requires a supporting CNI plugin.",
+              "A NetworkPolicy acts like a firewall at the Pod level. By default in Kubernetes, all Pods can freely talk to all other Pods. A NetworkPolicy lets you lock that down: you can control which Pods or IP ranges are allowed to send traffic to a Pod (ingress rules), and where a Pod is allowed to send traffic (egress rules). Important: NetworkPolicy only works if your cluster uses a CNI networking plugin that enforces it, such as Calico or Cilium. Plugins like Flannel do not enforce NetworkPolicies.",
           },
           {
             q: "What does a CNI plugin do in Kubernetes?",
@@ -1922,7 +1922,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Service (ClusterIP/NodePort/LB) is L4 — routes by IP and Port. Ingress is L7 — routes by HTTP path, headers, and hostname.",
+              "L4 and L7 refer to layers in the OSI networking model. L4 (Transport Layer) routing only looks at the IP address and port number — it forwards traffic without inspecting its content. L7 (Application Layer) routing can read the actual HTTP content: URL path, headers, or hostname. In Kubernetes, Services operate at L4 (they forward TCP/UDP connections by IP and port), while Ingress operates at L7 (it can route /api to one Service and /web to another based on the URL).",
           },
           {
             q: "What is ExternalTrafficPolicy on a Service?",
@@ -1982,7 +1982,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "When all Pods fail readiness probes, the Endpoints list becomes empty. The Service still exists but all connections are refused. Fix the Pods to restore traffic.",
+              "A readiness probe is a periodic health check that Kubernetes runs to decide whether a Pod is ready to receive traffic. When a Pod fails its readiness probe (for example, the app hasn't finished starting, or it's temporarily overloaded), Kubernetes removes that Pod from the Service's Endpoints list — the list of Pods the Service actively routes traffic to. When the Endpoints list is empty, the Service has no backends and all incoming connections are immediately refused.",
           },
         ],
       },
@@ -2239,7 +2239,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Ingress enables smart routing through one entry point, saving multiple LoadBalancers.",
+              "In cloud environments, each LoadBalancer Service provisions a separate cloud load balancer with its own IP address and billing cost. An Ingress uses a single entry point (typically one load balancer or NodePort) and routes HTTP/HTTPS traffic to different backend Services based on the URL path (e.g., /api → api-service) or hostname (e.g., api.example.com → api-service). Many Services share one external IP, reducing cost and simplifying DNS management.",
           },
           {
             q: "What is an Ingress Controller?",
@@ -2299,7 +2299,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "An egress NetworkPolicy defines which destinations a Pod is allowed to send traffic to.",
+              "An egress NetworkPolicy controls where a Pod is allowed to send traffic. When you add Egress to policyTypes, all outbound traffic from the selected Pods is blocked by default — only destinations you explicitly list in the egress rules are permitted. A common beginner mistake: forgetting to allow port 53 (UDP/TCP) for DNS. Without it, Pods can't resolve any hostnames, even if other egress rules are correct.",
           },
           {
             q: "What does a service mesh solve?",
@@ -2347,7 +2347,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ingress defines who is allowed to communicate with the Pod. egress defines where the Pod is allowed to send traffic. Both can be specified together in policyTypes.",
+              "Note: in a NetworkPolicy, 'ingress' and 'egress' are directions, not related to the Ingress resource. Ingress rules define who is allowed to send traffic to the Pod (inbound). Egress rules define where the Pod is allowed to send traffic (outbound). Both can be specified together in policyTypes, letting you fully control a Pod's network communication in both directions.",
           },
           {
             q: "How does Ingress route by hostname?",
@@ -2722,7 +2722,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "NetworkPolicy is just a spec — enforcement depends on the CNI plugin. Calico, Cilium, and Weave support it. Flannel and kubenet do not implement NetworkPolicies — policies are created but never enforced.",
+              "A NetworkPolicy resource is just a declaration — Kubernetes itself does not enforce it. Enforcement is done by the CNI (Container Network Interface) plugin responsible for Pod networking. Calico, Cilium, and Weave Net all support NetworkPolicy enforcement. Flannel and kubenet do not — if you apply a NetworkPolicy on a Flannel cluster, the resource is created but completely ignored. Always verify your CNI plugin supports NetworkPolicy before relying on it for security.",
           },
           {
             q: "What is the purpose of a Namespace?",
@@ -2734,7 +2734,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Namespaces provide logical isolation – separation between teams, projects, or environments.",
+              "A Namespace is a virtual partition inside a single Kubernetes cluster. It keeps resources (Pods, Services, ConfigMaps, etc.) of different teams, projects, or environments separate from each other. For example, you might have namespaces named 'dev', 'staging', and 'production'. Resource quotas (CPU/memory limits), access controls (RBAC), and NetworkPolicies are all applied per Namespace, making it the primary tool for multi-tenant clusters.",
           },
           {
             q: "What does ResourceQuota do?",
@@ -2806,7 +2806,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Every Pod in Kubernetes gets its own network namespace with a separate network interface and routing table.",
+              "A Linux network namespace is a kernel feature that gives a process its own isolated view of the network: its own network interfaces, IP addresses, and routing table. Kubernetes uses this to isolate Pods — every Pod gets its own network namespace, which is why each Pod has its own IP address and can't accidentally intercept traffic destined for another Pod on the same Node.",
           },
           {
             q: "How do Pods on different Nodes communicate?",
