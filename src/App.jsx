@@ -372,13 +372,13 @@ function renderQuestion(qText, lang) {
   if (paragraphs.length <= 1) {
     const qDir = hasHebrew(qText) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
     return (
-      <div dir={qDir} style={{color:"#e2e8f0",fontSize:17,fontWeight:700,lineHeight:1.75,wordBreak:"break-word",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>
+      <div dir={qDir} style={{color:"#e2e8f0",fontSize:18,fontWeight:700,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>
         {renderBidi(qText, lang)}
       </div>
     );
   }
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
       {paragraphs.map((para, idx) => {
         const isCode = para.includes("\n");
         if (isCode) {
@@ -391,7 +391,7 @@ function renderQuestion(qText, lang) {
         const isLast = idx === paragraphs.length - 1;
         const pDir = hasHebrew(para) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
         return (
-          <div key={idx} dir={pDir} style={{color:"#e2e8f0",fontSize:isLast?17:15,fontWeight:isLast?700:400,lineHeight:1.7,wordBreak:"break-word",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>
+          <div key={idx} dir={pDir} style={{color:"#e2e8f0",fontSize:isLast?18:15,fontWeight:isLast?700:400,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>
             {renderBidi(para, lang)}
           </div>
         );
@@ -2212,7 +2212,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
 
               <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
-                style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"22px 20px",marginBottom:16,outline:"none",position:"relative"}}>
+                style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"22px 20px 24px",marginBottom:20,outline:"none",position:"relative"}}>
                 {renderQuestion(currentQuestions[questionIndex].q, lang)}
                 {!isInHistoryMode&&!tryAgainActive&&!isFreeMode(selectedTopic?.id)&&(
                   <button onClick={toggleBookmark}
@@ -2243,14 +2243,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     </button>
                   </div>
                   {hintVisible&&(
-                    <div role="note" style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"9px 13px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,animation:"fadeIn 0.2s ease"}}>
+                    <div role="note" style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"11px 14px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,wordBreak:"break-word",overflowWrap:"anywhere",animation:"fadeIn 0.2s ease"}}>
                       {renderBidi(currentQuestions[questionIndex].explanation.split(/\.\s+/)[0], lang)}
                     </div>
                   )}
                 </div>
               )}
 
-              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
                 {currentQuestions[questionIndex].options.map((opt,i)=>{
                   const isCorrect = i===currentQuestions[questionIndex].answer;
                   const isChosen  = i===dispSelectedAnswer;
@@ -2268,9 +2268,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"14px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.65,display:"flex",alignItems:"flex-start",gap:11,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none"}}>
-                      <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor,marginTop:2}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.5,display:"flex",alignItems:"flex-start",gap:12,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none"}}>
+                      <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor,marginTop:1}}>{t("optionLabels")[i]}</span>
+                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere"}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
                       {dispSubmitted&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16}}>✓</span>}
                       {dispSubmitted&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16}}>✗</span>}
                     </button>
@@ -2303,17 +2303,17 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     const timedOut = dispSelectedAnswer === null || dispSelectedAnswer === -1;
                     const isCorrect = !timedOut && dispSelectedAnswer === q.answer;
                     return (
-                      <div role="status" aria-live="polite" style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
-                        <div style={{fontWeight:800,fontSize:14,marginBottom:8,color:isCorrect?"#10B981":"#EF4444"}}>
+                      <div role="status" aria-live="polite" style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"16px 18px",marginBottom:16}}>
+                        <div style={{fontWeight:800,fontSize:14,marginBottom:10,color:isCorrect?"#10B981":"#EF4444"}}>
                           {isCorrect
                             ? (tryAgainActive ? t("tryAgainCorrect") : `${t("correct")}${isInHistoryMode?"":" +"+LEVEL_CONFIG[selectedLevel].points+" "+t("pts")}`)
                             : timedOut
                               ? `${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
                               : (tryAgainActive ? t("tryAgainWrong") : t("incorrect"))}
                         </div>
-                        {!isInterviewMode&&<div style={{display:"flex",flexDirection:"column",gap:5}}>
+                        {!isInterviewMode&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
                           {q.explanation.split(/\. /).map((s,idx,arr)=>(
-                            <div key={idx} style={{color:"#94a3b8",fontSize:14,lineHeight:1.75,direction:dir}}>
+                            <div key={idx} style={{color:"#94a3b8",fontSize:14,lineHeight:1.7,direction:dir,wordBreak:"break-word",overflowWrap:"anywhere"}}>
                               {renderBidi(s+(idx<arr.length-1?".":""),lang)}
                             </div>
                           ))}
@@ -2324,12 +2324,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   {isInterviewMode&&(()=>{
                     const q = currentQuestions[questionIndex];
                     return (
-                      <div style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.22)",borderRadius:12,padding:"14px 16px",marginBottom:12,direction:"rtl",animation:"fadeIn 0.3s ease"}}>
+                      <div style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.22)",borderRadius:12,padding:"16px 18px",marginBottom:16,direction:"rtl",animation:"fadeIn 0.3s ease"}}>
                         <div style={{fontSize:11,fontWeight:700,color:"#A855F7",marginBottom:8,letterSpacing:0.5}}>תשובה אידיאלית</div>
-                        <div style={{color:"#e2e8f0",fontWeight:700,fontSize:14,marginBottom:6}}>{q.options[q.answer]}</div>
-                        <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                        <div style={{color:"#e2e8f0",fontWeight:700,fontSize:14,marginBottom:8,wordBreak:"break-word",overflowWrap:"anywhere"}}>{q.options[q.answer]}</div>
+                        <div style={{display:"flex",flexDirection:"column",gap:8}}>
                           {q.explanation.split(/\. /).map((s,idx,arr)=>(
-                            <div key={idx} style={{color:"#94a3b8",fontSize:13,lineHeight:1.7}}>{s+(idx<arr.length-1?".":"")}</div>
+                            <div key={idx} style={{color:"#94a3b8",fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere"}}>{s+(idx<arr.length-1?".":"")}</div>
                           ))}
                         </div>
                       </div>
