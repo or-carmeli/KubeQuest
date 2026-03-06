@@ -248,9 +248,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl describe pod shows a volumeMount referencing ConfigMap `payment-config`. kubectl get configmap -n staging shows:\n\nNAME              DATA   AGE\napp-settings      3      5d\n\nNo `payment-config` exists. What most likely happened?",
+          "Inspecting the pod spec reveals a volumeMount expecting ConfigMap 'payment-config'.\n\nkubectl get configmap -n staging:\n\nNAME              DATA   AGE\napp-settings      3      5d\n\nThe ConfigMap 'payment-config' does not exist in this namespace. What most likely happened?",
         promptHe:
-          "kubectl describe pod מציג volumeMount המפנה ל-ConfigMap `payment-config`. kubectl get configmap -n staging מציג:\n\nNAME              DATA   AGE\napp-settings      3      5d\n\n`payment-config` אינו קיים. מה כנראה קרה?",
+          "בדיקת ה-pod spec מגלה volumeMount המצפה ל-ConfigMap 'payment-config'.\n\nkubectl get configmap -n staging:\n\nNAME              DATA   AGE\napp-settings      3      5d\n\nה-ConfigMap 'payment-config' אינו קיים ב-namespace הזה. מה כנראה קרה?",
         options: [
           "The ConfigMap was created in a different namespace (e.g., production) but not in staging",
           "The ConfigMap was accidentally deleted from staging",
@@ -379,9 +379,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl get secret -n default | grep registry returns nothing. The pull Secret doesn't exist. How do you create it correctly?",
+          "You run the following command:\n\nkubectl get secret -n default\n\nNo registry-related Secret exists in the namespace. How do you create one correctly?",
         promptHe:
-          "kubectl get secret -n default | grep registry לא מחזיר דבר. ה-pull Secret לא קיים. כיצד יוצרים אותו נכון?",
+          "הרצת הפקודה הבאה:\n\nkubectl get secret -n default\n\nלא קיים Secret הקשור ל-registry ב-namespace. כיצד יוצרים אחד נכון?",
         options: [
           "kubectl create secret docker-registry regcred --docker-server=registry.company.com --docker-username=user --docker-password=pass -n default",
           "kubectl create configmap registry-auth --from-literal=password=mypassword",
@@ -510,9 +510,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl describe svc shows:  Selector: app=backend\nkubectl get pods --show-labels shows pods labelled: app=backend-v2\n\nThe label was changed in the last deployment but the Service was not updated. What is the fix?",
+          "Here is what you found:\n\nkubectl describe svc backend-svc -n production\n  Selector: app=backend\n\nkubectl get pods -n production --show-labels\n  Pod labels: app=backend-v2\n\nThe label was updated in the last deployment, but the Service selector was not. What is the fix?",
         promptHe:
-          "kubectl describe svc מציג: Selector: app=backend\nkubectl get pods --show-labels מציג Pods עם label: app=backend-v2\n\nה-label שונה בדיפלוימנט האחרון אך ה-Service לא עודכן. מה התיקון?",
+          "הנה מה שמצאת:\n\nkubectl describe svc backend-svc -n production\n  Selector: app=backend\n\nkubectl get pods -n production --show-labels\n  Pod labels: app=backend-v2\n\nה-label עודכן בדיפלוימנט האחרון, אך ה-selector של ה-Service לא עודכן. מה התיקון?",
         options: [
           "Manually add label `app=backend` to every running pod with kubectl label",
           "kubectl patch svc backend-svc -n production -p '{\"spec\":{\"selector\":{\"app\":\"backend-v2\"}}}'",
@@ -664,9 +664,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl describe shows CoreDNS memory limit is 170Mi. kubectl top shows CoreDNS consuming 168Mi — nearly at the limit. The cluster recently scaled from 20 to 80 nodes. What is the likely root cause?",
+          "After running describe and top on the CoreDNS pod:\n\nkubectl describe pod coredns-abc12 -n kube-system\n  Memory limit: 170Mi\n\nkubectl top pod coredns-abc12 -n kube-system\n  Current usage: 168Mi (99% of limit)\n\nThe cluster recently scaled from 20 to 80 nodes. What is the likely root cause?",
         promptHe:
-          "kubectl describe מציג שמגבלת זיכרון CoreDNS היא 170Mi. kubectl top מציג שCoreDNS צורך 168Mi — כמעט בתקרה. הקלאסטר גדל לאחרונה מ-20 ל-80 Nodes. מה הסיבה השורשית הסבירה?",
+          "לאחר הרצת describe ו-top על ה-Pod של CoreDNS:\n\nkubectl describe pod coredns-abc12 -n kube-system\n  Memory limit: 170Mi\n\nkubectl top pod coredns-abc12 -n kube-system\n  Current usage: 168Mi (99% of limit)\n\nהקלאסטר גדל לאחרונה מ-20 ל-80 Nodes. מה הסיבה השורשית הסבירה?",
         options: [
           "A memory leak in the CoreDNS binary — upgrade CoreDNS immediately",
           "The cluster grew significantly; CoreDNS caches DNS records for many more Services and Pods now, requiring more memory",
@@ -795,9 +795,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl get networkpolicy -n production lists several policies including `deny-all-ingress` and `allow-frontend`. How do you see what each policy actually permits?",
+          "You run:\n\nkubectl get networkpolicy -n production\n\nSeveral policies are listed, including 'deny-all-ingress' and 'allow-frontend'. How do you inspect what each policy actually permits?",
         promptHe:
-          "kubectl get networkpolicy -n production מציג מספר מדיניות כולל `deny-all-ingress` ו-`allow-frontend`. כיצד רואים מה כל מדיניות בפועל מתירה?",
+          "הרצת:\n\nkubectl get networkpolicy -n production\n\nמספר מדיניות מופיעות ברשימה, כולל 'deny-all-ingress' ו-'allow-frontend'. כיצד בודקים מה כל מדיניות בפועל מתירה?",
         options: [
           "kubectl describe networkpolicy -n production  (shows selectors and rules for all policies)",
           "kubectl logs networkpolicy-controller -n kube-system",
@@ -841,9 +841,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl get pods -n production --show-labels shows frontend pods have label `app=frontend`, NOT `role=frontend`. The `allow-frontend` policy's `from` podSelector specifies `role=frontend`. What is the correct fix?",
+          "You run:\n\nkubectl get pods -n production --show-labels\n  frontend pods: app=frontend (NOT role=frontend)\n\nBut the 'allow-frontend' policy's from podSelector specifies role=frontend. What is the correct fix?",
         promptHe:
-          "kubectl get pods -n production --show-labels מציג של-Pods של פרונטאנד יש label `app=frontend`, לא `role=frontend`. ה-podSelector `from` של מדיניות `allow-frontend` מציין `role=frontend`. מה התיקון הנכון?",
+          "הרצת:\n\nkubectl get pods -n production --show-labels\n  frontend pods: app=frontend (לא role=frontend)\n\nאך ה-podSelector מסוג from במדיניות 'allow-frontend' מציין role=frontend. מה התיקון הנכון?",
         options: [
           "kubectl label pod <each-frontend-pod> role=frontend  (relabel individual pods)",
           "kubectl patch networkpolicy allow-frontend -n production -p to update the from-selector to `app=frontend`",

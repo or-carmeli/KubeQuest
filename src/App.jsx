@@ -3112,7 +3112,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>}
               </div>
               <button onClick={()=>setScreen("incidentList")}
-                style={{padding:13,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:12,color:"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                style={{padding:13,background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:12,color:"#6366F1",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                 {t("incidentTryAnother")}
               </button>
               <button onClick={()=>setScreen("home")}
