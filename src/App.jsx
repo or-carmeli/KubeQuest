@@ -205,7 +205,7 @@ const TRANSLATIONS = {
     bookmark: "☆ שמרי", bookmarkActive: "★ שמורה",
     bookmark_m: "☆ שמור", bookmarkActive_m: "★ שמור",
     searchBtn: "🔎 חיפוש שאלה", searchPlaceholder: "חפשי לפי מילת מפתח...", searchNoResults: "לא נמצאו תוצאות",
-    mistakesBtn: "❌ טעויות שלי", mistakesEmpty: "אין טעויות! כל הכבוד 🎉", mistakesHint: "נושאים שלא הושלמו ב-100%",
+    mistakesBtn: "❌ טעויות שלי", mistakesEmpty: "אין טעויות! כל הכבוד 🎉", mistakesHint: "שאלות שטעית בהן",
     guideBtn: "📘 מדריך Kubernetes", aboutBtn: "ℹ️ אודות האפליקציה",
     shareBtn: "📤 שתפי עם חבר", shareBtn_m: "📤 שתף עם חבר",
     dailyStreak: "ימים ברצף",
@@ -315,7 +315,7 @@ const TRANSLATIONS = {
     removeBookmark: "Remove",
     bookmark: "☆ Save", bookmarkActive: "★ Saved",
     searchBtn: "🔎 Search Question", searchPlaceholder: "Search by keyword...", searchNoResults: "No results found",
-    mistakesBtn: "❌ My Mistakes", mistakesEmpty: "No mistakes! Great job 🎉", mistakesHint: "Topics not yet completed at 100%",
+    mistakesBtn: "❌ My Mistakes", mistakesEmpty: "No mistakes! Great job 🎉", mistakesHint: "Questions you answered incorrectly",
     guideBtn: "📘 Kubernetes Guide", aboutBtn: "ℹ️ About",
     shareBtn: "📤 Share",
     dailyStreak: "day streak",
@@ -1196,7 +1196,7 @@ export default function K8sQuestApp() {
           const key = `${selectedTopic.id}_${selectedLevel}`;
           const prevResult = completedTopics[key];
           if (prevResult) {
-            const newCompleted = { ...completedTopics, [key]: { ...prevResult, retryComplete: true } };
+            const newCompleted = { ...completedTopics, [key]: { ...prevResult, retryComplete: true, wrongIndices: [] } };
             setCompletedTopics(newCompleted);
             if (!isFreeMode(selectedTopic.id)) saveUserData(stats, newCompleted, unlockedAchievements);
           }
@@ -1212,7 +1212,8 @@ export default function K8sQuestApp() {
       const bestCorrect = prevResult ? Math.min(Math.max(prevResult.correct, finalCorrect), currentQuestions.length) : Math.min(finalCorrect, currentQuestions.length);
       // Preserve retryComplete so replaying doesn't re-lock the next level
       const keepRetryComplete = prevResult?.retryComplete || bestCorrect === currentQuestions.length;
-      const newCompleted = { ...completedTopics, [key]: { correct: bestCorrect, total: currentQuestions.length, ...(keepRetryComplete ? { retryComplete: true } : {}) } };
+      const wrongIdx = !isFreeMode(selectedTopic.id) ? quizHistory.map((h,i)=>h.chosen!==h.answer?i:null).filter(v=>v!==null) : (completedTopics[key]?.wrongIndices??[]);
+      const newCompleted = { ...completedTopics, [key]: { correct: bestCorrect, total: currentQuestions.length, wrongIndices: wrongIdx, ...(keepRetryComplete ? { retryComplete: true } : {}) } };
       // Recompute topic score; add any free-mode bonus accumulated on top
       const freeBonus = Math.max(0, stats.total_score - computeScore(completedTopics));
       const newStats = { ...stats, total_score: computeScore(newCompleted) + freeBonus };
