@@ -1616,7 +1616,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         </div>
 
         {/* ── Loading text ── */}
-        <div style={{color:"#475569",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
+        <div style={{color:"#475569",fontSize:13,letterSpacing:0.5,fontWeight:700}}>{t("loadingText")}</div>
       </div>
     </div>
   );
