@@ -2127,9 +2127,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {/* Greeting block — compact */}
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
               {/* Row 1: שלום / Hello + username + optional guest label — all inline */}
-              <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",justifyContent:"center"}}>
-                <span style={{color:"#64748b",fontSize:13,lineHeight:1,direction:dir}}>{t("greeting")}</span>
-                <span style={{color:"#e2e8f0",fontSize:15,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap"}}>{displayName}</span>
+              <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"nowrap",justifyContent:"center",maxWidth:"100%",overflow:"hidden"}}>
+                <span style={{color:"#64748b",fontSize:13,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
+                <span style={{color:"#e2e8f0",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
               </div>
               {/* Row 2: tagline / mode hint — smaller and dimmer */}
               <p style={{color:"#64748b",fontSize:11,margin:0,lineHeight:1.3,textAlign:"center",direction:dir}}>
