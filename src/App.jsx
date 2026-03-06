@@ -1988,27 +1988,31 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="home"&&(
         <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
           <div style={{marginBottom:16}}>
-            {/* Header row: brand left, spacer right (burger is a fixed element outside <main>) */}
-            <div className="home-header-row" style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,paddingBottom:12,borderBottom:"1px solid rgba(255,255,255,0.06)",direction:"ltr"}}>
-              {/* Brand: logo + title stacked */}
-              <div style={{display:"flex",alignItems:"center",gap:+(10/fs).toFixed(1)}}>
-                <svg className="home-logo" width={Math.round(44/fs)} height={Math.round(44/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0,filter:"drop-shadow(0 0 10px rgba(0,212,255,0.35))"}}>
-                  <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
-                  <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
-                  <circle cx="50" cy="50" r="44" fill="none" stroke="url(#hgr)" strokeWidth="4" opacity="0.9"/>
-                  <g transform="translate(50,50)" stroke="url(#hgr)" strokeWidth="2.8" strokeLinecap="round">
-                    {[0,51.4,102.8,154.2,205.7,257.1,308.5].map((deg,i)=><line key={i} x1="0" y1="-18" x2="0" y2="-34" transform={`rotate(${deg})`}/>)}
-                  </g>
-                  <circle cx="50" cy="50" r="10" fill="none" stroke="url(#hgr)" strokeWidth="3"/>
-                  <circle cx="50" cy="50" r="5" fill="#00D4FF"/>
-                  {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
-                </svg>
-                <div style={{display:"flex",flexDirection:"column",gap:+(2/fs).toFixed(1)}}>
-                  <h1 className="home-title-text" style={{fontSize:+(26/fs).toFixed(1),fontWeight:900,margin:0,lineHeight:1,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
-                  <span style={{fontSize:+(10/fs).toFixed(1),color:"#475569",letterSpacing:0.3,whiteSpace:"nowrap"}}>Kubernetes Interview Trainer</span>
+            {/* Header row: equal spacers on both sides keep brand centered; burger lives outside <main> as a fixed element */}
+            <div className="home-header-row" style={{display:"flex",alignItems:"center",marginBottom:14,paddingBottom:12,borderBottom:"1px solid rgba(255,255,255,0.06)",direction:"ltr"}}>
+              {/* Left spacer — mirrors the fixed burger so brand stays perfectly centered */}
+              <div style={{width:Math.round(44/fs),flexShrink:0}}/>
+              {/* Brand: logo + title centered in remaining space */}
+              <div style={{flex:1,display:"flex",justifyContent:"center"}}>
+                <div style={{display:"flex",alignItems:"center",gap:+(10/fs).toFixed(1)}}>
+                  <svg className="home-logo" width={Math.round(44/fs)} height={Math.round(44/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0,filter:"drop-shadow(0 0 10px rgba(0,212,255,0.35))"}}>
+                    <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
+                    <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="url(#hgr)" strokeWidth="4" opacity="0.9"/>
+                    <g transform="translate(50,50)" stroke="url(#hgr)" strokeWidth="2.8" strokeLinecap="round">
+                      {[0,51.4,102.8,154.2,205.7,257.1,308.5].map((deg,i)=><line key={i} x1="0" y1="-18" x2="0" y2="-34" transform={`rotate(${deg})`}/>)}
+                    </g>
+                    <circle cx="50" cy="50" r="10" fill="none" stroke="url(#hgr)" strokeWidth="3"/>
+                    <circle cx="50" cy="50" r="5" fill="#00D4FF"/>
+                    {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
+                  </svg>
+                  <div style={{display:"flex",flexDirection:"column",gap:+(2/fs).toFixed(1)}}>
+                    <h1 className="home-title-text" style={{fontSize:+(26/fs).toFixed(1),fontWeight:900,margin:0,lineHeight:1,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
+                    <span style={{fontSize:+(10/fs).toFixed(1),color:"#475569",letterSpacing:0.3,whiteSpace:"nowrap"}}>Kubernetes Interview Trainer</span>
+                  </div>
                 </div>
               </div>
-              {/* Right spacer — matches fixed burger button size */}
+              {/* Right spacer — matches fixed burger button */}
               <div style={{width:Math.round(44/fs),flexShrink:0}}/>
             </div>
             {/* Welcome section — compact */}
