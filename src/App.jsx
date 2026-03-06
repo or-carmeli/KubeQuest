@@ -1979,8 +1979,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               {/* Left spacer — burger is now a fixed element outside <main> */}
               <div style={{width:Math.round(44/fs),flexShrink:0}}/>
               {/* Center: title — font and logo size are fixed visual size (counter-zoomed) */}
-              <h1 style={{flex:1,fontSize:+(36/fs).toFixed(1),fontWeight:900,margin:0,display:"flex",alignItems:"center",justifyContent:"center",gap:+(12/fs).toFixed(1),filter:"drop-shadow(0 0 20px rgba(0,212,255,0.4))",minWidth:0}}>
-                <svg className="home-logo" width={Math.round(52/fs)} height={Math.round(52/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+              <h1 style={{flex:1,fontSize:+(42/fs).toFixed(1),fontWeight:900,margin:0,display:"flex",alignItems:"center",justifyContent:"center",gap:+(14/fs).toFixed(1),filter:"drop-shadow(0 0 20px rgba(0,212,255,0.4))",minWidth:0}}>
+                <svg className="home-logo" width={Math.round(60/fs)} height={Math.round(60/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
                   <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
                   <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
                   <circle cx="50" cy="50" r="44" fill="none" stroke="url(#hgr)" strokeWidth="4" opacity="0.9"/>
