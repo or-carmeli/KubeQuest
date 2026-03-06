@@ -469,6 +469,7 @@ export default function K8sQuestApp() {
 
   const [authChecked, setAuthChecked]     = useState(false);
   const [dataLoaded,  setDataLoaded]      = useState(false);
+  const [minLoadElapsed, setMinLoadElapsed] = useState(false);
   const [user, setUser]                   = useState(null);
   const [authScreen, setAuthScreen]       = useState("login");
   const authFormRef                       = useRef(null);
@@ -615,6 +616,8 @@ export default function K8sQuestApp() {
   const currentLevelData = selectedTopic && selectedLevel && !isFreeMode(selectedTopic.id) && !retryMode ? getLevelData(selectedTopic, selectedLevel) : null;
   const currentQuestions = isFreeMode(selectedTopic?.id) || retryMode ? mixedQuestions : (topicQuestions.length > 0 ? topicQuestions : (currentLevelData?.questions || []));
 
+  useEffect(() => { const t = setTimeout(() => setMinLoadElapsed(true), 1000); return () => clearTimeout(t); }, []);
+
   useEffect(() => {
     // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link)
     const hash = window.location.hash;
@@ -685,7 +688,7 @@ export default function K8sQuestApp() {
       }
     } catch {}
     achievementsLoaded.current = true;
-    setTimeout(() => setDataLoaded(true), 1000);
+    setTimeout(() => setDataLoaded(true), 2000);
     // Check for a saved in-progress quiz for the guest session
     const savedQuiz = loadQuizState();
     if (savedQuiz && savedQuiz.userId === "guest") setResumeData(savedQuiz);
@@ -851,7 +854,7 @@ export default function K8sQuestApp() {
     }
 
     achievementsLoaded.current = true;
-    setTimeout(() => setDataLoaded(true), 1000);   // ← data is now in state; no more flash of 0%
+    setTimeout(() => setDataLoaded(true), 2000);   // ← data is now in state; no more flash of 0%
 
     // Check for a saved in-progress quiz belonging to this user
     const savedQuiz = loadQuizState();
@@ -1555,7 +1558,7 @@ export default function K8sQuestApp() {
 
 const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
 
-  if (!authChecked || (!!user && !isGuest && !dataLoaded)) return (
+  if (!authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded)) return (
     <div style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif"}}>
       <style>{`
         @keyframes lspin  { from { transform: rotate(0deg)   } to { transform: rotate(360deg)  } }
