@@ -4632,7 +4632,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PV is the storage unit defined by the admin. PVC is the application request for storage.",
+              "A PersistentVolume (PV) is a piece of real storage provisioned in the cluster — it could be a cloud disk (AWS EBS, GCP PD), an NFS share, or a local drive. A PersistentVolumeClaim (PVC) is a request submitted by an application (Pod) asking for a certain amount of storage with specific access requirements. Kubernetes automatically matches a PVC to a suitable PV — similar to how a parking request gets matched to an available space.",
           },
           {
             q: "What is AccessMode ReadWriteOnce?",
@@ -4656,7 +4656,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Helm Chart is a package containing templates, values, and metadata for installing an application.",
+              "Helm is Kubernetes' package manager — think of it like apt or npm, but for Kubernetes applications. A Helm Chart is a bundle of Kubernetes YAML files (Deployments, Services, ConfigMaps, etc.) packaged with templates and configurable values. Instead of writing and maintaining dozens of separate YAML files, you install one Chart with a single command and configure it by passing values. This makes it easy to deploy complex applications consistently across different environments.",
           },
           {
             q: "What command installs a Helm Chart?",
@@ -4699,7 +4699,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "StorageClass defines a provisioner (e.g. gp2, pd-standard) and reclaim policy. A PVC specifies a StorageClass to get a disk.",
+              "A StorageClass is a blueprint that tells Kubernetes how to create storage on demand. It names a provisioner — a plugin that knows how to talk to a specific storage system (e.g., the AWS EBS plugin creates EBS disks, the GCP plugin creates Persistent Disks). When a Pod requests storage via a PVC that references a StorageClass, the provisioner automatically creates a real disk and a PV for it. Without StorageClass, an admin would have to manually create every PV before a Pod could use it.",
           },
           {
             q: "What does helm repo add do?",
@@ -4838,7 +4838,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "mountPropagation: None (default)/HostToContainer/Bidirectional controls whether new bind mounts in the Host appear in the Container and vice versa. Critical for certain storage plugins.",
+              "mountPropagation controls whether filesystem mounts that appear on the host Node are visible inside the container, and vice versa. The default (None) keeps them isolated. HostToContainer lets the container see new mounts the host creates after startup. Bidirectional also lets the container create mounts that are visible on the host. This is an advanced setting rarely needed in normal workloads — it matters mainly for certain storage plugins (like CSI drivers) that mount disks on the host and need those mounts reflected inside the container.",
           },
           {
             q: "What was the Reclaim Policy Recycle?",
@@ -5102,7 +5102,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Dynamic Provisioning – when a PVC with StorageClass is created, the provisioner auto-creates a PV.",
+              "Without Dynamic Provisioning, an admin must manually create a PV before any Pod can claim storage — this doesn't scale well. Dynamic Provisioning automates this: when a Pod creates a PVC that references a StorageClass, Kubernetes automatically creates a matching PV (and the real underlying disk on AWS/GCP/Azure) on demand. When the PVC is deleted, the disk is cleaned up according to the Reclaim Policy. This is the standard approach for all cloud-hosted Kubernetes clusters today.",
           },
           {
             q: "What does Reclaim Policy Delete do?",
@@ -5114,7 +5114,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Reclaim Policy Delete – when PVC is deleted, the PV and cloud disk are automatically deleted.",
+              "Reclaim Policy Delete means that when a PVC is deleted, Kubernetes automatically deletes both the PV object and the underlying physical disk (e.g., the AWS EBS volume or GCP Persistent Disk). This is the default for dynamically provisioned volumes and is convenient for ephemeral workloads. However, it permanently destroys all data — if you delete the PVC of a production database, the data is gone. For databases and anything important, use Reclaim Policy Retain instead, which preserves the data after PVC deletion.",
           },
           {
             q: "How do you change a Helm value from the CLI?",
@@ -5593,7 +5593,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "CSI is a standard that allows vendors to write storage drivers for Kubernetes.",
+              "CSI (Container Storage Interface) is an open standard that defines how storage vendors write drivers for Kubernetes (and other orchestrators). Before CSI, storage drivers were built directly into the Kubernetes source code ('in-tree' plugins), which meant adding or updating a driver required a Kubernetes release. CSI moves drivers out-of-tree: each vendor (AWS, GCP, Ceph, NetApp, etc.) ships their own CSI driver as a separate Deployment/DaemonSet in the cluster. This lets storage vendors release driver updates independently of Kubernetes itself.",
           },
           {
             q: "What is a Helm Hook?",
@@ -5616,7 +5616,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "VolumeSnapshot creates a point-in-time backup of a PV, allowing restore to a specific point.",
+              "A VolumeSnapshot is a point-in-time copy of a PersistentVolume's data — similar to a database snapshot or a VM disk checkpoint. It lets you capture the current state of a disk so you can restore it later (e.g., before running a risky database migration). From a snapshot you can create a new PVC pre-populated with that data. VolumeSnapshots require two things to work: a snapshot-controller running in the cluster, and a CSI driver that supports snapshot operations. Not all storage backends support this feature.",
           },
           {
             q: "How does a StatefulSet manage storage?",
@@ -6125,7 +6125,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl get events shows events in the Namespace, sorted by time, indicating reasons for issues.",
+              "kubectl get events lists all events recorded in the current Namespace, sorted by timestamp. Events are Kubernetes' way of narrating what happened: 'Pod was scheduled to node-1', 'Successfully pulled image', 'Liveness probe failed', 'OOMKilled'. Unlike logs (which come from your application), events come from Kubernetes itself and describe the lifecycle and problems of your resources. Add --sort-by=.metadata.creationTimestamp to always see the most recent events first.",
           },
           {
             q: "How do you see which Node a Pod runs on?",
@@ -6149,7 +6149,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Pod can be Running but not Ready if the readiness probe fails. A Service only sends traffic to Ready Pods.",
+              "Running means the container process has started — but that doesn't mean it can serve requests yet. A readiness probe is a health check Kubernetes runs against the Pod (e.g., an HTTP GET to /health) to decide whether it is ready to receive traffic. A Pod that is Running but failing its readiness probe is shown as 0/1 Ready and is automatically removed from the Service's load balancer until it passes. This prevents live traffic from hitting a Pod that hasn't finished starting up, is overloaded, or is temporarily unhealthy.",
           },
           {
             q: "How do you view logs from a crashed container?",
@@ -6161,7 +6161,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl logs --previous shows logs from the previous instance of the container before it crashed.",
+              "When a container crashes (e.g., in CrashLoopBackOff), Kubernetes automatically starts a new container instance to replace it. The new instance is now 'current', so kubectl logs (without any flag) shows the new instance's logs — which may be nearly empty if it crashed immediately. The --previous flag fetches the logs from the container run that just crashed, which is exactly what you need to diagnose the root cause. Without --previous you'll often see no useful output.",
           },
           {
             q: "What extra info does kubectl get pods -o wide show?",
@@ -6233,7 +6233,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Server-Side Apply (SSA) does merging at the API server and manages field ownership. Suitable for CI/CD systems that manage resources other tools also touch.",
+              "Normally, kubectl apply merges your YAML with the cluster state on your local machine, which can cause conflicts when multiple tools (e.g., kubectl and Helm) both modify the same resource. Server-Side Apply (SSA) moves this merge logic to the API server and tracks which tool 'owns' which fields. For example, if Helm owns spec.replicas and your CI script owns spec.template.spec.containers[0].image, SSA prevents each tool from accidentally overwriting the other's fields. Most useful in complex GitOps setups with multiple automation tools.",
           },
           {
             q: "What does kubectl wait do?",
