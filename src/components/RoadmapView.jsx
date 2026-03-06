@@ -180,7 +180,7 @@ export default function RoadmapView({
 
                   {/* Text — takes remaining space, clips instead of wrapping */}
                   <div style={{flex:1,minWidth:0,direction:dir}}>
-                    <div className="roadmap-title" style={{fontWeight:700,color:"#e2e8f0",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
+                    <div className="roadmap-title" style={{fontWeight:700,color:"#e2e8f0",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,direction:"ltr"}}>
                       <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topic.name}</span>
                       {completed&&<span style={{flexShrink:0}}>✅</span>}
                     </div>
