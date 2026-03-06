@@ -3204,7 +3204,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Secret is intended for sensitive data. ConfigMap is for regular configuration.",
+              "Both ConfigMap and Secret store key-value data, but they serve different purposes. ConfigMap is for non-sensitive configuration (like a database URL or timeout value). Secret is for sensitive data (passwords, API tokens, TLS certificates). Secret values are base64-encoded in storage — not encrypted by default, but Kubernetes applies stricter access control to them. Both can be used in Pods as environment variables or mounted as files.",
           },
           {
             q: "Are Secrets fully encrypted by default?",
@@ -3228,7 +3228,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "A ConfigMap can be loaded as env variables, as a volume with files, or via the API.",
+              "A ConfigMap can reach a Pod in two main ways. As environment variables: each key becomes an env var the application reads at startup (e.g., DB_URL=postgres://...). As mounted files: the ConfigMap is mounted as a directory inside the container, and each key becomes a file whose content is the value. Changes to a ConfigMap mounted as a volume are automatically reflected in running Pods (with a short delay). Changes to env variables only take effect after the Pod is restarted.",
           },
           {
             q: "What is imagePullSecrets?",
@@ -3240,7 +3240,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "imagePullSecrets allows Kubernetes to pull images from private registries like ECR.",
+              "When your container image is stored in a private registry (like AWS ECR, a private Docker Hub repo, or a self-hosted registry), pulling it requires credentials. imagePullSecrets references a Secret containing those registry credentials. Kubernetes passes them to the kubelet on each Node so it can authenticate and download the image before starting the Pod. Without this, pulls from private registries will fail with an 'image pull error'.",
           },
           {
             q: "How do you create a ConfigMap from a file?",
@@ -3264,7 +3264,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Every Namespace contains a ServiceAccount named 'default'. Pods that don't specify a ServiceAccount get it automatically.",
+              "A ServiceAccount is an identity for a Pod — it lets the Pod authenticate to the Kubernetes API server (for example, a monitoring agent that needs to list all Pods). Every Namespace automatically gets a ServiceAccount named 'default', and Pods that don't explicitly specify a ServiceAccount are assigned it automatically. The default ServiceAccount has minimal permissions, but best practice is to create dedicated ServiceAccounts with only the permissions each workload needs.",
           },
           {
             q: "What is a Secret of type Opaque?",
@@ -3300,7 +3300,7 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation:
-              "RBAC = Role Based Access Control — Kubernetes' permission mechanism based on Roles and Bindings.",
+              "RBAC = Role Based Access Control — Kubernetes' system for controlling who can do what. For example, RBAC can allow a developer to list and view Pods but not delete them, or let a monitoring tool read all resources without modifying anything. It works through three building blocks: Roles (define which actions are allowed on which resources), Subjects (who is allowed — users, groups, or ServiceAccounts), and Bindings (connect a Role to a Subject).",
           },
           {
             q: "What command checks the current user's permissions?",
@@ -3348,7 +3348,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "LimitRange sets default requests/limits for containers that don't specify them, and enforces min/max constraints. Prevents Pods from running without resource limits.",
+              "In Kubernetes, resource requests (how much CPU/memory a container needs) and limits (the maximum it can use) should be set on every container. LimitRange enforces this at the Namespace level: it can automatically apply default requests and limits to containers that don't specify them, and enforce minimum/maximum boundaries. Without LimitRange, developers might forget to set limits, allowing a single Pod to consume all resources on a Node and starve other Pods.",
           },
           {
             q: "Is a ConfigMap in one Namespace accessible from a Pod in a different Namespace?",
@@ -3372,7 +3372,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "runAsNonRoot: true causes Kubernetes to refuse to start the container if the image runs as root (UID 0). Helps prevent privilege escalation.",
+              "In Linux, the root user (UID 0) has unlimited system-wide privileges. If a container runs as root and an attacker exploits a container escape vulnerability, they could gain root access on the underlying Node — a serious breach. runAsNonRoot: true tells Kubernetes to refuse to start the container if the image's default user is root (UID 0). This forces you to build images that run as a non-privileged user account, limiting the blast radius of any compromise.",
           },
           {
             q: "What does readOnlyRootFilesystem: true do in a securityContext?",
@@ -3420,7 +3420,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "requests define the Scheduler's allocation guarantee. limits define the maximum — exceeding limits.memory causes OOMKill; exceeding limits.cpu causes CPU throttling.",
+              "requests tell the Kubernetes Scheduler how much CPU/memory to reserve on a Node for a container — a Node is chosen only if it has enough free capacity. limits cap what the container can actually consume at runtime. If a container exceeds its memory limit, the Linux kernel forcibly kills it (OOMKill = Out-Of-Memory Kill) and Kubernetes restarts it. If it exceeds its CPU limit, it is throttled (slowed down) but not killed. Always set both so one misbehaving Pod can't starve others on the same Node.",
           },
           {
             q: "What is a SubjectAccessReview in Kubernetes?",
@@ -3432,7 +3432,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "SubjectAccessReview is an API that allows programmatic permission checks. kubectl auth can-i uses it behind the scenes.",
+              "A SubjectAccessReview is a Kubernetes API request that asks: 'can subject X perform action Y on resource Z?' A subject can be a human user, a group, or a ServiceAccount (SA — a machine identity used by Pods). The familiar kubectl auth can-i command is just a convenient wrapper that submits a SubjectAccessReview behind the scenes and prints yes or no. This API is also used in automation — for example, a CI/CD pipeline checking whether it has permission to deploy before attempting it.",
           },
         ],
       },
@@ -3684,7 +3684,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Role defines permissions in a specific Namespace. ClusterRole defines permissions cluster-wide.",
+              "A Role is a set of permissions (e.g., 'can list and get Pods') that applies only within a specific Namespace — a Role in 'prod' grants no access in 'staging'. A ClusterRole defines permissions that apply across the entire cluster, including cluster-scoped resources like Nodes, PersistentVolumes, and Namespaces themselves. A ClusterRole can also be bound within a single Namespace via a RoleBinding — a useful pattern for sharing a common permission set across many Namespaces.",
           },
           {
             q: "What is a RoleBinding?",
@@ -3707,14 +3707,14 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ServiceAccount provides identity to Pods for authentication with the Kubernetes API.",
+              "A ServiceAccount is a machine identity — not for human users, but for applications running inside Pods. When a Pod needs to interact with the Kubernetes API (e.g., a monitoring tool listing all Pods, or an operator creating other resources), it authenticates using its ServiceAccount's token, which Kubernetes automatically mounts into every Pod. RBAC then controls what actions that ServiceAccount is permitted to perform.",
           },
           {
             q: "What verb allows real-time watching?",
             options: ["get", "list", "watch", "monitor"],
             answer: 2,
             explanation:
-              "The 'watch' verb allows a stream of real-time changes (like kubectl get pods -w).",
+              "The 'watch' verb opens a long-lived connection that streams change events from the API server in real time — additions, updates, and deletions — without polling. This is what kubectl get pods -w uses. Kubernetes controllers (like the Deployment controller) rely heavily on watch to react to cluster changes immediately. If a ServiceAccount only has get and list but not watch, it cannot receive real-time updates.",
           },
           {
             q: "What is Pod Security Admission?",
@@ -3726,7 +3726,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Pod Security Admission replaced PodSecurityPolicy. Configured at Namespace level with label pod-security.kubernetes.io/enforce.",
+              "Pod Security Admission (PSA) is a built-in Kubernetes controller that enforces security standards on Pods before allowing them to run. You activate it by adding a label to a Namespace (e.g., pod-security.kubernetes.io/enforce=restricted), and Kubernetes automatically rejects any Pod that doesn't meet the required security level. It replaced the older PodSecurityPolicy (PSP), which was removed in v1.25. The three levels — privileged (no restrictions), baseline (blocks known bad practices), restricted (strict production hardening) — cover most security needs.",
           },
           {
             q: "What is an admission webhook?",
@@ -3738,7 +3738,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Admission webhooks (Validating/Mutating) allow external logic to validate or modify resources before they're persisted in etcd.",
+              "An admission webhook intercepts every create/update/delete request to the Kubernetes API server before the change is saved to etcd (the cluster's database). There are two kinds: a Validating webhook can inspect a resource and reject it outright (e.g., block Pods with images from unapproved registries). A Mutating webhook can modify a resource before saving (e.g., automatically inject a sidecar container into every Pod). Tools like OPA Gatekeeper and Kyverno work as admission webhooks.",
           },
           {
             q: "What is an immutable Secret or ConfigMap?",
@@ -3750,7 +3750,7 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation:
-              "immutable: true prevents changes. Benefit: K8s doesn't need to watch for changes, reducing load on the API server.",
+              "Setting immutable: true on a Secret or ConfigMap permanently locks it — you cannot update its data after creation (you'd need to delete and recreate it). The performance benefit: Kubernetes normally watches every ConfigMap and Secret for changes so it can update mounted volumes. Marking it immutable removes that watch, reducing load on the API server in large clusters with many Secrets. Ideal for data that never changes, like versioned TLS certificates or fixed configuration bundles.",
           },
           {
             q: "What is IRSA in AWS EKS?",
@@ -3858,7 +3858,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "seccomp (secure computing mode) restricts which system calls a process can make. Set in Pod spec: securityContext.seccompProfile.type: RuntimeDefault for baseline protection.",
+              "System calls (syscalls) are how programs ask the OS kernel to do privileged things — open files, create network connections, fork new processes. Linux has 300+ syscalls, but most containers only need a small subset. seccomp (secure computing mode) lets you block all syscalls the container doesn't need. If an attacker exploits a vulnerability inside the container, they cannot use dangerous syscalls to escalate privileges or escape. Setting seccompProfile.type: RuntimeDefault in the Pod spec applies the container runtime's recommended safe baseline profile.",
           },
           {
             q: "What is AppArmor in Kubernetes?",
@@ -3870,7 +3870,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "AppArmor profiles restrict what a process can do. Since K8s 1.30 it is configured via securityContext.appArmorProfile. In older versions the beta annotation container.apparmor.security.beta.kubernetes.io/<container> was used.",
+              "AppArmor is a Linux Mandatory Access Control (MAC) module that enforces per-process security profiles. A profile specifies exactly which files a process can read or write, which network operations it can perform, and which kernel capabilities it can use — even if the process runs as root. In Kubernetes, the AppArmor profile must be loaded on the Node, then referenced in the Pod spec. Since Kubernetes 1.30, this is done via securityContext.appArmorProfile. In older versions, the annotation container.apparmor.security.beta.kubernetes.io/<container> was used.",
           },
           {
             q: "How do you sync a Secret from AWS Secrets Manager?",
@@ -4169,7 +4169,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "External Secrets Operator syncs secrets from AWS Secrets Manager, GCP, Azure Key Vault to K8s.",
+              "In production, most organizations store secrets in a dedicated secret manager (AWS Secrets Manager, GCP Secret Manager, HashiCorp Vault, Azure Key Vault) with features like rotation, audit trails, and fine-grained access. The External Secrets Operator bridges that system with Kubernetes: you define a SecretStore (how to connect to the provider) and an ExternalSecret (which secret to sync and where to store it in K8s). The operator creates and continuously keeps a real Kubernetes Secret in sync, automatically updating it when the source rotates.",
           },
           {
             q: "What is Encryption at Rest?",
@@ -4181,7 +4181,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Encryption at Rest encrypts the etcd database where K8s stores all secrets.",
+              "etcd is the distributed key-value database that stores all Kubernetes cluster state, including Secrets. By default, Secrets are stored in etcd as plain base64-encoded text — anyone with filesystem access to the etcd data can decode them in seconds. Encryption at Rest adds an AES-GCM encryption layer: data is encrypted before being written to the etcd disk using a key from a separate EncryptionConfiguration file on the control plane. Even if an attacker exfiltrates the etcd data files, the Secret values remain unreadable without that key.",
           },
           {
             q: "What does Sealed Secrets allow?",
@@ -4193,7 +4193,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Sealed Secrets encrypts secrets so they can be safely stored in a git repository.",
+              "GitOps stores all cluster configuration in git, but you can't commit plaintext Kubernetes Secrets — anyone with repo access would read your passwords. Sealed Secrets (by Bitnami) solves this with asymmetric encryption: a controller in your cluster generates a unique key pair. You use the public key to encrypt your Secret into a SealedSecret resource, which is safe to commit. Only the controller in that specific cluster — which holds the matching private key — can decrypt it and create the real Kubernetes Secret. A SealedSecret from Cluster A cannot be decrypted by Cluster B.",
           },
           {
             q: "What are the three Pod Security Standard levels?",
@@ -4229,7 +4229,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "OPA Gatekeeper is an admission webhook that lets you write policies (Rego) blocking deployments that violate rules.",
+              "OPA (Open Policy Agent) Gatekeeper is an admission webhook that enforces custom policies on every resource created in the cluster. Policies are written in Rego, a declarative rule language. Unlike Pod Security Admission (which uses fixed built-in levels), OPA Gatekeeper lets you define arbitrary rules tailored to your organization — for example: all container images must come from gcr.io/, all Pods must have resource limits, or no Service of type LoadBalancer is allowed. Kyverno is an alternative tool that serves the same purpose with a YAML-based policy syntax.",
           },
           {
             q: "What is Workload Identity in GKE?",
