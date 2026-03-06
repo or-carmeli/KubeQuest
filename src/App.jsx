@@ -1502,7 +1502,7 @@ export default function K8sQuestApp() {
 // Renders incident step prompt: detects terminal/kubectl lines and styles them in monospace
   const renderIncidentPrompt = (text) => {
     if (!text) return null;
-    const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+-[a-z0-9]+\s|FATAL|Error|Failed|rpc error|unauthorized|  [A-Za-z])/;
+    const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error|Failed|rpc error|unauthorized|  [A-Za-z])/;
     return text.split("\n").map((line, i) => {
       if (!line.trim()) return <div key={i} style={{height:5}}/>;
       if (terminalPat.test(line)) {
