@@ -1767,8 +1767,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .roadmap-card-header{gap:6px!important}
 }
 @media(max-width:430px){
-.home-logo{width:40px!important;height:40px!important}
-.home-title-text{font-size:22px!important}
+.home-logo{width:46px!important;height:46px!important}
 .guest-banner{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
 .guest-banner-btn{width:100%!important;text-align:center!important}
 .action-card{padding:13px 14px!important}
@@ -1780,8 +1779,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .stats-cell{padding:11px 6px!important}
 }
 @media(max-width:390px){
-.home-logo{width:36px!important;height:36px!important}
-.home-title-text{font-size:20px!important}
+.home-logo{width:40px!important;height:40px!important}
 .home-screen{padding:10px 10px!important}
 .page-pad{padding:10px 12px!important}
 .topic-card-section{padding:11px 12px!important}
@@ -1795,8 +1793,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .roadmap-node-circle{width:24px!important;height:24px!important;font-size:10px!important}
 }
 @media(max-width:360px){
-.home-logo{width:30px!important;height:30px!important}
-.home-title-text{font-size:18px!important}
+.home-logo{width:34px!important;height:34px!important}
 .home-screen{padding:8px 8px!important}
 .page-pad{padding:8px 10px!important}
 .topic-card-section{padding:10px 10px!important}
@@ -2092,7 +2089,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",marginBottom:14}}>
             {/* Brand row: logo left, title+subtitle right — same order as loading screen */}
             <div style={{display:"flex",alignItems:"center",gap:14,direction:"ltr"}}>
-              <svg className="home-logo" width={46} height={46} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0,filter:"drop-shadow(0 0 14px rgba(0,212,255,0.45))"}}>
+              <svg className="home-logo" width={54} height={54} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0,filter:"drop-shadow(0 0 14px rgba(0,212,255,0.45))"}}>
                 <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
                 <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
                 <circle cx="50" cy="50" r="44" fill="none" stroke="url(#hgr)" strokeWidth="4" opacity="0.9"/>
