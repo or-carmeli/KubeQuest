@@ -1585,7 +1585,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
           </svg>
           <div style={{textAlign:"left"}}>
-            <div style={{fontSize:32,fontWeight:900,lineHeight:1,letterSpacing:-0.5,
+            <div style={{fontSize:27,fontWeight:900,lineHeight:1,letterSpacing:-0.5,
               background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",
               WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
               backgroundClip:"text",backgroundSize:"300% auto",
@@ -2286,10 +2286,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
       {/* ── MISTAKES ── */}
       {screen==="mistakes"&&(()=>{
-        const items=[];
+        const wrongItems=[];
         TOPICS.forEach(topic=>(['easy','medium','hard']).forEach(lvl=>{
           const r=completedTopics[`${topic.id}_${lvl}`];
-          if(r&&r.correct<r.total&&!r.retryComplete) items.push({topic,level:lvl,correct:r.correct,total:r.total});
+          if(!r) return;
+          if(r.wrongIndices&&r.wrongIndices.length>0){
+            const rawQs=lang==="en"?topic.levels[lvl].questionsEn:topic.levels[lvl].questions;
+            r.wrongIndices.forEach(idx=>{const q=rawQs?.[idx];if(q) wrongItems.push({topic,level:lvl,q});});
+          } else if(!r.wrongIndices&&r.correct<r.total&&!r.retryComplete){
+            wrongItems.push({topic,level:lvl,legacy:true,correct:r.correct,total:r.total});
+          }
         }));
         return (
           <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
@@ -2298,24 +2304,41 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </button>
             <h2 style={{color:"#e2e8f0",fontSize:18,fontWeight:700,marginBottom:4}}>{t("mistakesBtn")}</h2>
             <p style={{color:"#64748b",fontSize:13,marginBottom:20}}>{t("mistakesHint")}</p>
-            {items.length===0
+            {wrongItems.length===0
               ? <div style={{textAlign:"center",padding:"40px 0",color:"#10B981",fontSize:16,fontWeight:700}}>{t("mistakesEmpty")}</div>
-              : items.map(({topic,level,correct,total},i)=>(
-                  <div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:12,padding:"14px 16px",marginBottom:10,display:"flex",alignItems:"center",gap:14}}>
-                    <span style={{fontSize:26,flexShrink:0}}>{topic.icon}</span>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{topic.name}</div>
-                      <div style={{color:"#64748b",fontSize:12,marginTop:2,display:"flex",alignItems:"center",gap:8,direction:"ltr"}}>
-                        <span style={{color:LEVEL_CONFIG[level]?.color,fontWeight:600}}>{lang==="en"?LEVEL_CONFIG[level]?.labelEn:LEVEL_CONFIG[level]?.label}</span>
-                        <span>·</span>
-                        <span style={{color:"#EF4444"}}>{correct}/{total} {lang==="en"?"correct":"נכון"}</span>
+              : wrongItems.map(({topic,level,q,legacy,correct,total},i)=>
+                  legacy?(
+                    <div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:12,padding:"14px 16px",marginBottom:10,display:"flex",alignItems:"center",gap:14}}>
+                      <span style={{fontSize:26,flexShrink:0}}>{topic.icon}</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{topic.name}</div>
+                        <div style={{color:"#64748b",fontSize:12,marginTop:2,display:"flex",alignItems:"center",gap:8,direction:"ltr"}}>
+                          <span style={{color:LEVEL_CONFIG[level]?.color,fontWeight:600}}>{lang==="en"?LEVEL_CONFIG[level]?.labelEn:LEVEL_CONFIG[level]?.label}</span>
+                          <span>·</span>
+                          <span style={{color:"#EF4444"}}>{correct}/{total} {lang==="en"?"correct":"נכון"}</span>
+                        </div>
+                      </div>
+                      <button onClick={()=>startTopic(topic,level)} style={{flexShrink:0,padding:"8px 14px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,color:"#EF4444",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                        {lang==="en"?"Retry":"נסה שוב"}
+                      </button>
+                    </div>
+                  ):(
+                    <div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(239,68,68,0.12)",borderRadius:12,padding:"14px 16px",marginBottom:10}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,direction:"ltr",flexWrap:"wrap"}}>
+                        <span style={{fontSize:15}}>{topic.icon}</span>
+                        <span style={{color:"#94a3b8",fontSize:12,fontWeight:600}}>{topic.name}</span>
+                        <span style={{color:LEVEL_CONFIG[level]?.color,fontSize:11,fontWeight:700,background:`${LEVEL_CONFIG[level]?.color}18`,border:`1px solid ${LEVEL_CONFIG[level]?.color}44`,borderRadius:6,padding:"2px 6px"}}>
+                          {lang==="en"?LEVEL_CONFIG[level]?.labelEn:LEVEL_CONFIG[level]?.label}
+                        </span>
+                      </div>
+                      <div style={{color:"#e2e8f0",fontSize:14,lineHeight:1.5,marginBottom:8,direction:dir}}>{q.q}</div>
+                      <div style={{display:"flex",alignItems:"flex-start",gap:6}}>
+                        <span style={{color:"#10B981",fontSize:13,flexShrink:0,marginTop:1}}>✓</span>
+                        <span style={{color:"#10B981",fontSize:13,lineHeight:1.4}}>{q.options[q.answer]}</span>
                       </div>
                     </div>
-                    <button onClick={()=>startTopic(topic,level)} style={{flexShrink:0,padding:"8px 14px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,color:"#EF4444",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                      {lang==="en"?"Retry":"נסה שוב"}
-                    </button>
-                  </div>
-                ))
+                  )
+                )
             }
           </div>
         );
