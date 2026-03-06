@@ -298,7 +298,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Pod is the basic unit of execution. It contains one or more containers that share an IP and storage.",
+              "A Pod is Kubernetes' basic deployable unit — think of it as a wrapper that holds one or more containers that always run together on the same machine. All containers inside a Pod share the same network address (IP) and can share storage volumes. Kubernetes schedules and manages Pods, not individual containers directly.",
           },
           {
             q: "What happens when a Pod managed by a Deployment dies?",
@@ -322,7 +322,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Deployment manages the lifecycle of Pods and ensures the desired count is always running.",
+              "A Deployment is the standard way to run a stateless application in Kubernetes. It manages a group of identical Pods via an internal ReplicaSet and ensures the desired number of Pods are always running. If a Pod crashes, the Deployment automatically creates a replacement. It also handles rolling updates (deploy a new version with zero downtime) and rollbacks to a previous version.",
           },
           {
             q: "What are replicas?",
@@ -334,7 +334,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Replicas are identical copies of the Pod running in parallel for high availability.",
+              "Replicas are identical copies of your Pod running at the same time. Running multiple replicas means if one Pod crashes, the others keep serving traffic — this is called high availability. The Scheduler tries to spread replicas across different Nodes so a single machine failure cannot take down your entire application.",
           },
           {
             q: "What is an init container?",
@@ -358,7 +358,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A liveness probe checks the container is still working. If it fails repeatedly, K8s kills and restarts the container.",
+              "A liveness probe is a periodic health check Kubernetes runs against your container. If the probe fails more than a configured number of times in a row, Kubernetes assumes the container is stuck (e.g. frozen due to a deadlock) and automatically kills and restarts it. Common probe types: HTTP GET request to a health endpoint, TCP socket connection, or a shell command that must exit with code 0.",
           },
           {
             q: "What does a readiness probe do?",
@@ -378,11 +378,11 @@ export const TOPICS = [
               "Never — Kubernetes never restarts a stopped container",
               "OnFailure — Kubernetes restarts only if the exit code is non-zero",
               "Always — Kubernetes always restarts a stopped container",
-              "OnFailure — Kubernetes restarts only when the exit code is non-zero, not on clean exit",
+              "OnSuccess — Kubernetes restarts the container only when it exits cleanly with code 0",
             ],
             answer: 2,
             explanation:
-              "restartPolicy: Always is the default — Kubernetes always restarts a stopped container.",
+              "restartPolicy controls when Kubernetes restarts a stopped container. 'Always' (the default) restarts the container no matter what — whether it crashed or exited cleanly. 'OnFailure' restarts only on a non-zero exit code (error). 'Never' never restarts it. Most long-running apps (web servers, APIs) use the default 'Always'.",
           },
           {
             q: "What is the difference between a Job and a CronJob?",
@@ -406,7 +406,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "requests defines how much CPU/Memory the Pod needs. The Scheduler uses this to choose a suitable Node.",
+              "requests tells Kubernetes the minimum CPU and memory your container needs to run properly. The Scheduler uses this value when deciding which Node to place the Pod on — it only considers Nodes that have at least that much free capacity. Setting requests too low can cause performance problems; setting them too high wastes cluster resources. Note: requests are a scheduling hint — the container can still use more (up to its limit). The hard cap is set separately via limits.",
           },
           {
             q: "What is a ReplicaSet in Kubernetes?",
@@ -490,7 +490,7 @@ export const TOPICS = [
             ],
             answer: 3,
             explanation:
-              "When a Pod is deleted, K8s sends SIGTERM and waits terminationGracePeriodSeconds (default 30s) before SIGKILL, allowing the app to close connections gracefully.",
+              "When you delete a Pod, Kubernetes first sends SIGTERM — a polite OS signal telling the process 'please shut down soon'. The app has terminationGracePeriodSeconds (default: 30 seconds) to finish in-flight requests and clean up. After that deadline, Kubernetes sends SIGKILL, which force-terminates the process immediately no matter what it is doing. Setting a higher value gives slow-shutting-down apps time to complete; setting it to 0 skips graceful shutdown entirely.",
           },
           {
             q: "What characterises a multi-container Pod?",
@@ -827,7 +827,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A PDB defines how many Pods must remain available during planned disruptions such as node drains.",
+              "A PodDisruptionBudget (PDB) protects your application during planned maintenance. When an operator runs kubectl drain to safely remove all Pods from a Node (for example to upgrade the Node's OS or decommission it), the PDB tells Kubernetes how many of your Pods must stay Running at all times. Example: with minAvailable: 2 and 3 replicas, the drain can only evict one Pod at a time — ensuring at least 2 replicas are always serving traffic.",
           },
           {
             q: "What is nodeSelector?",
@@ -839,7 +839,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "nodeSelector is a Pod spec field that restricts the Scheduler to choose only Nodes with matching labels.",
+              "nodeSelector is the simplest way to pin a Pod to a specific type of Node. You add labels to Nodes (e.g. kubectl label node my-node gpu=true) and then reference those labels in the Pod spec under nodeSelector: {gpu: 'true'}. The Scheduler will only place the Pod on Nodes that have all the required labels. If no matching Node exists, the Pod stays Pending. For more flexible rules (preferred vs. required, multiple conditions), use nodeAffinity instead.",
           },
           {
             q: "What is the difference between affinity and anti-affinity?",
@@ -851,7 +851,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Affinity attracts Pods toward specific Nodes. Anti-affinity ensures Pods don't run together on the same zone.",
+              "Affinity is a rule that draws a Pod toward certain Nodes or toward other Pods (e.g. 'place me on a Node that already runs a cache Pod'). Anti-affinity is the opposite — it pushes Pods apart (e.g. 'never put two replicas of my app on the same Node, so one Node failure doesn't kill both'). Both can be required (hard: the Pod won't schedule if the rule isn't met) or preferred (soft: Kubernetes tries its best but won't block scheduling).",
           },
           {
             q: "What are resource limits?",
@@ -863,7 +863,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "limits defines the maximum. Exceeding memory limit causes OOMKill; exceeding CPU limit causes throttling.",
+              "limits is the hard ceiling on resources a container can use. Memory: if a container exceeds its memory limit, the Linux kernel immediately kills it — this is called OOMKill (Out Of Memory Kill), visible as exit code 137 in kubectl describe pod. CPU: if a container exceeds its CPU limit, it is throttled (slowed down) — the process keeps running but gets less CPU time. Unlike memory, exceeding the CPU limit never kills the container.",
           },
           {
             q: "What command shows rollout history?",
@@ -922,7 +922,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A taint on a Node prevents scheduling of Pods that don't declare a matching Toleration. Used to dedicate Nodes for specific workloads (GPUs, spot instances).",
+              "Think of a taint as a 'No entry' sign on a Node — by default, no Pod can be scheduled there. A toleration in the Pod spec is the Pod's pass that lets it ignore a specific taint and land on that Node. This lets you reserve expensive or specialized Nodes (like GPU machines) exclusively for the workloads that need them, keeping them free from unrelated Pods.",
           },
           {
             q: "What is the difference between requiredDuringScheduling and preferredDuringScheduling in affinity?",
@@ -970,7 +970,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Guaranteed: requests=limits. Burstable: requests<limits. BestEffort: no requests/limits. Under memory pressure, BestEffort is evicted first.",
+              "Kubernetes automatically assigns each Pod a Quality of Service class based on its resource settings. Guaranteed (safest): every container sets requests equal to limits for both CPU and memory — these Pods are last to be evicted. Burstable: at least one container sets requests or limits but doesn't qualify for Guaranteed — can burst above its request when resources are available. BestEffort (riskiest): no requests or limits set at all — these are the first to be evicted when a Node runs low on memory. Setting proper requests and limits is important for production workloads.",
           },
           {
             q: "What does kubectl rollout pause do?",
@@ -1263,7 +1263,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A DaemonSet ensures one Pod runs on every Node. On a new Node – Pod is added automatically.",
+              "A DaemonSet is a 'run everywhere' guarantee — Kubernetes automatically creates exactly one copy of the Pod on each Node in the cluster. When a new Node joins, the DaemonSet Pod is added to it without any manual action. When a Node is removed, its DaemonSet Pod is garbage-collected. This is ideal for infrastructure tools that must run on every machine: log collectors (e.g. Fluentd), monitoring agents (e.g. Prometheus node-exporter), or network plugins (CNI).",
           },
           {
             q: "What is HPA?",
@@ -1286,7 +1286,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "CrashLoopBackOff – the container tries to start, crashes, and tries again.",
+              "CrashLoopBackOff means the container starts, crashes almost immediately, and Kubernetes tries to restart it — but adds an exponentially increasing delay between attempts (10s, 20s, 40s, up to ~5 minutes) to avoid hammering a broken system. Common causes: the app's startup command fails (e.g. script not found), a required environment variable is missing, a config file is absent or invalid, or the app tries to connect to a dependency (like a database) that isn't ready yet. Diagnose with kubectl logs <pod> and kubectl describe pod <pod>.",
           },
           {
             q: "What is OOMKilled?",
@@ -1298,7 +1298,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "OOMKilled means the container used more memory than its configured limit.",
+              "OOMKilled stands for 'Out Of Memory Killed'. When a container uses more memory than its limits.memory value, the Linux kernel's OOM Killer forcibly terminates the process. In Kubernetes you'll see exit code 137 in kubectl describe pod. To fix: check actual usage with kubectl top pod, then increase limits.memory (e.g. from 128Mi to 256Mi). If memory usage keeps growing over time, the application likely has a memory leak.",
           },
           {
             q: "What is pod preemption?",
@@ -1310,7 +1310,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Preemption — the Scheduler evicts lower-priority Pods so a higher-priority Pod can be scheduled.",
+              "Pod preemption is triggered when a high-priority Pod can't be scheduled because the cluster has no free resources. Instead of leaving it Pending forever, the Kubernetes Scheduler identifies lower-priority Pods it can evict to free up space on a Node. The evicted Pods go back to Pending and may reschedule elsewhere. Priority is defined via a PriorityClass resource. Preemption ensures critical workloads (monitoring, system services) always get resources, even under heavy cluster load.",
           },
           {
             q: "What does topologySpreadConstraints do?",
@@ -1346,7 +1346,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "VPA automatically adjusts resource requests/limits based on actual usage, reducing waste and preventing OOM.",
+              "VPA (Vertical Pod Autoscaler) watches your Pods' actual CPU and memory consumption and adjusts their requests (and optionally limits) accordingly. Unlike HPA which adds more Pod replicas (horizontal scaling), VPA makes each individual Pod bigger or smaller (vertical scaling). VPA has three modes: Recommendation (read-only, shows suggested values but changes nothing), Initial (applies recommended values only when a new Pod is created), and Auto (evicts and recreates Pods to apply updated values). Note: do not use VPA and HPA targeting CPU on the same Deployment at the same time.",
           },
           {
             q: "What is a DaemonSet typically used for?",
