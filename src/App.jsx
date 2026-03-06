@@ -1530,8 +1530,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   );
 
   const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
-  const FONT_SCALES = { normal: 1.1, large: 1.1, xl: 1.1 }; // A+/A++ removed; all map to single 10% boost
-  const fs = FONT_SCALES[a11y.fontSize] || 1.1;
+  const FONT_SCALES = { normal: 1, large: 1, xl: 1 }; // no zoom — original A mode is now the default
+  const fs = FONT_SCALES[a11y.fontSize] || 1;
 
   // History navigation: questionIndex can go below liveIndexRef.current to review past answers
   const isInHistoryMode     = questionIndex < liveIndexRef.current;
