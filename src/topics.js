@@ -46,8 +46,8 @@ export const TOPICS = [
     descriptionEn: "Pods · Deployments · StatefulSets · Scheduling · Resources",
     levels: {
       easy: {
-        theory: `Pods ו-Deployments הם ליבת Kubernetes.\n🔹 Pod – יחידת הריצה הקטנה ביותר, מכיל קונטיינר אחד או יותר\n🔹 Pods זמניים – כשמת, נוצר חדש עם IP חדש\n🔹 Deployment מנהל קבוצת Pods זהים ומבטיח שהמספר הרצוי תמיד רץ\n🔹 replicas – עותקים זהים של ה-Pod שרצים במקביל\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app`,
-        theoryEn: `Pods and Deployments are the core of Kubernetes.\n🔹 Pod – the smallest unit of execution, contains one or more containers\n🔹 Pods are ephemeral – when one dies, a new one is created with a new IP\n🔹 Deployment manages a group of identical Pods and ensures the desired count is running\n🔹 replicas – identical copies of the Pod running in parallel\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app`,
+        theory: `Pods ו-Deployments הם ליבת Kubernetes.\n🔹 Pod – יחידת הריצה הקטנה ביותר, מכיל קונטיינר אחד או יותר\n🔹 Pods זמניים – Pod מנוהל (Deployment/ReplicaSet) שמת, נוצר חדש עם IP חדש. Pod עצמאי שמת — נשאר מת\n🔹 Deployment מנהל קבוצת Pods זהים ומבטיח שהמספר הרצוי תמיד רץ\n🔹 replicas – עותקים זהים של ה-Pod שרצים במקביל\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app`,
+        theoryEn: `Pods and Deployments are the core of Kubernetes.\n🔹 Pod – the smallest unit of execution, contains one or more containers\n🔹 Pods are ephemeral – a managed Pod (Deployment/ReplicaSet) that dies gets replaced with a new one and a new IP. A standalone Pod that dies stays dead\n🔹 Deployment manages a group of identical Pods and ensures the desired count is running\n🔹 replicas – identical copies of the Pod running in parallel\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app`,
         questions: [
           {
             q: "מה הוא Pod ב-Kubernetes?",
@@ -62,7 +62,7 @@ export const TOPICS = [
               "Pod הוא יחידת הריצה הבסיסית ב-Kubernetes. כל קונטיינרי ה-Pod חולקים כתובת IP אחת, network namespace, ו-volumes. Kubernetes מנהל Pods, לא קונטיינרים ישירות.",
           },
           {
-            q: "מה קורה כש-Pod מת?",
+            q: "מה קורה כש-Pod מנוהל על ידי Deployment מת?",
             options: [
               "הוא ממשיך לרוץ בזיכרון עד שהנתונים נשמרים לדיסק",
               "הנתונים שלו נשמרים ב-etcd לשחזור עתידי",
@@ -70,7 +70,7 @@ export const TOPICS = [
               "ה-Service המחובר אליו עובר אוטומטית ל-Pod אחר ב-Namespace",
             ],
             answer: 2,
-            explanation: "Pods הם ephemeral — לא נועדו לחיות לנצח. כשPod נמחק או קורס, ה-Deployment Controller יוצר Pod חדש עם IP חדש. לכן לא מתחברים לIP של Pod ישירות אלא דרך Service שמעדכן את ה-Endpoints אוטומטית.",
+            explanation: "כש-Pod מנוהל על ידי Deployment או ReplicaSet מת, ה-Controller יוצר Pod חדש עם IP חדש אוטומטית. שים לב: Pod עצמאי (standalone) שמת — לא יוחלף, הוא נשאר מת. לכן לא מתחברים ל-IP של Pod ישירות אלא דרך Service.",
           },
           {
             q: "מה Deployment עושה?",
@@ -301,7 +301,7 @@ export const TOPICS = [
               "A Pod is the basic unit of execution. It contains one or more containers that share an IP and storage.",
           },
           {
-            q: "What happens when a Pod dies?",
+            q: "What happens when a Pod managed by a Deployment dies?",
             options: [
               "It keeps running in memory until its data is flushed to disk",
               "Data is preserved in etcd and restored to the replacement Pod automatically",
@@ -310,7 +310,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "Pods are ephemeral – when they die, Kubernetes creates a new one with a new IP.",
+              "When a Pod managed by a Deployment or ReplicaSet dies, the controller automatically creates a replacement with a new IP. Important: a standalone Pod that dies is NOT recreated — it stays dead. This is why you always connect via a Service, not directly to a Pod's IP.",
           },
           {
             q: "What does a Deployment do?",
