@@ -1996,19 +1996,22 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               {/* Right spacer — burger is now a fixed element outside <main> */}
               <div style={{width:Math.round(44/fs),flexShrink:0}}/>
             </div>
-            {/* Row 2: Greeting */}
-            <p style={{color:"#94a3b8",fontSize:13,margin:"0 0 16px",textAlign:"center"}}>
-              {t("greeting")}, <span style={{color:"#e2e8f0",fontWeight:700}}>{displayName}</span>! 👋
-              {isGuest&&<span style={{color:"#475569",fontSize:12}}> · {t("playingAsGuest")}</span>}
-            </p>
-            {isInterviewMode&&<p style={{color:"#64748b",fontSize:11,margin:"-10px 0 14px",textAlign:"center",direction:dir}}>{t("interviewModeHint")}</p>}
-            {dailyStreak.streak > 0 && (
-              <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
-                <div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:20,padding:"5px 16px",fontSize:13,color:"#F59E0B",fontWeight:700}}>
+            {/* Welcome section */}
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"0 12px 16px",textAlign:"center",direction:dir}}>
+              <p style={{color:"#94a3b8",fontSize:13,margin:0}}>{t("greeting")},</p>
+              <h2 style={{margin:0,color:"#e2e8f0",fontSize:22,fontWeight:800,maxWidth:"90%",lineHeight:1.2,wordBreak:"break-word",overflowWrap:"anywhere"}}>
+                {displayName}
+              </h2>
+              {isGuest&&<p style={{color:"#475569",fontSize:12,margin:0}}>{t("playingAsGuest")}</p>}
+              <p style={{color:"#64748b",fontSize:12,margin:0,maxWidth:"90%"}}>
+                {isInterviewMode?t("interviewModeHint"):t("tagline")}
+              </p>
+              {dailyStreak.streak > 0 && (
+                <div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:20,padding:"5px 16px",fontSize:13,color:"#F59E0B",fontWeight:700,marginTop:4}}>
                   🔥 {dailyStreak.streak} {t("dailyStreak")}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:12,padding:"11px 16px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}><span style={{color:"#4a9aba",fontSize:13,flex:1,minWidth:0}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{setAuthScreen("signup");setUser(null);}} style={{padding:"6px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:8,color:"#00D4FF",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{t("signupNow")}</button></div>}
           <div style={{display:"flex",gap:6,marginBottom:16,background:"rgba(255,255,255,0.03)",borderRadius:10,padding:3,direction:"ltr"}}>
