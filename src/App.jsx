@@ -1971,6 +1971,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{padding:"10px 16px 4px"}}>
             <span style={{fontSize:10,color:"#334155",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"PRACTICE":"תרגול"}</span>
           </div>
+          <button onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            🚨 {lang==="en"?"Incident Mode":"מצב אירוע"}
+          </button>
           <button onClick={()=>{startMixedQuiz();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("mixedQuizBtn")}
           </button>
