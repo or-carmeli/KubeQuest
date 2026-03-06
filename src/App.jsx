@@ -1736,7 +1736,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </button>
               <button onClick={()=>setResumeData(null)}
                 style={{width:"100%",padding:"10px",background:"none",border:"none",borderRadius:12,color:"#475569",fontSize:13,fontWeight:600,cursor:"pointer"}}>
-                {dir==="rtl"?"→":"←"} {t("back")}
+                {t("back")}
               </button>
             </div>
           </div>
