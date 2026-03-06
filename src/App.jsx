@@ -2008,7 +2008,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </svg>
                   <div style={{display:"flex",flexDirection:"column",gap:+(2/fs).toFixed(1)}}>
                     <h1 className="home-title-text" style={{fontSize:+(26/fs).toFixed(1),fontWeight:900,margin:0,lineHeight:1,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
-                    <span style={{fontSize:+(10/fs).toFixed(1),color:"#475569",letterSpacing:0.3,whiteSpace:"nowrap"}}>Kubernetes Interview Trainer</span>
+                    <span style={{fontSize:+(10/fs).toFixed(1),color:"#475569",letterSpacing:0.3,whiteSpace:"nowrap"}}>Train Your Kubernetes Skills</span>
                   </div>
                 </div>
               </div>
