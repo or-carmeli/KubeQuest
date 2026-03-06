@@ -189,6 +189,14 @@ const TRANSLATIONS = {
     incidentShareCopied: "✓ הועתק! הדבק ב-LinkedIn",
     incidentResumeBanner: "המשיכי את האירוע", incidentResumeBanner_m: "המשך את האירוע",
     incidentDiscard: "נטשי", incidentDiscard_m: "נטוש",
+    reportBtn: "⚑ דווחי על שגיאה", reportBtn_m: "⚑ דווח על שגיאה",
+    reportTitle: "דיווח על שגיאה בשאלה",
+    reportType1: "התשובה הנכונה שגויה", reportType2: "השאלה לא ברורה",
+    reportType3: "שגיאת כתיב/דקדוק",  reportType4: "אחר",
+    reportNote: "הערה נוספת (לא חובה)",
+    reportSend: "שלחי דיווח", reportSend_m: "שלח דיווח",
+    reportThanks: "✓ תודה! הדיווח נשלח.",
+    reportCancel: "ביטול",
     savedQuestions: "🔖 שאלות שמורות", savedQuestionsTitle: "שאלות שמורות",
     noBookmarks: "עוד לא שמרת שאלות. לחצי על ☆ בזמן חידון כדי לשמור.",
     noBookmarks_m: "עוד לא שמרת שאלות. לחץ על ☆ בזמן חידון כדי לשמור.",
@@ -289,6 +297,14 @@ const TRANSLATIONS = {
     incidentShareCopied: "✓ Copied! Paste in LinkedIn",
     incidentResumeBanner: "Continue Incident",
     incidentDiscard: "Discard",
+    reportBtn: "⚑ Report an error",
+    reportTitle: "Report a question error",
+    reportType1: "Wrong answer marked correct", reportType2: "Question is unclear",
+    reportType3: "Typo / grammar error",        reportType4: "Other",
+    reportNote: "Additional note (optional)",
+    reportSend: "Send report",
+    reportThanks: "✓ Thanks! Report sent.",
+    reportCancel: "Cancel",
     savedQuestions: "🔖 Saved Questions", savedQuestionsTitle: "Saved Questions",
     noBookmarks: "No saved questions yet. Tap ☆ during a quiz to save one.",
     startSavedQuiz: "▶ Practice Saved Questions",
@@ -538,6 +554,11 @@ export default function K8sQuestApp() {
   const [incidentResume,     setIncidentResume]     = useState(null); // saved state for resume banner
   const [incidentShareCopied,setIncidentShareCopied]= useState(false);
   const incidentTimerRef = useRef(null);
+  const [reportDialog,  setReportDialog]  = useState(null); // {qText, qIndex} | null
+  const [reportType,    setReportType]    = useState("");
+  const [reportNote,    setReportNote]    = useState("");
+  const [reportSent,    setReportSent]    = useState(false);
+  const [reportSending, setReportSending] = useState(false);
 
   // Shuffle answer options so the correct answer isn't predictably the longest/same position
   const getLevelData = (topic, level) => ({
@@ -1752,6 +1773,66 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         </div>
       )}
 
+      {/* ── REPORT DIALOG ─────────────────────────────────── */}
+      {reportDialog&&(
+        <div onClick={()=>setReportDialog(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:5010,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
+          <div role="dialog" aria-modal="true" onClick={e=>e.stopPropagation()}
+            style={{background:"#0f172a",border:"1px solid rgba(255,255,255,0.12)",borderRadius:18,padding:"22px 20px",width:"min(400px,100%)",animation:"fadeIn 0.25s ease",direction:dir,position:"relative"}}>
+            <button onClick={()=>setReportDialog(null)} aria-label={t("reportCancel")}
+              style={{position:"absolute",top:12,insetInlineEnd:14,background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer",lineHeight:1}}>✕</button>
+            <div style={{fontWeight:800,color:"#e2e8f0",fontSize:16,marginBottom:14}}>⚑ {t("reportTitle")}</div>
+            {/* Question preview */}
+            <div style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"9px 12px",marginBottom:14,color:"#94a3b8",fontSize:12,lineHeight:1.5,direction:"ltr",textAlign:"left",overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>
+              {reportDialog.qText}
+            </div>
+            {reportSent?(
+              <div style={{textAlign:"center",padding:"16px 0",color:"#10B981",fontWeight:700,fontSize:15}}>{t("reportThanks")}</div>
+            ):(
+              <>
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+                  {[t("reportType1"),t("reportType2"),t("reportType3"),t("reportType4")].map((label,i)=>(
+                    <label key={i} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"9px 12px",borderRadius:9,background:reportType===label?"rgba(0,212,255,0.08)":"rgba(255,255,255,0.03)",border:`1px solid ${reportType===label?"rgba(0,212,255,0.35)":"rgba(255,255,255,0.08)"}`,transition:"all 0.15s"}}>
+                      <input type="radio" name="reportType" value={label} checked={reportType===label} onChange={()=>setReportType(label)}
+                        style={{accentColor:"#00D4FF",width:15,height:15,flexShrink:0}}/>
+                      <span style={{color:reportType===label?"#e2e8f0":"#94a3b8",fontSize:14,fontWeight:reportType===label?700:400}}>{label}</span>
+                    </label>
+                  ))}
+                </div>
+                <textarea value={reportNote} onChange={e=>setReportNote(e.target.value)} placeholder={t("reportNote")} rows={2}
+                  style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:9,color:"#e2e8f0",fontSize:13,padding:"9px 12px",resize:"vertical",boxSizing:"border-box",outline:"none",marginBottom:14,direction:dir,fontFamily:"inherit"}}/>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setReportDialog(null)}
+                    style={{flex:1,padding:"10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,color:"#64748b",fontSize:13,fontWeight:600,cursor:"pointer"}}>
+                    {t("reportCancel")}
+                  </button>
+                  <button disabled={!reportType||reportSending} onClick={async()=>{
+                    if (!reportType) return;
+                    setReportSending(true);
+                    try {
+                      await supabase.from("question_reports").insert({
+                        question_text: reportDialog.qText.slice(0,300),
+                        report_type: reportType,
+                        note: reportNote||null,
+                        user_id: user?.id||null,
+                        user_email: user?.email||null,
+                        topic: selectedTopic?.id||null,
+                        level: selectedLevel||null,
+                      });
+                    } catch {}
+                    setReportSent(true);
+                    setReportSending(false);
+                    setTimeout(()=>setReportDialog(null), 2000);
+                  }}
+                    style={{flex:2,padding:"10px",background:reportType?"linear-gradient(135deg,rgba(239,68,68,0.2),rgba(239,68,68,0.1))":"rgba(255,255,255,0.04)",border:`1px solid ${reportType?"rgba(239,68,68,0.4)":"rgba(255,255,255,0.09)"}`,borderRadius:10,color:reportType?"#EF4444":"#475569",fontSize:13,fontWeight:700,cursor:reportType?"pointer":"default",transition:"all 0.15s",opacity:reportSending?0.7:1}}>
+                    {reportSending?"...":(t("reportSend"))}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:20,width:"min(360px,calc(100vw - 32px))",animation:"fadeIn 0.3s ease",direction:"ltr"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}><div><h3 style={{margin:0,color:"#e2e8f0",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"#475569",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"#475569",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i===0?"rgba(245,158,11,0.1)":"rgba(255,255,255,0.03)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"rgba(255,255,255,0.06)"}`}}><span style={{fontSize:18,width:28}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1}}><div style={{color:"#e2e8f0",fontWeight:700,fontSize:14}}>{entry.username ? (entry.username.includes("@") ? entry.username.split("@")[0] : entry.username) : t("anonymous")}</div><div style={{color:"#475569",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div></div>)}{userRank&&<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"#94a3b8",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"הדירוג שלך"}</span><span style={{color:"#e2e8f0",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"rgba(255,255,255,0.2)"}}>|</span><span>{lang==="en"?"Score":"ניקוד"}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div>}</div></div>}
 
       {showBookmarks&&(
@@ -2179,6 +2260,17 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   );
                 })}
               </div>
+
+              {/* Report error button */}
+              {!isInHistoryMode&&!tryAgainActive&&(
+                <div style={{textAlign:"center",marginBottom:8}}>
+                  <button onClick={()=>{setReportDialog({qText:currentQuestions[questionIndex].q,qIndex:questionIndex});setReportType("");setReportNote("");setReportSent(false);}}
+                    style={{background:"none",border:"none",color:"#475569",fontSize:12,cursor:"pointer",padding:"4px 8px",borderRadius:6,transition:"color 0.15s"}}
+                    onMouseEnter={e=>e.currentTarget.style.color="#94a3b8"} onMouseLeave={e=>e.currentTarget.style.color="#475569"}>
+                    {t("reportBtn")}
+                  </button>
+                </div>
+              )}
 
               {!dispSubmitted&&dispSelectedAnswer!==null&&!isInHistoryMode&&!tryAgainActive&&(
                 <button onClick={handleSubmit}
