@@ -2105,7 +2105,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
 
               <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
-                style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"20px 22px",marginBottom:14,outline:"none",position:"relative"}}>
+                style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"22px 20px",marginBottom:16,outline:"none",position:"relative"}}>
                 {renderQuestion(currentQuestions[questionIndex].q, lang)}
                 {!isInHistoryMode&&!tryAgainActive&&!isFreeMode(selectedTopic?.id)&&(
                   <button onClick={toggleBookmark}
@@ -2143,7 +2143,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
               )}
 
-              <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:14}}>
+              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
                 {currentQuestions[questionIndex].options.map((opt,i)=>{
                   const isCorrect = i===currentQuestions[questionIndex].answer;
                   const isChosen  = i===dispSelectedAnswer;
@@ -2161,8 +2161,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",gap:10,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none"}}>
-                      <span aria-hidden="true" style={{flexShrink:0,width:24,height:24,borderRadius:6,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"14px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.65,display:"flex",alignItems:"flex-start",gap:11,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none"}}>
+                      <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor,marginTop:2}}>{t("optionLabels")[i]}</span>
                       <span dir={optDir} style={{flex:1}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
                       {dispSubmitted&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16}}>✓</span>}
                       {dispSubmitted&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16}}>✗</span>}
@@ -2186,7 +2186,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     const isCorrect = !timedOut && dispSelectedAnswer === q.answer;
                     return (
                       <div role="status" aria-live="polite" style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
-                        <div style={{fontWeight:800,fontSize:13,marginBottom:6,color:isCorrect?"#10B981":"#EF4444"}}>
+                        <div style={{fontWeight:800,fontSize:14,marginBottom:8,color:isCorrect?"#10B981":"#EF4444"}}>
                           {isCorrect
                             ? (tryAgainActive ? t("tryAgainCorrect") : `${t("correct")}${isInHistoryMode?"":" +"+LEVEL_CONFIG[selectedLevel].points+" "+t("pts")}`)
                             : timedOut
@@ -2195,7 +2195,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         </div>
                         {!isInterviewMode&&<div style={{display:"flex",flexDirection:"column",gap:5}}>
                           {q.explanation.split(/\. /).map((s,idx,arr)=>(
-                            <div key={idx} style={{color:"#94a3b8",fontSize:13,lineHeight:1.7,direction:dir}}>
+                            <div key={idx} style={{color:"#94a3b8",fontSize:14,lineHeight:1.75,direction:dir}}>
                               {renderBidi(s+(idx<arr.length-1?".":""),lang)}
                             </div>
                           ))}
