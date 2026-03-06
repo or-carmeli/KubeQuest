@@ -1987,14 +1987,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* HOME */}
       {screen==="home"&&(
         <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
-          <div style={{marginBottom:24}}>
-            {/* Row 1: Title centered + burger button */}
-            <div className="home-header-row" style={{display:"flex",alignItems:"center",marginBottom:16,gap:8,direction:"ltr"}}>
-              {/* Left spacer — burger is now a fixed element outside <main> */}
-              <div style={{width:Math.round(44/fs),flexShrink:0}}/>
-              {/* Center: title — font and logo size are fixed visual size (counter-zoomed) */}
-              <h1 style={{flex:1,fontSize:+(42/fs).toFixed(1),fontWeight:900,margin:0,display:"flex",alignItems:"center",justifyContent:"center",gap:+(14/fs).toFixed(1),filter:"drop-shadow(0 0 20px rgba(0,212,255,0.4))",minWidth:0}}>
-                <svg className="home-logo" width={Math.round(60/fs)} height={Math.round(60/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+          <div style={{marginBottom:16}}>
+            {/* Header row: brand left, spacer right (burger is a fixed element outside <main>) */}
+            <div className="home-header-row" style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,paddingBottom:12,borderBottom:"1px solid rgba(255,255,255,0.06)",direction:"ltr"}}>
+              {/* Brand: logo + title stacked */}
+              <div style={{display:"flex",alignItems:"center",gap:+(10/fs).toFixed(1)}}>
+                <svg className="home-logo" width={Math.round(44/fs)} height={Math.round(44/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0,filter:"drop-shadow(0 0 10px rgba(0,212,255,0.35))"}}>
                   <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
                   <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
                   <circle cx="50" cy="50" r="44" fill="none" stroke="url(#hgr)" strokeWidth="4" opacity="0.9"/>
@@ -2005,23 +2003,26 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   <circle cx="50" cy="50" r="5" fill="#00D4FF"/>
                   {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
                 </svg>
-                <span className="home-title-text" style={{background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</span>
-              </h1>
-              {/* Right spacer — burger is now a fixed element outside <main> */}
+                <div style={{display:"flex",flexDirection:"column",gap:+(2/fs).toFixed(1)}}>
+                  <h1 className="home-title-text" style={{fontSize:+(26/fs).toFixed(1),fontWeight:900,margin:0,lineHeight:1,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
+                  <span style={{fontSize:+(10/fs).toFixed(1),color:"#475569",letterSpacing:0.3,whiteSpace:"nowrap"}}>Kubernetes Interview Trainer</span>
+                </div>
+              </div>
+              {/* Right spacer — matches fixed burger button size */}
               <div style={{width:Math.round(44/fs),flexShrink:0}}/>
             </div>
-            {/* Welcome section */}
-            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"0 12px 16px",textAlign:"center",direction:dir}}>
-              <p style={{color:"#94a3b8",fontSize:13,margin:0}}>{t("greeting")},</p>
-              <h2 style={{margin:0,color:"#e2e8f0",fontSize:22,fontWeight:800,maxWidth:"90%",lineHeight:1.2,wordBreak:"break-word",overflowWrap:"anywhere"}}>
+            {/* Welcome section — compact */}
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"6px 12px 12px",textAlign:"center",direction:dir}}>
+              <p style={{color:"#64748b",fontSize:12,margin:0}}>{t("greeting")},</p>
+              <h2 style={{margin:0,color:"#e2e8f0",fontSize:19,fontWeight:700,maxWidth:"90%",lineHeight:1.25,wordBreak:"break-word",overflowWrap:"anywhere"}}>
                 {displayName}
               </h2>
-              {isGuest&&<p style={{color:"#475569",fontSize:12,margin:0}}>{t("playingAsGuest")}</p>}
-              <p style={{color:"#64748b",fontSize:12,margin:0,maxWidth:"90%"}}>
+              {isGuest&&<p style={{color:"#475569",fontSize:11,margin:0}}>{t("playingAsGuest")}</p>}
+              <p style={{color:"#64748b",fontSize:12,margin:0,maxWidth:"90%",lineHeight:1.4}}>
                 {isInterviewMode?t("interviewModeHint"):t("tagline")}
               </p>
               {dailyStreak.streak > 0 && (
-                <div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:20,padding:"5px 16px",fontSize:13,color:"#F59E0B",fontWeight:700,marginTop:4}}>
+                <div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:20,padding:"4px 14px",fontSize:12,color:"#F59E0B",fontWeight:700,marginTop:2}}>
                   🔥 {dailyStreak.streak} {t("dailyStreak")}
                 </div>
               )}
