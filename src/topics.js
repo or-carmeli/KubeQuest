@@ -6119,7 +6119,7 @@ export const TOPICS = [
             q: "What does kubectl get events show?",
             options: [
               "Only errors",
-              "Cluster events — Pod scheduling, image pulls, probe failures",
+              "Namespace events — Pod scheduling, image pulls, probe failures",
               "Only Pod logs",
               "Only Node events",
             ],
@@ -6438,7 +6438,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Finalizer הוא שדה ב-metadata שמונע מחיקת resource עד שlogic חיצוני מנקה אותו (בד\"כ controller). כשהcontroller לא זמין, ה-Pod תקוע ב-Terminating. כדי לפתור: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' מסיר את כל ה-finalizers ידנית.",
+              "Finalizer הוא שדה ב-metadata שמונע מחיקת resource עד שlogic חיצוני מנקה אותו (בד\"כ controller). אפילו --grace-period=0 --force לא יעזור כשיש finalizer פעיל. כשה-controller לא זמין, ה-Pod תקוע ב-Terminating. כדי לפתור: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' מסיר את כל ה-finalizers ידנית.",
           },
           {
             q: "Pod CrashLoopBackOff.\n\nkubectl logs מציג:\nError: ECONNREFUSED 10.96.5.21:5432\n\nמה ניתן להסיק?",
@@ -6666,7 +6666,7 @@ export const TOPICS = [
               "ContainerCreating is normal briefly, but when prolonged it indicates a blocker. Common causes are: a PVC that is still Pending, a Secret or ConfigMap referenced in the spec that does not exist, a large image still downloading, or a CNI plugin failing to configure the Pod's network interface.",
           },
           {
-            q: "A Pod is stuck in Terminating and kubectl delete pod my-pod --grace-period=0 doesn't help. What is the cause?",
+            q: "A Pod is stuck in Terminating and even kubectl delete pod my-pod --grace-period=0 --force doesn't help. What is the cause?",
             options: [
               "Namespace is locked",
               "The Pod has a finalizer that was not cleared — must be removed manually",
@@ -6675,7 +6675,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A finalizer is a field in metadata that blocks deletion of a resource until an external controller removes it. If that controller is unavailable, the Pod stays stuck in Terminating indefinitely. To force removal: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' clears all finalizers and lets deletion proceed.",
+              "A finalizer is a field in metadata that blocks deletion of a resource until an external controller removes it. Even --grace-period=0 --force cannot bypass an active finalizer. If that controller is unavailable, the Pod stays stuck in Terminating indefinitely. To force removal: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' clears all finalizers and lets deletion proceed.",
           },
           {
             q: "A Pod is in CrashLoopBackOff.\n\nkubectl logs shows:\nError: ECONNREFUSED 10.96.5.21:5432\n\nWhat can you infer?",
@@ -6909,7 +6909,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Endpoints ריקים (<none>) אומרים שה-Service selector לא תואם ל-labels של אף Pod בריא. הדבר גורם לkube-proxy לא לייצר iptables rules לnicotine הPods, כך שכל תנועה לService תיפול. הרץ kubectl get pods --show-labels והשווה בדקדוק ל-selector של ה-Service.",
+              "Endpoints ריקים (<none>) אומרים שה-Service selector לא תואם ל-labels של אף Pod בריא. הדבר גורם לkube-proxy לא לייצר iptables rules לאף אחד מה-Pods, כך שכל תנועה לService תיפול. הרץ kubectl get pods --show-labels והשווה בדקדוק ל-selector של ה-Service.",
           },
           {
             q: "kubectl apply נכשל עם:\n\nerror: error validating 'deployment.yaml': error validating data: ValidationError(Deployment.spec.template.spec.containers[0]): unknown field 'resoruces'\n\nמה הבעיה?",
@@ -6936,7 +6936,7 @@ export const TOPICS = [
               "404 ב-HTTP liveness probe אומר שה-path שמוגדר ב-livenessProbe.httpGet.path לא קיים באפליקציה. ה-Pod עצמו רץ — הבעיה היא הגדרת ה-probe בלבד. בדוק בdocumentation של האפליקציה איזה endpoint health היא חושפת (/health, /ping, /livez) ועדכן את ה-path.",
           },
           {
-            q: "kubectl exec -it my-pod -- bash מחזיר:\n\nError from server: container not found ('bash')\n\nמה הפתרון?",
+            q: "kubectl exec -it my-pod -- bash מחזיר:\n\nexec: \"bash\": executable file not found in $PATH\n\nמה הפתרון?",
             options: [
               "Pod לא Running",
               "הimage לא מכיל bash – נסה /bin/sh או kubectl debug עם image busybox",
@@ -7005,7 +7005,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "כשPod מטעין env vars מConfigMap, הוא קורא אותם פעם אחת בלבד — בזמן הפעלת הPod. שינוי ב-ConfigMap אחרי שה-Pod רץ לא מגיע אליו. הפתרון הוא kubectl rollout restart deployment/my-app שיוצר Pods חדשים שטוענים את ה-ConfigMap המעודכן.",
+              "כשPod מטעין env vars מConfigMap, הוא קורא אותם פעם אחת בלבד — בזמן הפעלת הPod. שינוי ב-ConfigMap אחרי שה-Pod רץ לא מגיע אליו. הפתרון הוא kubectl rollout restart deployment/my-app. שים לב: ConfigMap שמוזנק כ-volume (לא env) כן מתעדכן אוטומטית (עם השהייה של עד כדקה).",
           },
           {
             q: "Pod לא עולה.\n\nkubectl describe מציג:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: /var/lib/kubelet/pods/.../volumes/.../my-secret\n\nמה הסיבה?",
@@ -7178,7 +7178,7 @@ export const TOPICS = [
               "A 404 from the liveness probe means the path configured in livenessProbe.httpGet.path does not exist on the application — the Pod itself is healthy, only the probe config is wrong. Check the application's documentation or source code to find which health endpoint it exposes (/health, /ping, /livez), then update the path in the Pod spec.",
           },
           {
-            q: "kubectl exec -it my-pod -- bash returns:\n\nError from server: container not found ('bash')\n\nWhat is the fix?",
+            q: "kubectl exec -it my-pod -- bash returns:\n\nexec: \"bash\": executable file not found in $PATH\n\nWhat is the fix?",
             options: [
               "Pod not Running",
               "The image has no bash — try /bin/sh or kubectl debug with a busybox image",
@@ -7247,7 +7247,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Environment variables sourced from a ConfigMap (via envFrom or env.valueFrom) are injected once at Pod creation and never updated while the Pod runs. Editing the ConfigMap changes the stored data but does not reach the existing Pod. Run kubectl rollout restart deployment/my-app to create new Pods that read the updated ConfigMap.",
+              "Environment variables sourced from a ConfigMap (via envFrom or env.valueFrom) are injected once at Pod creation and never updated while the Pod runs. Editing the ConfigMap changes the stored data but does not reach the existing Pod. Run kubectl rollout restart deployment/my-app to create new Pods that read the updated ConfigMap. Note: ConfigMaps mounted as volumes DO auto-update (within ~1 minute) without a restart.",
           },
           {
             q: "A Pod won't start.\n\nkubectl describe shows:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: .../volumes/.../my-secret\n\nWhat is the cause?",
