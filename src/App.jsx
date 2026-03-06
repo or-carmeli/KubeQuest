@@ -1895,10 +1895,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {/* Row 1: Title centered + burger button */}
             <div className="home-header-row" style={{display:"flex",alignItems:"center",marginBottom:16,gap:8,direction:"ltr"}}>
               {/* Left spacer — burger is now a fixed element outside <main> */}
-              <div style={{width:40,flexShrink:0}}/>
-              {/* Center: title */}
-              <h1 style={{flex:1,fontSize:32,fontWeight:900,margin:0,display:"flex",alignItems:"center",justifyContent:"center",gap:10,filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))",minWidth:0}}>
-                <svg className="home-logo" width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+              <div style={{width:Math.round(56/fs),flexShrink:0}}/>
+              {/* Center: title — font and logo size are fixed visual size (counter-zoomed) */}
+              <h1 style={{flex:1,fontSize:+(32/fs).toFixed(1),fontWeight:900,margin:0,display:"flex",alignItems:"center",justifyContent:"center",gap:+(10/fs).toFixed(1),filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))",minWidth:0}}>
+                <svg className="home-logo" width={Math.round(48/fs)} height={Math.round(48/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
                   <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
                   <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
                   <circle cx="50" cy="50" r="44" fill="none" stroke="url(#hgr)" strokeWidth="4" opacity="0.9"/>
@@ -1912,7 +1912,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <span className="home-title-text" style={{background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</span>
               </h1>
               {/* Right spacer — burger is now a fixed element outside <main> */}
-              <div style={{width:40,flexShrink:0}}/>
+              <div style={{width:Math.round(56/fs),flexShrink:0}}/>
             </div>
             {/* Row 2: Greeting */}
             <p style={{color:"#94a3b8",fontSize:13,margin:"0 0 16px",textAlign:"center"}}>
