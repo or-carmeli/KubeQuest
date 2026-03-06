@@ -2130,7 +2130,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",justifyContent:"center"}}>
                 <span style={{color:"#64748b",fontSize:13,lineHeight:1,direction:dir}}>{t("greeting")}</span>
                 <span style={{color:"#e2e8f0",fontSize:15,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap"}}>{displayName}</span>
-                {isGuest&&<span style={{color:"#475569",fontSize:11}}>{t("playingAsGuest")}</span>}
               </div>
               {/* Row 2: tagline / mode hint — smaller and dimmer */}
               <p style={{color:"#64748b",fontSize:11,margin:0,lineHeight:1.3,textAlign:"center",direction:dir}}>
