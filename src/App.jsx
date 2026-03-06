@@ -2612,7 +2612,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     </span>}
                   </div>
                 </div>
-                <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4}}>
+                <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4,transform:lang==="he"?"scaleX(-1)":undefined}}>
                   <div style={{height:"100%",borderRadius:4,
                     width:`${((liveIndexRef.current+(submitted&&!isInHistoryMode?1:0))/currentQuestions.length)*100}%`,
                     background:`linear-gradient(90deg,${selectedTopic.color},${selectedTopic.color}88)`,
@@ -3005,7 +3005,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
 
             {/* Progress bar */}
-            <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:4,marginBottom:16}}>
+            <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:4,marginBottom:16,transform:lang==="he"?"scaleX(-1)":undefined}}>
               <div style={{height:"100%",borderRadius:4,width:`${progress}%`,background:"linear-gradient(90deg,#EF4444,#F59E0B)",transition:"width 0.4s ease"}}/>
             </div>
 
