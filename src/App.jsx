@@ -1666,7 +1666,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 @media(max-width:430px){
 .home-logo{width:36px!important;height:36px!important}
 .home-title-text{font-size:25px!important}
-.home-header-row{padding-inline-end:52px!important}
 .guest-banner{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
 .guest-banner-btn{width:100%!important;text-align:center!important}
 .action-card{padding:13px 14px!important}
@@ -1844,8 +1843,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
           <div style={{marginBottom:24}}>
             {/* Row 1: Title centered + burger button */}
-            <div className="home-header-row" style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16,minHeight:48,direction:"ltr"}}>
-              <h1 style={{fontSize:32,fontWeight:900,margin:0,display:"flex",alignItems:"center",gap:10,zIndex:1,filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))",minWidth:0}}>
+            <div className="home-header-row" style={{display:"flex",alignItems:"center",marginBottom:16,gap:8,direction:"ltr"}}>
+              {/* Left slot: burger (LTR/English) or spacer (RTL/Hebrew) */}
+              {lang==="en"
+                ? <button onClick={()=>setShowMenu(p=>!p)} aria-label="Open menu" aria-expanded={showMenu} aria-haspopup="menu" style={{flexShrink:0,width:40,height:40,background:showMenu?"rgba(0,212,255,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${showMenu?"rgba(0,212,255,0.3)":"rgba(255,255,255,0.1)"}`,borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,zIndex:201,transition:"all 0.2s"}}>
+                    {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:18,height:2,borderRadius:2,background:showMenu?"#00D4FF":"#94a3b8",transition:"background 0.2s"}}/>)}
+                  </button>
+                : <div style={{width:40,flexShrink:0}}/>}
+              {/* Center: title */}
+              <h1 style={{flex:1,fontSize:32,fontWeight:900,margin:0,display:"flex",alignItems:"center",justifyContent:"center",gap:10,filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))",overflow:"hidden",minWidth:0}}>
                 <svg className="home-logo" width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
                   <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
                   <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
@@ -1859,14 +1865,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </svg>
                 <span className="home-title-text" style={{background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</span>
               </h1>
-              {/* Burger button */}
-              <button onClick={()=>setShowMenu(p=>!p)}
-                aria-label={lang==="en"?"Open menu":"פתח תפריט"}
-                aria-expanded={showMenu}
-                aria-haspopup="menu"
-                style={{position:"absolute",[lang==="en"?"left":"right"]:0,top:"50%",transform:"translateY(-50%)",width:40,height:40,background:showMenu?"rgba(0,212,255,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${showMenu?"rgba(0,212,255,0.3)":"rgba(255,255,255,0.1)"}`,borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,zIndex:201,transition:"all 0.2s"}}>
-                {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:18,height:2,borderRadius:2,background:showMenu?"#00D4FF":"#94a3b8",transition:"background 0.2s"}}/>)}
-              </button>
+              {/* Right slot: burger (RTL/Hebrew) or spacer (LTR/English) */}
+              {lang!=="en"
+                ? <button onClick={()=>setShowMenu(p=>!p)} aria-label="פתח תפריט" aria-expanded={showMenu} aria-haspopup="menu" style={{flexShrink:0,width:40,height:40,background:showMenu?"rgba(0,212,255,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${showMenu?"rgba(0,212,255,0.3)":"rgba(255,255,255,0.1)"}`,borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,zIndex:201,transition:"all 0.2s"}}>
+                    {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:18,height:2,borderRadius:2,background:showMenu?"#00D4FF":"#94a3b8",transition:"background 0.2s"}}/>)}
+                  </button>
+                : <div style={{width:40,flexShrink:0}}/>}
             </div>
             {/* Row 2: Greeting */}
             <p style={{color:"#94a3b8",fontSize:13,margin:"0 0 16px",textAlign:"center"}}>
