@@ -501,7 +501,7 @@ export default function K8sQuestApp() {
       if (saved) return saved;
     } catch {}
     return {
-      fontSize: "large",
+      fontSize: "normal",
       reduceMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
       highContrast: window.matchMedia?.("(prefers-contrast: more)").matches ?? false,
       autoRead: false,
@@ -1530,8 +1530,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   );
 
   const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
-  const FONT_SCALES = { normal: 1, large: 1.2, xl: 1.4 };
-  const fs = FONT_SCALES[a11y.fontSize] || 1;
+  const FONT_SCALES = { normal: 1.1, large: 1.1, xl: 1.1 }; // A+/A++ removed; all map to single 10% boost
+  const fs = FONT_SCALES[a11y.fontSize] || 1.1;
 
   // History navigation: questionIndex can go below liveIndexRef.current to review past answers
   const isInHistoryMode     = questionIndex < liveIndexRef.current;
@@ -1782,7 +1782,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Dropdown menu — rendered outside <main> so CSS zoom never affects it */}
       {showMenu&&(<>
         <div onClick={()=>setShowMenu(false)} style={{position:"fixed",inset:0,zIndex:199}}/>
-        <div style={{position:"fixed",top:68,[lang==="en"?"left":"right"]:12,background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"8px 0",zIndex:200,minWidth:220,boxShadow:"0 8px 32px rgba(0,0,0,0.5)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100vh - 90px)"}}>
+        <div style={{position:"fixed",top:62,[lang==="en"?"left":"right"]:8,background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"8px 0",zIndex:200,minWidth:220,boxShadow:"0 8px 32px rgba(0,0,0,0.5)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100vh - 90px)"}}>
           {/* Language + Gender */}
           <div style={{padding:"8px 14px 10px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",gap:8,alignItems:"center",justifyContent:"center"}}>
             {lang==="he"&&<GenderToggle gender={gender} setGender={handleSetGender}/>}
@@ -1826,19 +1826,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <span style={{fontSize:10,color:"#334155",fontWeight:700,letterSpacing:1}}>{lang==="en"?"SETTINGS":"הגדרות"}</span>
           </div>
           <div style={{padding:"4px 14px 10px"}}>
-            <div style={{marginBottom:7}}>
-              <div style={{fontSize:11,color:"#64748b",marginBottom:5}}>{t("a11yFontSize")}</div>
-              <div style={{display:"flex",gap:4}}>
-                {[["normal","A",12],["large","A+",14],["xl","A++",16]].map(([sz,label,sz_px])=>(
-                  <button key={sz} onClick={()=>updateA11y("fontSize",sz)}
-                    aria-pressed={a11y.fontSize===sz}
-                    aria-label={`${t("a11yFontSize")}: ${label}`}
-                    style={{flex:1,padding:"5px 0",fontSize:sz_px,fontWeight:a11y.fontSize===sz?800:500,background:a11y.fontSize===sz?"rgba(0,212,255,0.12)":"rgba(255,255,255,0.04)",border:`1px solid ${a11y.fontSize===sz?"rgba(0,212,255,0.4)":"rgba(255,255,255,0.08)"}`,borderRadius:6,color:a11y.fontSize===sz?"#00D4FF":"#64748b",cursor:"pointer"}}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Font size buttons removed — fixed at 1.1× zoom */}
             <div style={{display:"flex",gap:4}}>
               {(["reduceMotion","highContrast"]).map((key,i)=>(
                 <button key={key} onClick={()=>updateA11y(key,!a11y[key])}
@@ -1883,7 +1871,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Fixed burger — outside <main> so CSS zoom never affects it */}
       {screen==="home"&&(
         <button onClick={()=>setShowMenu(p=>!p)} aria-label={lang==="en"?"Open menu":"פתח תפריט"} aria-expanded={showMenu} aria-haspopup="menu"
-          style={{position:"fixed",top:16,[lang==="en"?"left":"right"]:16,width:40,height:40,
+          style={{position:"fixed",top:14,[lang==="en"?"left":"right"]:8,width:40,height:40,
             background:showMenu?"rgba(0,212,255,0.1)":"rgba(255,255,255,0.04)",
             border:`1px solid ${showMenu?"rgba(0,212,255,0.3)":"rgba(255,255,255,0.1)"}`,
             borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,
@@ -1899,7 +1887,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {/* Row 1: Title centered + burger button */}
             <div className="home-header-row" style={{display:"flex",alignItems:"center",marginBottom:16,gap:8,direction:"ltr"}}>
               {/* Left spacer — burger is now a fixed element outside <main> */}
-              <div style={{width:Math.round(56/fs),flexShrink:0}}/>
+              <div style={{width:Math.round(48/fs),flexShrink:0}}/>
               {/* Center: title — font and logo size are fixed visual size (counter-zoomed) */}
               <h1 style={{flex:1,fontSize:+(32/fs).toFixed(1),fontWeight:900,margin:0,display:"flex",alignItems:"center",justifyContent:"center",gap:+(10/fs).toFixed(1),filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))",minWidth:0}}>
                 <svg className="home-logo" width={Math.round(48/fs)} height={Math.round(48/fs)} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
@@ -1916,7 +1904,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <span className="home-title-text" style={{background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</span>
               </h1>
               {/* Right spacer — burger is now a fixed element outside <main> */}
-              <div style={{width:Math.round(56/fs),flexShrink:0}}/>
+              <div style={{width:Math.round(48/fs),flexShrink:0}}/>
             </div>
             {/* Row 2: Greeting */}
             <p style={{color:"#94a3b8",fontSize:13,margin:"0 0 16px",textAlign:"center"}}>
