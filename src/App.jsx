@@ -1545,16 +1545,78 @@ export default function K8sQuestApp() {
 const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
 
   if (!authChecked || (!!user && !isGuest && !dataLoaded)) return (
-    <div style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{textAlign:"center"}}>
-        <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
-          style={{animation:"spin 1.4s linear infinite",display:"block",margin:"0 auto 14px"}}>
-          <style>{"@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}"}</style>
-          <defs><linearGradient id="slg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="100%" stopColor="#A855F7"/></linearGradient></defs>
-          <circle cx="50" cy="50" r="44" fill="none" stroke="url(#slg)" strokeWidth="5" opacity="0.8"/>
-          <circle cx="50" cy="50" r="6" fill="#00D4FF"/>
-        </svg>
-        <div style={{color:"#475569",fontSize:13}}>{t("loadingText")}</div>
+    <div style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif"}}>
+      <style>{`
+        @keyframes lspin  { from { transform: rotate(0deg)   } to { transform: rotate(360deg)  } }
+        @keyframes lspin2 { from { transform: rotate(0deg)   } to { transform: rotate(-360deg) } }
+        @keyframes lshine { from { background-position: 0% center } to { background-position: -200% center } }
+        @keyframes lpulse { 0%,100% { opacity:.5; transform: translate(-50%,-50%) scale(1)   }
+                            50%      { opacity:1; transform: translate(-50%,-50%) scale(1.25) } }
+      `}</style>
+
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:28}}>
+
+        {/* ── Brand ── */}
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <svg width="54" height="54" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+            style={{flexShrink:0,filter:"drop-shadow(0 0 14px rgba(0,212,255,0.45))"}}>
+            <defs>
+              <radialGradient id="lbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient>
+              <linearGradient id="lgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="50" fill="url(#lbg)"/>
+            <circle cx="50" cy="50" r="44" fill="none" stroke="url(#lgr)" strokeWidth="4" opacity="0.9"/>
+            <g transform="translate(50,50)" stroke="url(#lgr)" strokeWidth="2.8" strokeLinecap="round">
+              {[0,51.4,102.8,154.2,205.7,257.1,308.5].map((deg,i)=><line key={i} x1="0" y1="-18" x2="0" y2="-34" transform={`rotate(${deg})`}/>)}
+            </g>
+            <circle cx="50" cy="50" r="10" fill="none" stroke="url(#lgr)" strokeWidth="3"/>
+            <circle cx="50" cy="50" r="5" fill="#00D4FF"/>
+            {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
+          </svg>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontSize:28,fontWeight:900,lineHeight:1,letterSpacing:-0.5,
+              background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",
+              WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
+              backgroundClip:"text",backgroundSize:"300% auto",
+              animation:"lshine 9s linear infinite"}}>KubeQuest</div>
+            <div style={{fontSize:11,color:"#475569",letterSpacing:0.4,marginTop:3}}>Train Your Kubernetes Skills</div>
+          </div>
+        </div>
+
+        {/* ── Spinner ── */}
+        <div style={{position:"relative",width:64,height:64}}>
+          {/* Outer ring — comet arc, clockwise */}
+          <svg width="64" height="64" viewBox="0 0 64 64" style={{position:"absolute",inset:0,animation:"lspin 1.3s linear infinite"}} xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sg1" gradientUnits="userSpaceOnUse" x1="64" y1="0" x2="0" y2="64">
+                <stop offset="0%" stopColor="#00D4FF"/>
+                <stop offset="100%" stopColor="#00D4FF" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3"/>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="url(#sg1)" strokeWidth="3"
+              strokeLinecap="round" strokeDasharray="90 86"/>
+          </svg>
+          {/* Inner ring — comet arc, counter-clockwise */}
+          <svg width="64" height="64" viewBox="0 0 64 64" style={{position:"absolute",inset:0,animation:"lspin2 1.9s linear infinite"}} xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sg2" gradientUnits="userSpaceOnUse" x1="0" y1="64" x2="64" y2="0">
+                <stop offset="0%" stopColor="#A855F7"/>
+                <stop offset="100%" stopColor="#A855F7" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            <circle cx="32" cy="32" r="18" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="2.5"/>
+            <circle cx="32" cy="32" r="18" fill="none" stroke="url(#sg2)" strokeWidth="2.5"
+              strokeLinecap="round" strokeDasharray="56 57"/>
+          </svg>
+          {/* Pulsing center dot */}
+          <div style={{position:"absolute",top:"50%",left:"50%",width:9,height:9,borderRadius:"50%",
+            background:"#00D4FF",boxShadow:"0 0 12px 3px rgba(0,212,255,0.6)",
+            animation:"lpulse 1.6s ease-in-out infinite"}}/>
+        </div>
+
+        {/* ── Loading text ── */}
+        <div style={{color:"#475569",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
       </div>
     </div>
   );
