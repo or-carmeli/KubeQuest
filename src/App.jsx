@@ -1819,6 +1819,20 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         level: selectedLevel||null,
                       });
                     } catch {}
+                    try {
+                      await fetch("https://formspree.io/f/mjgavyae", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          question: reportDialog.qText.slice(0, 300),
+                          type: reportType,
+                          note: reportNote || "-",
+                          topic: selectedTopic?.id || "-",
+                          level: selectedLevel || "-",
+                          user: user?.email || "guest",
+                        }),
+                      });
+                    } catch {}
                     setReportSent(true);
                     setReportSending(false);
                     setTimeout(()=>setReportDialog(null), 2000);

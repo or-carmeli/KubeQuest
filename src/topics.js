@@ -136,7 +136,7 @@ export const TOPICS = [
               "Never – Kubernetes לא מפעיל מחדש קונטיינר שנפסק",
               "OnFailure – Kubernetes מפעיל מחדש רק אם exit code שגוי",
               "Always – Kubernetes תמיד מפעיל מחדש קונטיינר שנפסק",
-              "OnError – Kubernetes מפעיל מחדש רק בשגיאות runtime",
+              "OnFailure – מפעיל מחדש רק אם exit code שונה מ-0, לא אם יצא תקין",
             ],
             answer: 2,
             explanation:
@@ -224,7 +224,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "imagePullPolicy: Always מאלץ את kubelet למשוך image מה-registry בכל הפעלה. IfNotPresent (ברירת מחדל) מוריד רק אם לא קיים מקומית.",
+              "imagePullPolicy: Always מאלץ את kubelet למשוך image מה-registry בכל הפעלה. ברירת המחדל היא IfNotPresent כשה-tag אינו :latest, ו-Always כש-tag הוא :latest או לא צוין כלל.",
           },
           {
             q: "מה שלבי ה-Pod האפשריים ב-Kubernetes?",
@@ -378,7 +378,7 @@ export const TOPICS = [
               "Never — Kubernetes never restarts a stopped container",
               "OnFailure — Kubernetes restarts only if the exit code is non-zero",
               "Always — Kubernetes always restarts a stopped container",
-              "OnError — Kubernetes restarts only on runtime errors",
+              "OnFailure — Kubernetes restarts only when the exit code is non-zero, not on clean exit",
             ],
             answer: 2,
             explanation:
@@ -466,7 +466,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "imagePullPolicy: Always forces kubelet to pull the image from the registry on every container start. IfNotPresent (default) only pulls if the image isn't cached locally.",
+              "imagePullPolicy: Always forces kubelet to pull the image from the registry on every container start. The default is IfNotPresent when an explicit non-latest tag is used, and Always when the tag is :latest or omitted.",
           },
           {
             q: "What are the possible Pod phases in Kubernetes?",
@@ -702,7 +702,7 @@ export const TOPICS = [
             options: [
               "Job לא יוצר בכלל עד שAdministrator מאשר ידנית",
               "אם Job קודם עדיין רץ, Job חדש לא נוצר עד שהוא מסיים",
-              "כל ה-Pods ב-CronJob יכולים לרוץ במקביל ללא הגבלה",
+              "Job שנכשל מנסה אוטומטית עד 3 פעמים לפני שמסומן כנכשל",
               "Job שמסתיים עם שגיאה נמחק אוטומטית מה-Namespace",
             ],
             answer: 1,
@@ -731,7 +731,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ה-QoS class נקבע אוטומטית לפי requests ו-limits: Guaranteed כשrequests=limits (הכי מוגן), Burstable כשrequests>0 אבל לא שווה לlimits, BestEffort כשאין requests/limits כלל (ראשון להיגרש). Guaranteed Pods הם האחרונים להיגרש בMemoryPressure.",
+              "ה-QoS class נקבע אוטומטית לפי requests ו-limits: Guaranteed כשrequests=limits עבור CPU ו-Memory בכל הקונטיינרים (הכי מוגן), Burstable כשלפחות קונטיינר אחד מגדיר requests או limits אבל לא עומד בתנאי Guaranteed, BestEffort כשאין requests/limits כלל (ראשון להיגרש). Guaranteed Pods הם האחרונים להיגרש בMemoryPressure.",
           },
           {
             q: "מה kubectl rollout pause עושה?",
@@ -776,7 +776,7 @@ export const TOPICS = [
             options: [
               "Updates all Pods simultaneously to minimise total deployment time",
               "Zero downtime during update",
-              "Automatically rolls back if readiness probes fail on new Pods",
+              "Guarantees data consistency by pausing until all Pods write their state to etcd",
               "Prevents the Service from routing to unhealthy Pods during upgrade",
             ],
             answer: 1,
@@ -1105,7 +1105,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "VPA מתאים resources requests/limits אוטומטית לפי שימוש בפועל, להפחתת בזבוז ומניעת OOM.",
+              "VPA מתאים resource requests אוטומטית לפי שימוש בפועל. במצב Auto הוא גם יכול לעדכן limits, אבל השינוי הראשי הוא ב-requests, להפחתת בזבוז ומניעת OOM.",
           },
           {
             q: "מה DaemonSet משמש בדרך כלל?",
@@ -1136,7 +1136,7 @@ export const TOPICS = [
             options: [
               "הוסף Node חדש לCluster ללא taint",
               "הקטן את ה-CPU request כדי שה-Pod יתאים לNode קטן יותר",
-              "הוסף toleration מתאים לPod spec עם key:'dedicated', value:'gpu'",
+              "הוסף toleration מתאים ל-Pod spec",
               "שנה את ה-Namespace של ה-Pod לNamespace ייעודי ל-GPU",
             ],
             answer: 2,
@@ -1153,19 +1153,19 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "StatefulSet מתזמן Pods בסדר ordinal: pod-0 חייב להיות Ready לפני שpod-1 מתחיל. זאת התנהגות מכוונת שמבטיחה עקביות ב-stateful applications. בדוק kubectl describe pod pod-0 לגלות מה מונע ממנו להיות Ready.",
+              "עם podManagementPolicy: OrderedReady (ברירת המחדל), StatefulSet מתזמן Pods בסדר ordinal: pod-0 חייב להיות Ready לפני שpod-1 מתחיל. עם Parallel — כולם עולים בו-זמנית. בדוק kubectl describe pod pod-0 לגלות מה מונע ממנו להיות Ready.",
           },
           {
             q: "בודק את מצב ה-HPA בCluster.\n\nkubectl get hpa מציג:\nNAME    REFERENCE         TARGETS         MINPODS  MAXPODS  REPLICAS\napp-hpa  Deployment/app   <unknown>/50%   2        10       2\n\nמה הסיבה ל-<unknown>?",
             options: [
               "ה-Deployment שה-HPA מפנה אליו לא קיים בNamespace",
               "metrics-server לא מותקן – HPA לא מקבל מדדי CPU",
-              "ה-CPU limit לא מוגדר ב-Pod spec ולכן אין נתון אחוזי",
+              "ה-HPA מוגדר על Service במקום על Deployment ולכן לא מצליח לעדכן replicas",
               "מספר ה-replicas הוא 0 ואין Pods שמדווחים על metrics",
             ],
             answer: 1,
             explanation:
-              "HPA תלוי ב-metrics-server כדי לקבל נתוני CPU. כשmetrics-server לא מותקן, ה-TARGETS מציג <unknown> כי אין מדדים. בדוק עם: kubectl get apiservice v1beta1.metrics.k8s.io ואם חסר – התקן metrics-server.",
+              "HPA תלוי ב-metrics-server כדי לקבל נתוני CPU. כשmetrics-server לא מותקן, ה-TARGETS מציג <unknown>. סיבה נוספת נפוצה: Pod ללא resources.requests.cpu — HPA לא מצליח לחשב אחוז ניצול. בדוק עם: kubectl get apiservice v1beta1.metrics.k8s.io.",
           },
           {
             q: "Rolling update נתקע.\n\nkubectl rollout status מציג:\nWaiting for rollout to finish: 3 out of 5 new replicas have been updated...\nה-YAML מגדיר maxUnavailable: 0.\n\nמה הסיבה?",
@@ -1249,7 +1249,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "VPA במצב Recommendation אינו משנה דבר בפועל – הוא רק מציג את ההמלצות. רק מצבי Auto, Initial, ו-Off (עדכון ב-creation) מיישמים שינויים. יש לעדכן ידנית את ה-Deployment requests לפי ההמלצה.",
+              "VPA במצב Recommendation אינו משנה דבר בפועל – הוא רק מציג את ההמלצות. רק מצבי Auto ו-Initial מיישמים שינויים: Initial מעדכן requests בלבד בעת יצירת Pod חדש; Auto גם מפנה Pods קיימים כדי לעדכן אותם. מצב Off מכבה את ה-VPA לגמרי. יש לעדכן ידנית את ה-Deployment requests לפי ההמלצה.",
           },
         ],
         questionsEn: [
@@ -1533,7 +1533,7 @@ export const TOPICS = [
           {
             q: "מה Service מסוג ClusterIP?",
             options: [
-              "חשיפה חיצונית עם IP קבוע שמנתב תנועה לNod ב-cloud",
+              "חשיפה חיצונית עם IP קבוע שמנתב תנועה ל-Nodes ב-cloud",
               "גישה פנימית בלבד בתוך הCluster – ברירת המחדל של Service",
               "DNS חיצוני שמאפשר לPods לגשת לשירותים מחוץ לCluster",
               "VPN שמחבר Pods ב-Clusters שונים לתקשורת מאובטחת",
@@ -1579,12 +1579,12 @@ export const TOPICS = [
           {
             q: "מה headless Service?",
             options: [
-              "Service ללא selector שמאפשר ניהול Endpoints ידני",
               "Service עם clusterIP: None – מחזיר ישירות IPs של Pods ב-DNS",
+              "Service רגיל עם ClusterIP שמספק load balancing פנימי",
               "Service ללא port שמשמש לtunneling בין Namespaces",
               "Service שתומך רק ב-IPv6 ולא ב-IPv4",
             ],
-            answer: 1,
+            answer: 0,
             explanation:
               "Headless Service (clusterIP: None) לא מספק load balancing – DNS מחזיר ישירות את IPs של הPods. משמש ל-StatefulSets.",
           },
@@ -1994,7 +1994,7 @@ export const TOPICS = [
             q: "מה ה-DNS name של service בשם 'api' ב-namespace 'prod'?",
             options: ["api.prod", "api.prod.svc", "api.prod.svc.cluster.local", "prod.api.local"],
             answer: 2,
-            explanation: "ה-FQDN המלא הוא service.namespace.svc.cluster.local. CoreDNS מפתח שמות אלו ל-ClusterIP של ה-Service. בתוך אותו Namespace אפשר להשתמש בשם קצר (api.prod) — CoreDNS מוסיף אוטומטית את הסיומת.",
+            explanation: "ה-FQDN המלא הוא service.namespace.svc.cluster.local. CoreDNS מפתח שמות אלו ל-ClusterIP של ה-Service. בתוך אותו Namespace אפשר להשתמש בשם קצר (api בלבד) — CoreDNS מוסיף אוטומטית את הסיומת. api.prod הוא שם קצר שעובד מ-Namespace אחר.",
           },
           {
             q: "מה היתרון של Ingress על פני LoadBalancer?",
@@ -2147,7 +2147,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Local: source IP נשמר + hop אחד פחות, אבל Nodes ללא Pod מקבלים תנועה שנדחית. Cluster: SNAT מאזן לכל Nodes אבל מאבד source IP.",
+              "Local: source IP נשמר ותנועה לא יוצאת מה-Node, אבל Nodes ללא Pod פעיל לא יקבלו תנועה ויגרמו לאי-איזון. Cluster: SNAT מאזן לכל Nodes אבל מאבד source IP.",
           },
           {
             q: "מה ההבדל בין Ingress pathType: Exact ל-Prefix?",
@@ -2383,7 +2383,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Local: source IP preserved + one fewer hop, but Nodes without a Pod drop traffic. Cluster: SNAT balances across all Nodes but loses source IP.",
+              "Local: source IP preserved and traffic stays on the same Node, but Nodes without an active Pod receive no traffic which can cause imbalance. Cluster: SNAT balances across all Nodes but loses source IP.",
           },
           {
             q: "What is the difference between Ingress pathType: Exact and Prefix?",
@@ -2483,7 +2483,7 @@ export const TOPICS = [
               "cloud provider מיוחד שתומך ב-Network Policy API",
             ],
             answer: 1,
-            explanation: "NetworkPolicy היא רק spec — יישום בפועל תלוי ב-CNI plugin. Calico, Cilium, ו-Weave תומכים בה. kubenet (ה-CNI הדיפולטי ב-minikube/kind) לא מממש NetworkPolicies בכלל — ה-policies יוצרות אבל לא נאכפות.",
+            explanation: "NetworkPolicy היא רק spec — יישום בפועל תלוי ב-CNI plugin. Calico, Cilium, ו-Weave תומכים בה. Flannel ו-kubenet לא מממשים NetworkPolicies — ה-policies יוצרות אבל לא נאכפות.",
           },
           {
             q: "מה מטרת Namespace?",
@@ -2520,16 +2520,16 @@ export const TOPICS = [
               "CNI הוא סטנדרט שמגדיר כיצד plugins מגדירים רשת לPods. Calico, Flannel, Cilium הם CNI plugins.",
           },
           {
-            q: "מה kube-proxy עושה?",
+            q: "מתי kube-proxy מעדכן את ה-iptables/IPVS rules שלו?",
             options: [
-              "משמש כProxy לבקשות לAPI server ומגן מפני עומס",
-              "מממש Service networking על ידי ניהול iptables/IPVS rules",
-              "משמש כDNS resolver ומתרגם Service names ל-Pod IPs",
-              "מנהל TLS certificates ומחדש אותם אוטומטית",
+              "פעם בדקה לפי cron job שמוגדר ב-kube-proxy config",
+              "בכל שינוי ב-Service או Endpoints (הוספת/הסרת Pod)",
+              "רק כשה-kubelet על ה-Node מאתחל מחדש",
+              "רק כש-API server שולח פקודת sync מפורשת",
             ],
             answer: 1,
             explanation:
-              "kube-proxy רץ על כל Node ומתחזק iptables/IPVS rules שמנתבים תנועה ל-Service IPs ל-Pod IPs.",
+              "kube-proxy צופה (watch) בשינויים ב-API server. כשנוצר/נמחק Service או כש-Endpoints משתנים (Pod עלה/ירד), kube-proxy מעדכן מיידית את ה-iptables/IPVS rules ב-Node.",
           },
           {
             q: "מה היתרון של IPVS על iptables בkube-proxy?",
@@ -2583,13 +2583,13 @@ export const TOPICS = [
             q: "Service לא מנתב תנועה לPods.\n\nkubectl get endpoints app-svc מציג:\nNAME      ENDPOINTS\napp-svc   <none>\nה-Pod רץ עם label: app=App (A גדולה). ה-Service:\nspec:\n  selector:\n    app: app\n\nמה הבעיה?",
             options: [
               "Service port שגוי",
-              "selector לא תואם – 'app: app' ≠ 'app: App' (רגישות לrcase)",
+              "selector לא תואם – 'app: app' ≠ 'app: App' (רגישות לאותיות גדולות/קטנות)",
               "Pod לא Ready",
               "Namespace שגוי",
             ],
             answer: 1,
             explanation:
-              "Kubernetes labels רגישים לrcase. 'app' ≠ 'App'. Service selector חייב לתאים בדיוק ל-Pod labels. תקן את ה-selector ל-app: App.",
+              "Kubernetes labels הם case-sensitive. 'app' ≠ 'App'. Service selector חייב לתאים בדיוק ל-Pod labels. תקן את ה-selector ל-app: App.",
           },
           {
             q: "NetworkPolicy חוסמת DNS. Pods לא מצליחים לפתור שמות.\n\nNetworkPolicy:\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n  - ports:\n    - port: 443\n\nמה חסר?",
@@ -2616,16 +2616,16 @@ export const TOPICS = [
               "השגיאה endpoints not found אומרת ש-Service קיים אבל אין Pods שמתאימים ל-selector שלו, כך שה-Endpoints ריקים. הIngress Controller לא יכול לנתב לשום מקום ומחזיר 503. בדוק kubectl get endpoints api-svc ו-kubectl get pods --show-labels להשוות label-ים.",
           },
           {
-            q: "Pod מנסה לגשת ל-api-svc.backend.svc.cluster.local ולא מצליח, אך api-svc.backend עובד. מה השם הנכון?",
+            q: "Pod מנסה לגשת ל-api-svc.backend.cluster.local ולא מצליח. מה ה-FQDN הנכון של Service בשם api-svc ב-Namespace backend?",
             options: [
-              "api-svc.backend הוא הFQDN",
-              "FQDN מלא הוא api-svc.backend.svc.cluster.local",
-              "FQDN מלא הוא api-svc.backend.cluster.local",
-              "שם ה-DNS חייב להיות IP",
+              "api-svc.backend הוא ה-FQDN המלא",
+              "api-svc.backend.svc.cluster.local",
+              "api-svc.backend.cluster.local",
+              "api-svc.svc.cluster.local",
             ],
             answer: 1,
             explanation:
-              "FQDN מלא: <service>.<namespace>.svc.cluster.local. api-svc.backend עובד בזכות search domains. api-svc.backend.cluster.local (ללא svc) לא יפעל.",
+              "FQDN מלא: <service>.<namespace>.svc.cluster.local. api-svc.backend.cluster.local לא יפעל כי חסר .svc. api-svc.backend עובד בזכות search domains בתוך ה-Cluster, אבל אינו FQDN.",
           },
           {
             q: "Service עם ExternalTrafficPolicy:Local. בקשות חיצוניות נדחות לסירוגין.\n\nkubectl get pods -o wide מציג שPods רצים רק ב-node-1 ו-node-2.\n\nמה הסיבה?",
@@ -2666,14 +2666,14 @@ export const TOPICS = [
           {
             q: "Pod לא מצליח להגיע לאינטרנט.\n\nkubectl exec -- curl https://google.com מחזיר timeout.\n\nNetworkPolicy:\nspec:\n  podSelector: {matchLabels: {app: worker}}\n  policyTypes: [Egress]\n  egress:\n  - to:\n    - podSelector: {}\n\nמה חסר?",
             options: [
-              "ingress rule",
-              "egress ל-0.0.0.0/0 (כל IPs) חסר – NetworkPolicy חוסמת תנועה לChיצון",
-              "DNS port",
-              "Service חסר",
+              "ingress rule לאפשר תגובות נכנסות",
+              "egress rule עם ipBlock: cidr: 0.0.0.0/0 לאפשר גישה ל-IPs חיצוניים",
+              "Service מסוג LoadBalancer ב-Namespace",
+              "הגדרת hostNetwork: true ב-Pod spec",
             ],
             answer: 1,
             explanation:
-              "podSelector:{} מאפשר תנועה לכל Pod בCluster, אבל IPs חיצוניים (כמו Google) אינם Pods. כדי לאפשר גישה לאינטרנט צריך להוסיף ipBlock: {cidr: '0.0.0.0/0'} לrule. בנוסף, port 53 לDNS גם חייב להיות מוגדר כדי שname resolution יעבוד.",
+              "podSelector:{} מאפשר תנועה רק לPods בCluster, אבל IPs חיצוניים (כמו Google) אינם Pods. כדי לאפשר גישה לאינטרנט צריך להוסיף egress rule עם ipBlock: {cidr: '0.0.0.0/0'}. כמו כן, port 53 לDNS חייב להיות מוגדר כדי שname resolution יעבוד.",
           },
           {
             q: "Pod מנסה להגיע ל-Service ב-Namespace אחר בשם 'db-svc' ב-namespace 'data'. הוא מנסה: curl db-svc. זה נכשל. מה הפתרון?",
@@ -2722,7 +2722,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "NetworkPolicy requires a supporting CNI plugin. kubenet does not implement NetworkPolicies!",
+              "NetworkPolicy is just a spec — enforcement depends on the CNI plugin. Calico, Cilium, and Weave support it. Flannel and kubenet do not implement NetworkPolicies — policies are created but never enforced.",
           },
           {
             q: "What is the purpose of a Namespace?",
@@ -2857,16 +2857,16 @@ export const TOPICS = [
               "The error 'endpoints not found' means the Service exists but its selector matches no Pods, so the Endpoints list is empty and the Ingress Controller has nowhere to send traffic. Run kubectl get endpoints api-svc and kubectl get pods --show-labels to compare the selector with the actual Pod labels.",
           },
           {
-            q: "A Pod tries to access api-svc.backend.svc.cluster.local and fails, but api-svc.backend works. What is the correct FQDN?",
+            q: "A Pod tries to access api-svc.backend.cluster.local and fails. What is the correct FQDN for Service api-svc in Namespace backend?",
             options: [
-              "api-svc.backend is the FQDN",
-              "The full FQDN is api-svc.backend.svc.cluster.local",
-              "The full FQDN is api-svc.backend.cluster.local",
-              "DNS names must be IPs",
+              "api-svc.backend is the full FQDN",
+              "api-svc.backend.svc.cluster.local",
+              "api-svc.backend.cluster.local",
+              "api-svc.svc.cluster.local",
             ],
             answer: 1,
             explanation:
-              "CoreDNS adds search domains scoped to the current Namespace, so a short name like api-svc.backend resolves within that Namespace only. The full FQDN is api-svc.backend.svc.cluster.local. The form api-svc.backend.cluster.local is missing the 'svc' segment and will not resolve.",
+              "The full FQDN is <service>.<namespace>.svc.cluster.local. api-svc.backend.cluster.local is missing the 'svc' segment and won't resolve. The short form api-svc.backend works via CoreDNS search domains but is not a FQDN.",
           },
           {
             q: "A Service has ExternalTrafficPolicy:Local. External requests are intermittently dropped.\n\nkubectl get pods -o wide shows Pods run only on node-1 and node-2.\n\nWhat is happening?",
@@ -2907,14 +2907,14 @@ export const TOPICS = [
           {
             q: "A Pod cannot reach the internet.\n\nkubectl exec -- curl https://google.com times out.\n\nNetworkPolicy:\nspec:\n  podSelector: {matchLabels: {app: worker}}\n  policyTypes: [Egress]\n  egress:\n  - to:\n    - podSelector: {}\n\nWhat is missing?",
             options: [
-              "An ingress rule",
-              "An egress rule to 0.0.0.0/0 is missing — the policy blocks external traffic",
-              "DNS port",
-              "A missing Service",
+              "An ingress rule to allow response traffic",
+              "An egress rule with ipBlock: cidr: 0.0.0.0/0 to allow external IPs",
+              "A LoadBalancer Service in the Namespace",
+              "Setting hostNetwork: true in the Pod spec",
             ],
             answer: 1,
             explanation:
-              "podSelector:{} allows traffic only to other Pods inside the cluster. External IP addresses (like google.com) are not Pods, so that traffic is blocked. To allow internet access add an ipBlock rule for 0.0.0.0/0, and also add a port 53 egress rule so DNS resolution works.",
+              "podSelector:{} allows traffic only to other Pods inside the cluster. External IP addresses (like google.com) are not Pods, so that traffic is blocked. To allow internet access add an ipBlock rule for 0.0.0.0/0. Also add a port 53 egress rule so DNS resolution works.",
           },
           {
             q: "A Pod tries to reach a Service 'db-svc' in namespace 'data' using: curl db-svc. It fails. What is the fix?",
@@ -2977,18 +2977,18 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Secrets מקודדים ב-base64 בלבד – לא מוצפנים! צריך Sealed Secrets לאבטחה אמיתית.",
+              "Secrets מקודדים ב-base64 בלבד – לא מוצפנים! לאבטחה אמיתית: הפעל Encryption at Rest ב-etcd, או השתמש ב-Sealed Secrets / external secrets manager.",
           },
           {
             q: "כיצד משתמשים ב-ConfigMap ב-Pod?",
             options: [
-              "רק כקובץ – מוסיפים דרך volume ואין דרך אחרת לגשת לnתונים",
+              "רק כקובץ – מוסיפים דרך volume ואין דרך אחרת לגשת לנתונים",
               "רק כenv variables ישירות ב-containers spec ולא בצורות אחרות",
               "כenv variables או כvolume files",
               "לא ניתן – Pod ניגש ל-ConfigMap רק דרך Kubernetes API call",
             ],
             answer: 2,
-            explanation: "ישנן שלוש דרכים לצרוך ConfigMap ב-Pod: 1) envFrom/env — טוען values כ-env variables. 2) volumeMounts — מהר ConfigMap כספרייה, כל key הופך לקובץ. 3) דרך Kubernetes API ישירות מהקוד. שינוי ב-volume יתעדכן אוטומטית (עם השהייה), שינוי ב-env מצריך restart.",
+            explanation: "ישנן שלוש דרכים לצרוך ConfigMap ב-Pod: 1) envFrom/env — טוען values כ-env variables. 2) volumeMounts — מאונט ConfigMap כספרייה, כל key הופך לקובץ. 3) דרך Kubernetes API ישירות מהקוד. שינוי ב-volume יתעדכן אוטומטית (עם השהייה), שינוי ב-env מצריך restart.",
           },
           {
             q: "מה זה imagePullSecrets?",
@@ -3178,7 +3178,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "requests קובעים את הscaling של ה-Scheduler (מה מובטח). limits קובעים את המקסימום – חריגה מlimits.memory = OOMKill, חריגה מlimits.cpu = throttling.",
+              "requests קובעים את ה-scheduling של ה-Scheduler — Node נבחר רק אם יש בו מספיק resources פנויים. limits קובעים את המקסימום – חריגה מ-limits.memory = OOMKill, חריגה מ-limits.cpu = throttling.",
           },
           {
             q: "מה subjectAccessReview ב-Kubernetes?",
@@ -3216,7 +3216,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Secrets are only base64 encoded by default – not encrypted! Sealed Secrets needed for true security.",
+              "Secrets are only base64-encoded by default — not encrypted! For real security: enable Encryption at Rest for etcd, or use Sealed Secrets / an external secrets manager.",
           },
           {
             q: "How can a ConfigMap be used in a Pod?",
@@ -3484,7 +3484,7 @@ export const TOPICS = [
             q: "מה Pod Security Admission?",
             options: [
               "Firewall לPods",
-              "מנגנון Kubernetes מגרסה 1.25 שאוכף Pod Security Standards (privileged/baseline/restricted)",
+              "מנגנון Kubernetes (beta מ-1.23, GA מ-1.25) שאוכף Pod Security Standards (privileged/baseline/restricted)",
               "Plugin לאימות",
               "Network policy",
             ],
@@ -3496,7 +3496,7 @@ export const TOPICS = [
             q: "מה admission webhook?",
             options: [
               "Webhook לgit",
-              "HTTP callback שמופעל לפני/אחרי יצירת resource ב-API server",
+              "HTTP callback שמופעל לפני שמירת resource ב-etcd, לאימות או לשינוי",
               "Service account",
               "Plugin לlogging",
             ],
@@ -3610,7 +3610,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "מגרסת K8s 1.21+ tokens הם bounded – מוגבלים בזמן, Pod, ו-audience. לא ניתן להשתמש בhם מחוץ לPod. מאובטח הרבה יותר מstatic ServiceAccount secrets.",
+              "מגרסת K8s 1.21+ tokens הם bounded – מוגבלים בזמן, Pod, ו-audience. לא ניתן להשתמש בהם מחוץ לPod. מאובטח הרבה יותר מstatic ServiceAccount secrets.",
           },
           {
             q: "מה seccomp profile עושה?",
@@ -3634,7 +3634,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "AppArmor profile מגביל מה process יכול לעשות. ב-K8s: annotation container.apparmor.security.beta.kubernetes.io/<container>: runtime/default.",
+              "AppArmor profile מגביל מה process יכול לעשות. מ-K8s 1.30 מוגדר ב-securityContext.appArmorProfile. בגרסאות ישנות יותר נעשה שימוש ב-annotation container.apparmor.security.beta.kubernetes.io/<container>.",
           },
           {
             q: "כיצד מסנכרנים Secret מ-AWS Secrets Manager?",
@@ -3720,7 +3720,7 @@ export const TOPICS = [
             q: "What is Pod Security Admission?",
             options: [
               "A Pod firewall",
-              "A Kubernetes mechanism (v1.25+) enforcing Pod Security Standards (privileged/baseline/restricted)",
+              "A Kubernetes mechanism (beta v1.23, GA v1.25) enforcing Pod Security Standards (privileged/baseline/restricted)",
               "An auth plugin",
               "A network policy",
             ],
@@ -3732,7 +3732,7 @@ export const TOPICS = [
             q: "What is an admission webhook?",
             options: [
               "A git webhook",
-              "An HTTP callback triggered before/after resource creation in the API server",
+              "An HTTP callback triggered before a resource is persisted to etcd, for validation or mutation",
               "A service account",
               "A logging plugin",
             ],
@@ -3870,7 +3870,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "AppArmor profiles restrict what a process can do. In K8s: annotation container.apparmor.security.beta.kubernetes.io/<container>: runtime/default on the Pod.",
+              "AppArmor profiles restrict what a process can do. Since K8s 1.30 it is configured via securityContext.appArmorProfile. In older versions the beta annotation container.apparmor.security.beta.kubernetes.io/<container> was used.",
           },
           {
             q: "How do you sync a Secret from AWS Secrets Manager?",
@@ -4022,14 +4022,14 @@ export const TOPICS = [
           {
             q: "מה network policy default-deny?",
             options: [
-              "חוסם כל תנועה יוצאת",
-              "PolicyRule שחוסם את כל התנועה הנכנסת לNamespace בהיעדר rules ספציפיים",
-              "מוחק כל Service",
-              "חוסם DNS",
+              "הגדרה ב-API server שמופעלת עם feature flag ומחילה deny אוטומטי",
+              "NetworkPolicy עם podSelector: {} שחוסמת את כל התנועה הנכנסת לכל הPods ב-Namespace",
+              "פקודת kubectl שמוחקת את כל ה-NetworkPolicies ב-Namespace",
+              "Label על Namespace שמאפשר חסימת תנועה ברמת cluster",
             ],
             answer: 1,
             explanation:
-              "NetworkPolicy עם podSelector: {} ו-policyTypes: Ingress ללא ingress rules חוסמת כל תנועה נכנסת לכל Pods בNamespace.",
+              "NetworkPolicy עם podSelector: {} ו-policyTypes: Ingress ללא ingress rules חוסמת כל תנועה נכנסת לכל Pods ב-Namespace. אין feature flag — הכל מנוהל דרך NetworkPolicy objects.",
           },
           {
             q: "Pod מקבל שגיאה:\n\nError: pods is forbidden: User 'system:serviceaccount:default:my-sa' cannot list resource 'pods' in API group '' in the namespace 'prod'\n\nמה הפתרון?",
@@ -4053,7 +4053,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl auth can-i --as מאפשר לבדוק הרשאות עבור ServiceAccount ספציפי בלי להריץ פקודה אמיתית. כש-'no' מוחזר, הפתרון הוא ליצור Role עם verbs: [get, list] על resources: secrets, ואז RoleBinding שמחבר אותו ל-app-sa ב-namespace prod. הוספת ClusterAdmin היא עודפת וסיכון אבטחה.",
+              "kubectl auth can-i --as מאפשר לבדוק הרשאות עבור ServiceAccount ספציפי בלי להריץ פקודה אמיתית. כש-'no' מוחזר, הפתרון הוא ליצור Role עם verbs: [get] על resources: secrets (least privilege — Pod צריך רק לקרוא Secret ספציפי), ואז RoleBinding שמחבר אותו ל-app-sa ב-namespace prod. הוספת ClusterAdmin היא עודפת וסיכון אבטחה.",
           },
           {
             q: "מנסים לפרוס Deployment ומקבלים שגיאה:\n\nError from server: error when creating 'deploy.yaml': admission webhook 'validate.kyverno.svc' denied the request: Container image must come from 'gcr.io/'\n\nמה קורה?",
@@ -4135,16 +4135,16 @@ export const TOPICS = [
               "Kubernetes Audit Logs מתעדים כל קריאה לAPI server, כולל גישה לSecrets. כשServiceAccount ניגש לSecrets שלא אמור להיות לו צורך בהם, זה אות אזהרה לפריצה אפשרית. יש לחקור, להגביל את ה-RBAC של אותו ServiceAccount, ולשקול rotation של כל הSecrets שנחשפו.",
           },
           {
-            q: "Deployment נדחה ב-Cluster עם PSP ישן:\n\nForbidden: unable to validate against any security policy\n\nמה הצעד הנכון ב-K8s 1.25+?",
+            q: "אתם מגדירים אבטחת Pods ב-Cluster שרץ על K8s 1.25+. איזה מנגנון תשתמשו?",
             options: [
-              "הוסף cluster-admin",
-              "PSP הוסר ב-1.25. עבור ל-Pod Security Admission (PSA) עם labels על ה-Namespace",
-              "שנה Namespace",
-              "הוסף NetworkPolicy",
+              "PodSecurityPolicy (PSP) — הדרך הסטנדרטית לאכיפת אבטחה",
+              "Pod Security Admission (PSA) עם labels על ה-Namespace",
+              "הוספת NetworkPolicy לכל Pod",
+              "הוספת cluster-admin לכל ServiceAccount",
             ],
             answer: 1,
             explanation:
-              "PodSecurityPolicy (PSP) הוצא משימוש ב-K8s 1.21 והוסר לחלוטין ב-1.25. הפתרון המובנה החלופי הוא Pod Security Admission (PSA), שמופעל על ידי הוספת labels לNamespace. לצרכים מתקדמים יותר ניתן להשתמש ב-Kyverno או OPA Gatekeeper.",
+              "PodSecurityPolicy (PSP) הוצא משימוש ב-K8s 1.21 והוסר לחלוטין ב-1.25. ב-1.25+ משתמשים ב-Pod Security Admission (PSA), שמופעל על ידי הוספת labels לNamespace (למשל pod-security.kubernetes.io/enforce: restricted). לצרכים מתקדמים ניתן להשתמש ב-Kyverno או OPA Gatekeeper.",
           },
         ],
         questionsEn: [
@@ -4258,14 +4258,14 @@ export const TOPICS = [
           {
             q: "What is a default-deny NetworkPolicy?",
             options: [
-              "Blocks all outbound traffic",
-              "A policy that blocks all inbound traffic to a Namespace when no specific rules exist",
-              "Deletes all Services",
-              "Blocks DNS",
+              "An API server setting activated by a feature flag that auto-denies all traffic",
+              "A NetworkPolicy with podSelector: {} that blocks all inbound traffic to every Pod in the Namespace",
+              "A kubectl command that removes all NetworkPolicies from a Namespace",
+              "A label on a Namespace that enforces cluster-wide traffic blocking",
             ],
             answer: 1,
             explanation:
-              "A NetworkPolicy with podSelector: {} and policyTypes: Ingress with no ingress rules blocks all inbound traffic to every Pod in the Namespace.",
+              "A NetworkPolicy with podSelector: {} and policyTypes: Ingress with no ingress rules blocks all inbound traffic to every Pod in the Namespace. There is no feature flag — it is all managed via NetworkPolicy objects.",
           },
           {
             q: "A Pod receives:\n\nError: pods is forbidden: User 'system:serviceaccount:default:my-sa' cannot list resource 'pods' in namespace 'prod'\n\nWhat is the fix?",
@@ -4289,7 +4289,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl auth can-i --as lets you test permissions for any ServiceAccount without running a real operation. When it returns 'no', create a Role with verbs: [get, list] on secrets and a RoleBinding attaching it to app-sa in the prod Namespace. Adding cluster-admin is excessive and a security risk.",
+              "kubectl auth can-i --as lets you test permissions for any ServiceAccount without running a real operation. When it returns 'no', create a Role with verbs: [get] on secrets (least privilege — the Pod only needs to read a specific Secret) and a RoleBinding attaching it to app-sa in the prod Namespace. Adding cluster-admin is excessive and a security risk.",
           },
           {
             q: "Deploying a workload fails with:\n\nError: admission webhook 'validate.kyverno.svc' denied the request: Container image must come from 'gcr.io/'\n\nWhat is happening?",
@@ -4371,16 +4371,16 @@ export const TOPICS = [
               "Kubernetes Audit Logs record every call to the API server, including Secret reads. A ServiceAccount named 'compromised-sa' accessing Secrets it shouldn't need is a red flag for unauthorized access. Investigate the RBAC permissions, revoke unnecessary access, and rotate any Secrets that may have been exposed.",
           },
           {
-            q: "A Deployment is rejected on a cluster running K8s 1.25+:\n\nForbidden: unable to validate against any security policy\n\nWhat is the correct approach?",
+            q: "You are enforcing Pod security on a cluster running K8s 1.25+. Which mechanism do you use?",
             options: [
-              "Add cluster-admin",
-              "PSP was removed in K8s 1.25. Migrate to Pod Security Admission (PSA) with Namespace labels",
-              "Change the Namespace",
-              "Add a NetworkPolicy",
+              "PodSecurityPolicy (PSP) — the standard way to enforce security",
+              "Pod Security Admission (PSA) with labels on the Namespace",
+              "Add a NetworkPolicy to every Pod",
+              "Give every ServiceAccount cluster-admin",
             ],
             answer: 1,
             explanation:
-              "PodSecurityPolicy was deprecated in Kubernetes 1.21 and fully removed in 1.25. This error means the cluster still references the removed API. The built-in replacement is Pod Security Admission, activated by adding pod-security.kubernetes.io/enforce labels on Namespaces. For more advanced policy enforcement, Kyverno or OPA Gatekeeper are good alternatives.",
+              "PodSecurityPolicy was deprecated in Kubernetes 1.21 and fully removed in 1.25. On 1.25+ the built-in replacement is Pod Security Admission, activated by adding pod-security.kubernetes.io/enforce labels on Namespaces (e.g. restricted). For more advanced policy enforcement, Kyverno or OPA Gatekeeper are good alternatives.",
           },
         ],
       },
@@ -4499,11 +4499,11 @@ export const TOPICS = [
               "helm list (או helm ls) מציג את כל ה-Releases המותקנים עם גרסה, סטטוס, ו-chart שהשתמשו בו.",
           },
           {
-            q: "מה קורה לנתונים ב-emptyDir כש-Pod מאתחל?",
+            q: "מה קורה לנתונים ב-emptyDir כש-Pod נמחק?",
             options: ["נשמרים לתמיד", "נמחקים", "מגובים אוטומטית", "מועברים לPV"],
             answer: 1,
             explanation:
-              "emptyDir נשאר חי גם אם קונטיינר מתאחל, אבל נמחק לחלוטין כשה-Pod עצמו מוחק.",
+              "emptyDir נשאר חי כל עוד ה-Pod קיים — כולל בין restarts של קונטיינרים. אבל נמחק לחלוטין כשה-Pod עצמו מוחק או מועבר ל-Node אחר.",
           },
           {
             q: "מה AccessMode ReadWriteMany (RWX) מאפשר?",
@@ -4612,13 +4612,13 @@ export const TOPICS = [
             q: "מה ה-Reclaim Policy Recycle?",
             options: [
               "מחק PV",
-              "מנקה PV ומחזיר אותו לAvailable – deprecated, הוסר ב-K8s 1.21",
+              "מנקה PV ומחזיר אותו לAvailable – deprecated מ-K8s 1.7, הוחלף ב-Dynamic Provisioning",
               "מגבה PV",
               "משחרר PV לPool",
             ],
             answer: 1,
             explanation:
-              "Recycle ניקה (rm -rf /thevolume/*) ואז השאיר PV כAvailable לPVC חדש. Deprecated ב-1.7 והוסר. פתרון מודרני: Dynamic Provisioning.",
+              "Recycle ניקה את הנתונים (rm -rf /thevolume/*) ואז השאיר PV כAvailable לPVC חדש. Deprecated מ-K8s 1.7. פתרון מודרני: Dynamic Provisioning עם StorageClass.",
           },
         ],
         questionsEn: [
@@ -4726,16 +4726,16 @@ export const TOPICS = [
               "helm list (or helm ls) shows all installed Releases with version, status, and the Chart used.",
           },
           {
-            q: "What happens to emptyDir data when a Pod restarts?",
+            q: "What happens to emptyDir data when a Pod is deleted?",
             options: [
-              "Persisted forever",
-              "Deleted when the Pod is removed (survives container restart)",
-              "Automatically backed up",
-              "Moved to a PV",
+              "Persisted forever on the Node",
+              "Deleted permanently (but survives container restarts within the same Pod)",
+              "Automatically backed up to object storage",
+              "Moved to a PV for reuse",
             ],
             answer: 1,
             explanation:
-              "emptyDir survives container restarts within the same Pod, but is deleted entirely when the Pod itself is deleted.",
+              "emptyDir is tied to the Pod lifecycle: it survives container restarts within the same Pod, but is deleted entirely when the Pod itself is deleted or rescheduled to another Node.",
           },
           {
             q: "What does AccessMode ReadWriteMany (RWX) allow?",
@@ -4844,7 +4844,7 @@ export const TOPICS = [
             q: "What was the Reclaim Policy Recycle?",
             options: [
               "Deletes the PV",
-              "Cleaned the PV and returned it to Available — deprecated and removed in K8s 1.21",
+              "Cleaned the PV and returned it to Available — deprecated since K8s 1.7, replaced by Dynamic Provisioning",
               "Backs up the PV",
               "Returns the PV to a pool",
             ],
@@ -4938,7 +4938,7 @@ export const TOPICS = [
             q: "מה helm rollback?",
             options: [
               "מוחק Release",
-              "מחזיר Release לgrevision קודמת",
+              "מחזיר Release לrevision קודמת",
               "reset values",
               "שינוי Chart version",
             ],
@@ -5000,7 +5000,7 @@ export const TOPICS = [
               "PVC נמחק אוטומטית",
               "PVC נשמר! – StatefulSet לא מוחק PVCs בעצמו; נתוני הDB נשארים",
               "PVC מועבר לPool",
-              "PVC נמחק בwחרי 5 דקות",
+              "PVC נמחק אחרי 5 דקות",
             ],
             answer: 1,
             explanation:
@@ -5058,7 +5058,7 @@ export const TOPICS = [
             q: "מה volumeClaimTemplates בStatefulSet לעומת volume רגיל?",
             options: [
               "אין הבדל",
-              "volumeClaimTemplates יוצר PVC ייחודי per-Pod אוטומטית. volume רגיל יוצר PVC אחד משותף לכל הPods",
+              "volumeClaimTemplates יוצר PVC ייחודי per-Pod אוטומטית. volume רגיל מצביע על PVC קיים — כל הPods משתמשים באותו storage",
               "volumeClaimTemplates לdynamic בלבד",
               "volume רגיל מהיר יותר",
             ],
@@ -5293,7 +5293,7 @@ export const TOPICS = [
             q: "What is the difference between volumeClaimTemplates in a StatefulSet and a regular volume?",
             options: [
               "No difference",
-              "volumeClaimTemplates creates a unique PVC per Pod automatically; a regular volume creates one shared PVC for all Pods",
+              "volumeClaimTemplates creates a unique PVC per Pod automatically; a regular volume references an existing PVC — all Pods share the same storage",
               "volumeClaimTemplates for dynamic provisioning only",
               "Regular volumes are faster",
             ],
@@ -5517,7 +5517,7 @@ export const TOPICS = [
               "הוסף securityContext",
               "שנה StorageClass",
             ],
-            answer: 2,
+            answer: 1,
             explanation:
               "readOnly: true ב-volumeMount גורם לLinux לעשות mount של ה-volume כ-read-only filesystem, כך שכל ניסיון כתיבה נכשל עם 'read-only file system'. שנה ל-readOnly: false או הסר את השדה לחלוטין (ברירת המחדל היא read-write).",
           },
@@ -5878,7 +5878,7 @@ export const TOPICS = [
             q: "מה kubectl get events מציג?",
             options: [
               "רק שגיאות",
-              "אירועים מהCluster – Pod scheduling, image pull, probe failures",
+              "אירועים מה-Namespace הנוכחי – Pod scheduling, image pull, probe failures",
               "רק Pod logs",
               "רק Node events",
             ],
@@ -5950,7 +5950,7 @@ export const TOPICS = [
             options: [
               "מציג הבדלים בין namespaces",
               "מציג הבדלים בין YAML מקומי לstate הנוכחי בCluster לפני apply",
-              "משווה gרסאות K8s",
+              "משווה גרסאות K8s",
               "משווה Nodes",
             ],
             answer: 1,
@@ -6033,13 +6033,13 @@ export const TOPICS = [
             q: "כיצד בודקים health של ה-API server?",
             options: [
               "kubectl check apiserver",
-              "kubectl get --raw='/healthz' ו-kubectl get componentstatuses",
+              "kubectl get --raw='/healthz' (מחזיר ok אם בריא)",
               "kubectl describe apiserver",
               "kubectl status cluster",
             ],
             answer: 1,
             explanation:
-              "kubectl get --raw='/healthz' מחזיר ok אם API server בריא. kubectl get componentstatuses מציג controller-manager, scheduler, etcd.",
+              "kubectl get --raw='/healthz' מחזיר ok אם API server בריא. שים לב: kubectl get componentstatuses הייתה deprecated מ-K8s 1.19 והוסרה ב-1.26. השתמש ב-/healthz, /readyz, /livez במקום.",
           },
           {
             q: "מה kubectl config get-contexts עושה?",
@@ -6275,13 +6275,13 @@ export const TOPICS = [
             q: "How do you check the health of the API server?",
             options: [
               "kubectl check apiserver",
-              "kubectl get --raw='/healthz' and kubectl get componentstatuses",
+              "kubectl get --raw='/healthz' (returns ok when healthy)",
               "kubectl describe apiserver",
               "kubectl status cluster",
             ],
             answer: 1,
             explanation:
-              "kubectl get --raw='/healthz' returns 'ok' if the API server is healthy. kubectl get componentstatuses shows controller-manager, scheduler, and etcd health.",
+              "kubectl get --raw='/healthz' returns 'ok' if the API server is healthy. Note: kubectl get componentstatuses was deprecated in K8s 1.19 and removed in 1.26. Use /healthz, /readyz, or /livez endpoints instead.",
           },
           {
             q: "What does kubectl config get-contexts do?",
@@ -6390,7 +6390,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "liveness probe בודק האם הקונטיינר עדיין \"חי\" ומגיב. כשהוא נכשל failureThreshold פעמים ברציפות, Kubernetes ממית את הקונטיינר ומפעיל אותו מחדש לפי ה-restartPolicy. שלא כמו readiness probe, כישלון liveness probe לא מסיר מה-Service — הוא מבצע restart.",
+              "liveness probe בודק האם הקונטיינר עדיין \"חי\" ומגיב. כשהוא נכשל failureThreshold פעמים ברציפות, Kubernetes ממית את הקונטיינר ומפעיל אותו מחדש לפי ה-restartPolicy. readiness probe לעומת זאת מסיר את ה-Pod מה-Service Endpoints ללא restart.",
           },
           {
             q: "מה kubectl port-forward משמש לצורך?",
@@ -6402,19 +6402,19 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl port-forward יוצר tunnel SSH-like דרך ה-API server בין ה-machine המקומי ל-Pod. הפקודה kubectl port-forward pod/mypod 8080:80 מאפשרת לגשת ל-Pod על port 80 דרך localhost:8080 מבלי לפתוח Service ציבורי.",
+              "kubectl port-forward יוצר tunnel דרך ה-API server (בפרוטוקול SPDY/HTTP2) בין ה-machine המקומי ל-Pod. הפקודה kubectl port-forward pod/mypod 8080:80 מאפשרת לגשת ל-Pod על port 80 דרך localhost:8080 מבלי לפתוח Service ציבורי.",
           },
           {
             q: "מה RunContainerError אומר?",
             options: [
               "Pod לא מתזמן",
-              "הקונטיינר התחיל אבל נכשל מיד – בד״כ mountPath שגוי, env חסר, או entrypoint שגוי",
+              "ה-container runtime נכשל בהפעלת הקונטיינר – בד״כ mountPath שגוי, Secret/ConfigMap חסר, או בעיה בהרשאות",
               "Image לא נמצא",
               "OOMKilled",
             ],
             answer: 1,
             explanation:
-              "RunContainerError אומר שה-container runtime הצליח לעלות את הקונטיינר אבל הוא יצא מיד עם שגיאה — לא אותו דבר כמו ImagePullBackOff שקורה לפני ההפעלה. הסיבות הנפוצות: mountPath שגוי, env var חסר, או entrypoint שגוי. בדוק kubectl describe ו-kubectl logs.",
+              "RunContainerError אומר שה-container runtime נכשל בהפעלת הקונטיינר עצמו — לא שה-process בפנים קרס (זה יהיה CrashLoopBackOff). הסיבות הנפוצות: volume/mount שגוי, Secret או ConfigMap חסרים, בעיות securityContext. בדוק kubectl describe pod ו-kubectl logs.",
           },
           {
             q: "Pod נמצא ב-ContainerCreating זמן רב. מה הסיבות האפשריות?",
@@ -6429,7 +6429,7 @@ export const TOPICS = [
               "ContainerCreating הוא שלב נורמלי, אבל כשהוא נמשך זמן רב מציין בעיה. הסיבות הנפוצות הן: PVC שעדיין לא Bound, Secret או ConfigMap שמוזכרים ב-spec אבל לא קיימים, image גדול שנמשך להורדה, או בעיה ב-CNI שלא מצליח להגדיר network interface.",
           },
           {
-            q: "Pod מצב Terminating ולא נמחק. kubectl delete pod my-pod --grace-period=0 לא עוזר. מה הסיבה?",
+            q: "Pod מצב Terminating ולא נמחק. אפילו kubectl delete pod my-pod --grace-period=0 --force לא עוזר. מה הסיבה?",
             options: [
               "Namespace נעול",
               "Pod יש finalizer שלא נוקה – יש לבדוק ולהסיר ידנית",
@@ -6645,13 +6645,13 @@ export const TOPICS = [
             q: "What does RunContainerError mean?",
             options: [
               "Pod is not scheduled",
-              "Container started but immediately failed — usually wrong mountPath, missing env var, or wrong entrypoint",
+              "Container runtime failed to start the container — usually a wrong volume mount, missing Secret/ConfigMap, or securityContext issue",
               "Image not found",
               "OOMKilled",
             ],
             answer: 1,
             explanation:
-              "RunContainerError occurs after the image is pulled successfully but the container exits immediately upon startup — unlike ImagePullBackOff which fails before starting. Common causes are a missing env var, wrong mountPath, or an entrypoint command that does not exist in the image. Check kubectl describe and kubectl logs for details.",
+              "RunContainerError means the container runtime failed to start the container itself — not that the process inside crashed (that would be CrashLoopBackOff). Common causes: wrong volume mount, missing Secret or ConfigMap, securityContext issues. Check kubectl describe pod and kubectl logs for details.",
           },
           {
             q: "A Pod is in ContainerCreating for a long time. What are the likely causes?",
