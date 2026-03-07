@@ -1981,7 +1981,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <p style={{color:"#94a3b8",fontSize:14,margin:0}}>{t("tagline")}</p>
         </div>
 
-        <button className="gbtn" onClick={()=>setUser(GUEST_USER)}
+        <button className="gbtn" onClick={()=>{setIsInterviewMode(false);setUser(GUEST_USER);}}
           style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"#7dd3fc",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
           {t("startPlaying")}
         </button>
