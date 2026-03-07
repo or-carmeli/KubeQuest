@@ -430,8 +430,25 @@ function shuffleOptions(questions) {
   });
 }
 
+// Set of Kubernetes / technical terms that should render as inline code
+const K8S_CODE_TERMS = new Set([
+  "kubectl","pod","pods","node","nodes","namespace","namespaces","deployment","deployments",
+  "service","services","configmap","configmaps","secret","secrets","ingress","daemonset",
+  "statefulset","replicaset","cronjob","job","pvc","pv","hpa","api-server","kube-proxy",
+  "kubelet","etcd","helm","docker","container","containers","kubectl get pods",
+  "kubectl get nodes","kubectl describe","kubectl logs","kubectl apply","kubectl delete",
+  "kubectl scale","kubectl rollout","kubectl exec","production","staging","default",
+  "kube-system","cluster","replica","replicas",
+]);
+
+// Check if a token (or multi-word phrase) is a known K8s / CLI term
+function isCodeTerm(token) {
+  return K8S_CODE_TERMS.has(token.toLowerCase().replace(/s$/,"")) || K8S_CODE_TERMS.has(token.toLowerCase());
+}
+
 // Wraps inline English/Latin sequences in <span dir="ltr"> for correct bidi rendering
-// in RTL Hebrew paragraphs. Returns text unchanged for English mode.
+// in RTL Hebrew paragraphs. K8s terms get inline-code styling.
+// Returns text unchanged for English mode.
 function renderBidi(text, lang) {
   if (!text || lang !== "he") return text;
   if (!/[A-Za-z]/.test(text)) return text;
@@ -439,7 +456,12 @@ function renderBidi(text, lang) {
   const parts = text.split(/((?:[A-Za-z][A-Za-z0-9\-_.:/]*(?:\s+(?=[A-Za-z]))?)+)/);
   if (parts.length <= 1) return text;
   return parts.map((part, i) => {
-    if (/^[A-Za-z]/.test(part)) return <span key={i} dir="ltr" style={{unicodeBidi:"isolate"}}>{part}</span>;
+    if (/^[A-Za-z]/.test(part)) {
+      const codeStyle = isCodeTerm(part)
+        ? {background:"rgba(0,212,255,0.08)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:4,padding:"1px 5px",fontSize:"0.9em",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",color:"#7dd3fc",whiteSpace:"nowrap"}
+        : undefined;
+      return <span key={i} dir="ltr" style={{unicodeBidi:"isolate",...codeStyle}}>{part}</span>;
+    }
     // Insert RLM (U+200F) before punctuation that immediately follows an LTR span so
     // the Unicode bidi algorithm places it at the visual end of the RTL sentence.
     if (i > 0 && /^[A-Za-z]/.test(parts[i - 1])) return "\u200F" + part;
@@ -1849,12 +1871,17 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
       </a>
-      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar{flex-wrap:wrap!important;row-gap:6px!important}
 .quiz-bar-right{width:100%!important;justify-content:flex-start!important;gap:8px!important}
 .quiz-bar-right span,.quiz-bar-right button{font-size:11px!important}
+.opt-btn{padding:12px 14px!important;font-size:14px!important;gap:10px!important;min-height:48px!important}
+.explanation-card{border-radius:12px!important}
+.explanation-card>div:last-child{padding:14px 16px!important}
+.explanation-card ul{padding-inline-start:16px!important;gap:6px!important}
+.explanation-card li{font-size:13px!important;line-height:1.75!important}
 .home-actions{gap:5px!important}
 .home-actions>button{font-size:11px!important;padding:5px 8px!important}
 .home-screen{padding:12px 14px!important}
@@ -1880,6 +1907,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .topic-card-section{padding:13px 14px!important}
 .stats-grid{gap:7px!important}
 .stats-cell{padding:11px 6px!important}
+.opt-btn{padding:11px 12px!important;font-size:13px!important;gap:8px!important;border-radius:10px!important}
 }
 @media(max-width:390px){
 .home-logo{width:40px!important;height:40px!important}
@@ -3197,11 +3225,12 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.5,display:"flex",alignItems:"flex-start",gap:12,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none"}}>
-                      <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor,marginTop:1}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere"}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
-                      {dispSubmitted&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16}}>✓</span>}
-                      {dispSubmitted&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16}}>✗</span>}
+                      dir={dir}
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"14px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:12,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.6,display:"flex",alignItems:dir==="rtl"?"center":"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:12,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:52}}>
+                      <span aria-hidden="true" style={{flexShrink:0,width:28,height:28,borderRadius:8,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
+                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left"}}>{optDir==="ltr"?opt:renderBidi(opt,lang)}</span>
+                      {dispSubmitted&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✓</span>}
+                      {dispSubmitted&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✗</span>}
                     </button>
                   );
                 })}
@@ -3231,35 +3260,61 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                     const q = currentQuestions[questionIndex];
                     const timedOut = dispSelectedAnswer === null || dispSelectedAnswer === -1;
                     const isCorrect = !timedOut && dispSelectedAnswer === q.answer;
+                    const explanationParts = q.explanation.split(/\. /);
+                    const mainExplanation = explanationParts[0] + (explanationParts.length > 1 ? "." : "");
+                    const bulletPoints = explanationParts.slice(1);
                     return (
-                      <div role="status" aria-live="polite" style={{background:isCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${isCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"16px 18px",marginBottom:16}}>
-                        <div style={{fontWeight:800,fontSize:14,marginBottom:10,color:isCorrect?"#10B981":"#EF4444"}}>
-                          {isCorrect
-                            ? (tryAgainActive ? t("tryAgainCorrect") : `${t("correct")}${isInHistoryMode?"":" +"+LEVEL_CONFIG[selectedLevel].points+" "+t("pts")}`)
-                            : timedOut
-                              ? `${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
-                              : (tryAgainActive ? t("tryAgainWrong") : t("incorrect"))}
+                      <div role="status" aria-live="polite" dir={dir} className="explanation-card" style={{background:isCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",border:`1px solid ${isCorrect?"#10B98125":"#EF444425"}`,borderRadius:14,padding:0,marginBottom:16,overflow:"hidden"}}>
+                        {/* Status banner */}
+                        <div style={{background:isCorrect?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.10)",padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:dir==="rtl"?"flex-end":"flex-start",gap:8,borderBottom:`1px solid ${isCorrect?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)"}`}}>
+                          <span style={{fontWeight:900,fontSize:15,color:isCorrect?"#10B981":"#EF4444",letterSpacing:0.3}}>
+                            {isCorrect
+                              ? (tryAgainActive ? t("tryAgainCorrect") : `${t("correct")}${isInHistoryMode?"":" +"+LEVEL_CONFIG[selectedLevel].points+" "+t("pts")}`)
+                              : timedOut
+                                ? `${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[q.answer]}`
+                                : (tryAgainActive ? t("tryAgainWrong") : t("incorrect"))}
+                          </span>
                         </div>
-                        {!isInterviewMode&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-                          {q.explanation.split(/\. /).map((s,idx,arr)=>(
-                            <div key={idx} style={{color:"#94a3b8",fontSize:14,lineHeight:1.7,direction:dir,wordBreak:"break-word",overflowWrap:"anywhere"}}>
-                              {renderBidi(s+(idx<arr.length-1?".":""),lang)}
-                            </div>
-                          ))}
+                        {/* Explanation body */}
+                        {!isInterviewMode&&<div style={{padding:"16px 20px",display:"flex",flexDirection:"column",gap:14}}>
+                          {/* Main explanation sentence */}
+                          <div style={{color:"#c8d2de",fontSize:14,lineHeight:1.8,direction:dir,wordBreak:"break-word",overflowWrap:"anywhere"}}>
+                            {renderBidi(mainExplanation,lang)}
+                          </div>
+                          {/* Supporting bullet points */}
+                          {bulletPoints.length > 0 && (
+                            <ul dir={dir} style={{margin:0,paddingInlineStart:20,display:"flex",flexDirection:"column",gap:8,listStyleType:"disc",listStylePosition:"outside"}}>
+                              {bulletPoints.map((s,idx,arr)=>(
+                                <li key={idx} style={{color:"#94a3b8",fontSize:13,lineHeight:1.8,wordBreak:"break-word",overflowWrap:"anywhere",paddingInlineStart:4}}>
+                                  {renderBidi(s+(idx<arr.length-1?".":""),lang)}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>}
                       </div>
                     );
                   })()}
                   {isInterviewMode&&(()=>{
                     const q = currentQuestions[questionIndex];
+                    const iParts = q.explanation.split(/\. /);
+                    const iMain = iParts[0] + (iParts.length > 1 ? "." : "");
+                    const iBullets = iParts.slice(1);
                     return (
-                      <div style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.22)",borderRadius:12,padding:"16px 18px",marginBottom:16,direction:"rtl",animation:"fadeIn 0.3s ease"}}>
-                        <div style={{fontSize:11,fontWeight:700,color:"#A855F7",marginBottom:8,letterSpacing:0.5}}>תשובה אידיאלית</div>
-                        <div dir="auto" style={{color:"#e2e8f0",fontWeight:700,fontSize:14,marginBottom:8,wordBreak:"break-word",overflowWrap:"anywhere"}}>{q.options[q.answer]}</div>
-                        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                          {q.explanation.split(/\. /).map((s,idx,arr)=>(
-                            <div key={idx} dir="auto" style={{color:"#94a3b8",fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere"}}>{s+(idx<arr.length-1?".":"")}</div>
-                          ))}
+                      <div dir={dir} style={{background:"rgba(168,85,247,0.06)",border:"1px solid rgba(168,85,247,0.22)",borderRadius:14,padding:0,marginBottom:16,direction:dir,animation:"fadeIn 0.3s ease",overflow:"hidden"}}>
+                        <div style={{background:"rgba(168,85,247,0.10)",padding:"12px 20px",borderBottom:"1px solid rgba(168,85,247,0.12)"}}>
+                          <span style={{fontSize:12,fontWeight:800,color:"#A855F7",letterSpacing:0.5}}>תשובה אידיאלית</span>
+                        </div>
+                        <div style={{padding:"16px 20px",display:"flex",flexDirection:"column",gap:12}}>
+                          <div dir="auto" style={{color:"#e2e8f0",fontWeight:700,fontSize:14,wordBreak:"break-word",overflowWrap:"anywhere"}}>{q.options[q.answer]}</div>
+                          <div style={{color:"#c8d2de",fontSize:14,lineHeight:1.8,wordBreak:"break-word",overflowWrap:"anywhere"}}>{renderBidi(iMain,lang)}</div>
+                          {iBullets.length > 0 && (
+                            <ul dir={dir} style={{margin:0,paddingInlineStart:20,display:"flex",flexDirection:"column",gap:8,listStyleType:"disc",listStylePosition:"outside"}}>
+                              {iBullets.map((s,idx,arr)=>(
+                                <li key={idx} dir="auto" style={{color:"#94a3b8",fontSize:13,lineHeight:1.8,wordBreak:"break-word",overflowWrap:"anywhere",paddingInlineStart:4}}>{renderBidi(s+(idx<arr.length-1?".":""),lang)}</li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       </div>
                     );
