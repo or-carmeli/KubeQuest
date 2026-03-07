@@ -12,7 +12,6 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const GUEST_USER = { id: "guest", email: "guest", user_metadata: { username: "Guest" } };
-const APP_VERSION = "1.5.0";
 
 const LEVEL_CONFIG = {
   easy:   { label: "קל",        labelEn: "Easy",             icon: "🌱", color: "#10B981", points: 10 },
