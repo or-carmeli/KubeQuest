@@ -32,8 +32,8 @@ const INCIDENT_DIFFICULTY_CONFIG = {
 };
 
 const INCIDENT_SAVE_KEY = "incident_progress_v1";
-// v1.6.1 — patch: resume modal UX refactor (less intrusive, cooldown, session flag)
-const APP_VERSION  = "1.6.1";
+// v2.0.0 — major: portfolio repo refactor (BSL 1.1, proprietary content extracted)
+const APP_VERSION  = "2.0.0";
 const SESSION_START = new Date();
 
 // Resume modal behaviour constants
