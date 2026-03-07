@@ -485,7 +485,7 @@ function Footer({ lang }) {
   return (
     <div style={{textAlign:"center",marginTop:28,paddingTop:18,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
       <a href="https://buymeacoffee.com/ocarmeli7n" target="_blank" rel="noopener noreferrer"
-        style={{color:"#475569",fontSize:11,textDecoration:"none",display:"block",marginBottom:8,transition:"color 0.2s"}}
+        style={{color:"#475569",fontSize:11,textDecoration:"none",display:"block",marginBottom:8,transition:"color 0.2s",direction:"ltr"}}
         onMouseEnter={e=>{e.currentTarget.style.color="#64748b";}}
         onMouseLeave={e=>{e.currentTarget.style.color="#475569";}}>
         Enjoying KubeQuest?<br/>Support the project ☕
