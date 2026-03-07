@@ -178,7 +178,7 @@ export default function RoadmapView({
                     {topic.icon}
                   </div>
 
-                  {/* Text — takes remaining space, clips instead of wrapping */}
+                  {/* Text - takes remaining space, clips instead of wrapping */}
                   <div style={{flex:1,minWidth:0,direction:"ltr",textAlign:"center"}}>
                     <div className="roadmap-title" style={{fontWeight:700,color:"#e2e8f0",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                       <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topic.name}</span>

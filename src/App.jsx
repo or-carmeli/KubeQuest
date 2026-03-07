@@ -428,7 +428,7 @@ function shuffleOptions(questions) {
 function renderBidi(text, lang) {
   if (!text || lang !== "he") return text;
   if (!/[A-Za-z]/.test(text)) return text;
-  // Do NOT capture trailing punctuation inside the LTR span — leave ?!.,; in the RTL flow.
+  // Do NOT capture trailing punctuation inside the LTR span - leave ?!.,; in the RTL flow.
   const parts = text.split(/((?:[A-Za-z][A-Za-z0-9\-_.:/]*(?:\s+(?=[A-Za-z]))?)+)/);
   if (parts.length <= 1) return text;
   return parts.map((part, i) => {
@@ -594,7 +594,7 @@ export default function K8sQuestApp() {
 
   const isFreeMode = (id) => id === "mixed" || id === "daily" || id === "bookmarks";
 
-  // Weighted progress % for a single topic — matches Roadmap's stageProgress logic.
+  // Weighted progress % for a single topic - matches Roadmap's stageProgress logic.
   const computeTopicProgress = (topicId) => {
     let score = 0;
     LEVEL_ORDER.forEach(lvl => {
@@ -607,7 +607,7 @@ export default function K8sQuestApp() {
 
   // Derive total_score canonically from completedTopics so it can never be gamed.
   // Each topic/level key is "topicId_level" (e.g. "workloads_easy").
-  // Free-mode keys (mixed_mixed, daily_daily) are excluded — they are session-only.
+  // Free-mode keys (mixed_mixed, daily_daily) are excluded - they are session-only.
   const computeScore = (completed) =>
     Object.entries(completed).reduce((sum, [key, res]) => {
       const parts = key.split("_");
@@ -810,7 +810,7 @@ export default function K8sQuestApp() {
       const raw = localStorage.getItem("k8s_quest_guest");
       if (raw) guestSaved = JSON.parse(raw);
     } catch {}
-    // Always clear it immediately — prevents it leaking into whichever account logs in next
+    // Always clear it immediately - prevents it leaking into whichever account logs in next
     if (guestSaved) { try { localStorage.removeItem("k8s_quest_guest"); } catch {} }
 
     const base = data || {};
@@ -832,7 +832,7 @@ export default function K8sQuestApp() {
     const mergedStats = {
       total_answered: (base.total_answered || 0) + (gs.total_answered || 0),
       total_correct:  (base.total_correct  || 0) + (gs.total_correct  || 0),
-      // Prefer the DB value — it includes free-mode bonus on top of topic score
+      // Prefer the DB value - it includes free-mode bonus on top of topic score
       total_score:    base.total_score != null ? Math.max(base.total_score, topicBaseScore) : topicBaseScore,
       max_streak:     Math.max(base.max_streak || 0, gs.max_streak || 0),
       current_streak: Math.max(base.current_streak || 0, gs.current_streak || 0),
@@ -876,11 +876,11 @@ export default function K8sQuestApp() {
   const saveUserData = async (ns, nc, na) => {
     if (!user || isGuest) return;
     setSaveError("");
-    // BUG-E fix: strip free-mode entries — they are session-only and must not persist
+    // BUG-E fix: strip free-mode entries - they are session-only and must not persist
     const cleanNc = Object.fromEntries(
       Object.entries(nc).filter(([k]) => !isFreeMode(k.split("_")[0]))
     );
-    // BUG-B fix: use UPDATE (not upsert) — the row is always created by loadUserData,
+    // BUG-B fix: use UPDATE (not upsert) - the row is always created by loadUserData,
     // so upsert here was inserting duplicate rows when user_id had no UNIQUE constraint.
     const { error } = await supabase.from("user_stats").update({
       username: user.user_metadata?.username || user.email?.split("@")[0] || "",
@@ -1085,7 +1085,7 @@ export default function K8sQuestApp() {
 
     setScreen("topic");
     setResumeData(null);
-    // Keep saving state as user continues — do NOT clearQuizState() here
+    // Keep saving state as user continues - do NOT clearQuizState() here
   };
 
   const handleDiscardResume = () => {
@@ -1159,7 +1159,7 @@ export default function K8sQuestApp() {
       const isFree = isFreeMode(selectedTopic?.id);
       return {
         ...prev,
-        // total_score is NOT updated here — derived from completedTopics at quiz end
+        // total_score is NOT updated here - derived from completedTopics at quiz end
         current_streak: streak,
         max_streak:     Math.max(prev.max_streak, streak),
         // BUG-D fix: free-mode questions don't count toward persistent answered/correct
@@ -1207,7 +1207,7 @@ export default function K8sQuestApp() {
         setRetryMode(false);
         clearQuizState();
         if (finalCorrect === currentQuestions.length) {
-          // Upgrade stored result to 100% (score stays the same — only marks as complete)
+          // Upgrade stored result to 100% (score stays the same - only marks as complete)
           const key = `${selectedTopic.id}_${selectedLevel}`;
           const prevResult = completedTopics[key];
           if (prevResult) {
@@ -1320,7 +1320,7 @@ export default function K8sQuestApp() {
       const j = Math.floor(annualRng() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    // Pick a non-overlapping window by day-of-year — no repeats until full pool cycles
+    // Pick a non-overlapping window by day-of-year - no repeats until full pool cycles
     const now = new Date();
     const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
     const numWindows = Math.floor(shuffled.length / 5);
@@ -1646,7 +1646,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
         {/* ── Spinner ── */}
         <div style={{position:"relative",width:64,height:64}}>
-          {/* Outer ring — comet arc, clockwise */}
+          {/* Outer ring - comet arc, clockwise */}
           <svg width="64" height="64" viewBox="0 0 64 64" style={{position:"absolute",inset:0,animation:"lspin 1.3s linear infinite"}} xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="sg1" gradientUnits="userSpaceOnUse" x1="64" y1="0" x2="0" y2="64">
@@ -1658,7 +1658,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <circle cx="32" cy="32" r="28" fill="none" stroke="url(#sg1)" strokeWidth="3"
               strokeLinecap="round" strokeDasharray="90 86"/>
           </svg>
-          {/* Inner ring — comet arc, counter-clockwise */}
+          {/* Inner ring - comet arc, counter-clockwise */}
           <svg width="64" height="64" viewBox="0 0 64 64" style={{position:"absolute",inset:0,animation:"lspin2 1.9s linear infinite"}} xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="sg2" gradientUnits="userSpaceOnUse" x1="0" y1="64" x2="64" y2="0">
@@ -1683,7 +1683,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   );
 
   const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
-  const FONT_SCALES = { normal: 1, large: 1, xl: 1 }; // no zoom — original A mode is now the default
+  const FONT_SCALES = { normal: 1, large: 1, xl: 1 }; // no zoom - original A mode is now the default
   const fs = FONT_SCALES[a11y.fontSize] || 1;
 
   // History navigation: questionIndex can go below liveIndexRef.current to review past answers
@@ -1789,7 +1789,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817 0%,#0f172a 60%,#020817 100%)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,position:"relative",overflowX:"hidden"}}>
-      {/* Skip-to-content — invisible until focused by keyboard */}
+      {/* Skip-to-content - invisible until focused by keyboard */}
       <a href="#main-content"
         style={{position:"fixed",top:-100,left:8,zIndex:9999,padding:"8px 16px",background:"#00D4FF",color:"#020817",borderRadius:8,fontWeight:700,fontSize:14,textDecoration:"none",transition:"top 0.15s",direction:"ltr"}}
         onFocus={e=>e.currentTarget.style.top="8px"}
@@ -2003,7 +2003,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         </div>
       )}
 
-      {/* Dropdown menu — rendered outside <main> so CSS zoom never affects it */}
+      {/* Dropdown menu - rendered outside <main> so CSS zoom never affects it */}
       {showMenu&&(<>
         <div onClick={()=>setShowMenu(false)} style={{position:"fixed",inset:0,zIndex:199}}/>
         <div style={{position:"fixed",top:82,right:8,background:"#0f172a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"8px 0",zIndex:200,minWidth:234,boxShadow:"0 8px 32px rgba(0,0,0,0.5)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100vh - 110px)"}}>
@@ -2130,7 +2130,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* HOME */}
       {screen==="home"&&(
         <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
-          {/* ── Hero — centered, matches loading screen composition ── */}
+          {/* ── Hero - centered, matches loading screen composition ── */}
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",marginBottom:14}}>
             {/* Header row: logo+title on one side, burger on the other */}
             {(()=>{
@@ -2180,14 +2180,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             })()}
             {/* Separator */}
             <div style={{width:"100%",borderBottom:"1px solid rgba(255,255,255,0.06)",margin:"10px 0"}}/>
-            {/* Greeting block — compact */}
+            {/* Greeting block - compact */}
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-              {/* Row 1: שלום / Hello + username + optional guest label — all inline */}
+              {/* Row 1: שלום / Hello + username + optional guest label - all inline */}
               <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"nowrap",justifyContent:"center",maxWidth:"100%",overflow:"hidden"}}>
                 <span style={{color:"#64748b",fontSize:13,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
                 <span style={{color:"#e2e8f0",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
               </div>
-              {/* Row 2: tagline / mode hint — smaller and dimmer */}
+              {/* Row 2: tagline / mode hint - smaller and dimmer */}
               <p style={{color:"#64748b",fontSize:11,margin:0,lineHeight:1.3,textAlign:"center",direction:dir}}>
                 {isInterviewMode?t("interviewModeHint"):t("tagline")}
               </p>
@@ -2468,7 +2468,7 @@ kubectl get jobs && kubectl get cronjobs`},
             {k:"ClusterIP",    v:lang==="en"?"Internal-only. Default type. Not reachable from outside the cluster.":"גישה פנימית בלבד. סוג ברירת מחדל."},
             {k:"NodePort",     v:lang==="en"?"External access via <NodeIP>:<30000–32767>. Good for dev/testing.":"גישה חיצונית דרך פורט קבוע. לפיתוח ובדיקות."},
             {k:"LoadBalancer", v:lang==="en"?"Cloud provider creates an external load balancer. Standard for production.":"ספק ענן יוצר LB חיצוני. סטנדרט לפרודקשן."},
-            {k:"Headless",     v:lang==="en"?"clusterIP: None — DNS returns individual Pod IPs. Used by StatefulSets.":"clusterIP: None – DNS מחזיר IPs של Pods ישירות."},
+            {k:"Headless",     v:lang==="en"?"clusterIP: None - DNS returns individual Pod IPs. Used by StatefulSets.":"clusterIP: None – DNS מחזיר IPs של Pods ישירות."},
             {sect:lang==="en"?"Port fields":"שדות פורטים"},
             {k:"port",       v:lang==="en"?"Port the Service listens on inside the cluster":"פורט שה-Service מאזין עליו בתוך הקלאסטר"},
             {k:"targetPort", v:lang==="en"?"Port on the Pod container (where your app listens)":"פורט בתוך הקונטיינר"},
@@ -2544,7 +2544,7 @@ kubectl top nodes
             {sect:"ConfigMap"},
             {k:"ConfigMap",  v:lang==="en"?"Stores non-sensitive key-value config. Mount as a volume (auto-updates in ~1 min) or inject as env vars (requires Pod restart to update).":"קונפיגורציה non-sensitive. כvolume מתעדכן אוטומטית; כenv var דורש restart."},
             {sect:"Secret"},
-            {k:"Secret",     v:lang==="en"?"Like ConfigMap but for sensitive data. Values are base64-encoded — NOT encrypted by default. Use Sealed Secrets or External Secrets Operator for production GitOps.":"לנתונים רגישים. מקודד base64, לא מוצפן כברירת מחדל."},
+            {k:"Secret",     v:lang==="en"?"Like ConfigMap but for sensitive data. Values are base64-encoded - NOT encrypted by default. Use Sealed Secrets or External Secrets Operator for production GitOps.":"לנתונים רגישים. מקודד base64, לא מוצפן כברירת מחדל."},
             {sect:lang==="en"?"Injecting config into Pods":"הזרקת קונפיגורציה ל-Pods"},
             {k:"env.value",                      v:lang==="en"?"Hardcoded value directly in the Pod spec.":"ערך קבוע ב-spec."},
             {k:"env.valueFrom.configMapKeyRef",  v:lang==="en"?"Pull one key from a ConfigMap as an env var.":"env var ממפתח ספציפי ב-ConfigMap."},
@@ -2574,7 +2574,7 @@ kubectl rollout restart deploy/<name>`},
           {id:"storage",icon:"💾",color:"#6366F1",title:lang==="en"?"Storage":"אחסון",items:[
             {sect:lang==="en"?"Ephemeral Volumes":"Volumes זמניים"},
             {k:"emptyDir",  v:lang==="en"?"Created with the Pod, deleted with the Pod. Survives container restarts. Shared by all containers in the same Pod.":"נוצר עם ה-Pod, נמחק איתו. שורד container restart. משותף לכל הקונטיינרים."},
-            {k:"hostPath",  v:lang==="en"?"Mounts a Node directory into the Pod. Avoid in production — breaks portability.":"תיקיה מה-Node לתוך ה-Pod. יש להימנע ב-production."},
+            {k:"hostPath",  v:lang==="en"?"Mounts a Node directory into the Pod. Avoid in production - breaks portability.":"תיקיה מה-Node לתוך ה-Pod. יש להימנע ב-production."},
             {sect:"PersistentVolume (PV)"},
             {k:"PV",        v:lang==="en"?"A piece of real storage in the cluster (cloud disk, NFS…). Provisioned by admin or auto-created by a StorageClass.":"אחסון אמיתי בקלאסטר. נוצר על ידי Admin או אוטומטית על ידי StorageClass."},
             {sect:"PersistentVolumeClaim (PVC)"},
@@ -2582,9 +2582,9 @@ kubectl rollout restart deploy/<name>`},
             {sect:"StorageClass"},
             {k:"StorageClass",v:lang==="en"?"Blueprint for dynamic provisioning. Names the provisioner plugin (AWS EBS CSI, GCP PD, Ceph…) that creates real disks on demand.":"תבנית ל-dynamic provisioning. מגדיר provisioner שיוצר דיסקים אוטומטית."},
             {sect:lang==="en"?"Access Modes":"מצבי גישה"},
-            {k:"ReadWriteOnce (RWO)",v:lang==="en"?"One Node — read + write. Default for most cloud disks.":"Node אחד – קריאה וכתיבה. ברירת מחדל."},
-            {k:"ReadWriteMany (RWX)",v:lang==="en"?"Many Nodes — read + write. Requires NFS, AWS EFS, or Ceph.":"מספר Nodes – קריאה וכתיבה. דורש NFS/EFS."},
-            {k:"ReadOnlyMany  (ROX)",v:lang==="en"?"Many Nodes — read only.":"מספר Nodes – קריאה בלבד."},
+            {k:"ReadWriteOnce (RWO)",v:lang==="en"?"One Node - read + write. Default for most cloud disks.":"Node אחד – קריאה וכתיבה. ברירת מחדל."},
+            {k:"ReadWriteMany (RWX)",v:lang==="en"?"Many Nodes - read + write. Requires NFS, AWS EFS, or Ceph.":"מספר Nodes – קריאה וכתיבה. דורש NFS/EFS."},
+            {k:"ReadOnlyMany  (ROX)",v:lang==="en"?"Many Nodes - read only.":"מספר Nodes – קריאה בלבד."},
             {sect:lang==="en"?"Reclaim Policy":"מדיניות שחרור"},
             {k:"Retain", v:lang==="en"?"Data preserved after PVC deletion. Admin must clean up manually. Recommended for databases.":"נתונים נשמרים לאחר מחיקת PVC. Admin מנקה ידנית. לבסיסי נתונים."},
             {k:"Delete", v:lang==="en"?"PV and the underlying cloud disk are deleted when PVC is deleted. Default for dynamic provisioning.":"PV ודיסק פיזי נמחקים עם מחיקת PVC. ברירת מחדל לdynamic."},
@@ -2617,7 +2617,7 @@ kubectl delete pvc -l app=<name> -n <ns>`},
             {k:"get / list / watch",      v:lang==="en"?"Read-only access":"גישת קריאה בלבד"},
             {k:"create / update / patch", v:lang==="en"?"Write access":"גישת כתיבה"},
             {k:"delete",                  v:lang==="en"?"Remove a resource":"מחיקת משאב"},
-            {k:"* (wildcard)",            v:lang==="en"?"All verbs — avoid in production":"כל הפעלים – יש להימנע ב-production"},
+            {k:"* (wildcard)",            v:lang==="en"?"All verbs - avoid in production":"כל הפעלים – יש להימנע ב-production"},
           ],code:
 `# RBAC
 kubectl get role,rolebinding -n <ns>
@@ -2641,19 +2641,19 @@ kubectl describe sa <name> -n <ns>
             {k:"Cause", v:lang==="en"?"Container starts, crashes immediately, Kubernetes keeps restarting with exponential delay.":"הקונטיינר קורס שוב ושוב עם השהייה גדלה."},
             {k:"Fix",   v:lang==="en"?"kubectl logs <pod> --previous  →  read the crash output before it restarted":"kubectl logs <pod> --previous – קרא את ה-crash output"},
             {sect:"ImagePullBackOff"},
-            {k:"Cause", v:lang==="en"?"Kubernetes can't pull the image — typo in name/tag, or missing imagePullSecret for a private registry.":"לא ניתן למשוך image – שם/tag שגוי, או imagePullSecret חסר."},
+            {k:"Cause", v:lang==="en"?"Kubernetes can't pull the image - typo in name/tag, or missing imagePullSecret for a private registry.":"לא ניתן למשוך image – שם/tag שגוי, או imagePullSecret חסר."},
             {k:"Fix",   v:lang==="en"?"kubectl describe pod <name>  →  read the exact error in Events":"kubectl describe pod – קרא את השגיאה המדויקת ב-Events"},
             {sect:lang==="en"?"Pending Pod":"Pod תקוע"},
-            {k:"Cause", v:lang==="en"?"No Node can accept it — CPU/memory insufficient, wrong nodeSelector, missing toleration, or unbound PVC.":"אין Node פנוי – CPU/memory, nodeSelector, toleration, או PVC לא bound."},
+            {k:"Cause", v:lang==="en"?"No Node can accept it - CPU/memory insufficient, wrong nodeSelector, missing toleration, or unbound PVC.":"אין Node פנוי – CPU/memory, nodeSelector, toleration, או PVC לא bound."},
             {k:"Fix",   v:lang==="en"?"kubectl describe pod <name>  →  read the FailedScheduling event":"kubectl describe pod – קרא FailedScheduling event"},
             {sect:"OOMKilled"},
             {k:"Cause", v:lang==="en"?"Container exceeded its memory limit. Linux kernel terminates it with exit code 137.":"חריגת מגבלת זיכרון. Linux ממית עם קוד יציאה 137."},
             {k:"Fix",   v:lang==="en"?"Increase limits.memory in Pod spec. Measure actual usage with kubectl top pod.":"הגדל limits.memory. מדוד שימוש בפועל עם kubectl top pod."},
             {sect:"Node NotReady"},
-            {k:"Cause", v:lang==="en"?"kubelet stopped reporting — process crashed, TLS cert expired, or disk/memory pressure.":"kubelet הפסיק לדווח – קרסה, TLS פג, לחץ disk/memory."},
+            {k:"Cause", v:lang==="en"?"kubelet stopped reporting - process crashed, TLS cert expired, or disk/memory pressure.":"kubelet הפסיק לדווח – קרסה, TLS פג, לחץ disk/memory."},
             {k:"Fix",   v:lang==="en"?"kubectl describe node  →  SSH into the Node  →  systemctl status kubelet":"kubectl describe node, ואז SSH: systemctl status kubelet"},
           ],code:
-`# Universal first step — read the Events
+`# Universal first step - read the Events
 kubectl describe pod <name>             # scroll down to Events section
 
 # Logs
@@ -2736,7 +2736,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
               {dir==="rtl"?"→ חזרה":"← Back"}
             </button>
             <h2 style={{color:"#e2e8f0",fontSize:18,fontWeight:700,marginBottom:4}}>{t("guideBtn")}</h2>
-            <p style={{color:"#64748b",fontSize:13,marginBottom:20,direction:dir}}>{lang==="en"?"Quick reference for key Kubernetes concepts — tap a section to expand":"סיכום מהיר של מושגי Kubernetes מרכזיים – לחצו על נושא לפתיחה"}</p>
+            <p style={{color:"#64748b",fontSize:13,marginBottom:20,direction:dir}}>{lang==="en"?"Quick reference for key Kubernetes concepts - tap a section to expand":"סיכום מהיר של מושגי Kubernetes מרכזיים – לחצו על נושא לפתיחה"}</p>
             {GUIDE.map(section=>(
               <div key={section.id} style={{marginBottom:8}}>
                 {/* Section header */}
@@ -2844,7 +2844,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
         const svcStatus = (ok) => ok ? "Operational" : "Degraded";
         const svcColor  = (ok) => ok ? "#10B981" : "#EF4444";
 
-        // 30-day uptime bars — static plausible pattern, DB bar reflects live state
+        // 30-day uptime bars - static plausible pattern, DB bar reflects live state
         const uptimeBars = (seed, healthy=true) => Array.from({length:30},(_,i)=>{
           const pseudo = (seed * 31 + i * 7) % 100;
           if (!healthy && i===29) return "error";
@@ -2920,8 +2920,8 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
               ))}
             </div>
 
-            {/* ── UPTIME — LAST 30 DAYS ── */}
-            {sectionTitle(lang==="en"?"Uptime — Last 30 Days":"זמינות — 30 ימים אחרונים")}
+            {/* ── UPTIME - LAST 30 DAYS ── */}
+            {sectionTitle(lang==="en"?"Uptime - Last 30 Days":"זמינות - 30 ימים אחרונים")}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {services.map(({name,bars,ok})=>{
                 const uptimePct = (bars.filter(b=>b==="ok").length/30*100).toFixed(2);
@@ -2951,7 +2951,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
               {metricCard("API Latency",   "12ms",    "avg · last 5m", "#00D4FF")}
               {metricCard("Response Time", "98ms",    "p95 · last 5m", "#A855F7")}
               {metricCard("Error Rate",    "0.01%",   "last 24h",      "#10B981")}
-              {metricCard("Active Users",  dbStatus==="ok"?"Live":"—", dbStatus==="ok"?"session active":"n/a", "#F59E0B")}
+              {metricCard("Active Users",  dbStatus==="ok"?"Live":"-", dbStatus==="ok"?"session active":"n/a", "#F59E0B")}
             </div>
 
             {/* ── DEPLOYMENT INFO ── */}
@@ -2959,7 +2959,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
             <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"4px 16px"}}>
               {infoRow("Version",     `v${APP_VERSION}`,                                      "#00D4FF", true)}
               {infoRow("Environment", env,                                                     isProd?"#10B981":"#F59E0B")}
-              {infoRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "—", "#94a3b8", true)}
+              {infoRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "-", "#94a3b8", true)}
               {infoRow("Branch",      "main",                                                  "#94a3b8", true)}
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
                 <span style={{fontSize:13,color:"#64748b",fontWeight:500}}>CI Status</span>
@@ -3325,7 +3325,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                       await navigator.share({ title: "KubeQuest", text: msg, url: "https://kubequest.online" });
                       return;
                     } catch(e) {
-                      if (e.name === "AbortError") return; // user dismissed — do nothing
+                      if (e.name === "AbortError") return; // user dismissed - do nothing
                       // fall through to desktop fallback
                     }
                   }
@@ -3341,7 +3341,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                       {shareCopied?(lang==="en"?"✓ Copied! Paste in LinkedIn":"✓ הועתק! הדבק ב-LinkedIn"):t("shareResult")}
                     </button>
                     {shareCopied&&<div style={{fontSize:11,color:"#64748b",textAlign:"center",marginTop:5,animation:"fadeIn 0.2s ease"}}>
-                      {lang==="en"?"Post text copied to clipboard — just paste it in the LinkedIn dialog":"טקסט הפוסט הועתק — הדבק אותו בחלון LinkedIn"}
+                      {lang==="en"?"Post text copied to clipboard - just paste it in the LinkedIn dialog":"טקסט הפוסט הועתק - הדבק אותו בחלון LinkedIn"}
                     </div>}
                   </div>
                 );

@@ -46,7 +46,7 @@ export const TOPICS = [
     descriptionEn: "Pods · Deployments · StatefulSets · Scheduling · Resources",
     levels: {
       easy: {
-        theory: `Pods ו-Deployments הם ליבת Kubernetes.\n🔹 Pod – יחידת הריצה הקטנה ביותר, מכיל קונטיינר אחד או יותר\n🔹 Pods זמניים – Pod מנוהל (Deployment/ReplicaSet) שמת, נוצר חדש עם IP חדש. Pod עצמאי שמת — נשאר מת\n🔹 Deployment מנהל קבוצת Pods זהים ומבטיח שהמספר הרצוי תמיד רץ\n🔹 replicas – עותקים זהים של ה-Pod שרצים במקביל\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app`,
+        theory: `Pods ו-Deployments הם ליבת Kubernetes.\n🔹 Pod – יחידת הריצה הקטנה ביותר, מכיל קונטיינר אחד או יותר\n🔹 Pods זמניים – Pod מנוהל (Deployment/ReplicaSet) שמת, נוצר חדש עם IP חדש. Pod עצמאי שמת - נשאר מת\n🔹 Deployment מנהל קבוצת Pods זהים ומבטיח שהמספר הרצוי תמיד רץ\n🔹 replicas – עותקים זהים של ה-Pod שרצים במקביל\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app`,
         theoryEn: `Pods and Deployments are the core of Kubernetes.\n🔹 Pod – the smallest unit of execution, contains one or more containers\n🔹 Pods are ephemeral – a managed Pod (Deployment/ReplicaSet) that dies gets replaced with a new one and a new IP. A standalone Pod that dies stays dead\n🔹 Deployment manages a group of identical Pods and ensures the desired count is running\n🔹 replicas – identical copies of the Pod running in parallel\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app`,
         questions: [
           {
@@ -70,7 +70,7 @@ export const TOPICS = [
               "ה-Service המחובר אליו עובר אוטומטית ל-Pod אחר ב-Namespace",
             ],
             answer: 2,
-            explanation: "כש-Pod מנוהל על ידי Deployment או ReplicaSet מת, ה-Controller יוצר Pod חדש עם IP חדש אוטומטית. שים לב: Pod עצמאי (standalone) שמת — לא יוחלף, הוא נשאר מת. לכן לא מתחברים ל-IP של Pod ישירות אלא דרך Service.",
+            explanation: "כש-Pod מנוהל על ידי Deployment או ReplicaSet מת, ה-Controller יוצר Pod חדש עם IP חדש אוטומטית. שים לב: Pod עצמאי (standalone) שמת - לא יוחלף, הוא נשאר מת. לכן לא מתחברים ל-IP של Pod ישירות אלא דרך Service.",
           },
           {
             q: "מה Deployment עושה?",
@@ -92,7 +92,7 @@ export const TOPICS = [
               "volumes שמשותפים בין Pods שונים באותו Namespace",
             ],
             answer: 1,
-            explanation: "Replicas הם עותקים זהים של ה-Pod שרצים במקביל. הם מספקים זמינות גבוהה — אם Pod אחד נכשל, האחרים ממשיכים לקבל traffic. ה-Scheduler מנסה לפזר replicas על Nodes שונים למניעת נקודת כשל יחידה.",
+            explanation: "Replicas הם עותקים זהים של ה-Pod שרצים במקביל. הם מספקים זמינות גבוהה - אם Pod אחד נכשל, האחרים ממשיכים לקבל traffic. ה-Scheduler מנסה לפזר replicas על Nodes שונים למניעת נקודת כשל יחידה.",
           },
           {
             q: "מה זה init container?",
@@ -298,7 +298,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Pod is Kubernetes' basic deployable unit — think of it as a wrapper that holds one or more containers that always run together on the same machine. All containers inside a Pod share the same network address (IP) and can share storage volumes. Kubernetes schedules and manages Pods, not individual containers directly.",
+              "A Pod is Kubernetes' basic deployable unit - think of it as a wrapper that holds one or more containers that always run together on the same machine. All containers inside a Pod share the same network address (IP) and can share storage volumes. Kubernetes schedules and manages Pods, not individual containers directly.",
           },
           {
             q: "What happens when a Pod managed by a Deployment dies?",
@@ -310,7 +310,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "When a Pod managed by a Deployment or ReplicaSet dies, the controller automatically creates a replacement with a new IP. Important: a standalone Pod that dies is NOT recreated — it stays dead. This is why you always connect via a Service, not directly to a Pod's IP.",
+              "When a Pod managed by a Deployment or ReplicaSet dies, the controller automatically creates a replacement with a new IP. Important: a standalone Pod that dies is NOT recreated - it stays dead. This is why you always connect via a Service, not directly to a Pod's IP.",
           },
           {
             q: "What does a Deployment do?",
@@ -334,7 +334,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Replicas are identical copies of your Pod running at the same time. Running multiple replicas means if one Pod crashes, the others keep serving traffic — this is called high availability. The Scheduler tries to spread replicas across different Nodes so a single machine failure cannot take down your entire application.",
+              "Replicas are identical copies of your Pod running at the same time. Running multiple replicas means if one Pod crashes, the others keep serving traffic - this is called high availability. The Scheduler tries to spread replicas across different Nodes so a single machine failure cannot take down your entire application.",
           },
           {
             q: "What is an init container?",
@@ -352,7 +352,7 @@ export const TOPICS = [
             q: "What does a liveness probe do?",
             options: [
               "Checks that the Pod is connected to the correct Service and receiving traffic",
-              "Checks the container is alive — if it fails, Kubernetes restarts it",
+              "Checks the container is alive - if it fails, Kubernetes restarts it",
               "Checks that configuration files loaded successfully at Pod startup",
               "Verifies that API server connectivity is still valid from within the container",
             ],
@@ -375,14 +375,14 @@ export const TOPICS = [
           {
             q: "What is the default restartPolicy for a Pod?",
             options: [
-              "Never — Kubernetes never restarts a stopped container",
-              "OnFailure — Kubernetes restarts only if the exit code is non-zero",
-              "Always — Kubernetes always restarts a stopped container",
-              "OnSuccess — Kubernetes restarts the container only when it exits cleanly with code 0",
+              "Never - Kubernetes never restarts a stopped container",
+              "OnFailure - Kubernetes restarts only if the exit code is non-zero",
+              "Always - Kubernetes always restarts a stopped container",
+              "OnSuccess - Kubernetes restarts the container only when it exits cleanly with code 0",
             ],
             answer: 2,
             explanation:
-              "restartPolicy controls when Kubernetes restarts a stopped container. 'Always' (the default) restarts the container no matter what — whether it crashed or exited cleanly. 'OnFailure' restarts only on a non-zero exit code (error). 'Never' never restarts it. Most long-running apps (web servers, APIs) use the default 'Always'.",
+              "restartPolicy controls when Kubernetes restarts a stopped container. 'Always' (the default) restarts the container no matter what - whether it crashed or exited cleanly. 'OnFailure' restarts only on a non-zero exit code (error). 'Never' never restarts it. Most long-running apps (web servers, APIs) use the default 'Always'.",
           },
           {
             q: "What is the difference between a Job and a CronJob?",
@@ -406,7 +406,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "requests tells Kubernetes the minimum CPU and memory your container needs to run properly. The Scheduler uses this value when deciding which Node to place the Pod on — it only considers Nodes that have at least that much free capacity. Setting requests too low can cause performance problems; setting them too high wastes cluster resources. Note: requests are a scheduling hint — the container can still use more (up to its limit). The hard cap is set separately via limits.",
+              "requests tells Kubernetes the minimum CPU and memory your container needs to run properly. The Scheduler uses this value when deciding which Node to place the Pod on - it only considers Nodes that have at least that much free capacity. Setting requests too low can cause performance problems; setting them too high wastes cluster resources. Note: requests are a scheduling hint - the container can still use more (up to its limit). The hard cap is set separately via limits.",
           },
           {
             q: "What is a ReplicaSet in Kubernetes?",
@@ -442,7 +442,7 @@ export const TOPICS = [
             ],
             answer: 3,
             explanation:
-              "Labels are key-value pairs for tagging and filtering via selectors (Services, Deployments). Annotations store extra metadata (URLs, owners, build IDs) — not usable in selectors.",
+              "Labels are key-value pairs for tagging and filtering via selectors (Services, Deployments). Annotations store extra metadata (URLs, owners, build IDs) - not usable in selectors.",
           },
           {
             q: "What is the difference between kubectl apply and kubectl create?",
@@ -490,7 +490,7 @@ export const TOPICS = [
             ],
             answer: 3,
             explanation:
-              "When you delete a Pod, Kubernetes first sends SIGTERM — a polite OS signal telling the process 'please shut down soon'. The app has terminationGracePeriodSeconds (default: 30 seconds) to finish in-flight requests and clean up. After that deadline, Kubernetes sends SIGKILL, which force-terminates the process immediately no matter what it is doing. Setting a higher value gives slow-shutting-down apps time to complete; setting it to 0 skips graceful shutdown entirely.",
+              "When you delete a Pod, Kubernetes first sends SIGTERM - a polite OS signal telling the process 'please shut down soon'. The app has terminationGracePeriodSeconds (default: 30 seconds) to finish in-flight requests and clean up. After that deadline, Kubernetes sends SIGKILL, which force-terminates the process immediately no matter what it is doing. Setting a higher value gives slow-shutting-down apps time to complete; setting it to 0 skips graceful shutdown entirely.",
           },
           {
             q: "What characterises a multi-container Pod?",
@@ -509,7 +509,7 @@ export const TOPICS = [
             options: [
               "Deletes the Pod and exports its spec to a local YAML file",
               "Shows only errors and warnings recorded in the Pod's events",
-              "Displays the full Pod spec as YAML — useful for debugging and export",
+              "Displays the full Pod spec as YAML - useful for debugging and export",
               "Restarts the Pod while preserving its IP and volumes",
             ],
             answer: 2,
@@ -543,7 +543,7 @@ export const TOPICS = [
               "מגביל את מספר הPods המחוברים ל-Service בזמן עדכון",
             ],
             answer: 1,
-            explanation: "Rolling Update מחליף Pods בהדרגה — Pod חדש עולה ורק אז Pod ישן יורד. כך תמיד יש Pods זמינים ואין downtime. בשונה מ-Recreate שמוחק הכל ואז יוצר מחדש ויגרום לdowntime.",
+            explanation: "Rolling Update מחליף Pods בהדרגה - Pod חדש עולה ורק אז Pod ישן יורד. כך תמיד יש Pods זמינים ואין downtime. בשונה מ-Recreate שמוחק הכל ואז יוצר מחדש ויגרום לdowntime.",
           },
           {
             q: "כיצד מבצעים rollback?",
@@ -565,7 +565,7 @@ export const TOPICS = [
               "StatefulSet תומך רק בcloud providers ולא ב-on-premise clusters",
             ],
             answer: 1,
-            explanation: "ב-StatefulSet לכל Pod יש שם קבוע ורציף (pod-0, pod-1, pod-2) ו-PVC ייחודי משלו. Pods עולים בסדר, Pod-0 ראשון. בשונה מ-Deployment, Pods ב-StatefulSet אינם זהים לחלוטין — לכל אחד זהות קבועה גם לאחר restart.",
+            explanation: "ב-StatefulSet לכל Pod יש שם קבוע ורציף (pod-0, pod-1, pod-2) ו-PVC ייחודי משלו. Pods עולים בסדר, Pod-0 ראשון. בשונה מ-Deployment, Pods ב-StatefulSet אינם זהים לחלוטין - לכל אחד זהות קבועה גם לאחר restart.",
           },
           {
             q: "לאיזה אפליקציה מתאים StatefulSet?",
@@ -612,7 +612,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "affinity מגדיר העדפה או חובה לתזמן Pod ליד resources מסוימים (Nodes, Zones, Pods אחרים). anti-affinity עושה ההפך — מבטיח שPods לא ירוצו על אותו Node או Zone. שימוש נפוץ ב-anti-affinity: פיזור replicas לזמינות גבוהה.",
+              "affinity מגדיר העדפה או חובה לתזמן Pod ליד resources מסוימים (Nodes, Zones, Pods אחרים). anti-affinity עושה ההפך - מבטיח שPods לא ירוצו על אותו Node או Zone. שימוש נפוץ ב-anti-affinity: פיזור replicas לזמינות גבוהה.",
           },
           {
             q: "מה resource limits?",
@@ -624,7 +624,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "limits מגדיר את הגבול המקסימלי שקונטיינר יכול לצרוך. חריגה מ-memory limit גורמת ל-OOMKill מיידי (exit code 137). חריגה מ-CPU limit גורמת ל-throttling — ה-CPU של הקונטיינר מוגבל אבל הוא לא מסתיים. להבדיל מ-requests שמשמשים לתזמון.",
+              "limits מגדיר את הגבול המקסימלי שקונטיינר יכול לצרוך. חריגה מ-memory limit גורמת ל-OOMKill מיידי (exit code 137). חריגה מ-CPU limit גורמת ל-throttling - ה-CPU של הקונטיינר מוגבל אבל הוא לא מסתיים. להבדיל מ-requests שמשמשים לתזמון.",
           },
           {
             q: "מה הפקודה לראות rollout history?",
@@ -671,7 +671,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "maxUnavailable מגדיר כמה Pods מותרים להיות לא זמינים בו-זמנית בזמן rolling update. ערך 0 אומר שאף Pod לא ייסגר לפני שPod חדש מוכן — אפס downtime, אבל update איטי יותר ומצריך maxSurge גדול מ-0.",
+              "maxUnavailable מגדיר כמה Pods מותרים להיות לא זמינים בו-זמנית בזמן rolling update. ערך 0 אומר שאף Pod לא ייסגר לפני שPod חדש מוכן - אפס downtime, אבל update איטי יותר ומצריך maxSurge גדול מ-0.",
           },
           {
             q: "מה taints ו-tolerations פותרים?",
@@ -780,7 +780,7 @@ export const TOPICS = [
               "Prevents the Service from routing to unhealthy Pods during upgrade",
             ],
             answer: 1,
-            explanation: "A Rolling Update replaces Pods gradually — a new Pod starts and only then does an old Pod stop. This means there are always running Pods serving traffic and the update causes zero downtime.",
+            explanation: "A Rolling Update replaces Pods gradually - a new Pod starts and only then does an old Pod stop. This means there are always running Pods serving traffic and the update causes zero downtime.",
           },
           {
             q: "How do you perform a rollback?",
@@ -815,7 +815,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Databases and message brokers like MySQL, PostgreSQL, or Kafka require stable network identities and persistent storage that survives Pod restarts — exactly what StatefulSet provides. Stateless apps (web servers, APIs) use Deployments instead.",
+              "Databases and message brokers like MySQL, PostgreSQL, or Kafka require stable network identities and persistent storage that survives Pod restarts - exactly what StatefulSet provides. Stateless apps (web servers, APIs) use Deployments instead.",
           },
           {
             q: "What does a PodDisruptionBudget do?",
@@ -827,7 +827,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A PodDisruptionBudget (PDB) protects your application during planned maintenance. When an operator runs kubectl drain to safely remove all Pods from a Node (for example to upgrade the Node's OS or decommission it), the PDB tells Kubernetes how many of your Pods must stay Running at all times. Example: with minAvailable: 2 and 3 replicas, the drain can only evict one Pod at a time — ensuring at least 2 replicas are always serving traffic.",
+              "A PodDisruptionBudget (PDB) protects your application during planned maintenance. When an operator runs kubectl drain to safely remove all Pods from a Node (for example to upgrade the Node's OS or decommission it), the PDB tells Kubernetes how many of your Pods must stay Running at all times. Example: with minAvailable: 2 and 3 replicas, the drain can only evict one Pod at a time - ensuring at least 2 replicas are always serving traffic.",
           },
           {
             q: "What is nodeSelector?",
@@ -851,7 +851,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Affinity is a rule that draws a Pod toward certain Nodes or toward other Pods (e.g. 'place me on a Node that already runs a cache Pod'). Anti-affinity is the opposite — it pushes Pods apart (e.g. 'never put two replicas of my app on the same Node, so one Node failure doesn't kill both'). Both can be required (hard: the Pod won't schedule if the rule isn't met) or preferred (soft: Kubernetes tries its best but won't block scheduling).",
+              "Affinity is a rule that draws a Pod toward certain Nodes or toward other Pods (e.g. 'place me on a Node that already runs a cache Pod'). Anti-affinity is the opposite - it pushes Pods apart (e.g. 'never put two replicas of my app on the same Node, so one Node failure doesn't kill both'). Both can be required (hard: the Pod won't schedule if the rule isn't met) or preferred (soft: Kubernetes tries its best but won't block scheduling).",
           },
           {
             q: "What are resource limits?",
@@ -863,7 +863,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "limits is the hard ceiling on resources a container can use. Memory: if a container exceeds its memory limit, the Linux kernel immediately kills it — this is called OOMKill (Out Of Memory Kill), visible as exit code 137 in kubectl describe pod. CPU: if a container exceeds its CPU limit, it is throttled (slowed down) — the process keeps running but gets less CPU time. Unlike memory, exceeding the CPU limit never kills the container.",
+              "limits is the hard ceiling on resources a container can use. Memory: if a container exceeds its memory limit, the Linux kernel immediately kills it - this is called OOMKill (Out Of Memory Kill), visible as exit code 137 in kubectl describe pod. CPU: if a container exceeds its CPU limit, it is throttled (slowed down) - the process keeps running but gets less CPU time. Unlike memory, exceeding the CPU limit never kills the container.",
           },
           {
             q: "What command shows rollout history?",
@@ -892,7 +892,7 @@ export const TOPICS = [
             q: "What does strategy: Recreate do in a Deployment?",
             options: [
               "Updates one Pod at a time while keeping full availability throughout",
-              "Deletes all old Pods before creating new ones — causes downtime",
+              "Deletes all old Pods before creating new ones - causes downtime",
               "Creates a new Namespace for each release and gradually shifts traffic",
               "Runs both old and new Pods simultaneously and switches traffic at the end",
             ],
@@ -922,7 +922,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Think of a taint as a 'No entry' sign on a Node — by default, no Pod can be scheduled there. A toleration in the Pod spec is the Pod's pass that lets it ignore a specific taint and land on that Node. This lets you reserve expensive or specialized Nodes (like GPU machines) exclusively for the workloads that need them, keeping them free from unrelated Pods.",
+              "Think of a taint as a 'No entry' sign on a Node - by default, no Pod can be scheduled there. A toleration in the Pod spec is the Pod's pass that lets it ignore a specific taint and land on that Node. This lets you reserve expensive or specialized Nodes (like GPU machines) exclusively for the workloads that need them, keeping them free from unrelated Pods.",
           },
           {
             q: "What is the difference between requiredDuringScheduling and preferredDuringScheduling in affinity?",
@@ -963,20 +963,20 @@ export const TOPICS = [
           {
             q: "What are the three Pod QoS classes?",
             options: [
-              "Low, Medium, High — based on the number of configured replicas",
-              "Guaranteed, Burstable, BestEffort — based on the relationship between requests and limits",
-              "Bronze, Silver, Gold — based on the assigned PriorityClass value",
-              "Fast, Normal, Slow — based on the readiness probe response time",
+              "Low, Medium, High - based on the number of configured replicas",
+              "Guaranteed, Burstable, BestEffort - based on the relationship between requests and limits",
+              "Bronze, Silver, Gold - based on the assigned PriorityClass value",
+              "Fast, Normal, Slow - based on the readiness probe response time",
             ],
             answer: 1,
             explanation:
-              "Kubernetes automatically assigns each Pod a Quality of Service class based on its resource settings. Guaranteed (safest): every container sets requests equal to limits for both CPU and memory — these Pods are last to be evicted. Burstable: at least one container sets requests or limits but doesn't qualify for Guaranteed — can burst above its request when resources are available. BestEffort (riskiest): no requests or limits set at all — these are the first to be evicted when a Node runs low on memory. Setting proper requests and limits is important for production workloads.",
+              "Kubernetes automatically assigns each Pod a Quality of Service class based on its resource settings. Guaranteed (safest): every container sets requests equal to limits for both CPU and memory - these Pods are last to be evicted. Burstable: at least one container sets requests or limits but doesn't qualify for Guaranteed - can burst above its request when resources are available. BestEffort (riskiest): no requests or limits set at all - these are the first to be evicted when a Node runs low on memory. Setting proper requests and limits is important for production workloads.",
           },
           {
             q: "What does kubectl rollout pause do?",
             options: [
               "Deletes the Deployment and preserves the current ReplicaSet state",
-              "Freezes the rolling update at the current step — useful for canary deploys",
+              "Freezes the rolling update at the current step - useful for canary deploys",
               "Reverts the Deployment to the previous revision without saving a new revision",
               "Stops all Pods from receiving traffic via the Service until manually resumed",
             ],
@@ -1035,7 +1035,7 @@ export const TOPICS = [
               "Helm Package Archive – פורמט שמירה של Helm charts",
             ],
             answer: 1,
-            explanation: "HPA (Horizontal Pod Autoscaler) עוקב אחרי מדדים כמו CPU ו-Memory ומשנה את מספר ה-replicas אוטומטית. כשהעומס עולה — הוא מוסיף Pods; כשיורד — הוא מסיר. דורש metrics-server מותקן ב-Cluster.",
+            explanation: "HPA (Horizontal Pod Autoscaler) עוקב אחרי מדדים כמו CPU ו-Memory ומשנה את מספר ה-replicas אוטומטית. כשהעומס עולה - הוא מוסיף Pods; כשיורד - הוא מסיר. דורש metrics-server מותקן ב-Cluster.",
           },
           {
             q: "מה משמעות CrashLoopBackOff?",
@@ -1046,7 +1046,7 @@ export const TOPICS = [
               "אין מספיק זיכרון פנוי ב-Node לתזמון הPod",
             ],
             answer: 1,
-            explanation: "CrashLoopBackOff פירושו שהקונטיינר עולה, קורס מיד, ו-Kubernetes מנסה להפעיל אותו שוב — אבל מוסיף המתנה הולכת וגדלה (10s, 20s, 40s...) בין ניסיונות. הסיבות הנפוצות: קוד ב-entrypoint קורס, חסר env var חיוני, או קובץ config חסר.",
+            explanation: "CrashLoopBackOff פירושו שהקונטיינר עולה, קורס מיד, ו-Kubernetes מנסה להפעיל אותו שוב - אבל מוסיף המתנה הולכת וגדלה (10s, 20s, 40s...) בין ניסיונות. הסיבות הנפוצות: קוד ב-entrypoint קורס, חסר env var חיוני, או קובץ config חסר.",
           },
           {
             q: "מה זה OOMKilled?",
@@ -1129,7 +1129,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PriorityClass הוא משאב ב-Kubernetes שמגדיר מספר עדיפות לPod (למשל: 1000 גבוה מ-500). Scheduler תמיד ינסה לתזמן קודם Pods עם עדיפות גבוהה יותר. Preemption: אם ל-Cluster אין מספיק משאבים לPod בעדיפות גבוהה, Kubernetes יפנה מקום ב-Node על ידי פינוי (eviction) של Pods בעדיפות נמוכה יותר — זה נקרא preemption. כך Pods קריטיים כמו מערכת ניטור תמיד יקבלו משאבים, גם כשה-Cluster עמוס.",
+              "PriorityClass הוא משאב ב-Kubernetes שמגדיר מספר עדיפות לPod (למשל: 1000 גבוה מ-500). Scheduler תמיד ינסה לתזמן קודם Pods עם עדיפות גבוהה יותר. Preemption: אם ל-Cluster אין מספיק משאבים לPod בעדיפות גבוהה, Kubernetes יפנה מקום ב-Node על ידי פינוי (eviction) של Pods בעדיפות נמוכה יותר - זה נקרא preemption. כך Pods קריטיים כמו מערכת ניטור תמיד יקבלו משאבים, גם כשה-Cluster עמוס.",
           },
           {
             q: "Pod נשאר Pending.\n\nkubectl describe מראה:\nEvents:\n  Warning  FailedScheduling  0/3 nodes are available: 3 node(s) had untolerated taint {dedicated:gpu}.\n\nמה הפתרון?",
@@ -1153,7 +1153,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "עם podManagementPolicy: OrderedReady (ברירת המחדל), StatefulSet מתזמן Pods בסדר ordinal: pod-0 חייב להיות Ready לפני שpod-1 מתחיל. עם Parallel — כולם עולים בו-זמנית. בדוק kubectl describe pod pod-0 לגלות מה מונע ממנו להיות Ready.",
+              "עם podManagementPolicy: OrderedReady (ברירת המחדל), StatefulSet מתזמן Pods בסדר ordinal: pod-0 חייב להיות Ready לפני שpod-1 מתחיל. עם Parallel - כולם עולים בו-זמנית. בדוק kubectl describe pod pod-0 לגלות מה מונע ממנו להיות Ready.",
           },
           {
             q: "בודק את מצב ה-HPA בCluster.\n\nkubectl get hpa מציג:\nNAME    REFERENCE         TARGETS         MINPODS  MAXPODS  REPLICAS\napp-hpa  Deployment/app   <unknown>/50%   2        10       2\n\nמה הסיבה ל-<unknown>?",
@@ -1165,7 +1165,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "HPA תלוי ב-metrics-server כדי לקבל נתוני CPU. כשmetrics-server לא מותקן, ה-TARGETS מציג <unknown>. סיבה נוספת נפוצה: Pod ללא resources.requests.cpu — HPA לא מצליח לחשב אחוז ניצול. בדוק עם: kubectl get apiservice v1beta1.metrics.k8s.io.",
+              "HPA תלוי ב-metrics-server כדי לקבל נתוני CPU. כשmetrics-server לא מותקן, ה-TARGETS מציג <unknown>. סיבה נוספת נפוצה: Pod ללא resources.requests.cpu - HPA לא מצליח לחשב אחוז ניצול. בדוק עם: kubectl get apiservice v1beta1.metrics.k8s.io.",
           },
           {
             q: "Rolling update נתקע.\n\nkubectl rollout status מציג:\nWaiting for rollout to finish: 3 out of 5 new replicas have been updated...\nה-YAML מגדיר maxUnavailable: 0.\n\nמה הסיבה?",
@@ -1263,15 +1263,15 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A DaemonSet is a 'run everywhere' guarantee — Kubernetes automatically creates exactly one copy of the Pod on each Node in the cluster. When a new Node joins, the DaemonSet Pod is added to it without any manual action. When a Node is removed, its DaemonSet Pod is garbage-collected. This is ideal for infrastructure tools that must run on every machine: log collectors (e.g. Fluentd), monitoring agents (e.g. Prometheus node-exporter), or network plugins (CNI).",
+              "A DaemonSet is a 'run everywhere' guarantee - Kubernetes automatically creates exactly one copy of the Pod on each Node in the cluster. When a new Node joins, the DaemonSet Pod is added to it without any manual action. When a Node is removed, its DaemonSet Pod is garbage-collected. This is ideal for infrastructure tools that must run on every machine: log collectors (e.g. Fluentd), monitoring agents (e.g. Prometheus node-exporter), or network plugins (CNI).",
           },
           {
             q: "What is HPA?",
             options: [
-              "High Performance App — a Pod configuration optimised for compute-intensive tasks",
-              "Horizontal Pod Autoscaler — scales Pods automatically based on CPU/Memory",
-              "Host Port Assignment — allocates host ports on Nodes for Pod services",
-              "Helm Package Archive — the storage format for packaged Helm charts",
+              "High Performance App - a Pod configuration optimised for compute-intensive tasks",
+              "Horizontal Pod Autoscaler - scales Pods automatically based on CPU/Memory",
+              "Host Port Assignment - allocates host ports on Nodes for Pod services",
+              "Helm Package Archive - the storage format for packaged Helm charts",
             ],
             answer: 1,
             explanation: "HPA (Horizontal Pod Autoscaler) watches metrics like CPU and Memory usage and automatically adjusts the replica count. When load increases it adds Pods; when load drops it removes them. Requires metrics-server to be installed in the cluster.",
@@ -1286,7 +1286,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "CrashLoopBackOff means the container starts, crashes almost immediately, and Kubernetes tries to restart it — but adds an exponentially increasing delay between attempts (10s, 20s, 40s, up to ~5 minutes) to avoid hammering a broken system. Common causes: the app's startup command fails (e.g. script not found), a required environment variable is missing, a config file is absent or invalid, or the app tries to connect to a dependency (like a database) that isn't ready yet. Diagnose with kubectl logs <pod> and kubectl describe pod <pod>.",
+              "CrashLoopBackOff means the container starts, crashes almost immediately, and Kubernetes tries to restart it - but adds an exponentially increasing delay between attempts (10s, 20s, 40s, up to ~5 minutes) to avoid hammering a broken system. Common causes: the app's startup command fails (e.g. script not found), a required environment variable is missing, a config file is absent or invalid, or the app tries to connect to a dependency (like a database) that isn't ready yet. Diagnose with kubectl logs <pod> and kubectl describe pod <pod>.",
           },
           {
             q: "What is OOMKilled?",
@@ -1358,7 +1358,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "DaemonSets are used for node-level agents: Fluentd, Prometheus node-exporter, CNI plugins — one per Node.",
+              "DaemonSets are used for node-level agents: Fluentd, Prometheus node-exporter, CNI plugins - one per Node.",
           },
           {
             q: "What does PriorityClass determine?",
@@ -1370,7 +1370,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "PriorityClass is a Kubernetes resource that assigns a numeric priority to a Pod (e.g. 1000 outranks 500). The scheduler always tries to place higher-priority Pods first. Preemption: if the cluster lacks resources for a high-priority Pod, Kubernetes evicts lower-priority Pods from a Node to make room — that is called preemption. This ensures critical Pods (e.g. monitoring, system services) always get resources, even under heavy load.",
+              "PriorityClass is a Kubernetes resource that assigns a numeric priority to a Pod (e.g. 1000 outranks 500). The scheduler always tries to place higher-priority Pods first. Preemption: if the cluster lacks resources for a high-priority Pod, Kubernetes evicts lower-priority Pods from a Node to make room - that is called preemption. This ensures critical Pods (e.g. monitoring, system services) always get resources, even under heavy load.",
           },
           {
             q: "A Pod stays Pending.\n\nkubectl describe shows:\nEvents:\n  Warning  FailedScheduling  0/3 nodes available: 3 node(s) had untolerated taint {dedicated:gpu}.\n\nWhat is the fix?",
@@ -1388,25 +1388,25 @@ export const TOPICS = [
             q: "A StatefulSet with 3 replicas is running in your cluster. Pod-1 stays Pending.\n\nWhat is the most likely cause?",
             options: [
               "The PVC for pod-1 is full and no additional storage can be allocated",
-              "Pod-0 is not Ready — StatefulSet schedules Pods in ordinal order",
+              "Pod-0 is not Ready - StatefulSet schedules Pods in ordinal order",
               "The Namespace quota has been reached and no new Pod can be created",
               "The imagePullSecret is incorrect and prevents pulling the image for pod-1",
             ],
             answer: 1,
             explanation:
-              "StatefulSet schedules Pods in ordinal order: pod-0 must be Ready before pod-1 is created. This is intentional — it ensures ordered startup for stateful applications. Check kubectl describe pod pod-0 to find what is preventing it from becoming Ready.",
+              "StatefulSet schedules Pods in ordinal order: pod-0 must be Ready before pod-1 is created. This is intentional - it ensures ordered startup for stateful applications. Check kubectl describe pod pod-0 to find what is preventing it from becoming Ready.",
           },
           {
             q: "You check the HPA status in the cluster.\n\nkubectl get hpa shows:\nNAME    TARGETS         MINPODS  MAXPODS  REPLICAS\napp-hpa  <unknown>/50%   2        10       2\n\nWhat causes <unknown>?",
             options: [
               "The Deployment the HPA references does not exist in the Namespace",
-              "metrics-server is not installed — HPA cannot receive CPU metrics",
+              "metrics-server is not installed - HPA cannot receive CPU metrics",
               "The CPU limit is not defined in the Pod spec so no percentage can be calculated",
               "The replica count is 0 and there are no Pods reporting metrics",
             ],
             answer: 1,
             explanation:
-              "HPA depends on metrics-server to receive CPU data. When metrics-server is absent the TARGETS column shows <unknown>. Verify with: kubectl get apiservice v1beta1.metrics.k8s.io — if it is missing, install metrics-server.",
+              "HPA depends on metrics-server to receive CPU data. When metrics-server is absent the TARGETS column shows <unknown>. Verify with: kubectl get apiservice v1beta1.metrics.k8s.io - if it is missing, install metrics-server.",
           },
           {
             q: "A rolling update is stuck.\n\nkubectl rollout status shows:\nWaiting for rollout to finish: 3 out of 5 new replicas updated...\nThe YAML sets maxUnavailable: 0.\n\nWhat is the cause?",
@@ -1418,7 +1418,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "maxUnavailable:0 means Kubernetes cannot remove an old Pod until a new one becomes Ready. If new Pods fail their readiness probe, the rollout permanently stalls — old Pods stay up but new ones never get promoted. Check kubectl logs on a new Pod to find the readiness failure.",
+              "maxUnavailable:0 means Kubernetes cannot remove an old Pod until a new one becomes Ready. If new Pods fail their readiness probe, the rollout permanently stalls - old Pods stay up but new ones never get promoted. Check kubectl logs on a new Pod to find the readiness failure.",
           },
           {
             q: "A DaemonSet Pod is missing from a new Node.\n\nkubectl describe node shows:\nTaints: node-role.kubernetes.io/control-plane:NoSchedule\nThe DaemonSet has no tolerations.\n\nWhat is the fix?",
@@ -1448,7 +1448,7 @@ export const TOPICS = [
             q: "A Job never completed.\n\nkubectl describe job shows:\nWarning  BackoffLimitExceeded  Job has reached the specified backoff limit\n\nWhat happens next?",
             options: [
               "The Job keeps running indefinitely and retries without any limit",
-              "Job is marked Failed — Kubernetes stops retrying and the object remains for inspection",
+              "Job is marked Failed - Kubernetes stops retrying and the object remains for inspection",
               "All Job Pods are immediately deleted and the Namespace is cleaned up",
               "The Job object is automatically deleted from the Namespace after the failure",
             ],
@@ -1460,7 +1460,7 @@ export const TOPICS = [
             q: "A Deployment does not manage its Pods. kubectl get pods --show-labels shows: app=backend-v2.\n\nThe Deployment spec reads:\nspec:\n  selector:\n    matchLabels:\n      app: backend\n\nWhat is wrong?",
             options: [
               "The Pods are in a different Namespace than the Deployment",
-              "selector doesn't match Pod labels — 'backend' ≠ 'backend-v2'",
+              "selector doesn't match Pod labels - 'backend' ≠ 'backend-v2'",
               "The container image is wrong and Pods cannot start successfully",
               "The Service is missing so the Deployment cannot discover its Pods",
             ],
@@ -1483,14 +1483,14 @@ export const TOPICS = [
           {
             q: "VPA is in Recommendation mode.\n\nkubectl describe vpa shows:\nTarget: cpu: 450m  memory: 512Mi\nThe Pod runs with requests: cpu: 100m  memory: 128Mi.\n\nWhat must you do?",
             options: [
-              "Nothing — VPA updates the Pod's requests automatically in Recommendation mode",
-              "VPA only recommends — update the Deployment requests manually to match the target",
+              "Nothing - VPA updates the Pod's requests automatically in Recommendation mode",
+              "VPA only recommends - update the Deployment requests manually to match the target",
               "Delete the Pod so VPA can apply the recommended requests on the next startup",
               "Scale up the replica count so the load is distributed and recommendations become lower",
             ],
             answer: 1,
             explanation:
-              "VPA Recommendation mode is read-only — it records what the resource requests should be but makes no changes. Only Auto and Initial modes actually mutate Pod specs. You must manually update the Deployment's requests to match the VPA recommendation.",
+              "VPA Recommendation mode is read-only - it records what the resource requests should be but makes no changes. Only Auto and Initial modes actually mutate Pod specs. You must manually update the Deployment's requests to match the VPA recommendation.",
           },
         ],
       },
@@ -1539,7 +1539,7 @@ export const TOPICS = [
               "VPN שמחבר Pods ב-Clusters שונים לתקשורת מאובטחת",
             ],
             answer: 1,
-            explanation: "ClusterIP הוא סוג ה-Service הדיפולטי — מקצה IP וירטואלי פנימי שנגיש רק מתוך ה-Cluster. Pods אחרים יכולים לגשת אליו לפי שם ב-DNS (my-service.my-ns.svc.cluster.local). אינו נגיש מחוץ לCluster ללא Ingress או port-forward.",
+            explanation: "ClusterIP הוא סוג ה-Service הדיפולטי - מקצה IP וירטואלי פנימי שנגיש רק מתוך ה-Cluster. Pods אחרים יכולים לגשת אליו לפי שם ב-DNS (my-service.my-ns.svc.cluster.local). אינו נגיש מחוץ לCluster ללא Ingress או port-forward.",
           },
           {
             q: "כיצד Service מוצא את ה-Pods שלו?",
@@ -1756,7 +1756,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Pod is the smallest unit running your application in Kubernetes. Every time a Pod restarts, it gets a brand-new IP address — so you can't reliably connect to it directly. A Service provides a permanent, stable IP address (called ClusterIP) that never changes. Kubernetes automatically routes traffic from the Service to whichever Pods are currently healthy and running.",
+              "A Pod is the smallest unit running your application in Kubernetes. Every time a Pod restarts, it gets a brand-new IP address - so you can't reliably connect to it directly. A Service provides a permanent, stable IP address (called ClusterIP) that never changes. Kubernetes automatically routes traffic from the Service to whichever Pods are currently healthy and running.",
           },
           {
             q: "Which Service type is for cloud external access?",
@@ -1779,7 +1779,7 @@ export const TOPICS = [
               "A VPN tunnel connecting Pods in different Clusters for secure communication",
             ],
             answer: 1,
-            explanation: "ClusterIP is the default Service type — it assigns a virtual internal IP reachable only from within the Cluster. Other Pods can reach it by DNS name (my-service.my-ns.svc.cluster.local). It is not reachable from outside the Cluster without an Ingress or port-forward.",
+            explanation: "ClusterIP is the default Service type - it assigns a virtual internal IP reachable only from within the Cluster. Other Pods can reach it by DNS name (my-service.my-ns.svc.cluster.local). It is not reachable from outside the Cluster without an Ingress or port-forward.",
           },
           {
             q: "How does a Service find its Pods?",
@@ -1807,26 +1807,26 @@ export const TOPICS = [
           {
             q: "What is the difference between port and targetPort in a Service?",
             options: [
-              "There is no difference — both define the same port the Service listens and forwards on",
+              "There is no difference - both define the same port the Service listens and forwards on",
               "port is the Service port; targetPort is the container port",
               "targetPort is used for HTTP traffic only while port handles all other protocols",
               "port governs external traffic routing while targetPort governs internal Service-to-Service traffic",
             ],
             answer: 1,
             explanation:
-              "port is the port that the Service exposes to the rest of the cluster (e.g., 80). targetPort is the port the container inside the Pod is actually listening on (e.g., 8080). They can be different — for example, your application might listen on port 8080, but you expose it as port 80 via the Service so callers use the conventional HTTP port.",
+              "port is the port that the Service exposes to the rest of the cluster (e.g., 80). targetPort is the port the container inside the Pod is actually listening on (e.g., 8080). They can be different - for example, your application might listen on port 8080, but you expose it as port 80 via the Service so callers use the conventional HTTP port.",
           },
           {
             q: "What is a headless Service?",
             options: [
-              "A Service with clusterIP: None — returns Pod IPs directly instead of a single load-balanced IP",
+              "A Service with clusterIP: None - returns Pod IPs directly instead of a single load-balanced IP",
               "A regular Service with ClusterIP that provides internal load balancing",
               "A Service defined without a port that is used for tunneling between Namespaces",
               "A Service that supports only IPv6 and rejects IPv4 connections",
             ],
             answer: 0,
             explanation:
-              "A headless Service is created by setting clusterIP: None. Unlike a normal Service, it has no shared virtual IP. Instead, DNS returns the individual IP addresses of each Pod directly. This is mainly used with StatefulSets — workloads like databases (e.g., MySQL, Cassandra) where each Pod has its own identity and needs to be addressable individually, rather than through a shared load-balanced IP.",
+              "A headless Service is created by setting clusterIP: None. Unlike a normal Service, it has no shared virtual IP. Instead, DNS returns the individual IP addresses of each Pod directly. This is mainly used with StatefulSets - workloads like databases (e.g., MySQL, Cassandra) where each Pod has its own identity and needs to be addressable individually, rather than through a shared load-balanced IP.",
           },
           {
             q: "What is an ExternalName Service?",
@@ -1874,7 +1874,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kube-proxy is a networking agent that runs on every Node. When you create a Service, kube-proxy programs the node's kernel networking rules (using iptables or IPVS — two Linux packet-routing mechanisms) so that traffic sent to the Service's stable IP is automatically redirected to one of the actual Pod IPs. Without kube-proxy, Service IPs would not route to any Pod.",
+              "kube-proxy is a networking agent that runs on every Node. When you create a Service, kube-proxy programs the node's kernel networking rules (using iptables or IPVS - two Linux packet-routing mechanisms) so that traffic sent to the Service's stable IP is automatically redirected to one of the actual Pod IPs. Without kube-proxy, Service IPs would not route to any Pod.",
           },
           {
             q: "What is the purpose of an Ingress in Kubernetes?",
@@ -1918,11 +1918,11 @@ export const TOPICS = [
               "L7 load balancing is faster because it performs fewer packet inspections than L4",
               "L4 routes by IP/Port; L7 routes by HTTP headers, path, and hostname",
               "L4 is exclusively for HTTPS traffic while L7 handles only unencrypted HTTP",
-              "There is no functional difference — only the controller implementation differs",
+              "There is no functional difference - only the controller implementation differs",
             ],
             answer: 1,
             explanation:
-              "L4 and L7 refer to layers in the OSI networking model. L4 (Transport Layer) routing only looks at the IP address and port number — it forwards traffic without inspecting its content. L7 (Application Layer) routing can read the actual HTTP content: URL path, headers, or hostname. In Kubernetes, Services operate at L4 (they forward TCP/UDP connections by IP and port), while Ingress operates at L7 (it can route /api to one Service and /web to another based on the URL).",
+              "L4 and L7 refer to layers in the OSI networking model. L4 (Transport Layer) routing only looks at the IP address and port number - it forwards traffic without inspecting its content. L7 (Application Layer) routing can read the actual HTTP content: URL path, headers, or hostname. In Kubernetes, Services operate at L4 (they forward TCP/UDP connections by IP and port), while Ingress operates at L7 (it can route /api to one Service and /web to another based on the URL).",
           },
           {
             q: "What is ExternalTrafficPolicy on a Service?",
@@ -1934,7 +1934,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ExternalTrafficPolicy: Cluster (default) — NATed to Pod IP but original client IP is lost. Local — preserves source IP but only Nodes that have a Pod receive traffic.",
+              "ExternalTrafficPolicy: Cluster (default) - NATed to Pod IP but original client IP is lost. Local - preserves source IP but only Nodes that have a Pod receive traffic.",
           },
           {
             q: "What is an Endpoint object in Kubernetes?",
@@ -1952,19 +1952,19 @@ export const TOPICS = [
             q: "What is containerPort in a Pod spec?",
             options: [
               "The port the Service exposes externally and routes incoming traffic through",
-              "Port the container listens on — primarily for documentation, does not open or block ports",
+              "Port the container listens on - primarily for documentation, does not open or block ports",
               "The port the Ingress controller uses when routing HTTP requests to the Pod",
               "The port automatically assigned to the NodePort service linked to this Pod",
             ],
             answer: 1,
             explanation:
-              "containerPort documents the port the container listens on. It is informational only — it doesn't create firewall rules. Services and NetworkPolicies work independently of it.",
+              "containerPort documents the port the container listens on. It is informational only - it doesn't create firewall rules. Services and NetworkPolicies work independently of it.",
           },
           {
             q: "What is an EndpointSlice in Kubernetes?",
             options: [
               "An older version of Endpoints still supported for backwards compatibility in legacy clusters",
-              "A more scalable replacement for Endpoints — limited to 100 endpoints per slice for better performance",
+              "A more scalable replacement for Endpoints - limited to 100 endpoints per slice for better performance",
               "An Ingress rule that defines routing to a specific backend endpoint",
               "A NetworkPolicy rule that restricts access to specific Endpoints by label",
             ],
@@ -1976,13 +1976,13 @@ export const TOPICS = [
             q: "What happens to traffic when a Service has no Ready Pods?",
             options: [
               "Traffic is queued in the Service and delivered when a Pod becomes Ready",
-              "Traffic is dropped — the Service's Endpoints list is empty and there are no backends to route to",
+              "Traffic is dropped - the Service's Endpoints list is empty and there are no backends to route to",
               "Traffic is forwarded to a default backend Pod defined in the cluster configuration",
               "Traffic loops back to the originating Pod as a fallback routing mechanism",
             ],
             answer: 1,
             explanation:
-              "A readiness probe is a periodic health check that Kubernetes runs to decide whether a Pod is ready to receive traffic. When a Pod fails its readiness probe (for example, the app hasn't finished starting, or it's temporarily overloaded), Kubernetes removes that Pod from the Service's Endpoints list — the list of Pods the Service actively routes traffic to. When the Endpoints list is empty, the Service has no backends and all incoming connections are immediately refused.",
+              "A readiness probe is a periodic health check that Kubernetes runs to decide whether a Pod is ready to receive traffic. When a Pod fails its readiness probe (for example, the app hasn't finished starting, or it's temporarily overloaded), Kubernetes removes that Pod from the Service's Endpoints list - the list of Pods the Service actively routes traffic to. When the Endpoints list is empty, the Service has no backends and all incoming connections are immediately refused.",
           },
         ],
       },
@@ -1994,7 +1994,7 @@ export const TOPICS = [
             q: "מה ה-DNS name של service בשם 'api' ב-namespace 'prod'?",
             options: ["api.prod", "api.prod.svc", "api.prod.svc.cluster.local", "prod.api.local"],
             answer: 2,
-            explanation: "ה-FQDN המלא הוא service.namespace.svc.cluster.local. CoreDNS מפתח שמות אלו ל-ClusterIP של ה-Service. בתוך אותו Namespace אפשר להשתמש בשם קצר (api בלבד) — CoreDNS מוסיף אוטומטית את הסיומת. api.prod הוא שם קצר שעובד מ-Namespace אחר.",
+            explanation: "ה-FQDN המלא הוא service.namespace.svc.cluster.local. CoreDNS מפתח שמות אלו ל-ClusterIP של ה-Service. בתוך אותו Namespace אפשר להשתמש בשם קצר (api בלבד) - CoreDNS מוסיף אוטומטית את הסיומת. api.prod הוא שם קצר שעובד מ-Namespace אחר.",
           },
           {
             q: "מה היתרון של Ingress על פני LoadBalancer?",
@@ -2227,7 +2227,7 @@ export const TOPICS = [
             q: "What is the DNS name of service 'api' in namespace 'prod'?",
             options: ["api.prod", "api.prod.svc", "api.prod.svc.cluster.local", "prod.api.local"],
             answer: 2,
-            explanation: "The full FQDN is service.namespace.svc.cluster.local. CoreDNS resolves this to the Service's ClusterIP. Within the same Namespace ('prod') you can use just the short name 'api' — CoreDNS automatically appends the namespace and domain suffix. From a different Namespace, use at least 'api.prod' or the full FQDN 'api.prod.svc.cluster.local'.",
+            explanation: "The full FQDN is service.namespace.svc.cluster.local. CoreDNS resolves this to the Service's ClusterIP. Within the same Namespace ('prod') you can use just the short name 'api' - CoreDNS automatically appends the namespace and domain suffix. From a different Namespace, use at least 'api.prod' or the full FQDN 'api.prod.svc.cluster.local'.",
           },
           {
             q: "What is the advantage of Ingress over LoadBalancer?",
@@ -2299,7 +2299,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "An egress NetworkPolicy controls where a Pod is allowed to send traffic. When you add Egress to policyTypes, all outbound traffic from the selected Pods is blocked by default — only destinations you explicitly list in the egress rules are permitted. A common beginner mistake: forgetting to allow port 53 (UDP/TCP) for DNS. Without it, Pods can't resolve any hostnames, even if other egress rules are correct.",
+              "An egress NetworkPolicy controls where a Pod is allowed to send traffic. When you add Egress to policyTypes, all outbound traffic from the selected Pods is blocked by default - only destinations you explicitly list in the egress rules are permitted. A common beginner mistake: forgetting to allow port 53 (UDP/TCP) for DNS. Without it, Pods can't resolve any hostnames, even if other egress rules are correct.",
           },
           {
             q: "What does a service mesh solve?",
@@ -2343,7 +2343,7 @@ export const TOPICS = [
               "ingress applies to HTTP-only connections while egress applies to HTTPS connections",
               "ingress defines inbound traffic to the Pod; egress defines outbound traffic from the Pod",
               "ingress applies at the Node level while egress applies only at the Pod level",
-              "There is no practical difference — both restrict traffic using the same label selectors",
+              "There is no practical difference - both restrict traffic using the same label selectors",
             ],
             answer: 1,
             explanation:
@@ -2353,7 +2353,7 @@ export const TOPICS = [
             q: "How does Ingress route by hostname?",
             options: [
               "By the port on which the request arrives, mapped in spec.ports of the Ingress",
-              "spec.rules[].host: api.example.com — routes traffic for that hostname to the Service",
+              "spec.rules[].host: api.example.com - routes traffic for that hostname to the Service",
               "spec.host at the root of the Ingress spec defines a single hostname for all rules",
               "Via a ConfigMap that maps hostname entries to backend Service names",
             ],
@@ -2365,7 +2365,7 @@ export const TOPICS = [
             q: "What is a Service without a selector (manual Endpoints)?",
             options: [
               "A Service that is automatically deleted because Kubernetes treats a missing selector as an error",
-              "A Service that lets you manually manage Endpoints — useful for connecting to external DBs",
+              "A Service that lets you manually manage Endpoints - useful for connecting to external DBs",
               "An outdated Service definition created in an older API version no longer compatible",
               "A backup Service that activates automatically when the primary Service becomes unavailable",
             ],
@@ -2379,7 +2379,7 @@ export const TOPICS = [
               "Local is always faster because it completely bypasses the kube-proxy NAT layer",
               "Local preserves the source IP but only Nodes with an active Pod receive traffic; Cluster SNATs traffic",
               "Cluster mode is for cloud deployments only while Local is for on-premises environments",
-              "There is no practical difference between the two modes — only the naming differs",
+              "There is no practical difference between the two modes - only the naming differs",
             ],
             answer: 1,
             explanation:
@@ -2391,7 +2391,7 @@ export const TOPICS = [
               "Exact is for HTTPS-only paths while Prefix is for HTTP-only paths",
               "Exact matches only that exact path; Prefix matches that path and all sub-paths",
               "Prefix performs routing faster because it needs fewer path comparison operations",
-              "There is no difference — both types match requests to the same set of paths identically",
+              "There is no difference - both types match requests to the same set of paths identically",
             ],
             answer: 1,
             explanation:
@@ -2401,13 +2401,13 @@ export const TOPICS = [
             q: "What is the difference between kube-proxy iptables and IPVS?",
             options: [
               "IPVS mode is only available in cloud-managed Kubernetes clusters",
-              "iptables uses linear scan; IPVS uses hash tables — IPVS is much faster in large clusters",
+              "iptables uses linear scan; IPVS uses hash tables - IPVS is much faster in large clusters",
               "iptables is more stable and recommended over IPVS for production workloads",
               "IPVS requires a Kubernetes version newer than 1.24 to function correctly",
             ],
             answer: 1,
             explanation:
-              "With iptables, every packet scans through rules linearly. IPVS uses hash tables — O(1) instead of O(n). Critical in large clusters with thousands of Services.",
+              "With iptables, every packet scans through rules linearly. IPVS uses hash tables - O(1) instead of O(n). Critical in large clusters with thousands of Services.",
           },
           {
             q: "What does DNS ndots:5 do in a Pod?",
@@ -2449,7 +2449,7 @@ export const TOPICS = [
             q: "How do you debug why a Service is not reaching its Pods?",
             options: [
               "kubectl logs service/<name> to view connection logs from the Service",
-              "Check kubectl get endpoints <service> — if empty, selector doesn't match labels",
+              "Check kubectl get endpoints <service> - if empty, selector doesn't match labels",
               "kubectl describe service/<name> --show-pods to list all attached Pods",
               "kubectl exec -it service/<name> -- netstat to view active connections",
             ],
@@ -2472,7 +2472,7 @@ export const TOPICS = [
               "רק תנועת HTTPS מותרת ותנועת HTTP נחסמת",
             ],
             answer: 1,
-            explanation: "כשאין NetworkPolicy ב-Namespace, ה-default הוא allow-all — כל Pod יכול לדבר עם כל Pod ב-Cluster. ברגע שמוסיפים NetworkPolicy שמכסה Pod מסוים, כל traffic שלא מורשה במפורש — חסום.",
+            explanation: "כשאין NetworkPolicy ב-Namespace, ה-default הוא allow-all - כל Pod יכול לדבר עם כל Pod ב-Cluster. ברגע שמוסיפים NetworkPolicy שמכסה Pod מסוים, כל traffic שלא מורשה במפורש - חסום.",
           },
           {
             q: "מה נדרש כדי ש-NetworkPolicy יעבוד?",
@@ -2483,7 +2483,7 @@ export const TOPICS = [
               "cloud provider מיוחד שתומך ב-Network Policy API",
             ],
             answer: 1,
-            explanation: "NetworkPolicy היא רק spec — יישום בפועל תלוי ב-CNI plugin. Calico, Cilium, ו-Weave תומכים בה. Flannel ו-kubenet לא מממשים NetworkPolicies — ה-policies יוצרות אבל לא נאכפות.",
+            explanation: "NetworkPolicy היא רק spec - יישום בפועל תלוי ב-CNI plugin. Calico, Cilium, ו-Weave תומכים בה. Flannel ו-kubenet לא מממשים NetworkPolicies - ה-policies יוצרות אבל לא נאכפות.",
           },
           {
             q: "מה מטרת Namespace?",
@@ -2494,7 +2494,7 @@ export const TOPICS = [
               "DNS גלובלי שמשתף names בין כל ה-Clusters",
             ],
             answer: 1,
-            explanation: "Namespace מספק בידוד לוגי בתוך Cluster אחד — Resources ב-Namespace אחד לא נגישים ישירות מ-Namespace אחר. משמש להפרדת צוותים (dev/ops), פרויקטים, או סביבות (dev/staging/prod). ResourceQuota ו-RBAC מוגדרים ברמת ה-Namespace.",
+            explanation: "Namespace מספק בידוד לוגי בתוך Cluster אחד - Resources ב-Namespace אחד לא נגישים ישירות מ-Namespace אחר. משמש להפרדת צוותים (dev/ops), פרויקטים, או סביבות (dev/staging/prod). ResourceQuota ו-RBAC מוגדרים ברמת ה-Namespace.",
           },
           {
             q: "מה ResourceQuota עושה?",
@@ -2505,7 +2505,7 @@ export const TOPICS = [
               "מחלק resources שווה בין כל ה-Pods ב-Namespace",
             ],
             answer: 1,
-            explanation: "ResourceQuota מגדיר תקרות לצריכה ב-Namespace: מקסימום CPU, Memory, מספר Pods, Services, PVCs ועוד. כשהתקרה מלאה — Pod חדש נדחה עם שגיאה. שימושי למניעת namespace אחד מלבלוע את כל משאבי ה-Cluster.",
+            explanation: "ResourceQuota מגדיר תקרות לצריכה ב-Namespace: מקסימום CPU, Memory, מספר Pods, Services, PVCs ועוד. כשהתקרה מלאה - Pod חדש נדחה עם שגיאה. שימושי למניעת namespace אחד מלבלוע את כל משאבי ה-Cluster.",
           },
           {
             q: "מה CNI?",
@@ -2601,7 +2601,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "כשמגדירים policyTypes: [Egress], כל יציאה שלא מוגדרת מפורשות נחסמת — כולל DNS. מכיוון שDNS עובד על port 53 (UDP ו-TCP) לכיוון CoreDNS, צריך להוסיף egress rule ל-port 53. port 443 בלבד לא מספיק.",
+              "כשמגדירים policyTypes: [Egress], כל יציאה שלא מוגדרת מפורשות נחסמת - כולל DNS. מכיוון שDNS עובד על port 53 (UDP ו-TCP) לכיוון CoreDNS, צריך להוסיף egress rule ל-port 53. port 443 בלבד לא מספיק.",
           },
           {
             q: "Ingress מחזיר 503.\n\nkubectl describe ingress מציג:\nBackend: api-svc:80 (<error: endpoints not found>)\n\nמה הבעיה?",
@@ -2710,7 +2710,7 @@ export const TOPICS = [
               "Only HTTPS traffic is allowed while HTTP is blocked by default",
             ],
             answer: 1,
-            explanation: "Without any NetworkPolicy, the default is allow-all — every Pod can talk to every other Pod in the Cluster. Once you apply a NetworkPolicy selecting a Pod, all traffic not explicitly allowed is blocked for that Pod.",
+            explanation: "Without any NetworkPolicy, the default is allow-all - every Pod can talk to every other Pod in the Cluster. Once you apply a NetworkPolicy selecting a Pod, all traffic not explicitly allowed is blocked for that Pod.",
           },
           {
             q: "What is required for NetworkPolicy to work?",
@@ -2722,7 +2722,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A NetworkPolicy resource is just a declaration — Kubernetes itself does not enforce it. Enforcement is done by the CNI (Container Network Interface) plugin responsible for Pod networking. Calico, Cilium, and Weave Net all support NetworkPolicy enforcement. Flannel and kubenet do not — if you apply a NetworkPolicy on a Flannel cluster, the resource is created but completely ignored. Always verify your CNI plugin supports NetworkPolicy before relying on it for security.",
+              "A NetworkPolicy resource is just a declaration - Kubernetes itself does not enforce it. Enforcement is done by the CNI (Container Network Interface) plugin responsible for Pod networking. Calico, Cilium, and Weave Net all support NetworkPolicy enforcement. Flannel and kubenet do not - if you apply a NetworkPolicy on a Flannel cluster, the resource is created but completely ignored. Always verify your CNI plugin supports NetworkPolicy before relying on it for security.",
           },
           {
             q: "What is the purpose of a Namespace?",
@@ -2751,10 +2751,10 @@ export const TOPICS = [
           {
             q: "What is CNI?",
             options: [
-              "Container Network Interface — standard for networking plugins",
-              "Cloud Native Infrastructure — a framework for managing cloud resources",
-              "Cluster Node Index — a key used to identify Nodes in the cluster",
-              "Container Name Interface — an interface for managing Pod names",
+              "Container Network Interface - standard for networking plugins",
+              "Cloud Native Infrastructure - a framework for managing cloud resources",
+              "Cluster Node Index - a key used to identify Nodes in the cluster",
+              "Container Name Interface - an interface for managing Pod names",
             ],
             answer: 0,
             explanation:
@@ -2782,7 +2782,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "IPVS uses hash tables instead of iptables linear chains — much better performance with thousands of Services.",
+              "IPVS uses hash tables instead of iptables linear chains - much better performance with thousands of Services.",
           },
           {
             q: "What does Cilium provide beyond standard CNI?",
@@ -2806,14 +2806,14 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Linux network namespace is a kernel feature that gives a process its own isolated view of the network: its own network interfaces, IP addresses, and routing table. Kubernetes uses this to isolate Pods — every Pod gets its own network namespace, which is why each Pod has its own IP address and can't accidentally intercept traffic destined for another Pod on the same Node.",
+              "A Linux network namespace is a kernel feature that gives a process its own isolated view of the network: its own network interfaces, IP addresses, and routing table. Kubernetes uses this to isolate Pods - every Pod gets its own network namespace, which is why each Pod has its own IP address and can't accidentally intercept traffic destined for another Pod on the same Node.",
           },
           {
             q: "How do Pods on different Nodes communicate?",
             options: [
-              "They cannot — Pods must be on the same Node for direct communication",
+              "They cannot - Pods must be on the same Node for direct communication",
               "Via an overlay network (VXLAN/Geneve) created by the CNI plugin",
-              "Only via Services — direct Pod-to-Pod IP communication is blocked",
+              "Only via Services - direct Pod-to-Pod IP communication is blocked",
               "Via an external LoadBalancer that routes traffic between Nodes",
             ],
             answer: 1,
@@ -2824,7 +2824,7 @@ export const TOPICS = [
             q: "A Service returns no traffic.\n\nkubectl get endpoints app-svc shows:\nNAME      ENDPOINTS\napp-svc   <none>\nThe Pod runs with label: app=App (capital A). The Service:\nspec:\n  selector:\n    app: app\n\nWhat is the problem?",
             options: [
               "Wrong Service port",
-              "Selector mismatch — 'app: app' ≠ 'app: App' (case sensitive)",
+              "Selector mismatch - 'app: app' ≠ 'app: App' (case sensitive)",
               "Pod not Ready",
               "Wrong Namespace",
             ],
@@ -2842,7 +2842,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "When policyTypes includes Egress, all outbound traffic not explicitly allowed is blocked — including DNS on port 53. Without a rule permitting port 53 UDP and TCP to CoreDNS, Pod name resolution fails entirely. Only permitting port 443 is not enough.",
+              "When policyTypes includes Egress, all outbound traffic not explicitly allowed is blocked - including DNS on port 53. Without a rule permitting port 53 UDP and TCP to CoreDNS, Pod name resolution fails entirely. Only permitting port 443 is not enough.",
           },
           {
             q: "Ingress returns 503.\n\nkubectl describe ingress shows:\nBackend: api-svc:80 (<error: endpoints not found>)\n\nWhat is wrong?",
@@ -2872,7 +2872,7 @@ export const TOPICS = [
             q: "A Service has ExternalTrafficPolicy:Local. External requests are intermittently dropped.\n\nkubectl get pods -o wide shows Pods run only on node-1 and node-2.\n\nWhat is happening?",
             options: [
               "Service misconfigured",
-              "Nodes without a Pod (node-3) receive traffic but can't route it — node-3 drops connections",
+              "Nodes without a Pod (node-3) receive traffic but can't route it - node-3 drops connections",
               "Wrong TLS",
               "Load Balancer misconfigured",
             ],
@@ -2896,7 +2896,7 @@ export const TOPICS = [
             q: "A backend Pod runs in a namespace labeled team:backend but cannot reach frontend.\n\nNetworkPolicy:\nspec:\n  podSelector:\n    matchLabels:\n      app: frontend\n  ingress:\n  - from:\n    - namespaceSelector:\n        matchLabels:\n          team: backend\n\nWhat do you check?",
             options: [
               "Missing port",
-              "Verify the Namespace actually has the label team:backend — run kubectl get namespace <ns> --show-labels",
+              "Verify the Namespace actually has the label team:backend - run kubectl get namespace <ns> --show-labels",
               "Pod not Ready",
               "Missing TLS on ingress",
             ],
@@ -2932,7 +2932,7 @@ export const TOPICS = [
             q: "The nginx Ingress Controller is running. Requests to /api return 404 from the backend.\n\nThe Ingress:\npath: /api\nbackend: api-svc:8080\nThe backend listens at /.\n\nWhat is missing?",
             options: [
               "A TLS certificate",
-              "The annotation rewrite-target: / — without it the backend receives /api instead of /",
+              "The annotation rewrite-target: / - without it the backend receives /api instead of /",
               "Missing Service",
               "Wrong pathType",
             ],
@@ -2988,7 +2988,7 @@ export const TOPICS = [
               "לא ניתן – Pod ניגש ל-ConfigMap רק דרך Kubernetes API call",
             ],
             answer: 2,
-            explanation: "ישנן שלוש דרכים לצרוך ConfigMap ב-Pod: 1) envFrom/env — טוען values כ-env variables. 2) volumeMounts — מאונט ConfigMap כספרייה, כל key הופך לקובץ. 3) דרך Kubernetes API ישירות מהקוד. שינוי ב-volume יתעדכן אוטומטית (עם השהייה), שינוי ב-env מצריך restart.",
+            explanation: "ישנן שלוש דרכים לצרוך ConfigMap ב-Pod: 1) envFrom/env - טוען values כ-env variables. 2) volumeMounts - מאונט ConfigMap כספרייה, כל key הופך לקובץ. 3) דרך Kubernetes API ישירות מהקוד. שינוי ב-volume יתעדכן אוטומטית (עם השהייה), שינוי ב-env מצריך restart.",
           },
           {
             q: "מה זה imagePullSecrets?",
@@ -3034,7 +3034,7 @@ export const TOPICS = [
               "Secret שמיועד לpasswords בלבד ולא לסוגי data אחרים",
             ],
             answer: 1,
-            explanation: "Opaque הוא ה-type הדיפולטי לSecrets — מאחסן נתונים שרירותיים כ-base64. סוגים אחרים: kubernetes.io/tls (לcertificates), kubernetes.io/dockerconfigjson (לimagePullSecrets), kubernetes.io/service-account-token. לכל type יש validation ייעודי.",
+            explanation: "Opaque הוא ה-type הדיפולטי לSecrets - מאחסן נתונים שרירותיים כ-base64. סוגים אחרים: kubernetes.io/tls (לcertificates), kubernetes.io/dockerconfigjson (לimagePullSecrets), kubernetes.io/service-account-token. לכל type יש validation ייעודי.",
           },
           {
             q: "כיצד מזריקים את כל keys של ConfigMap כ-env variables?",
@@ -3178,7 +3178,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "requests קובעים את ה-scheduling של ה-Scheduler — Node נבחר רק אם יש בו מספיק resources פנויים. limits קובעים את המקסימום – חריגה מ-limits.memory = OOMKill, חריגה מ-limits.cpu = throttling.",
+              "requests קובעים את ה-scheduling של ה-Scheduler - Node נבחר רק אם יש בו מספיק resources פנויים. limits קובעים את המקסימום – חריגה מ-limits.memory = OOMKill, חריגה מ-limits.cpu = throttling.",
           },
           {
             q: "מה subjectAccessReview ב-Kubernetes?",
@@ -3197,34 +3197,34 @@ export const TOPICS = [
           {
             q: "What is the difference between ConfigMap and Secret?",
             options: [
-              "No difference — both store key-value data identically in etcd",
+              "No difference - both store key-value data identically in etcd",
               "Secret is intended for sensitive data",
               "ConfigMap is faster because it skips base64 encoding",
               "Secret is only for passwords and not for other sensitive data types",
             ],
             answer: 1,
             explanation:
-              "Both ConfigMap and Secret store key-value data, but they serve different purposes. ConfigMap is for non-sensitive configuration (like a database URL or timeout value). Secret is for sensitive data (passwords, API tokens, TLS certificates). Secret values are base64-encoded in storage — not encrypted by default, but Kubernetes applies stricter access control to them. Both can be used in Pods as environment variables or mounted as files.",
+              "Both ConfigMap and Secret store key-value data, but they serve different purposes. ConfigMap is for non-sensitive configuration (like a database URL or timeout value). Secret is for sensitive data (passwords, API tokens, TLS certificates). Secret values are base64-encoded in storage - not encrypted by default, but Kubernetes applies stricter access control to them. Both can be used in Pods as environment variables or mounted as files.",
           },
           {
             q: "Are Secrets fully encrypted by default?",
             options: [
               "Yes, Kubernetes always encrypts Secrets at rest with AES-256 by default",
               "No, only base64 encoded by default",
-              "Depends on the Kubernetes version — encrypted automatically from v1.25 onwards",
+              "Depends on the Kubernetes version - encrypted automatically from v1.25 onwards",
               "Yes, with AES-256 configured automatically during cluster installation",
             ],
             answer: 1,
             explanation:
-              "Secrets are only base64-encoded by default — not encrypted! For real security: enable Encryption at Rest for etcd, or use Sealed Secrets / an external secrets manager.",
+              "Secrets are only base64-encoded by default - not encrypted! For real security: enable Encryption at Rest for etcd, or use Sealed Secrets / an external secrets manager.",
           },
           {
             q: "How can a ConfigMap be used in a Pod?",
             options: [
-              "Only as a file mounted via a volume — no other access method is supported",
+              "Only as a file mounted via a volume - no other access method is supported",
               "Only as env variables injected directly in the containers spec",
               "As env variables or volume files",
-              "Not possible — a Pod accesses ConfigMap data only via Kubernetes API calls",
+              "Not possible - a Pod accesses ConfigMap data only via Kubernetes API calls",
             ],
             answer: 2,
             explanation:
@@ -3257,14 +3257,14 @@ export const TOPICS = [
           {
             q: "What is the default ServiceAccount?",
             options: [
-              "admin — a ServiceAccount with full admin permissions in every Namespace",
+              "admin - a ServiceAccount with full admin permissions in every Namespace",
               "default",
-              "kubernetes — a ServiceAccount named after the cluster itself",
-              "root — a ServiceAccount that runs Pods with root privileges",
+              "kubernetes - a ServiceAccount named after the cluster itself",
+              "root - a ServiceAccount that runs Pods with root privileges",
             ],
             answer: 1,
             explanation:
-              "A ServiceAccount is an identity for a Pod — it lets the Pod authenticate to the Kubernetes API server (for example, a monitoring agent that needs to list all Pods). Every Namespace automatically gets a ServiceAccount named 'default', and Pods that don't explicitly specify a ServiceAccount are assigned it automatically. The default ServiceAccount has minimal permissions, but best practice is to create dedicated ServiceAccounts with only the permissions each workload needs.",
+              "A ServiceAccount is an identity for a Pod - it lets the Pod authenticate to the Kubernetes API server (for example, a monitoring agent that needs to list all Pods). Every Namespace automatically gets a ServiceAccount named 'default', and Pods that don't explicitly specify a ServiceAccount are assigned it automatically. The default ServiceAccount has minimal permissions, but best practice is to create dedicated ServiceAccounts with only the permissions each workload needs.",
           },
           {
             q: "What is a Secret of type Opaque?",
@@ -3276,7 +3276,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Opaque is the default Secret type — for any arbitrary base64-encoded data.",
+              "Opaque is the default Secret type - for any arbitrary base64-encoded data.",
           },
           {
             q: "How do you inject all ConfigMap keys as environment variables?",
@@ -3294,13 +3294,13 @@ export const TOPICS = [
             q: "What does RBAC stand for?",
             options: [
               "Role Based Access Control",
-              "Resource Based Auth Configuration — a cloud-level permission mechanism",
-              "Runtime Binary Access Control — runtime security for binaries",
-              "Recursive Binding Access Control — hierarchical binding management",
+              "Resource Based Auth Configuration - a cloud-level permission mechanism",
+              "Runtime Binary Access Control - runtime security for binaries",
+              "Recursive Binding Access Control - hierarchical binding management",
             ],
             answer: 0,
             explanation:
-              "RBAC = Role Based Access Control — Kubernetes' system for controlling who can do what. For example, RBAC can allow a developer to list and view Pods but not delete them, or let a monitoring tool read all resources without modifying anything. It works through three building blocks: Roles (define which actions are allowed on which resources), Subjects (who is allowed — users, groups, or ServiceAccounts), and Bindings (connect a Role to a Subject).",
+              "RBAC = Role Based Access Control - Kubernetes' system for controlling who can do what. For example, RBAC can allow a developer to list and view Pods but not delete them, or let a monitoring tool read all resources without modifying anything. It works through three building blocks: Roles (define which actions are allowed on which resources), Subjects (who is allowed - users, groups, or ServiceAccounts), and Bindings (connect a Role to a Subject).",
           },
           {
             q: "What command checks the current user's permissions?",
@@ -3330,7 +3330,7 @@ export const TOPICS = [
             q: "What is a Secret of type kubernetes.io/tls?",
             options: [
               "A TLS Secret for Pod-to-Pod internal communication only",
-              "A built-in Secret for storing a TLS certificate and key — tls.crt and tls.key",
+              "A built-in Secret for storing a TLS certificate and key - tls.crt and tls.key",
               "A Secret for storing SSH private keys for git repository access",
               "A Secret for passwords only, protected with a special hashing algorithm",
             ],
@@ -3353,8 +3353,8 @@ export const TOPICS = [
           {
             q: "Is a ConfigMap in one Namespace accessible from a Pod in a different Namespace?",
             options: [
-              "Yes, by default — all ConfigMaps are visible to every Pod in the cluster",
-              "No — ConfigMaps are Namespace-scoped",
+              "Yes, by default - all ConfigMaps are visible to every Pod in the cluster",
+              "No - ConfigMaps are Namespace-scoped",
               "Yes, with a ClusterRole that grants get on configmaps",
               "Yes, with a special label on the ConfigMap that enables cross-namespace access",
             ],
@@ -3372,7 +3372,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "In Linux, the root user (UID 0) has unlimited system-wide privileges. If a container runs as root and an attacker exploits a container escape vulnerability, they could gain root access on the underlying Node — a serious breach. runAsNonRoot: true tells Kubernetes to refuse to start the container if the image's default user is root (UID 0). This forces you to build images that run as a non-privileged user account, limiting the blast radius of any compromise.",
+              "In Linux, the root user (UID 0) has unlimited system-wide privileges. If a container runs as root and an attacker exploits a container escape vulnerability, they could gain root access on the underlying Node - a serious breach. runAsNonRoot: true tells Kubernetes to refuse to start the container if the image's default user is root (UID 0). This forces you to build images that run as a non-privileged user account, limiting the blast radius of any compromise.",
           },
           {
             q: "What does readOnlyRootFilesystem: true do in a securityContext?",
@@ -3413,14 +3413,14 @@ export const TOPICS = [
           {
             q: "What is the difference between resource requests and limits?",
             options: [
-              "No difference — requests and limits are always set to the same value",
-              "requests — the minimum the Scheduler guarantees; limits — the maximum the container can use",
+              "No difference - requests and limits are always set to the same value",
+              "requests - the minimum the Scheduler guarantees; limits - the maximum the container can use",
               "requests define CPU only while limits define memory only",
               "requests are for production workloads; limits are for dev and staging",
             ],
             answer: 1,
             explanation:
-              "requests tell the Kubernetes Scheduler how much CPU/memory to reserve on a Node for a container — a Node is chosen only if it has enough free capacity. limits cap what the container can actually consume at runtime. If a container exceeds its memory limit, the Linux kernel forcibly kills it (OOMKill = Out-Of-Memory Kill) and Kubernetes restarts it. If it exceeds its CPU limit, it is throttled (slowed down) but not killed. Always set both so one misbehaving Pod can't starve others on the same Node.",
+              "requests tell the Kubernetes Scheduler how much CPU/memory to reserve on a Node for a container - a Node is chosen only if it has enough free capacity. limits cap what the container can actually consume at runtime. If a container exceeds its memory limit, the Linux kernel forcibly kills it (OOMKill = Out-Of-Memory Kill) and Kubernetes restarts it. If it exceeds its CPU limit, it is throttled (slowed down) but not killed. Always set both so one misbehaving Pod can't starve others on the same Node.",
           },
           {
             q: "What is a SubjectAccessReview in Kubernetes?",
@@ -3432,7 +3432,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A SubjectAccessReview is a Kubernetes API request that asks: 'can subject X perform action Y on resource Z?' A subject can be a human user, a group, or a ServiceAccount (SA — a machine identity used by Pods). The familiar kubectl auth can-i command is just a convenient wrapper that submits a SubjectAccessReview behind the scenes and prints yes or no. This API is also used in automation — for example, a CI/CD pipeline checking whether it has permission to deploy before attempting it.",
+              "A SubjectAccessReview is a Kubernetes API request that asks: 'can subject X perform action Y on resource Z?' A subject can be a human user, a group, or a ServiceAccount (SA - a machine identity used by Pods). The familiar kubectl auth can-i command is just a convenient wrapper that submits a SubjectAccessReview behind the scenes and prints yes or no. This API is also used in automation - for example, a CI/CD pipeline checking whether it has permission to deploy before attempting it.",
           },
         ],
       },
@@ -3461,7 +3461,7 @@ export const TOPICS = [
               "מחיקת Role",
             ],
             answer: 1,
-            explanation: "RoleBinding קושר Role (רשימת הרשאות) ל-subject: User, Group, או ServiceAccount — בתוך Namespace מסוים. לגישה בכל ה-Cluster משתמשים ב-ClusterRoleBinding. בלי RoleBinding, ה-Role לא נאכף על אף ישות.",
+            explanation: "RoleBinding קושר Role (רשימת הרשאות) ל-subject: User, Group, או ServiceAccount - בתוך Namespace מסוים. לגישה בכל ה-Cluster משתמשים ב-ClusterRoleBinding. בלי RoleBinding, ה-Role לא נאכף על אף ישות.",
           },
           {
             q: "מה זה ServiceAccount?",
@@ -3472,13 +3472,13 @@ export const TOPICS = [
               "חשבון billing",
             ],
             answer: 1,
-            explanation: "ServiceAccount הוא זהות מכונה (machine identity) עבור Pods — לא למשתמשים אנושיים. Kubernetes מזריק token אוטומטית לכל Pod, שבאמצעותו הPod יכול לאמת את עצמו מול ה-API server ולקבל הרשאות לפי RBAC. לכל Namespace יש ServiceAccount בשם 'default'.",
+            explanation: "ServiceAccount הוא זהות מכונה (machine identity) עבור Pods - לא למשתמשים אנושיים. Kubernetes מזריק token אוטומטית לכל Pod, שבאמצעותו הPod יכול לאמת את עצמו מול ה-API server ולקבל הרשאות לפי RBAC. לכל Namespace יש ServiceAccount בשם 'default'.",
           },
           {
             q: "מה verb מאפשר מעקב בזמן אמת?",
             options: ["get", "list", "watch", "monitor"],
             answer: 2,
-            explanation: "ה-verb 'watch' מאפשר לקבל stream מתמשך של שינויים בזמן אמת מה-API server — כמו kubectl get pods -w. בלי watch, צריך לעשות polling חוזר. Controllers כמו Deployment controller משתמשים ב-watch כדי להגיב לשינויים מיידית.",
+            explanation: "ה-verb 'watch' מאפשר לקבל stream מתמשך של שינויים בזמן אמת מה-API server - כמו kubectl get pods -w. בלי watch, צריך לעשות polling חוזר. Controllers כמו Deployment controller משתמשים ב-watch כדי להגיב לשינויים מיידית.",
           },
           {
             q: "מה Pod Security Admission?",
@@ -3684,7 +3684,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A Role is a set of permissions (e.g., 'can list and get Pods') that applies only within a specific Namespace — a Role in 'prod' grants no access in 'staging'. A ClusterRole defines permissions that apply across the entire cluster, including cluster-scoped resources like Nodes, PersistentVolumes, and Namespaces themselves. A ClusterRole can also be bound within a single Namespace via a RoleBinding — a useful pattern for sharing a common permission set across many Namespaces.",
+              "A Role is a set of permissions (e.g., 'can list and get Pods') that applies only within a specific Namespace - a Role in 'prod' grants no access in 'staging'. A ClusterRole defines permissions that apply across the entire cluster, including cluster-scoped resources like Nodes, PersistentVolumes, and Namespaces themselves. A ClusterRole can also be bound within a single Namespace via a RoleBinding - a useful pattern for sharing a common permission set across many Namespaces.",
           },
           {
             q: "What is a RoleBinding?",
@@ -3695,7 +3695,7 @@ export const TOPICS = [
               "Deleting a Role",
             ],
             answer: 1,
-            explanation: "RoleBinding binds a Role (a list of permissions) to a subject — User, Group, or ServiceAccount — within a specific Namespace. For cluster-wide access, use ClusterRoleBinding. Without a RoleBinding, a Role has no effect on any identity.",
+            explanation: "RoleBinding binds a Role (a list of permissions) to a subject - User, Group, or ServiceAccount - within a specific Namespace. For cluster-wide access, use ClusterRoleBinding. Without a RoleBinding, a Role has no effect on any identity.",
           },
           {
             q: "What is a ServiceAccount?",
@@ -3707,14 +3707,14 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A ServiceAccount is a machine identity — not for human users, but for applications running inside Pods. When a Pod needs to interact with the Kubernetes API (e.g., a monitoring tool listing all Pods, or an operator creating other resources), it authenticates using its ServiceAccount's token, which Kubernetes automatically mounts into every Pod. RBAC then controls what actions that ServiceAccount is permitted to perform.",
+              "A ServiceAccount is a machine identity - not for human users, but for applications running inside Pods. When a Pod needs to interact with the Kubernetes API (e.g., a monitoring tool listing all Pods, or an operator creating other resources), it authenticates using its ServiceAccount's token, which Kubernetes automatically mounts into every Pod. RBAC then controls what actions that ServiceAccount is permitted to perform.",
           },
           {
             q: "What verb allows real-time watching?",
             options: ["get", "list", "watch", "monitor"],
             answer: 2,
             explanation:
-              "The 'watch' verb opens a long-lived connection that streams change events from the API server in real time — additions, updates, and deletions — without polling. This is what kubectl get pods -w uses. Kubernetes controllers (like the Deployment controller) rely heavily on watch to react to cluster changes immediately. If a ServiceAccount only has get and list but not watch, it cannot receive real-time updates.",
+              "The 'watch' verb opens a long-lived connection that streams change events from the API server in real time - additions, updates, and deletions - without polling. This is what kubectl get pods -w uses. Kubernetes controllers (like the Deployment controller) rely heavily on watch to react to cluster changes immediately. If a ServiceAccount only has get and list but not watch, it cannot receive real-time updates.",
           },
           {
             q: "What is Pod Security Admission?",
@@ -3726,7 +3726,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Pod Security Admission (PSA) is a built-in Kubernetes controller that enforces security standards on Pods before allowing them to run. You activate it by adding a label to a Namespace (e.g., pod-security.kubernetes.io/enforce=restricted), and Kubernetes automatically rejects any Pod that doesn't meet the required security level. It replaced the older PodSecurityPolicy (PSP), which was removed in v1.25. The three levels — privileged (no restrictions), baseline (blocks known bad practices), restricted (strict production hardening) — cover most security needs.",
+              "Pod Security Admission (PSA) is a built-in Kubernetes controller that enforces security standards on Pods before allowing them to run. You activate it by adding a label to a Namespace (e.g., pod-security.kubernetes.io/enforce=restricted), and Kubernetes automatically rejects any Pod that doesn't meet the required security level. It replaced the older PodSecurityPolicy (PSP), which was removed in v1.25. The three levels - privileged (no restrictions), baseline (blocks known bad practices), restricted (strict production hardening) - cover most security needs.",
           },
           {
             q: "What is an admission webhook?",
@@ -3750,13 +3750,13 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation:
-              "Setting immutable: true on a Secret or ConfigMap permanently locks it — you cannot update its data after creation (you'd need to delete and recreate it). The performance benefit: Kubernetes normally watches every ConfigMap and Secret for changes so it can update mounted volumes. Marking it immutable removes that watch, reducing load on the API server in large clusters with many Secrets. Ideal for data that never changes, like versioned TLS certificates or fixed configuration bundles.",
+              "Setting immutable: true on a Secret or ConfigMap permanently locks it - you cannot update its data after creation (you'd need to delete and recreate it). The performance benefit: Kubernetes normally watches every ConfigMap and Secret for changes so it can update mounted volumes. Marking it immutable removes that watch, reducing load on the API server in large clusters with many Secrets. Ideal for data that never changes, like versioned TLS certificates or fixed configuration bundles.",
           },
           {
             q: "What is IRSA in AWS EKS?",
             options: [
               "Integrated Role System Architecture",
-              "IAM Roles for Service Accounts — gives Pods AWS permissions without static credentials",
+              "IAM Roles for Service Accounts - gives Pods AWS permissions without static credentials",
               "Internal Route Service Adapter",
               "Image Registry Service Auth",
             ],
@@ -3840,25 +3840,25 @@ export const TOPICS = [
             q: "What is a bound ServiceAccount token?",
             options: [
               "A token tied to a Secret",
-              "A token tied to a specific Pod, time-limited, and audience-scoped — much more secure than legacy tokens",
+              "A token tied to a specific Pod, time-limited, and audience-scoped - much more secure than legacy tokens",
               "An unlimited token",
               "An admin-only token",
             ],
             answer: 1,
             explanation:
-              "From K8s 1.21+, tokens are bounded — they expire, are scoped to the Pod, and require a specific audience. They cannot be used outside the Pod. Far more secure than static ServiceAccount Secrets.",
+              "From K8s 1.21+, tokens are bounded - they expire, are scoped to the Pod, and require a specific audience. They cannot be used outside the Pod. Far more secure than static ServiceAccount Secrets.",
           },
           {
             q: "What does a seccomp profile do?",
             options: [
               "Limits CPU",
-              "Restricts syscalls a container can make — reduces the attack surface",
+              "Restricts syscalls a container can make - reduces the attack surface",
               "Encrypts traffic",
               "Limits DNS",
             ],
             answer: 1,
             explanation:
-              "System calls (syscalls) are how programs ask the OS kernel to do privileged things — open files, create network connections, fork new processes. Linux has 300+ syscalls, but most containers only need a small subset. seccomp (secure computing mode) lets you block all syscalls the container doesn't need. If an attacker exploits a vulnerability inside the container, they cannot use dangerous syscalls to escalate privileges or escape. Setting seccompProfile.type: RuntimeDefault in the Pod spec applies the container runtime's recommended safe baseline profile.",
+              "System calls (syscalls) are how programs ask the OS kernel to do privileged things - open files, create network connections, fork new processes. Linux has 300+ syscalls, but most containers only need a small subset. seccomp (secure computing mode) lets you block all syscalls the container doesn't need. If an attacker exploits a vulnerability inside the container, they cannot use dangerous syscalls to escalate privileges or escape. Setting seccompProfile.type: RuntimeDefault in the Pod spec applies the container runtime's recommended safe baseline profile.",
           },
           {
             q: "What is AppArmor in Kubernetes?",
@@ -3870,13 +3870,13 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "AppArmor is a Linux Mandatory Access Control (MAC) module that enforces per-process security profiles. A profile specifies exactly which files a process can read or write, which network operations it can perform, and which kernel capabilities it can use — even if the process runs as root. In Kubernetes, the AppArmor profile must be loaded on the Node, then referenced in the Pod spec. Since Kubernetes 1.30, this is done via securityContext.appArmorProfile. In older versions, the annotation container.apparmor.security.beta.kubernetes.io/<container> was used.",
+              "AppArmor is a Linux Mandatory Access Control (MAC) module that enforces per-process security profiles. A profile specifies exactly which files a process can read or write, which network operations it can perform, and which kernel capabilities it can use - even if the process runs as root. In Kubernetes, the AppArmor profile must be loaded on the Node, then referenced in the Pod spec. Since Kubernetes 1.30, this is done via securityContext.appArmorProfile. In older versions, the annotation container.apparmor.security.beta.kubernetes.io/<container> was used.",
           },
           {
             q: "How do you sync a Secret from AWS Secrets Manager?",
             options: [
               "kubectl sync secret",
-              "External Secrets Operator — SecretStore + ExternalSecret CR",
+              "External Secrets Operator - SecretStore + ExternalSecret CR",
               "aws-cli secret inject",
               "kubectl aws-secret",
             ],
@@ -3888,7 +3888,7 @@ export const TOPICS = [
             q: "What is an allow-all NetworkPolicy?",
             options: [
               "A policy auto-created by K8s",
-              "There isn't one — allow-all is the K8s default; to re-open after a deny, create a policy with ingress: [{}]",
+              "There isn't one - allow-all is the K8s default; to re-open after a deny, create a policy with ingress: [{}]",
               "A total block",
               "Namespace-scoped only",
             ],
@@ -3923,7 +3923,7 @@ export const TOPICS = [
               "הרשאות לפי שם",
             ],
             answer: 1,
-            explanation: "Least Privilege (הרשאות מינימליות) — עיקרון האבטחה שלפיו כל ישות (Pod, ServiceAccount, משתמש) מקבלת רק את ההרשאות הנדרשות לה בדיוק, ולא יותר. ב-Kubernetes: לא לתת cluster-admin כשמספיק Role ב-Namespace אחד.",
+            explanation: "Least Privilege (הרשאות מינימליות) - עיקרון האבטחה שלפיו כל ישות (Pod, ServiceAccount, משתמש) מקבלת רק את ההרשאות הנדרשות לה בדיוק, ולא יותר. ב-Kubernetes: לא לתת cluster-admin כשמספיק Role ב-Namespace אחד.",
           },
           {
             q: "מה External Secrets Operator עושה?",
@@ -3946,7 +3946,7 @@ export const TOPICS = [
               "הצפנת images",
             ],
             answer: 1,
-            explanation: "ב-Kubernetes, Secrets מאוחסנים ב-etcd כ-base64 — לא מוצפנים כברירת מחדל. Encryption at Rest מפעיל הצפנת AES-GCM על הנתונים לפני שמירה ב-etcd, כך שגם מי שגונב את מסד ה-etcd לא יוכל לקרוא את ה-Secrets.",
+            explanation: "ב-Kubernetes, Secrets מאוחסנים ב-etcd כ-base64 - לא מוצפנים כברירת מחדל. Encryption at Rest מפעיל הצפנת AES-GCM על הנתונים לפני שמירה ב-etcd, כך שגם מי שגונב את מסד ה-etcd לא יוכל לקרוא את ה-Secrets.",
           },
           {
             q: "מה Sealed Secrets מאפשר?",
@@ -4029,7 +4029,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "NetworkPolicy עם podSelector: {} ו-policyTypes: Ingress ללא ingress rules חוסמת כל תנועה נכנסת לכל Pods ב-Namespace. אין feature flag — הכל מנוהל דרך NetworkPolicy objects.",
+              "NetworkPolicy עם podSelector: {} ו-policyTypes: Ingress ללא ingress rules חוסמת כל תנועה נכנסת לכל Pods ב-Namespace. אין feature flag - הכל מנוהל דרך NetworkPolicy objects.",
           },
           {
             q: "Pod מקבל שגיאה:\n\nError: pods is forbidden: User 'system:serviceaccount:default:my-sa' cannot list resource 'pods' in API group '' in the namespace 'prod'\n\nמה הפתרון?",
@@ -4053,7 +4053,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl auth can-i --as מאפשר לבדוק הרשאות עבור ServiceAccount ספציפי בלי להריץ פקודה אמיתית. כש-'no' מוחזר, הפתרון הוא ליצור Role עם verbs: [get] על resources: secrets (least privilege — Pod צריך רק לקרוא Secret ספציפי), ואז RoleBinding שמחבר אותו ל-app-sa ב-namespace prod. הוספת ClusterAdmin היא עודפת וסיכון אבטחה.",
+              "kubectl auth can-i --as מאפשר לבדוק הרשאות עבור ServiceAccount ספציפי בלי להריץ פקודה אמיתית. כש-'no' מוחזר, הפתרון הוא ליצור Role עם verbs: [get] על resources: secrets (least privilege - Pod צריך רק לקרוא Secret ספציפי), ואז RoleBinding שמחבר אותו ל-app-sa ב-namespace prod. הוספת ClusterAdmin היא עודפת וסיכון אבטחה.",
           },
           {
             q: "מנסים לפרוס Deployment ומקבלים שגיאה:\n\nError from server: error when creating 'deploy.yaml': admission webhook 'validate.kyverno.svc' denied the request: Container image must come from 'gcr.io/'\n\nמה קורה?",
@@ -4065,7 +4065,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ValidatingAdmissionWebhook הוא שכבת validation שרצה לפני שKubernetes מאשר כל resource. Kyverno (או OPA Gatekeeper) מגדיר policy שמאפשרת רק images מ-gcr.io/. הפתרון הוא לשנות את ה-image URL ב-Deployment לרשומה המאושרת. ה-API server לא נפל — זו חסימה מכוונת.",
+              "ValidatingAdmissionWebhook הוא שכבת validation שרצה לפני שKubernetes מאשר כל resource. Kyverno (או OPA Gatekeeper) מגדיר policy שמאפשרת רק images מ-gcr.io/. הפתרון הוא לשנות את ה-image URL ב-Deployment לרשומה המאושרת. ה-API server לא נפל - זו חסימה מכוונת.",
           },
           {
             q: "Pod ב-EKS לא מצליח לגשת ל-S3. ה-IAM policy נכונה.\n\nPod spec:\napiVersion: v1\nkind: Pod\nspec:\n  serviceAccountName: app-sa\nה-ServiceAccount:\nannotations:\n  eks.amazonaws.com/role-arn: arn:aws:iam::123:role/app-role\n\nמה הבעיה הנפוצה ב-IRSA?",
@@ -4096,7 +4096,7 @@ export const TOPICS = [
             options: ["dGVzdDEyMw==", "test123 – base64 decoded", "בלתי ניתן לפענוח", "PASSWORD"],
             answer: 1,
             explanation:
-              "Kubernetes Secrets מאחסנים ערכים כbase64, שהוא קידוד ולא הצפנה — כל אחד יכול לפענח אותו. echo 'dGVzdDEyMw==' | base64 -d מחזיר 'test123'. לאבטחה אמיתית יש להפעיל Encryption at Rest עבור etcd, או להשתמש ב-Sealed Secrets.",
+              "Kubernetes Secrets מאחסנים ערכים כbase64, שהוא קידוד ולא הצפנה - כל אחד יכול לפענח אותו. echo 'dGVzdDEyMw==' | base64 -d מחזיר 'test123'. לאבטחה אמיתית יש להפעיל Encryption at Rest עבור etcd, או להשתמש ב-Sealed Secrets.",
           },
           {
             q: "OPA Gatekeeper דוחה Deployment:\n\nviolation: container 'app' has no resource limits\n\nמה הפתרון?",
@@ -4108,7 +4108,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "OPA Gatekeeper בודק resource objects לפני שKubernetes מאשר אותם. כדי לעבור את ה-policy, כל container חייב להגדיר resources.limits עם cpu ו-memory. מחיקת ה-policy אפשרית אבל מורידה את ההגנה — הפתרון הנכון הוא לתקן את ה-Deployment.",
+              "OPA Gatekeeper בודק resource objects לפני שKubernetes מאשר אותם. כדי לעבור את ה-policy, כל container חייב להגדיר resources.limits עם cpu ו-memory. מחיקת ה-policy אפשרית אבל מורידה את ההגנה - הפתרון הנכון הוא לתקן את ה-Deployment.",
           },
           {
             q: "Sealed Secret הוצפן ב-Cluster A. מנסים להשתמש בו ב-Cluster B ומקבלים שגיאה. למה?",
@@ -4137,7 +4137,7 @@ export const TOPICS = [
           {
             q: "אתם מגדירים אבטחת Pods ב-Cluster שרץ על K8s 1.25+. איזה מנגנון תשתמשו?",
             options: [
-              "PodSecurityPolicy (PSP) — הדרך הסטנדרטית לאכיפת אבטחה",
+              "PodSecurityPolicy (PSP) - הדרך הסטנדרטית לאכיפת אבטחה",
               "Pod Security Admission (PSA) עם labels על ה-Namespace",
               "הוספת NetworkPolicy לכל Pod",
               "הוספת cluster-admin לכל ServiceAccount",
@@ -4157,7 +4157,7 @@ export const TOPICS = [
               "Permissions by name",
             ],
             answer: 1,
-            explanation: "Least Privilege means every entity (Pod, ServiceAccount, user) gets only the exact permissions it requires — nothing more. In Kubernetes: prefer a scoped Role in one Namespace over cluster-admin. If compromised, a low-privilege account limits the blast radius.",
+            explanation: "Least Privilege means every entity (Pod, ServiceAccount, user) gets only the exact permissions it requires - nothing more. In Kubernetes: prefer a scoped Role in one Namespace over cluster-admin. If compromised, a low-privilege account limits the blast radius.",
           },
           {
             q: "What does External Secrets Operator do?",
@@ -4181,7 +4181,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "etcd is the distributed key-value database that stores all Kubernetes cluster state, including Secrets. By default, Secrets are stored in etcd as plain base64-encoded text — anyone with filesystem access to the etcd data can decode them in seconds. Encryption at Rest adds an AES-GCM encryption layer: data is encrypted before being written to the etcd disk using a key from a separate EncryptionConfiguration file on the control plane. Even if an attacker exfiltrates the etcd data files, the Secret values remain unreadable without that key.",
+              "etcd is the distributed key-value database that stores all Kubernetes cluster state, including Secrets. By default, Secrets are stored in etcd as plain base64-encoded text - anyone with filesystem access to the etcd data can decode them in seconds. Encryption at Rest adds an AES-GCM encryption layer: data is encrypted before being written to the etcd disk using a key from a separate EncryptionConfiguration file on the control plane. Even if an attacker exfiltrates the etcd data files, the Secret values remain unreadable without that key.",
           },
           {
             q: "What does Sealed Secrets allow?",
@@ -4193,7 +4193,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "GitOps stores all cluster configuration in git, but you can't commit plaintext Kubernetes Secrets — anyone with repo access would read your passwords. Sealed Secrets (by Bitnami) solves this with asymmetric encryption: a controller in your cluster generates a unique key pair. You use the public key to encrypt your Secret into a SealedSecret resource, which is safe to commit. Only the controller in that specific cluster — which holds the matching private key — can decrypt it and create the real Kubernetes Secret. A SealedSecret from Cluster A cannot be decrypted by Cluster B.",
+              "GitOps stores all cluster configuration in git, but you can't commit plaintext Kubernetes Secrets - anyone with repo access would read your passwords. Sealed Secrets (by Bitnami) solves this with asymmetric encryption: a controller in your cluster generates a unique key pair. You use the public key to encrypt your Secret into a SealedSecret resource, which is safe to commit. Only the controller in that specific cluster - which holds the matching private key - can decrypt it and create the real Kubernetes Secret. A SealedSecret from Cluster A cannot be decrypted by Cluster B.",
           },
           {
             q: "What are the three Pod Security Standard levels?",
@@ -4205,7 +4205,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "privileged — no restrictions. baseline — minimal protection. restricted — strict settings, production best practice.",
+              "privileged - no restrictions. baseline - minimal protection. restricted - strict settings, production best practice.",
           },
           {
             q: "How do you audit who accessed a Secret in Kubernetes?",
@@ -4223,13 +4223,13 @@ export const TOPICS = [
             q: "What is OPA/Gatekeeper?",
             options: [
               "Open Port Authority",
-              "Open Policy Agent — policy-as-code enforcement for Kubernetes",
+              "Open Policy Agent - policy-as-code enforcement for Kubernetes",
               "Optional Pod Allocator",
               "Object Permission Abstraction",
             ],
             answer: 1,
             explanation:
-              "OPA (Open Policy Agent) Gatekeeper is an admission webhook that enforces custom policies on every resource created in the cluster. Policies are written in Rego, a declarative rule language. Unlike Pod Security Admission (which uses fixed built-in levels), OPA Gatekeeper lets you define arbitrary rules tailored to your organization — for example: all container images must come from gcr.io/, all Pods must have resource limits, or no Service of type LoadBalancer is allowed. Kyverno is an alternative tool that serves the same purpose with a YAML-based policy syntax.",
+              "OPA (Open Policy Agent) Gatekeeper is an admission webhook that enforces custom policies on every resource created in the cluster. Policies are written in Rego, a declarative rule language. Unlike Pod Security Admission (which uses fixed built-in levels), OPA Gatekeeper lets you define arbitrary rules tailored to your organization - for example: all container images must come from gcr.io/, all Pods must have resource limits, or no Service of type LoadBalancer is allowed. Kyverno is an alternative tool that serves the same purpose with a YAML-based policy syntax.",
           },
           {
             q: "What is Workload Identity in GKE?",
@@ -4247,7 +4247,7 @@ export const TOPICS = [
             q: "What does kubectl --as do?",
             options: [
               "Changes context",
-              "Runs a command as a different user — useful for testing permissions",
+              "Runs a command as a different user - useful for testing permissions",
               "Saves credentials",
               "Switches namespace",
             ],
@@ -4265,7 +4265,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A NetworkPolicy with podSelector: {} and policyTypes: Ingress with no ingress rules blocks all inbound traffic to every Pod in the Namespace. There is no feature flag — it is all managed via NetworkPolicy objects.",
+              "A NetworkPolicy with podSelector: {} and policyTypes: Ingress with no ingress rules blocks all inbound traffic to every Pod in the Namespace. There is no feature flag - it is all managed via NetworkPolicy objects.",
           },
           {
             q: "A Pod receives:\n\nError: pods is forbidden: User 'system:serviceaccount:default:my-sa' cannot list resource 'pods' in namespace 'prod'\n\nWhat is the fix?",
@@ -4289,7 +4289,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl auth can-i --as lets you test permissions for any ServiceAccount without running a real operation. When it returns 'no', create a Role with verbs: [get] on secrets (least privilege — the Pod only needs to read a specific Secret) and a RoleBinding attaching it to app-sa in the prod Namespace. Adding cluster-admin is excessive and a security risk.",
+              "kubectl auth can-i --as lets you test permissions for any ServiceAccount without running a real operation. When it returns 'no', create a Role with verbs: [get] on secrets (least privilege - the Pod only needs to read a specific Secret) and a RoleBinding attaching it to app-sa in the prod Namespace. Adding cluster-admin is excessive and a security risk.",
           },
           {
             q: "Deploying a workload fails with:\n\nError: admission webhook 'validate.kyverno.svc' denied the request: Container image must come from 'gcr.io/'\n\nWhat is happening?",
@@ -4301,7 +4301,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A ValidatingAdmissionWebhook intercepts every resource creation before Kubernetes accepts it. Kyverno here enforces a policy that only allows images from gcr.io/. The API server did not crash — this is an intentional policy block. Fix by changing the container image URL to a gcr.io-hosted image.",
+              "A ValidatingAdmissionWebhook intercepts every resource creation before Kubernetes accepts it. Kyverno here enforces a policy that only allows images from gcr.io/. The API server did not crash - this is an intentional policy block. Fix by changing the container image URL to a gcr.io-hosted image.",
           },
           {
             q: "An EKS Pod cannot access S3. The IAM policy is correct. The ServiceAccount has:\n\nannotations:\n  eks.amazonaws.com/role-arn: arn:aws:iam::123:role/app-role\n\nWhat is the most common IRSA misconfiguration?",
@@ -4325,14 +4325,14 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "The restricted Pod Security Standard mandates explicit hardening fields in the container securityContext. You must set allowPrivilegeEscalation: false, runAsNonRoot: true, and seccompProfile: {type: RuntimeDefault}. Setting privileged: true is the opposite — it would further violate the policy.",
+              "The restricted Pod Security Standard mandates explicit hardening fields in the container securityContext. You must set allowPrivilegeEscalation: false, runAsNonRoot: true, and seccompProfile: {type: RuntimeDefault}. Setting privileged: true is the opposite - it would further violate the policy.",
           },
           {
             q: "A K8s Secret contains:\n\napiVersion: v1\nkind: Secret\ndata:\n  password: dGVzdDEyMw==\n\nWhat is the actual value?",
-            options: ["dGVzdDEyMw==", "test123 — base64 decoded", "Undecipherable", "PASSWORD"],
+            options: ["dGVzdDEyMw==", "test123 - base64 decoded", "Undecipherable", "PASSWORD"],
             answer: 1,
             explanation:
-              "Kubernetes Secrets store values as base64, which is encoding not encryption — anyone can reverse it. Running echo 'dGVzdDEyMw==' | base64 -d gives 'test123'. For real protection enable Encryption at Rest for etcd, or use Sealed Secrets.",
+              "Kubernetes Secrets store values as base64, which is encoding not encryption - anyone can reverse it. Running echo 'dGVzdDEyMw==' | base64 -d gives 'test123'. For real protection enable Encryption at Rest for etcd, or use Sealed Secrets.",
           },
           {
             q: "OPA Gatekeeper rejects a Deployment:\n\nviolation: container 'app' has no resource limits\n\nWhat is the fix?",
@@ -4350,7 +4350,7 @@ export const TOPICS = [
             q: "A SealedSecret was encrypted in Cluster A. Using it in Cluster B fails. Why?",
             options: [
               "SealedSecrets are global",
-              "Each cluster has a unique keypair. The SealedSecret is encrypted with Cluster A's public key — only its controller can decrypt it",
+              "Each cluster has a unique keypair. The SealedSecret is encrypted with Cluster A's public key - only its controller can decrypt it",
               "Wrong namespace",
               "Wrong version",
             ],
@@ -4362,7 +4362,7 @@ export const TOPICS = [
             q: 'A Kubernetes Audit Log shows:\n\n{"verb":"get","resource":"secrets","user":{"username":"system:serviceaccount:default:compromised-sa"}}\n\nWhat does this mean?',
             options: [
               "A normal log entry",
-              "ServiceAccount 'compromised-sa' accessed a Secret — possible unauthorized access, investigate and revoke permissions",
+              "ServiceAccount 'compromised-sa' accessed a Secret - possible unauthorized access, investigate and revoke permissions",
               "A restart log",
               "A backup log",
             ],
@@ -4373,7 +4373,7 @@ export const TOPICS = [
           {
             q: "You are enforcing Pod security on a cluster running K8s 1.25+. Which mechanism do you use?",
             options: [
-              "PodSecurityPolicy (PSP) — the standard way to enforce security",
+              "PodSecurityPolicy (PSP) - the standard way to enforce security",
               "Pod Security Admission (PSA) with labels on the Namespace",
               "Add a NetworkPolicy to every Pod",
               "Give every ServiceAccount cluster-admin",
@@ -4407,7 +4407,7 @@ export const TOPICS = [
               "PV לLinux, PVC לWindows",
             ],
             answer: 1,
-            explanation: "PersistentVolume (PV) הוא יחידת אחסון שה-admin מגדיר מראש — גודל, access modes, ו-storage backend (EBS, NFS, GCS). PersistentVolumeClaim (PVC) היא הבקשה של ה-Pod לאחסון. ה-K8s matcher מחבר בין PVC ל-PV שמתאים לדרישות.",
+            explanation: "PersistentVolume (PV) הוא יחידת אחסון שה-admin מגדיר מראש - גודל, access modes, ו-storage backend (EBS, NFS, GCS). PersistentVolumeClaim (PVC) היא הבקשה של ה-Pod לאחסון. ה-K8s matcher מחבר בין PVC ל-PV שמתאים לדרישות.",
           },
           {
             q: "מה AccessMode ReadWriteOnce?",
@@ -4418,7 +4418,7 @@ export const TOPICS = [
               "קריאה מכל הNodes",
             ],
             answer: 2,
-            explanation: "ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה על ידי Node אחד בלבד בו-זמנית. מתאים לרוב ה-databases. ReadWriteMany (RWX) מאפשר כמה Nodes במקביל — נדרש NFS/EFS. ReadOnlyMany (ROX) קריאה בלבד ממספר Nodes.",
+            explanation: "ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה על ידי Node אחד בלבד בו-זמנית. מתאים לרוב ה-databases. ReadWriteMany (RWX) מאפשר כמה Nodes במקביל - נדרש NFS/EFS. ReadOnlyMany (ROX) קריאה בלבד ממספר Nodes.",
           },
           {
             q: "מה זה Helm Chart?",
@@ -4503,7 +4503,7 @@ export const TOPICS = [
             options: ["נשמרים לתמיד", "נמחקים", "מגובים אוטומטית", "מועברים לPV"],
             answer: 1,
             explanation:
-              "emptyDir נשאר חי כל עוד ה-Pod קיים — כולל בין restarts של קונטיינרים. אבל נמחק לחלוטין כשה-Pod עצמו מוחק או מועבר ל-Node אחר.",
+              "emptyDir נשאר חי כל עוד ה-Pod קיים - כולל בין restarts של קונטיינרים. אבל נמחק לחלוטין כשה-Pod עצמו מוחק או מועבר ל-Node אחר.",
           },
           {
             q: "מה AccessMode ReadWriteMany (RWX) מאפשר?",
@@ -4632,7 +4632,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A PersistentVolume (PV) is a piece of real storage provisioned in the cluster — it could be a cloud disk (AWS EBS, GCP PD), an NFS share, or a local drive. A PersistentVolumeClaim (PVC) is a request submitted by an application (Pod) asking for a certain amount of storage with specific access requirements. Kubernetes automatically matches a PVC to a suitable PV — similar to how a parking request gets matched to an available space.",
+              "A PersistentVolume (PV) is a piece of real storage provisioned in the cluster - it could be a cloud disk (AWS EBS, GCP PD), an NFS share, or a local drive. A PersistentVolumeClaim (PVC) is a request submitted by an application (Pod) asking for a certain amount of storage with specific access requirements. Kubernetes automatically matches a PVC to a suitable PV - similar to how a parking request gets matched to an available space.",
           },
           {
             q: "What is AccessMode ReadWriteOnce?",
@@ -4656,7 +4656,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Helm is Kubernetes' package manager — think of it like apt or npm, but for Kubernetes applications. A Helm Chart is a bundle of Kubernetes YAML files (Deployments, Services, ConfigMaps, etc.) packaged with templates and configurable values. Instead of writing and maintaining dozens of separate YAML files, you install one Chart with a single command and configure it by passing values. This makes it easy to deploy complex applications consistently across different environments.",
+              "Helm is Kubernetes' package manager - think of it like apt or npm, but for Kubernetes applications. A Helm Chart is a bundle of Kubernetes YAML files (Deployments, Services, ConfigMaps, etc.) packaged with templates and configurable values. Instead of writing and maintaining dozens of separate YAML files, you install one Chart with a single command and configure it by passing values. This makes it easy to deploy complex applications consistently across different environments.",
           },
           {
             q: "What command installs a Helm Chart?",
@@ -4699,7 +4699,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A StorageClass is a blueprint that tells Kubernetes how to create storage on demand. It names a provisioner — a plugin that knows how to talk to a specific storage system (e.g., the AWS EBS plugin creates EBS disks, the GCP plugin creates Persistent Disks). When a Pod requests storage via a PVC that references a StorageClass, the provisioner automatically creates a real disk and a PV for it. Without StorageClass, an admin would have to manually create every PV before a Pod could use it.",
+              "A StorageClass is a blueprint that tells Kubernetes how to create storage on demand. It names a provisioner - a plugin that knows how to talk to a specific storage system (e.g., the AWS EBS plugin creates EBS disks, the GCP plugin creates Persistent Disks). When a Pod requests storage via a PVC that references a StorageClass, the provisioner automatically creates a real disk and a PV for it. Without StorageClass, an admin would have to manually create every PV before a Pod could use it.",
           },
           {
             q: "What does helm repo add do?",
@@ -4796,7 +4796,7 @@ export const TOPICS = [
             q: "What does PVC volumeMode: Block do?",
             options: [
               "Blocks PVC access",
-              "Exposes storage as a raw block device without a filesystem — for apps that manage storage directly",
+              "Exposes storage as a raw block device without a filesystem - for apps that manage storage directly",
               "Blocks all writes",
               "Blocks synchronization",
             ],
@@ -4820,7 +4820,7 @@ export const TOPICS = [
             q: "What does the StorageClass annotation storageclass.kubernetes.io/is-default-class do?",
             options: [
               "Defines a backup policy",
-              "Marks the StorageClass as the default — PVCs without storageClassName will use it",
+              "Marks the StorageClass as the default - PVCs without storageClassName will use it",
               "Sets retention",
               "Sets access mode",
             ],
@@ -4838,13 +4838,13 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "mountPropagation controls whether filesystem mounts that appear on the host Node are visible inside the container, and vice versa. The default (None) keeps them isolated. HostToContainer lets the container see new mounts the host creates after startup. Bidirectional also lets the container create mounts that are visible on the host. This is an advanced setting rarely needed in normal workloads — it matters mainly for certain storage plugins (like CSI drivers) that mount disks on the host and need those mounts reflected inside the container.",
+              "mountPropagation controls whether filesystem mounts that appear on the host Node are visible inside the container, and vice versa. The default (None) keeps them isolated. HostToContainer lets the container see new mounts the host creates after startup. Bidirectional also lets the container create mounts that are visible on the host. This is an advanced setting rarely needed in normal workloads - it matters mainly for certain storage plugins (like CSI drivers) that mount disks on the host and need those mounts reflected inside the container.",
           },
           {
             q: "What was the Reclaim Policy Recycle?",
             options: [
               "Deletes the PV",
-              "Cleaned the PV and returned it to Available — deprecated since K8s 1.7, replaced by Dynamic Provisioning",
+              "Cleaned the PV and returned it to Available - deprecated since K8s 1.7, replaced by Dynamic Provisioning",
               "Backs up the PV",
               "Returns the PV to a pool",
             ],
@@ -4896,7 +4896,7 @@ export const TOPICS = [
             q: "מה הפקודה לעדכן Helm Release?",
             options: ["helm update", "helm upgrade", "helm patch", "helm redeploy"],
             answer: 1,
-            explanation: "helm upgrade [release] [chart] מעדכן Release קיים לגרסה חדשה. Helm שומר את ה-revision הקודם — ניתן לחזור עם helm rollback. הוסף --install כדי לבצע install אם ה-release לא קיים עדיין (יוצר או מעדכן).",
+            explanation: "helm upgrade [release] [chart] מעדכן Release קיים לגרסה חדשה. Helm שומר את ה-revision הקודם - ניתן לחזור עם helm rollback. הוסף --install כדי לבצע install אם ה-release לא קיים עדיין (יוצר או מעדכן).",
           },
           {
             q: "מה Reclaim Policy Retain?",
@@ -5058,7 +5058,7 @@ export const TOPICS = [
             q: "מה volumeClaimTemplates בStatefulSet לעומת volume רגיל?",
             options: [
               "אין הבדל",
-              "volumeClaimTemplates יוצר PVC ייחודי per-Pod אוטומטית. volume רגיל מצביע על PVC קיים — כל הPods משתמשים באותו storage",
+              "volumeClaimTemplates יוצר PVC ייחודי per-Pod אוטומטית. volume רגיל מצביע על PVC קיים - כל הPods משתמשים באותו storage",
               "volumeClaimTemplates לdynamic בלבד",
               "volume רגיל מהיר יותר",
             ],
@@ -5102,7 +5102,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Without Dynamic Provisioning, an admin must manually create a PV before any Pod can claim storage — this doesn't scale well. Dynamic Provisioning automates this: when a Pod creates a PVC that references a StorageClass, Kubernetes automatically creates a matching PV (and the real underlying disk on AWS/GCP/Azure) on demand. When the PVC is deleted, the disk is cleaned up according to the Reclaim Policy. This is the standard approach for all cloud-hosted Kubernetes clusters today.",
+              "Without Dynamic Provisioning, an admin must manually create a PV before any Pod can claim storage - this doesn't scale well. Dynamic Provisioning automates this: when a Pod creates a PVC that references a StorageClass, Kubernetes automatically creates a matching PV (and the real underlying disk on AWS/GCP/Azure) on demand. When the PVC is deleted, the disk is cleaned up according to the Reclaim Policy. This is the standard approach for all cloud-hosted Kubernetes clusters today.",
           },
           {
             q: "What does Reclaim Policy Delete do?",
@@ -5114,7 +5114,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Reclaim Policy Delete means that when a PVC is deleted, Kubernetes automatically deletes both the PV object and the underlying physical disk (e.g., the AWS EBS volume or GCP Persistent Disk). This is the default for dynamically provisioned volumes and is convenient for ephemeral workloads. However, it permanently destroys all data — if you delete the PVC of a production database, the data is gone. For databases and anything important, use Reclaim Policy Retain instead, which preserves the data after PVC deletion.",
+              "Reclaim Policy Delete means that when a PVC is deleted, Kubernetes automatically deletes both the PV object and the underlying physical disk (e.g., the AWS EBS volume or GCP Persistent Disk). This is the default for dynamically provisioned volumes and is convenient for ephemeral workloads. However, it permanently destroys all data - if you delete the PVC of a production database, the data is gone. For databases and anything important, use Reclaim Policy Retain instead, which preserves the data after PVC deletion.",
           },
           {
             q: "How do you change a Helm value from the CLI?",
@@ -5131,7 +5131,7 @@ export const TOPICS = [
             q: "What command updates an existing Helm Release?",
             options: ["helm update", "helm upgrade", "helm patch", "helm redeploy"],
             answer: 1,
-            explanation: "helm upgrade [release] [chart] updates an existing Release to a new version. Helm stores the previous revision — you can roll back with helm rollback. Add --install to create the Release if it doesn't exist yet (upsert behavior).",
+            explanation: "helm upgrade [release] [chart] updates an existing Release to a new version. Helm stores the previous revision - you can roll back with helm rollback. Add --install to create the Release if it doesn't exist yet (upsert behavior).",
           },
           {
             q: "What is the Retain reclaim policy?",
@@ -5161,7 +5161,7 @@ export const TOPICS = [
             q: "What does helm template do?",
             options: [
               "Creates a new Template",
-              "Renders the Chart to YAML without installing — for pipelines and dry-runs",
+              "Renders the Chart to YAML without installing - for pipelines and dry-runs",
               "Saves the template",
               "Updates values",
             ],
@@ -5185,7 +5185,7 @@ export const TOPICS = [
             q: "What does mounting a ConfigMap as a Volume do?",
             options: [
               "ConfigMap cannot be a Volume",
-              "Each key becomes a file in a directory — useful for config files",
+              "Each key becomes a file in a directory - useful for config files",
               "Stored in RAM only",
               "Automatically encrypted",
             ],
@@ -5221,7 +5221,7 @@ export const TOPICS = [
             q: "What does a PVC in Pending status mean?",
             options: [
               "PVC awaiting backup",
-              "No matching PV found — due to wrong AccessMode, insufficient storage, or wrong StorageClass",
+              "No matching PV found - due to wrong AccessMode, insufficient storage, or wrong StorageClass",
               "PVC not created",
               "Helm failure",
             ],
@@ -5233,7 +5233,7 @@ export const TOPICS = [
             q: "A StatefulSet uses volumeClaimTemplates. What happens to the PVC when the Pod is deleted?",
             options: [
               "PVC is deleted automatically",
-              "PVC is retained — StatefulSet does not delete PVCs; DB data is preserved",
+              "PVC is retained - StatefulSet does not delete PVCs; DB data is preserved",
               "PVC is returned to the pool",
               "PVC is deleted after 5 minutes",
             ],
@@ -5269,7 +5269,7 @@ export const TOPICS = [
             q: "A PVC sets storageClassName: ''. What does this mean?",
             options: [
               "Uses the default StorageClass",
-              "Opts out of dynamic provisioning — PVC will only match a manually created PV with no storageClass",
+              "Opts out of dynamic provisioning - PVC will only match a manually created PV with no storageClass",
               "An error",
               "Creates a new PV",
             ],
@@ -5293,7 +5293,7 @@ export const TOPICS = [
             q: "What is the difference between volumeClaimTemplates in a StatefulSet and a regular volume?",
             options: [
               "No difference",
-              "volumeClaimTemplates creates a unique PVC per Pod automatically; a regular volume references an existing PVC — all Pods share the same storage",
+              "volumeClaimTemplates creates a unique PVC per Pod automatically; a regular volume references an existing PVC - all Pods share the same storage",
               "volumeClaimTemplates for dynamic provisioning only",
               "Regular volumes are faster",
             ],
@@ -5305,7 +5305,7 @@ export const TOPICS = [
             q: "What is the NOTES.txt file in a Helm Chart?",
             options: [
               "A README",
-              "Text rendered to the user after helm install — access instructions, URLs, next steps",
+              "Text rendered to the user after helm install - access instructions, URLs, next steps",
               "A test file",
               "A values file",
             ],
@@ -5317,7 +5317,7 @@ export const TOPICS = [
             q: "What is a Helm repository index.yaml?",
             options: [
               "A values file",
-              "A file containing metadata about all Charts in the repository — versions, descriptions, checksums",
+              "A file containing metadata about all Charts in the repository - versions, descriptions, checksums",
               "An RBAC file",
               "A secrets file",
             ],
@@ -5375,7 +5375,7 @@ export const TOPICS = [
               "גיבוי ConfigMap",
             ],
             answer: 1,
-            explanation: "VolumeSnapshot יוצר גיבוי נקודתי (point-in-time) של PersistentVolume. ניתן לשחזר ממנו PVC חדש עם הנתונים מאותה נקודה — שימושי לפני upgrade של DB. דורש CSI driver עם תמיכת snapshot ו-snapshot-controller מותקן.",
+            explanation: "VolumeSnapshot יוצר גיבוי נקודתי (point-in-time) של PersistentVolume. ניתן לשחזר ממנו PVC חדש עם הנתונים מאותה נקודה - שימושי לפני upgrade של DB. דורש CSI driver עם תמיכת snapshot ו-snapshot-controller מותקן.",
           },
           {
             q: "כיצד StatefulSet מנהל storage?",
@@ -5471,7 +5471,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "StatefulSet מגדיר volumeClaimTemplates, אבל PVCs שנוצרו לא נמחקים כש-StatefulSet או Helm Release מוסרים — זה מכוון כדי למנוע אובדן נתונים. לניקוי מכוון: kubectl delete pvc -l app=my-db -n production, לאחר אימות שהנתונים גובו. kubectl delete pvc --all מסוכן יותר.",
+              "StatefulSet מגדיר volumeClaimTemplates, אבל PVCs שנוצרו לא נמחקים כש-StatefulSet או Helm Release מוסרים - זה מכוון כדי למנוע אובדן נתונים. לניקוי מכוון: kubectl delete pvc -l app=my-db -n production, לאחר אימות שהנתונים גובו. kubectl delete pvc --all מסוכן יותר.",
           },
           {
             q: "helm upgrade כשל באמצע. Release ב-status 'failed'. ה-ConfigMap מחצית עודכן. מה הצעד הבא?",
@@ -5531,7 +5531,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ConfigMap עם immutable: true נועל את ה-data לחלוטין — Kubernetes מסרב לכל patch שמנסה לשנות אותו. הפתרון הוא למחוק את ה-ConfigMap ולתת ל-Helm ליצור אותו מחדש: kubectl delete cm my-configmap ואז helm upgrade. rollback יחזיר לגרסה הקודמת ללא שינוי.",
+              "ConfigMap עם immutable: true נועל את ה-data לחלוטין - Kubernetes מסרב לכל patch שמנסה לשנות אותו. הפתרון הוא למחוק את ה-ConfigMap ולתת ל-Helm ליצור אותו מחדש: kubectl delete cm my-configmap ואז helm upgrade. rollback יחזיר לגרסה הקודמת ללא שינוי.",
           },
           {
             q: "Pod עם PVC ב-AWS EKS. Pod עבר לNode אחר. PVC לא נמצא. kubectl get pvc מציג Bound. מה הסיבה?",
@@ -5543,7 +5543,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "EBS Volumes ב-AWS הם single-AZ — הם יכולים להיות attached רק לNode שנמצא באותה Availability Zone. כש-Pod מתזמן מחדש ל-Node ב-AZ אחרת, ה-EBS לא יכול לעקוב. הפתרון הוא להשתמש ב-StorageClass עם WaitForFirstConsumer וב-nodeAffinity כדי לשמור Pod ו-Volume באותה AZ.",
+              "EBS Volumes ב-AWS הם single-AZ - הם יכולים להיות attached רק לNode שנמצא באותה Availability Zone. כש-Pod מתזמן מחדש ל-Node ב-AZ אחרת, ה-EBS לא יכול לעקוב. הפתרון הוא להשתמש ב-StorageClass עם WaitForFirstConsumer וב-nodeAffinity כדי לשמור Pod ו-Volume באותה AZ.",
           },
           {
             q: "Helm Chart מכיל Secret. מה הדרך הנכונה לנהל secrets ב-Helm ב-production?",
@@ -5567,7 +5567,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "סטטוס Released אומר שה-PVC שהיה מחובר ל-PV נמחק, אבל עם Reclaim Policy: Retain, ה-PV והנתונים שמורים ולא נמחקים. כדי לעשות reuse: נקה את ה-ClaimRef עם kubectl patch pv data-pv -p '{\"spec\":{\"claimRef\":null}}' — ה-PV יחזור לסטטוס Available ויוכל לbind לPVC חדש.",
+              "סטטוס Released אומר שה-PVC שהיה מחובר ל-PV נמחק, אבל עם Reclaim Policy: Retain, ה-PV והנתונים שמורים ולא נמחקים. כדי לעשות reuse: נקה את ה-ClaimRef עם kubectl patch pv data-pv -p '{\"spec\":{\"claimRef\":null}}' - ה-PV יחזור לסטטוס Available ויוכל לbind לPVC חדש.",
           },
         ],
         questionsEn: [
@@ -5616,7 +5616,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A VolumeSnapshot is a point-in-time copy of a PersistentVolume's data — similar to a database snapshot or a VM disk checkpoint. It lets you capture the current state of a disk so you can restore it later (e.g., before running a risky database migration). From a snapshot you can create a new PVC pre-populated with that data. VolumeSnapshots require two things to work: a snapshot-controller running in the cluster, and a CSI driver that supports snapshot operations. Not all storage backends support this feature.",
+              "A VolumeSnapshot is a point-in-time copy of a PersistentVolume's data - similar to a database snapshot or a VM disk checkpoint. It lets you capture the current state of a disk so you can restore it later (e.g., before running a risky database migration). From a snapshot you can create a new PVC pre-populated with that data. VolumeSnapshots require two things to work: a snapshot-controller running in the cluster, and a CSI driver that supports snapshot operations. Not all storage backends support this feature.",
           },
           {
             q: "How does a StatefulSet manage storage?",
@@ -5640,7 +5640,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "VolumeSnapshotClass is like StorageClass — it defines which CSI driver to use when creating snapshots.",
+              "VolumeSnapshotClass is like StorageClass - it defines which CSI driver to use when creating snapshots.",
           },
           {
             q: "What does subPath do in a Volume?",
@@ -5670,7 +5670,7 @@ export const TOPICS = [
             q: "What does volume binding mode WaitForFirstConsumer do?",
             options: [
               "Waits for Admin approval",
-              "Waits for a Pod to be scheduled before creating the PV — ensuring the PV is in the same Zone as the Pod",
+              "Waits for a Pod to be scheduled before creating the PV - ensuring the PV is in the same Zone as the Pod",
               "Waits for replication",
               "Waits for backup",
             ],
@@ -5694,7 +5694,7 @@ export const TOPICS = [
             q: "A PVC stays Pending.\n\nkubectl describe pvc shows:\nEvents:\n  Warning  ProvisioningFailed  storageclass.storage.k8s.io 'fast-ssd' not found\n\nWhat is wrong?",
             options: [
               "PVC is too large",
-              "StorageClass 'fast-ssd' does not exist in the cluster — configuration error",
+              "StorageClass 'fast-ssd' does not exist in the cluster - configuration error",
               "Node is full",
               "Wrong Namespace",
             ],
@@ -5730,7 +5730,7 @@ export const TOPICS = [
             q: "A PVC sets storageClassName: standard. kubectl get pvc shows Pending.\n\nkubectl get storageclass shows:\nNAME    PROVISIONER\nfast    ebs.csi.aws.com\n\nWhat is wrong?",
             options: [
               "PVC is too large",
-              "StorageClass 'standard' does not exist — PVC requests a class not in the cluster",
+              "StorageClass 'standard' does not exist - PVC requests a class not in the cluster",
               "Wrong Namespace",
               "PV already exists",
             ],
@@ -5742,7 +5742,7 @@ export const TOPICS = [
             q: "A VolumeSnapshot is not created.\n\nkubectl describe volumesnapshot shows:\nready-to-use: false\nerror: rpc error: code = Unimplemented\n\nWhat is the likely cause?",
             options: [
               "Wrong Namespace",
-              "CSI driver does not support snapshot capability — check if snapshot-controller and CSI driver support it",
+              "CSI driver does not support snapshot capability - check if snapshot-controller and CSI driver support it",
               "PVC does not exist",
               "Capacity exceeded",
             ],
@@ -5772,19 +5772,19 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "A ConfigMap with immutable: true is locked — Kubernetes rejects any patch that changes its data, regardless of who issues it. The only way forward is to delete the ConfigMap and let Helm recreate it: kubectl delete cm my-configmap then helm upgrade. A rollback would return to the prior Helm state without resolving the immutability.",
+              "A ConfigMap with immutable: true is locked - Kubernetes rejects any patch that changes its data, regardless of who issues it. The only way forward is to delete the ConfigMap and let Helm recreate it: kubectl delete cm my-configmap then helm upgrade. A rollback would return to the prior Helm state without resolving the immutability.",
           },
           {
             q: "A Pod with a PVC on AWS EKS. The Pod moved to a different Node. The PVC is Bound but the Pod can't start. What is happening?",
             options: [
               "PVC was deleted",
-              "EBS Volume is in a different AZ than the new Node — EBS Volumes are single-AZ",
+              "EBS Volume is in a different AZ than the new Node - EBS Volumes are single-AZ",
               "NetworkPolicy is blocking",
               "Wrong StorageClass",
             ],
             answer: 1,
             explanation:
-              "AWS EBS Volumes are zone-specific — a volume created in us-east-1a cannot be attached to a Node in us-east-1b. When a Pod reschedules to a Node in a different AZ, the volume attachment fails even though the PVC shows Bound. Use a StorageClass with WaitForFirstConsumer binding mode and add nodeAffinity to keep the Pod in the same AZ as its volume.",
+              "AWS EBS Volumes are zone-specific - a volume created in us-east-1a cannot be attached to a Node in us-east-1b. When a Pod reschedules to a Node in a different AZ, the volume attachment fails even though the PVC shows Bound. Use a StorageClass with WaitForFirstConsumer binding mode and add nodeAffinity to keep the Pod in the same AZ as its volume.",
           },
           {
             q: "A Helm Chart contains a Secret. What is the correct way to manage secrets in Helm for production?",
@@ -6077,7 +6077,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl describe pod shows events, conditions, and detailed info — it's the primary diagnostic tool. The Events section at the bottom usually reveals the direct cause of the problem.",
+              "kubectl describe pod shows events, conditions, and detailed info - it's the primary diagnostic tool. The Events section at the bottom usually reveals the direct cause of the problem.",
           },
           {
             q: "Pod 'api-service' is Running but the app returns 500 errors. What is the first command you run?",
@@ -6089,7 +6089,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl logs shows the container's stdout/stderr — the first place to look for application errors while the pod is running. Use --follow to stream logs in real time.",
+              "kubectl logs shows the container's stdout/stderr - the first place to look for application errors while the pod is running. Use --follow to stream logs in real time.",
           },
           {
             q: "You need to check if a running pod can reach the database at db:5432. How do you open a shell inside the pod?",
@@ -6113,13 +6113,13 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation:
-              "kubectl get pods -A (short for --all-namespaces) lists pods from every namespace in one table — very useful for a system-wide health check.",
+              "kubectl get pods -A (short for --all-namespaces) lists pods from every namespace in one table - very useful for a system-wide health check.",
           },
           {
             q: "What does kubectl get events show?",
             options: [
               "Only errors",
-              "Namespace events — Pod scheduling, image pulls, probe failures",
+              "Namespace events - Pod scheduling, image pulls, probe failures",
               "Only Pod logs",
               "Only Node events",
             ],
@@ -6143,13 +6143,13 @@ export const TOPICS = [
             q: "What is the difference between Running and Ready?",
             options: [
               "No difference",
-              "Running — container is active. Ready — Pod passed readiness probe and can receive traffic",
-              "Ready — production only",
-              "Running — before deploy",
+              "Running - container is active. Ready - Pod passed readiness probe and can receive traffic",
+              "Ready - production only",
+              "Running - before deploy",
             ],
             answer: 1,
             explanation:
-              "Running means the container process has started — but that doesn't mean it can serve requests yet. A readiness probe is a health check Kubernetes runs against the Pod (e.g., an HTTP GET to /health) to decide whether it is ready to receive traffic. A Pod that is Running but failing its readiness probe is shown as 0/1 Ready and is automatically removed from the Service's load balancer until it passes. This prevents live traffic from hitting a Pod that hasn't finished starting up, is overloaded, or is temporarily unhealthy.",
+              "Running means the container process has started - but that doesn't mean it can serve requests yet. A readiness probe is a health check Kubernetes runs against the Pod (e.g., an HTTP GET to /health) to decide whether it is ready to receive traffic. A Pod that is Running but failing its readiness probe is shown as 0/1 Ready and is automatically removed from the Service's load balancer until it passes. This prevents live traffic from hitting a Pod that hasn't finished starting up, is overloaded, or is temporarily unhealthy.",
           },
           {
             q: "How do you view logs from a crashed container?",
@@ -6161,7 +6161,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "When a container crashes (e.g., in CrashLoopBackOff), Kubernetes automatically starts a new container instance to replace it. The new instance is now 'current', so kubectl logs (without any flag) shows the new instance's logs — which may be nearly empty if it crashed immediately. The --previous flag fetches the logs from the container run that just crashed, which is exactly what you need to diagnose the root cause. Without --previous you'll often see no useful output.",
+              "When a container crashes (e.g., in CrashLoopBackOff), Kubernetes automatically starts a new container instance to replace it. The new instance is now 'current', so kubectl logs (without any flag) shows the new instance's logs - which may be nearly empty if it crashed immediately. The --previous flag fetches the logs from the container run that just crashed, which is exactly what you need to diagnose the root cause. Without --previous you'll often see no useful output.",
           },
           {
             q: "What extra info does kubectl get pods -o wide show?",
@@ -6197,7 +6197,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl diff -f manifest.yaml shows what would change before kubectl apply. Enables review before modifying the cluster — like git diff for Kubernetes.",
+              "kubectl diff -f manifest.yaml shows what would change before kubectl apply. Enables review before modifying the cluster - like git diff for Kubernetes.",
           },
           {
             q: "What does kubectl rollout history deployment/app show?",
@@ -6215,7 +6215,7 @@ export const TOPICS = [
             q: "What does kubectl get pod -o jsonpath='{.items[*].metadata.name}' do?",
             options: [
               "Shows YAML",
-              "Extracts a specific value from JSON output — in this case all Pod names",
+              "Extracts a specific value from JSON output - in this case all Pod names",
               "Shows IPs",
               "Shows labels",
             ],
@@ -6227,7 +6227,7 @@ export const TOPICS = [
             q: "What does kubectl apply --server-side do?",
             options: [
               "Runs on the server only",
-              "Performs apply at the API server with Server-Side Apply — better conflict handling with multiple managers",
+              "Performs apply at the API server with Server-Side Apply - better conflict handling with multiple managers",
               "Runs as dry-run",
               "Runs in background",
             ],
@@ -6239,7 +6239,7 @@ export const TOPICS = [
             q: "What does kubectl wait do?",
             options: [
               "Waits 5 seconds",
-              "Waits until a specific condition is met — e.g. Pod=Ready",
+              "Waits until a specific condition is met - e.g. Pod=Ready",
               "Waits for user input",
               "Waits for network",
             ],
@@ -6251,7 +6251,7 @@ export const TOPICS = [
             q: "What does kubectl label node worker-1 env=production do?",
             options: [
               "Sets a Namespace",
-              "Adds a label to the Node — used with nodeSelector and nodeAffinity",
+              "Adds a label to the Node - used with nodeSelector and nodeAffinity",
               "Sets a taint",
               "Sets a StorageClass",
             ],
@@ -6263,7 +6263,7 @@ export const TOPICS = [
             q: "What does kubectl taint nodes node1 key=val:NoSchedule do?",
             options: [
               "Sets a label",
-              "Marks the Node as tainted — Pods without a matching toleration won't be scheduled there",
+              "Marks the Node as tainted - Pods without a matching toleration won't be scheduled there",
               "Deletes the Node",
               "Sets a resource quota",
             ],
@@ -6287,7 +6287,7 @@ export const TOPICS = [
             q: "What does kubectl config get-contexts do?",
             options: [
               "Shows Docker contexts",
-              "Lists all kubeconfig contexts — configured clusters and users",
+              "Lists all kubeconfig contexts - configured clusters and users",
               "Shows Namespaces",
               "Shows Node contexts",
             ],
@@ -6366,7 +6366,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ErrImagePull היא השגיאה שמופיעה בפעם הראשונה שה-pull נכשל. אחרי כמה ניסיונות, Kubernetes עובר לסטטוס ImagePullBackOff שמציין שהוא ממתין בין ניסיונות עם back-off גוברת. שתיהן אותה בעיה יסודית — שגיאה בhורדת ה-image.",
+              "ErrImagePull היא השגיאה שמופיעה בפעם הראשונה שה-pull נכשל. אחרי כמה ניסיונות, Kubernetes עובר לסטטוס ImagePullBackOff שמציין שהוא ממתין בין ניסיונות עם back-off גוברת. שתיהן אותה בעיה יסודית - שגיאה בhורדת ה-image.",
           },
           {
             q: "מה Pod בסטטוס Evicted?",
@@ -6414,7 +6414,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "RunContainerError אומר שה-container runtime נכשל בהפעלת הקונטיינר עצמו — לא שה-process בפנים קרס (זה יהיה CrashLoopBackOff). הסיבות הנפוצות: volume/mount שגוי, Secret או ConfigMap חסרים, בעיות securityContext. בדוק kubectl describe pod ו-kubectl logs.",
+              "RunContainerError אומר שה-container runtime נכשל בהפעלת הקונטיינר עצמו - לא שה-process בפנים קרס (זה יהיה CrashLoopBackOff). הסיבות הנפוצות: volume/mount שגוי, Secret או ConfigMap חסרים, בעיות securityContext. בדוק kubectl describe pod ו-kubectl logs.",
           },
           {
             q: "Pod נמצא ב-ContainerCreating זמן רב. מה הסיבות האפשריות?",
@@ -6450,7 +6450,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "ECONNREFUSED אומר שה-TCP connection נדחית — השרת בצד השני לא מאזין על ה-port. IP מסוג 10.96.x.x הוא ClusterIP של Service. בדוק kubectl get svc ו-kubectl get endpoints לוודא שה-DB Service קיים עם Endpoints, וש-Pod ה-DB עצמו רץ.",
+              "ECONNREFUSED אומר שה-TCP connection נדחית - השרת בצד השני לא מאזין על ה-port. IP מסוג 10.96.x.x הוא ClusterIP של Service. בדוק kubectl get svc ו-kubectl get endpoints לוודא שה-DB Service קיים עם Endpoints, וש-Pod ה-DB עצמו רץ.",
           },
           {
             q: "Pod ב-Error.\n\nkubectl describe מציג:\nEvents: Warning Failed: Failed to create pod sandbox: ... cni plugin not initialized\n\nמה הבעיה?",
@@ -6546,7 +6546,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl top pod --sort-by=memory ממיין את כל ה-Pods לפי צריכת הזיכרון הנוכחית (גבוה לנמוך). זה כלי שימושי לאבחון בעיות MemoryPressure — הPod בראש הרשימה הוא המועמד הראשון לעצירה אם ה-Node מגיע ל-memory limit.",
+              "kubectl top pod --sort-by=memory ממיין את כל ה-Pods לפי צריכת הזיכרון הנוכחית (גבוה לנמוך). זה כלי שימושי לאבחון בעיות MemoryPressure - הPod בראש הרשימה הוא המועמד הראשון לעצירה אם ה-Node מגיע ל-memory limit.",
           },
         ],
         questionsEn: [
@@ -6579,7 +6579,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "OOMKilled (Out Of Memory Killed) happens when a container exceeds its limits.memory setting — the Linux kernel terminates it with exit code 137 (SIGKILL). Increase the memory limit in the Pod spec, or use kubectl top pod to identify a memory leak in the application.",
+              "OOMKilled (Out Of Memory Killed) happens when a container exceeds its limits.memory setting - the Linux kernel terminates it with exit code 137 (SIGKILL). Increase the memory limit in the Pod spec, or use kubectl top pod to identify a memory leak in the application.",
           },
           {
             q: "A pod stays Pending. kubectl describe shows: '0/3 nodes are available: 3 Insufficient cpu'. What is the root cause?",
@@ -6597,7 +6597,7 @@ export const TOPICS = [
             q: "What is the difference between ErrImagePull and ImagePullBackOff?",
             options: [
               "No difference",
-              "ErrImagePull — first attempt failed. ImagePullBackOff — K8s is waiting in backoff before retrying",
+              "ErrImagePull - first attempt failed. ImagePullBackOff - K8s is waiting in backoff before retrying",
               "ErrImagePull for private, ImagePullBackOff for public",
               "ImagePullBackOff is more severe",
             ],
@@ -6639,19 +6639,19 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl port-forward creates a tunnel through the API server between your local machine and a Pod or Service. The command kubectl port-forward pod/mypod 8080:80 makes the Pod's port 80 accessible at localhost:8080 without creating a public Service — ideal for debugging.",
+              "kubectl port-forward creates a tunnel through the API server between your local machine and a Pod or Service. The command kubectl port-forward pod/mypod 8080:80 makes the Pod's port 80 accessible at localhost:8080 without creating a public Service - ideal for debugging.",
           },
           {
             q: "What does RunContainerError mean?",
             options: [
               "Pod is not scheduled",
-              "Container runtime failed to start the container — usually a wrong volume mount, missing Secret/ConfigMap, or securityContext issue",
+              "Container runtime failed to start the container - usually a wrong volume mount, missing Secret/ConfigMap, or securityContext issue",
               "Image not found",
               "OOMKilled",
             ],
             answer: 1,
             explanation:
-              "RunContainerError means the container runtime failed to start the container itself — not that the process inside crashed (that would be CrashLoopBackOff). Common causes: wrong volume mount, missing Secret or ConfigMap, securityContext issues. Check kubectl describe pod and kubectl logs for details.",
+              "RunContainerError means the container runtime failed to start the container itself - not that the process inside crashed (that would be CrashLoopBackOff). Common causes: wrong volume mount, missing Secret or ConfigMap, securityContext issues. Check kubectl describe pod and kubectl logs for details.",
           },
           {
             q: "A Pod is in ContainerCreating for a long time. What are the likely causes?",
@@ -6669,7 +6669,7 @@ export const TOPICS = [
             q: "A Pod is stuck in Terminating and even kubectl delete pod my-pod --grace-period=0 --force doesn't help. What is the cause?",
             options: [
               "Namespace is locked",
-              "The Pod has a finalizer that was not cleared — must be removed manually",
+              "The Pod has a finalizer that was not cleared - must be removed manually",
               "RBAC is blocking",
               "Node is down",
             ],
@@ -6681,13 +6681,13 @@ export const TOPICS = [
             q: "A Pod is in CrashLoopBackOff.\n\nkubectl logs shows:\nError: ECONNREFUSED 10.96.5.21:5432\n\nWhat can you infer?",
             options: [
               "DNS misconfiguration",
-              "The app cannot connect to the DB at IP 10.96.5.21:5432 — Service or DB Pod is unavailable",
+              "The app cannot connect to the DB at IP 10.96.5.21:5432 - Service or DB Pod is unavailable",
               "OOMKill",
               "CPU throttling",
             ],
             answer: 1,
             explanation:
-              "ECONNREFUSED means the TCP connection was actively rejected — nothing is listening on that port. IP addresses in the 10.96.x.x range are Kubernetes Service ClusterIPs. Check kubectl get svc and kubectl get endpoints to confirm the DB Service exists with live Endpoints, and that the DB Pod is actually Running.",
+              "ECONNREFUSED means the TCP connection was actively rejected - nothing is listening on that port. IP addresses in the 10.96.x.x range are Kubernetes Service ClusterIPs. Check kubectl get svc and kubectl get endpoints to confirm the DB Service exists with live Endpoints, and that the DB Pod is actually Running.",
           },
           {
             q: "A Pod is in Error.\n\nkubectl describe shows:\nEvents: Warning Failed: Failed to create pod sandbox: ... cni plugin not initialized\n\nWhat is the problem?",
@@ -6699,7 +6699,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "The CNI plugin runs on each Node and configures the network interface for every new Pod. If it has not been initialized on a Node — usually because the CNI DaemonSet Pod is missing or crashed — new Pods on that Node cannot get an IP address and sandbox creation fails. Check kubectl get ds -n kube-system.",
+              "The CNI plugin runs on each Node and configures the network interface for every new Pod. If it has not been initialized on a Node - usually because the CNI DaemonSet Pod is missing or crashed - new Pods on that Node cannot get an IP address and sandbox creation fails. Check kubectl get ds -n kube-system.",
           },
           {
             q: "A Node shows DiskPressure.\n\nkubectl describe node shows:\nConditions:\n  DiskPressure True\n\nWhat are the common causes?",
@@ -6726,7 +6726,7 @@ export const TOPICS = [
               "The Scheduler explains each Node's rejection individually: the one Node with enough memory is NotReady and cannot accept Pods, while the other two carry the not-ready taint. Fix the unhealthy Nodes or add a healthy Node with enough free memory to unblock scheduling.",
           },
           {
-            q: "A Deployment with 5 replicas — all Pending.\n\nkubectl describe pod shows:\nInsufficientCPU: 500m requested, 200m available\n\nWhat is the best long-term fix?",
+            q: "A Deployment with 5 replicas - all Pending.\n\nkubectl describe pod shows:\nInsufficientCPU: 500m requested, 200m available\n\nWhat is the best long-term fix?",
             options: [
               "Delete Pods",
               "Add Nodes to the cluster, or reduce CPU requests based on actual usage (kubectl top pods)",
@@ -6735,13 +6735,13 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "When all replicas are Pending with InsufficientCPU, the cluster has no remaining CPU capacity. Short-term, lower the CPU requests in the Pod spec closer to actual usage (check kubectl top pods). Long-term, add Nodes to the cluster — ideally via a Cluster Autoscaler — or use VPA to right-size requests automatically.",
+              "When all replicas are Pending with InsufficientCPU, the cluster has no remaining CPU capacity. Short-term, lower the CPU requests in the Pod spec closer to actual usage (check kubectl top pods). Long-term, add Nodes to the cluster - ideally via a Cluster Autoscaler - or use VPA to right-size requests automatically.",
           },
           {
             q: "A Pod with an initContainer.\n\nkubectl get pods shows:\nNAME    READY  STATUS\napp-1   0/1    Init:0/1\n\nWhat does this mean?",
             options: [
               "Main container crashed",
-              "The first initContainer has not finished yet — the Pod won't start the main container until all initContainers complete",
+              "The first initContainer has not finished yet - the Pod won't start the main container until all initContainers complete",
               "Wrong Namespace",
               "Wrong image",
             ],
@@ -6753,7 +6753,7 @@ export const TOPICS = [
             q: "A new Service is not working. kubectl run test-pod --image=busybox -- wget -qO- http://my-service returns a timeout. What do you check?",
             options: [
               "kubectl delete service",
-              "kubectl get endpoints my-service — if empty the selector doesn't match; if populated check Pod ports",
+              "kubectl get endpoints my-service - if empty the selector doesn't match; if populated check Pod ports",
               "kubectl describe namespace",
               "kubectl get nodes",
             ],
@@ -6765,7 +6765,7 @@ export const TOPICS = [
             q: "A Node has MemoryPressure. Pods are being evicted. What order does the kubelet evict them?",
             options: [
               "Stops scheduling only",
-              "Evicts Pods by QoS — BestEffort first, then Burstable, then Guaranteed last",
+              "Evicts Pods by QoS - BestEffort first, then Burstable, then Guaranteed last",
               "Restarts all Pods",
               "Deletes Services",
             ],
@@ -6777,7 +6777,7 @@ export const TOPICS = [
             q: "What does kubectl top pod --sort-by=memory do?",
             options: [
               "Lists Pods alphabetically",
-              "Lists Pods sorted by memory usage — useful for identifying resource-hungry Pods",
+              "Lists Pods sorted by memory usage - useful for identifying resource-hungry Pods",
               "Shows only OOMKilled Pods",
               "Shows Nodes",
             ],
@@ -6801,7 +6801,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "לפני rollback חשוב להבין מה שתשתנה. kubectl logs <new-pod> --previous מציג את הoutput של ה-crash, וkubectl describe pod מציג את ה-Events שהובילו לו. רק אחרי שמבינים את הסיבה מחליטים — לתקן את הcode ולדחוף גרסה חדשה, או לבצע rollout undo לגרסה הקודמת.",
+              "לפני rollback חשוב להבין מה שתשתנה. kubectl logs <new-pod> --previous מציג את הoutput של ה-crash, וkubectl describe pod מציג את ה-Events שהובילו לו. רק אחרי שמבינים את הסיבה מחליטים - לתקן את הcode ולדחוף גרסה חדשה, או לבצע rollout undo לגרסה הקודמת.",
           },
           {
             q: "Deployment Upgrade נעצר: 5 מתוך 10 Pods על v2 ו-5 נשארים על v1. kubectl rollout status מראה 'Waiting for rollout to finish'. מה הסיבה הסבירה ביותר?",
@@ -6825,7 +6825,7 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation:
-              "ה-Service selector 'app: backend' לא תואם ל-label 'app: backend-api' של ה-Pods — הם מחרוזות שונות. כתוצאה, ה-Endpoints ריקים ו-kube-proxy אין לאן לנתב. הרץ kubectl get endpoints <service> לאישור ו-kubectl get pods --show-labels להשוואה, ואז תקן את ה-selector.",
+              "ה-Service selector 'app: backend' לא תואם ל-label 'app: backend-api' של ה-Pods - הם מחרוזות שונות. כתוצאה, ה-Endpoints ריקים ו-kube-proxy אין לאן לנתב. הרץ kubectl get endpoints <service> לאישור ו-kubectl get pods --show-labels להשוואה, ואז תקן את ה-selector.",
           },
           {
             q: "Node מראה NotReady ב-kubectl get nodes. Pods מפונים ממנו. מה שתי הפעולות הראשונות שלך?",
@@ -6837,7 +6837,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "kubectl describe node <name> מציג את ה-Conditions (MemoryPressure, DiskPressure, Ready) ואת ה-Events האחרונים — המקום הראשון לחפש. לאחר מכן SSH ל-Node ו-systemctl status kubelet לוודא שהתהליך רץ. הסיבות הנפוצות ל-NotReady: kubelet נפל, תעודת TLS פגה, או disk/memory pressure.",
+              "kubectl describe node <name> מציג את ה-Conditions (MemoryPressure, DiskPressure, Ready) ואת ה-Events האחרונים - המקום הראשון לחפש. לאחר מכן SSH ל-Node ו-systemctl status kubelet לוודא שהתהליך רץ. הסיבות הנפוצות ל-NotReady: kubelet נפל, תעודת TLS פגה, או disk/memory pressure.",
           },
           {
             q: "מה kubectl drain עושה ומתי משתמשים בו?",
@@ -6861,7 +6861,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "kubectl cordon מסמן Node כ-SchedulingDisabled, כלומר ה-Scheduler לא יניח Pods חדשים עליו. שלא כמו drain, cordon לא מגרש Pods קיימים — הם ממשיכים לרוץ. שימושי כשרוצים למנוע תזמון חדש בלי לשבש workloads קיימים.",
+              "kubectl cordon מסמן Node כ-SchedulingDisabled, כלומר ה-Scheduler לא יניח Pods חדשים עליו. שלא כמו drain, cordon לא מגרש Pods קיימים - הם ממשיכים לרוץ. שימושי כשרוצים למנוע תזמון חדש בלי לשבש workloads קיימים.",
           },
           {
             q: "מה ephemeral debug container?",
@@ -6897,7 +6897,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "etcdctl snapshot save backup.db מייצר snapshot מלא של etcd — ה-database שמכיל את כל מצב הCluster. זהו הכלי הראשי ל-Disaster Recovery. חייבים לציין --endpoints, --cacert, --cert, ו--key לאימות מול ה-etcd cluster.",
+              "etcdctl snapshot save backup.db מייצר snapshot מלא של etcd - ה-database שמכיל את כל מצב הCluster. זהו הכלי הראשי ל-Disaster Recovery. חייבים לציין --endpoints, --cacert, --cert, ו--key לאימות מול ה-etcd cluster.",
           },
           {
             q: "Service לא מנתב traffic לPods. kubectl get endpoints מציג <none>. מה הגורם הסביר?",
@@ -6933,7 +6933,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "404 ב-HTTP liveness probe אומר שה-path שמוגדר ב-livenessProbe.httpGet.path לא קיים באפליקציה. ה-Pod עצמו רץ — הבעיה היא הגדרת ה-probe בלבד. בדוק בdocumentation של האפליקציה איזה endpoint health היא חושפת (/health, /ping, /livez) ועדכן את ה-path.",
+              "404 ב-HTTP liveness probe אומר שה-path שמוגדר ב-livenessProbe.httpGet.path לא קיים באפליקציה. ה-Pod עצמו רץ - הבעיה היא הגדרת ה-probe בלבד. בדוק בdocumentation של האפליקציה איזה endpoint health היא חושפת (/health, /ping, /livez) ועדכן את ה-path.",
           },
           {
             q: "kubectl exec -it my-pod -- bash מחזיר:\n\nexec: \"bash\": executable file not found in $PATH\n\nמה הפתרון?",
@@ -7005,7 +7005,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "כשPod מטעין env vars מConfigMap, הוא קורא אותם פעם אחת בלבד — בזמן הפעלת הPod. שינוי ב-ConfigMap אחרי שה-Pod רץ לא מגיע אליו. הפתרון הוא kubectl rollout restart deployment/my-app. שים לב: ConfigMap שמוזנק כ-volume (לא env) כן מתעדכן אוטומטית (עם השהייה של עד כדקה).",
+              "כשPod מטעין env vars מConfigMap, הוא קורא אותם פעם אחת בלבד - בזמן הפעלת הPod. שינוי ב-ConfigMap אחרי שה-Pod רץ לא מגיע אליו. הפתרון הוא kubectl rollout restart deployment/my-app. שים לב: ConfigMap שמוזנק כ-volume (לא env) כן מתעדכן אוטומטית (עם השהייה של עד כדקה).",
           },
           {
             q: "Pod לא עולה.\n\nkubectl describe מציג:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: /var/lib/kubelet/pods/.../volumes/.../my-secret\n\nמה הסיבה?",
@@ -7017,7 +7017,7 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation:
-              "Kubernetes מנסה לmount את ה-Secret כvolume לפני שמפעיל את הcontainer. אם ה-Secret לא קיים ב-Namespace, ה-volume mount נכשל ו-containerd לא יכול להתחיל את ה-task. בדוק kubectl get secret my-secret -n <namespace> ואם חסר — צור אותו.",
+              "Kubernetes מנסה לmount את ה-Secret כvolume לפני שמפעיל את הcontainer. אם ה-Secret לא קיים ב-Namespace, ה-volume mount נכשל ו-containerd לא יכול להתחיל את ה-task. בדוק kubectl get secret my-secret -n <namespace> ואם חסר - צור אותו.",
           },
           {
             q: "kubectl get pods מציג Pod ב-Terminating כבר 20 דקות. Node שבו רץ ה-Pod NotReady.\n\nמה עושים?",
@@ -7060,7 +7060,7 @@ export const TOPICS = [
           {
             q: "A Service has selector 'app: backend'. Pods labeled 'app: backend-api' are Running and healthy. Users get connection refused. What is wrong?",
             options: [
-              "The Service selector does not match Pod labels — selector is 'app: backend' but pods have 'app: backend-api'",
+              "The Service selector does not match Pod labels - selector is 'app: backend' but pods have 'app: backend-api'",
               "The Service port is wrong",
               "The Ingress is misconfigured",
               "The pods are in the wrong namespace",
@@ -7079,7 +7079,7 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation:
-              "kubectl describe node <name> is the first diagnostic step — it shows all Conditions (Ready, MemoryPressure, DiskPressure), recent Events, and allocated resources. Then SSH in and run systemctl status kubelet to check if the kubelet process is running. Common root causes: kubelet crashed, TLS cert expired, or disk/memory pressure.",
+              "kubectl describe node <name> is the first diagnostic step - it shows all Conditions (Ready, MemoryPressure, DiskPressure), recent Events, and allocated resources. Then SSH in and run systemctl status kubelet to check if the kubelet process is running. Common root causes: kubelet crashed, TLS cert expired, or disk/memory pressure.",
           },
           {
             q: "What does kubectl drain do and when is it used?",
@@ -7097,7 +7097,7 @@ export const TOPICS = [
             q: "What does kubectl cordon do?",
             options: [
               "Deletes a Node",
-              "Marks a Node as unschedulable — no new Pods are scheduled on it but existing ones continue",
+              "Marks a Node as unschedulable - no new Pods are scheduled on it but existing ones continue",
               "Restarts kubelet",
               "Syncs state",
             ],
@@ -7157,7 +7157,7 @@ export const TOPICS = [
             q: "kubectl apply fails with:\n\nerror: error validating 'deployment.yaml': unknown field 'resoruces'\n\nWhat is wrong?",
             options: [
               "Wrong RBAC",
-              "Typo in YAML — 'resoruces' instead of 'resources' — Kubernetes rejects unknown fields",
+              "Typo in YAML - 'resoruces' instead of 'resources' - Kubernetes rejects unknown fields",
               "Wrong Namespace",
               "Wrong API version",
             ],
@@ -7169,19 +7169,19 @@ export const TOPICS = [
             q: "A Pod is running but the liveness probe keeps failing.\n\nkubectl describe shows:\nLiveness probe failed: HTTP probe failed with statuscode: 404\n\nWhat do you check?",
             options: [
               "DNS misconfiguration",
-              "Wrong probe path — /healthz is incorrect, find which endpoint the app actually exposes",
+              "Wrong probe path - /healthz is incorrect, find which endpoint the app actually exposes",
               "Wrong image",
               "RBAC",
             ],
             answer: 1,
             explanation:
-              "A 404 from the liveness probe means the path configured in livenessProbe.httpGet.path does not exist on the application — the Pod itself is healthy, only the probe config is wrong. Check the application's documentation or source code to find which health endpoint it exposes (/health, /ping, /livez), then update the path in the Pod spec.",
+              "A 404 from the liveness probe means the path configured in livenessProbe.httpGet.path does not exist on the application - the Pod itself is healthy, only the probe config is wrong. Check the application's documentation or source code to find which health endpoint it exposes (/health, /ping, /livez), then update the path in the Pod spec.",
           },
           {
             q: "kubectl exec -it my-pod -- bash returns:\n\nexec: \"bash\": executable file not found in $PATH\n\nWhat is the fix?",
             options: [
               "Pod not Running",
-              "The image has no bash — try /bin/sh or kubectl debug with a busybox image",
+              "The image has no bash - try /bin/sh or kubectl debug with a busybox image",
               "Wrong Namespace",
               "RBAC issue",
             ],
@@ -7205,7 +7205,7 @@ export const TOPICS = [
             q: "kubectl logs my-pod returns:\n\nError from server (BadRequest): container 'my-container' in pod 'my-pod' is not running\n\nWhat do you do?",
             options: [
               "The Pod is definitely Running",
-              "Pod is not Running — check kubectl get pod my-pod for status, then kubectl describe pod my-pod for Events",
+              "Pod is not Running - check kubectl get pod my-pod for status, then kubectl describe pod my-pod for Events",
               "Delete the Pod",
               "Add a sidecar",
             ],
@@ -7217,7 +7217,7 @@ export const TOPICS = [
             q: "A new cluster.\n\nkubectl get nodes shows:\nNAME    STATUS    ROLES\nmaster  NotReady  control-plane\n\nWhat is the first step?",
             options: [
               "Delete the Node",
-              "CNI plugin is not yet installed — check kubectl get pods -n kube-system then install a CNI (Calico/Flannel)",
+              "CNI plugin is not yet installed - check kubectl get pods -n kube-system then install a CNI (Calico/Flannel)",
               "API server not running",
               "etcd failure",
             ],
@@ -7229,19 +7229,19 @@ export const TOPICS = [
             q: "helm upgrade failed midway. Release is in 'failed' status. Old Pods are still running. What is the state of the Release?",
             options: [
               "Auto-deleted",
-              "Release is in FAILED status — roll back to a previous revision with helm rollback my-release",
+              "Release is in FAILED status - roll back to a previous revision with helm rollback my-release",
               "Release is waiting",
               "Release is deleting Pods",
             ],
             answer: 1,
             explanation:
-              "When helm upgrade fails, the Release is marked FAILED but Kubernetes keeps the existing working Pods running — it does not automatically roll back or delete them. The Release object persists so you can recover: run helm history my-release to find revision numbers and helm rollback my-release N to restore a clean state.",
+              "When helm upgrade fails, the Release is marked FAILED but Kubernetes keeps the existing working Pods running - it does not automatically roll back or delete them. The Release object persists so you can recover: run helm history my-release to find revision numbers and helm rollback my-release N to restore a clean state.",
           },
           {
             q: "A Pod uses an env var from a ConfigMap. You updated the ConfigMap. The Pod still uses the old value. Why?",
             options: [
               "ConfigMap was not updated",
-              "env vars from ConfigMaps are injected at Pod creation — changing the ConfigMap doesn't restart Pods; run rollout restart",
+              "env vars from ConfigMaps are injected at Pod creation - changing the ConfigMap doesn't restart Pods; run rollout restart",
               "K8s cache",
               "DNS cache",
             ],
@@ -7253,7 +7253,7 @@ export const TOPICS = [
             q: "A Pod won't start.\n\nkubectl describe shows:\nWarning  Failed  Error: failed to create containerd task: ... no such file or directory: .../volumes/.../my-secret\n\nWhat is the cause?",
             options: [
               "Wrong image",
-              "Secret 'my-secret' does not exist in the Namespace — Pod cannot mount a missing Secret volume",
+              "Secret 'my-secret' does not exist in the Namespace - Pod cannot mount a missing Secret volume",
               "Node is full",
               "RBAC",
             ],
@@ -7265,7 +7265,7 @@ export const TOPICS = [
             q: "kubectl get pods shows a Pod stuck in Terminating for 20 minutes. The Node it ran on is NotReady.\n\nWhat do you do?",
             options: [
               "Wait it out",
-              "kubectl delete pod my-pod --grace-period=0 --force — a NotReady Node means kubelet is not reporting, graceful termination won't happen",
+              "kubectl delete pod my-pod --grace-period=0 --force - a NotReady Node means kubelet is not reporting, graceful termination won't happen",
               "kubectl drain the Node",
               "Restart the cluster",
             ],
