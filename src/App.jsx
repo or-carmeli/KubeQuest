@@ -462,12 +462,15 @@ function renderBidi(text, lang) {
   // Note: the character class excludes . so "Kubernetes." splits into "Kubernetes" + "."
   const parts = text.split(/((?:[A-Za-z][A-Za-z0-9\-_:/]*(?:\s+(?=[A-Za-z]))?)+)/);
   if (parts.length <= 1) return text;
+  // If the text starts with an English term, prepend RLM so the bidi algorithm
+  // keeps the paragraph direction RTL instead of flipping it to LTR.
+  const startsWithLatin = /^[A-Za-z]/.test(text);
   return parts.map((part, i) => {
     if (/^[A-Za-z]/.test(part)) {
       const codeStyle = isCodeTerm(part)
         ? {background:"rgba(0,212,255,0.06)",borderRadius:4,padding:"1px 5px",fontSize:"0.88em",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",color:"#7dd3fc",whiteSpace:"nowrap"}
         : undefined;
-      return <span key={i} dir="ltr" style={{unicodeBidi:"isolate",...codeStyle}}>{part}</span>;
+      return <span key={i} dir="ltr" style={{unicodeBidi:"isolate",...codeStyle}}>{(i === 0 && startsWithLatin ? "\u200F" : "")}{part}</span>;
     }
     // Insert RLM (U+200F) before punctuation that immediately follows an LTR span so
     // the Unicode bidi algorithm places it at the visual end of the RTL sentence.
