@@ -104,7 +104,7 @@ const TRANSLATIONS = {
     correctCount: "נכון", perfect: "⭐ מושלם!", points: "נקודות",
     guestSaveHint: "💡 הירשמי כדי לשמור את הניקוד!", signupLink: "הירשמי עכשיו",
     tryAgain: "🔄 נסי שוב", backToTopics: "→ חזרי לנושאים",
-    nextLevelBtn: "🚀 המשיכי לרמה הבאה", locked: "🔒 נעול",
+    nextLevelBtn: "המשיכי לרמה הבאה", locked: "🔒 נעול",
     skipTheory: "⚡ דלגי לחידון",
     timerOn: "⏱ כבי טיימר", timerOff: "⏱ הפעילי טיימר", timeUp: "⏰ הזמן נגמר!",
     reviewBtn: "📋 צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
@@ -160,7 +160,7 @@ const TRANSLATIONS = {
     finishTopic_m: "🎉 סיים נושא!",
     guestSaveHint_m: "💡 הרשם כדי לשמור את הניקוד!", signupLink_m: "הרשם עכשיו",
     tryAgain_m: "🔄 נסה שוב", backToTopics_m: "→ חזור לנושאים",
-    nextLevelBtn_m: "🚀 המשך לרמה הבאה",
+    nextLevelBtn_m: "המשך לרמה הבאה",
     skipTheory_m: "⚡ דלג לחידון",
     timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
     reviewBtn_m: "📋 צפה בסקירה", hideReview_m: "הסתר סקירה",
@@ -256,7 +256,7 @@ const TRANSLATIONS = {
     correctCount: "correct", perfect: "⭐ Perfect!", points: "points",
     guestSaveHint: "💡 Sign up to save your score!", signupLink: "Sign up now",
     tryAgain: "🔄 Try Again", backToTopics: "← Back to Topics",
-    nextLevelBtn: "🚀 Next Level", locked: "🔒 Locked",
+    nextLevelBtn: "Next Level", locked: "🔒 Locked",
     skipTheory: "⚡ Skip to Quiz",
     timerOn: "⏱ Timer On", timerOff: "⏱ Timer Off", timeUp: "⏰ Time's Up!",
     reviewBtn: "📋 View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
@@ -3618,7 +3618,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                 const nt=TOPICS[nextTopicIdx];
                 return<button onClick={()=>startTopic(nt,"easy")}
                   style={{padding:14,background:`linear-gradient(135deg,${nt.color}ee,${nt.color}88)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 20px ${nt.color}55`}}>
-                  🚀 {lang==="en"?"Next Topic":"נושא הבא"}: {nt.icon} {nt.name}
+                  {lang==="en"?"Next Topic":"נושא הבא"}: {nt.icon} {nt.name}
                 </button>;
               })()}
               {/* Next level button */}
