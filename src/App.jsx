@@ -2582,7 +2582,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             style={{width:"100%",marginBottom:16,padding:"16px 20px",background:"linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.05))",border:"1px solid rgba(239,68,68,0.35)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s"}}
             onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
             <div className="action-card-inner" style={{display:"flex",alignItems:"center",gap:12,minWidth:0,flex:1}}>
-              <span className="action-emoji" style={{fontSize:28,flexShrink:0}}>🚨</span>
               <div className="action-text" style={{textAlign:"start",minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                   <span style={{color:"#EF4444",fontWeight:800,fontSize:15}}>{t("incidentModeBtn")}</span>
