@@ -96,6 +96,16 @@ npm run build    # production build
 npm run preview  # preview production build locally
 ```
 
+### Docker
+
+```bash
+docker build -t kubequest .
+docker run -p 8080:80 kubequest
+# → http://localhost:8080
+```
+
+The Docker image uses a multi-stage build (Node 20 → nginx:alpine) and serves the static build via nginx with SPA routing and cache headers.
+
 ---
 
 ## Supabase Setup
