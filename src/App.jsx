@@ -1477,17 +1477,20 @@ export default function K8sQuestApp() {
     setScreen("incident");
   };
 
-  const handleIncidentShare = () => {
-    if (!selectedIncident) return;
+  const buildIncidentShareMsg = () => {
+    if (!selectedIncident) return "";
     const maxScore = selectedIncident.steps.length * 10;
     const time = formatIncidentTime(incidentElapsed);
-    const msg = lang === "he"
+    return lang === "he"
       ? `🚨 פתרתי את אירוע ה-Kubernetes "${selectedIncident.titleHe || selectedIncident.title}" ב-KubeQuest תוך ${time} עם ניקוד ${incidentScore}/${maxScore}!\nתוכלו לנצח? 💪\n\n#Kubernetes #DevOps #SRE #K8s\nhttps://kubequest.online`
       : `🚨 I just resolved the Kubernetes incident "${selectedIncident.title}" on KubeQuest in ${time} with a score of ${incidentScore}/${maxScore}!\nCan you beat it? 💪\n\n#Kubernetes #DevOps #SRE #K8s\nhttps://kubequest.online`;
+  };
+
+  const handleIncidentShare = () => {
+    const msg = buildIncidentShareMsg();
     navigator.clipboard?.writeText(msg).catch(() => {});
-    window.open("https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fkubequest.online", "_blank", "noopener,noreferrer,width=620,height=640");
     setIncidentShareCopied(true);
-    setTimeout(() => setIncidentShareCopied(false), 4000);
+    setTimeout(() => setIncidentShareCopied(false), 3000);
   };
 
   // Keyboard shortcuts: 1-4 to pick answer, Enter to confirm/next
@@ -3544,14 +3547,30 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
 
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {/* LinkedIn share */}
-              <div>
-                <button onClick={handleIncidentShare}
-                  style={{width:"100%",padding:13,background:incidentShareCopied?"rgba(10,102,194,0.18)":"rgba(10,102,194,0.1)",border:`1px solid ${incidentShareCopied?"rgba(10,102,194,0.6)":"rgba(10,102,194,0.35)"}`,borderRadius:12,color:"#4a9ede",fontSize:14,fontWeight:700,cursor:"pointer",transition:"all 0.2s"}}>
-                  {incidentShareCopied?t("incidentShareCopied"):t("incidentShareBtn")}
-                </button>
-                {incidentShareCopied&&<div style={{fontSize:11,color:"#64748b",textAlign:"center",marginTop:5,animation:"fadeIn 0.2s ease"}}>
-                  {lang==="en"?"Post text copied — paste it in the LinkedIn dialog":"טקסט הפוסט הועתק — הדבק אותו בחלון LinkedIn"}
-                </div>}
+              <div style={{background:"rgba(10,102,194,0.06)",border:"1px solid rgba(10,102,194,0.2)",borderRadius:12,padding:"12px 14px"}}>
+                <div style={{fontSize:11,color:"#475569",marginBottom:8,textAlign:"left"}}>
+                  {lang==="en"?"1. Copy this text  2. Open LinkedIn  3. Paste":"1. העתק את הטקסט  2. פתח LinkedIn  3. הדבק"}
+                </div>
+                <div
+                  onClick={()=>{
+                    const el = document.getElementById("share-text-box");
+                    if (el) { const r = document.createRange(); r.selectNodeContents(el); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+                    handleIncidentShare();
+                  }}
+                  id="share-text-box"
+                  style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",fontSize:12,color:"#94a3b8",direction:"ltr",textAlign:"left",lineHeight:1.7,marginBottom:10,cursor:"text",userSelect:"all",whiteSpace:"pre-wrap",wordBreak:"break-word"}}>
+                  {buildIncidentShareMsg()}
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={handleIncidentShare}
+                    style={{flex:1,padding:"10px",background:incidentShareCopied?"rgba(16,185,129,0.15)":"rgba(255,255,255,0.06)",border:`1px solid ${incidentShareCopied?"#10B98150":"rgba(255,255,255,0.1)"}`,borderRadius:8,color:incidentShareCopied?"#10B981":"#94a3b8",fontSize:13,fontWeight:700,cursor:"pointer",transition:"all 0.2s"}}>
+                    {incidentShareCopied ? "✓ "+( lang==="en"?"Copied!":"הועתק!") : "📋 "+(lang==="en"?"Copy":"העתק")}
+                  </button>
+                  <a href="https://www.linkedin.com/post/new" target="_blank" rel="noopener noreferrer"
+                    style={{flex:1,padding:"10px",background:"rgba(10,102,194,0.12)",border:"1px solid rgba(10,102,194,0.35)",borderRadius:8,color:"#4a9ede",fontSize:13,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                    in {lang==="en"?"Open LinkedIn":"פתח LinkedIn"}
+                  </a>
+                </div>
               </div>
               <button onClick={()=>setScreen("incidentList")}
                 style={{padding:13,background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:12,color:"#6366F1",fontSize:14,fontWeight:700,cursor:"pointer"}}>
