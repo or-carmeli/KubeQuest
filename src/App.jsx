@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import WeakAreaCard from "./components/WeakAreaCard";
 import RoadmapView from "./components/RoadmapView";
-import { DAILY_QUESTIONS } from "./dailyQuestions";
-import { TOPICS, ACHIEVEMENTS } from "./topics";
-import { INCIDENTS } from "./incidents";
+import { ACHIEVEMENTS } from "./topicMeta";
+import { TOPICS } from "./content/topics";
+import { DAILY_QUESTIONS } from "./content/dailyQuestions";
+import { INCIDENTS } from "./content/incidents";
 import { saveQuizState, loadQuizState, clearQuizState } from "./utils/quizPersistence";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer } from "./api/quiz";
 
@@ -32,8 +33,8 @@ const INCIDENT_DIFFICULTY_CONFIG = {
 };
 
 const INCIDENT_SAVE_KEY = "incident_progress_v1";
-// v1.6.1 — patch: resume modal UX refactor (less intrusive, cooldown, session flag)
-const APP_VERSION  = "1.6.1";
+// v2.0.0 — major: portfolio repo refactor (BSL 1.1, proprietary content extracted)
+const APP_VERSION  = "2.0.0";
 const SESSION_START = new Date();
 
 // Resume modal behaviour constants
@@ -676,7 +677,13 @@ export default function K8sQuestApp() {
       window.history.replaceState(null, "", window.location.pathname);
     }
 
-    if (!supabase) { setAuthChecked(true); setDataLoaded(true); return; }
+    // If Supabase is not configured, go straight to guest mode
+    if (!supabase) {
+      setAuthChecked(true);
+      setDataLoaded(true);
+      return;
+    }
+
     // Fallback: if Supabase never responds, unblock the UI after 10 s
     const authTimeout = setTimeout(() => { setAuthChecked(true); setDataLoaded(true); }, 10000);
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -972,6 +979,7 @@ export default function K8sQuestApp() {
     if (!supabase) { setAuthError("Supabase not configured"); return; }
     setAuthLoading(true); setAuthError("");
     const { emailVal, passwordVal, usernameVal } = getFormValues();
+    if (!supabase) { setAuthError("Supabase not configured"); setAuthLoading(false); return; }
     const { error } = await supabase.auth.signUp({
       email: emailVal, password: passwordVal, options: {
         data: { username: usernameVal || emailVal.split("@")[0] },
@@ -992,6 +1000,7 @@ export default function K8sQuestApp() {
     if (!supabase) { setAuthError("Supabase not configured"); return; }
     setAuthLoading(true); setAuthError("");
     const { emailVal, passwordVal } = getFormValues();
+    if (!supabase) { setAuthError("Supabase not configured"); setAuthLoading(false); return; }
     const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
     if (error) {
       setAuthError(t("wrongCredentials"));
@@ -1007,7 +1016,7 @@ export default function K8sQuestApp() {
   const handleResend = async () => {
     setAuthLoading(true);
     const { emailVal } = getFormValues();
-    if (!supabase) { setAuthLoading(false); return; }
+    if (!supabase) { setAuthError("Supabase not configured"); setAuthLoading(false); return; }
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: emailVal,
@@ -1044,7 +1053,7 @@ export default function K8sQuestApp() {
       try { localStorage.removeItem("k8s_quest_guest"); } catch {}
     } else if (user) {
       // BUG-B fix: update, not upsert
-      await supabase.from("user_stats").update({
+      if (supabase) await supabase.from("user_stats").update({
         username: user.user_metadata?.username || user.email?.split("@")[0] || "",
         ...emptyStats, completed_topics: {}, achievements: [], topic_stats: {},
         updated_at: new Date().toISOString(),
