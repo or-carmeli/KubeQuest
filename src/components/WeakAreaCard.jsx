@@ -64,7 +64,7 @@ export default function WeakAreaCard({ topicStats, completedTopics, onGoToTopic,
   const name      = TOPIC_NAMES[weakId] || weakId;
   const allPerfect = accuracy === 100 && entries.length >= Object.keys(TOPIC_NAMES).length;
 
-  // Shared card wrapper style — borderRight acts as the RTL-side indicator bar.
+  // Shared card wrapper style - borderRight acts as the RTL-side indicator bar.
   const cardBase = {
     borderRadius: 14,
     padding: "14px 18px",
