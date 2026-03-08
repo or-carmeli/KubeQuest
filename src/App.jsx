@@ -792,7 +792,7 @@ export default function K8sQuestApp() {
     const idx = LEVEL_ORDER.indexOf(level);
     if (idx === 0) return false;
     const prevResult = completedTopics[`${topicId}_${LEVEL_ORDER[idx - 1]}`];
-    return !prevResult || (prevResult.correct < prevResult.total && !prevResult.retryComplete);
+    return !prevResult;
   };
 
   const getNextLevel = (level) => {
