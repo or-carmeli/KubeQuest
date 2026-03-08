@@ -729,6 +729,7 @@ export default function K8sQuestApp() {
   const [incidentResume,     setIncidentResume]     = useState(null); // saved state for resume banner
   const [incidentShareCopied,setIncidentShareCopied]= useState(false);
   const incidentTimerRef = useRef(null);
+  const incidentCheckingRef = useRef(false);
   const [reportDialog,  setReportDialog]  = useState(null); // {qText, qIndex} | null
   const [reportType,    setReportType]    = useState("");
   const [reportNote,    setReportNote]    = useState("");
@@ -1824,6 +1825,7 @@ export default function K8sQuestApp() {
     setIncidentElapsed(0);
     setIncidentAnswer(null);
     setIncidentSubmitted(false);
+    incidentCheckingRef.current = false;
     setIncidentHistory([]);
     setScreen("incident");
   };
@@ -1840,29 +1842,33 @@ export default function K8sQuestApp() {
 
   const submitIncidentStep = async (forcedAnswer) => {
     const ans = forcedAnswer !== undefined ? forcedAnswer : incidentAnswer;
-    if (ans === null || incidentSubmitted || !selectedIncident) return;
-    setIncidentAnswer(ans);
-    setIncidentSubmitted(true);
+    if (ans === null || incidentSubmitted || incidentCheckingRef.current || !selectedIncident) return;
+    incidentCheckingRef.current = true;
 
     const step = getIncidentStep(incidentStepIndex);
-    let correct, correctAnswer;
+    let correct, correctAnswer, result;
 
     if (supabase && step?.id) {
       try {
         const rpcResult = await checkIncidentAnswer(supabase, step.id, ans);
         correct = rpcResult.correct;
         correctAnswer = rpcResult.correct_answer;
-        setIncidentAnswerResult({ correct, correctIndex: correctAnswer, explanation: rpcResult.explanation, explanationHe: rpcResult.explanation_he });
+        result = { correct, correctIndex: correctAnswer, explanation: rpcResult.explanation, explanationHe: rpcResult.explanation_he };
       } catch {
         correct = ans === step.answer;
         correctAnswer = step.answer;
-        setIncidentAnswerResult({ correct, correctIndex: correctAnswer, explanation: step.explanation, explanationHe: step.explanationHe || step.explanation_he });
+        result = { correct, correctIndex: correctAnswer, explanation: step.explanation, explanationHe: step.explanationHe || step.explanation_he };
       }
     } else {
       correct = ans === step.answer;
       correctAnswer = step.answer;
-      setIncidentAnswerResult({ correct, correctIndex: correctAnswer, explanation: step.explanation, explanationHe: step.explanationHe || step.explanation_he });
+      result = { correct, correctIndex: correctAnswer, explanation: step.explanation, explanationHe: step.explanationHe || step.explanation_he };
     }
+
+    setIncidentAnswer(ans);
+    setIncidentSubmitted(true);
+    setIncidentAnswerResult(result);
+    incidentCheckingRef.current = false;
 
     const newScore    = incidentScore    + (correct ? 10 : 0);
     const newMistakes = incidentMistakes + (correct ? 0 : 1);
@@ -1885,6 +1891,7 @@ export default function K8sQuestApp() {
       setIncidentAnswer(null);
       setIncidentSubmitted(false);
       setIncidentAnswerResult(null);
+      incidentCheckingRef.current = false;
       saveIncidentProgress(selectedIncident, nextIdx, incidentScore, incidentMistakes, incidentElapsed, incidentHistory);
     }
   };
