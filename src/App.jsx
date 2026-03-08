@@ -1648,7 +1648,7 @@ export default function K8sQuestApp() {
       const streak = correct ? prev.current_streak + 1 : 0;
       return {
         ...prev,
-        total_score:    prev.total_score + freeScoreAdd,
+        total_score:    prev.total_score + (isFree ? freeScoreAdd : (correct ? (LEVEL_CONFIG[selectedLevel]?.points ?? 0) : 0)),
         // Free-mode quizzes must NOT modify persistent streak
         current_streak: isFree ? prev.current_streak : streak,
         max_streak:     isFree ? prev.max_streak     : Math.max(prev.max_streak, streak),
@@ -1711,9 +1711,8 @@ export default function K8sQuestApp() {
         ? quizHistory.filter(h=>h.chosen!==h.answer).map(h=>({q:h.q,options:h.options,answer:h.answer}))
         : (completedTopics[key]?.wrongQuestions??[]);
       const newCompleted = { ...completedTopics, [key]: { correct: bestCorrect, total: currentQuestions.length, wrongIndices: wrongIdx, wrongQuestions, ...(keepRetryComplete ? { retryComplete: true } : {}) } };
-      // Recompute topic score; add any free-mode bonus accumulated on top
-      const freeBonus = Math.max(0, stats.total_score - computeScore(completedTopics));
-      const newStats = { ...stats, total_score: computeScore(newCompleted) + freeBonus };
+      // Recompute canonical score; use Math.max to preserve per-question points and free-mode bonuses
+      const newStats = { ...stats, total_score: Math.max(stats.total_score, computeScore(newCompleted)) };
       const newAch = [
         ...unlockedAchievements,
         ...ACHIEVEMENTS.filter(a => !unlockedAchievements.includes(a.id) && a.condition(newStats, newCompleted)).map(a => a.id),
