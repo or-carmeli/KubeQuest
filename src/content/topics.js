@@ -83,7 +83,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Liveness probe בודק שהקונטיינר עדיין עובד. אם נכשל מספר פעמים, K8s ממית ומפעיל מחדש את הקונטיינר.",
+                "Liveness probe הוא בדיקת בריאות תקופתית שKubernetes מריץ על הקונטיינר. אם הבדיקה נכשלת מספר פעמים ברצף, Kubernetes מניח שהקונטיינר תקוע (למשל deadlock) וממית ומפעיל אותו מחדש אוטומטית. סוגי בדיקות נפוצים: HTTP GET לendpoint בריאות, חיבור TCP socket, או פקודת shell שחייבת לסיים עם exit code 0.",
             },
             {
               q: "מה readiness probe עושה?",
@@ -95,7 +95,7 @@ export const TOPICS = [
               ],
               answer: 0,
               explanation:
-                "Readiness probe בודק שהקונטיינר מוכן לקבל בקשות. Pods שלא עוברים readiness נוסרים מה-Service endpoints.",
+                "Readiness probe בודק שהקונטיינר מוכן לקבל בקשות. Pods שלא עוברים readiness נוסרים מה-Service endpoints ולא מקבלים traffic. בשונה מ-liveness probe שממית את הקונטיינר בכישלון, readiness probe רק מפסיק לנתב אליו traffic עד שהוא מוכן שוב.",
             },
             {
               q: "מה ברירת המחדל של restartPolicy ב-Pod?",
@@ -103,11 +103,11 @@ export const TOPICS = [
               "Never – Kubernetes לא מפעיל מחדש קונטיינר שנפסק",
               "OnFailure – Kubernetes מפעיל מחדש רק אם exit code שגוי",
               "Always – Kubernetes תמיד מפעיל מחדש קונטיינר שנפסק",
-              "OnFailure – מפעיל מחדש רק אם exit code שונה מ-0, לא אם יצא תקין",
+              "OnSuccess – Kubernetes מפעיל מחדש רק כשהקונטיינר יוצא תקין עם exit code 0",
               ],
               answer: 2,
               explanation:
-                "restartPolicy: Always הוא ברירת המחדל – Kubernetes תמיד מפעיל מחדש קונטיינר שנפסק.",
+                "restartPolicy קובע מתי Kubernetes מפעיל מחדש קונטיינר שנפסק. Always (ברירת המחדל) מפעיל מחדש תמיד, בין אם הקונטיינר קרס או יצא תקין. OnFailure מפעיל מחדש רק כש-exit code שונה מ-0. Never לא מפעיל מחדש בכלל. OnSuccess לא קיים ב-Kubernetes.",
             },
             {
               q: "מה ההבדל בין Job ל-CronJob?",
@@ -119,7 +119,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Job מריץ Task עד שהוא מסיים בהצלחה. CronJob מתזמן Jobs לפי cron schedule.",
+                "Job מריץ משימה עד שהיא מסתיימת בהצלחה. אם הקונטיינר נכשל, Job יוצר Pod חדש ומנסה שוב (לפי backoffLimit). CronJob מתזמן Jobs לפי cron schedule — לדוגמה: גיבוי לילי, ניקוי נתונים ישנים, או שליחת דוחות. CronJob יוצר Job חדש בכל הרצה.",
             },
             {
               q: "מה resource requests ב-Pod?",
@@ -143,7 +143,7 @@ export const TOPICS = [
               ],
               answer: 0,
               explanation:
-                "Namespace מאפשר הפרדה לוגית. משאבים ב-Namespace שונה לא 'רואים' זה את זה. שימושי ל: dev/staging/prod, צוותים שונים.",
+                "Namespace מספק הפרדה לוגית בתוך Cluster. משאבים ב-Namespace שונה לא 'רואים' זה את זה כברירת מחדל. שימושי להפרדת סביבות (dev/staging/prod), צוותים, או לקוחות. ניתן להגדיר ResourceQuota ו-LimitRange לכל Namespace כדי להגביל צריכת משאבים.",
             },
         ],
         questionsEn: [
@@ -193,7 +193,7 @@ export const TOPICS = [
               ],
               answer: 0,
               explanation:
-                "A readiness probe checks whether the container is ready to serve requests. Pods that fail readiness are removed from Service endpoints.",
+                "A readiness probe checks whether the container is ready to serve requests. Pods that fail readiness are removed from Service endpoints and stop receiving traffic. Unlike a liveness probe, which kills the container on failure, a readiness probe only stops routing traffic to it until it passes again.",
             },
             {
               q: "What is the default restartPolicy for a Pod?",
@@ -217,7 +217,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "A Job runs a task until it completes successfully. A CronJob schedules Jobs according to a cron expression.",
+                "A Job runs a task until it completes successfully. If the container fails, the Job creates a new Pod and retries (up to backoffLimit). A CronJob schedules Jobs on a recurring basis using a cron expression — for example: nightly backups, data cleanup, or report generation. Each scheduled run creates a new Job.",
             },
             {
               q: "What are resource requests in a Pod?",
@@ -343,7 +343,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Ephemeral containers מוספים לPod רץ דרך kubectl debug. שימושי כשה-image הראשי חסר כלי debug. אינם מאותחלים מחדש ולא מופיעים בspec.",
+                "Ephemeral containers מוספים לPod רץ דרך kubectl debug ומאפשרים חקירת בעיות בזמן אמת. שימושי כשה-image הראשי הוא distroless או חסר כלי debug כמו shell או curl. בניגוד ל-init containers, הם לא מופיעים ב-Pod spec ולא מאותחלים מחדש — הם נועדו לשימוש חד-פעמי בלבד.",
             },
         ],
         questionsEn: [
@@ -441,7 +441,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Ephemeral containers are injected into a running Pod via kubectl debug. Useful when the main image lacks debugging tools. They don't restart and don't appear in the Pod spec.",
+                "Ephemeral containers are injected into a running Pod via kubectl debug, allowing real-time troubleshooting. Useful when the main image is distroless or lacks debugging tools like a shell or curl. Unlike init containers, ephemeral containers don't appear in the Pod spec and are never restarted — they are designed for one-time diagnostic use only.",
             },
         ],
       },
@@ -459,10 +459,10 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "DaemonSet מבטיח שעותק אחד של ה-Pod רץ על כל Node. בNode חדש – Pod נוסף אוטומטית.",
+                "DaemonSet מבטיח שעותק אחד של ה-Pod רץ על כל Node ב-Cluster. כשNode חדש מצטרף — Pod נוסף אליו אוטומטית. כשNode מוסר — ה-Pod נמחק. שימושי לכלי תשתית שחייבים לרוץ בכל מקום: אוספי logs (כמו Fluentd), agents לmonitoring (כמו Prometheus node-exporter), או plugins לרשת (CNI).",
             },
             {
-              q: "מה זה HPA?",
+              q: "מה תפקיד ה-HPA ב-Kubernetes?",
               options: [
               "High Performance App – תצורת Pod מותאמת לביצועים גבוהים",
               "Horizontal Pod Autoscaler – מגדיל/מקטין Pods לפי עומס",
@@ -474,7 +474,7 @@ export const TOPICS = [
                 "ה-HPA (Horizontal Pod Autoscaler) עוקב אחרי מדדים כמו CPU ו-Memory ומשנה את מספר ה-replicas אוטומטית. כשהעומס עולה - הוא מוסיף Pods; כשיורד - הוא מסיר. דורש metrics-server מותקן ב-Cluster.",
             },
             {
-              q: "מה זה OOMKilled?",
+              q: "מה המשמעות של OOMKilled ב-Kubernetes?",
               options: [
               "שגיאת רשת שנגרמת כשה-Pod מנסה לגשת לכתובת IP חסומה",
               "הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-limits.memory",
