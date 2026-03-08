@@ -932,16 +932,16 @@ export const TOPICS = [
                 "כל rule ב-Ingress מכיל שדה host שמגדיר את ה-hostname. לדוגמה, אפשר להגדיר שבקשות ל-api.example.com ינותבו ל-Service אחד ובקשות ל-web.example.com ינותבו ל-Service אחר. כך Ingress אחד יכול לשרת מספר דומיינים.",
             },
             {
-              q: "מה ExternalTrafficPolicy:Local לעומת Cluster?",
+              q: "מה ההבדל בין ExternalTrafficPolicy: Local לבין ExternalTrafficPolicy: Cluster ב-Kubernetes Service?",
               options: [
-              "Local מהיר יותר תמיד כי הוא מדלג על ה-NAT layer של kube-proxy",
-              "Local שומר IP מקורי אבל רק Nodes עם Pod פעיל מקבלים תנועה; Cluster עושה SNAT",
-              "Cluster מיועד לענן בלבד, Local ל-on-premise deployments",
-              "אין הבדל מעשי בין השניים – רק שם שונה לאותו מנגנון",
+              "Local מעביר תנועה רק ל-Pods שרצים על אותו Node ושומר על ה-IP המקורי של הלקוח; Cluster יכול להעביר תנועה לכל Pod ב-cluster ומבצע SNAT",
+              "Local מהיר יותר תמיד כי הוא מדלג לחלוטין על kube-proxy",
+              "Cluster מיועד לשימוש בענן בלבד, Local מיועד רק ל-on-premise deployments",
+              "אין הבדל מעשי בין השניים – זה רק שם אחר לאותו מנגנון ב-kube-proxy",
               ],
-              answer: 1,
+              answer: 0,
               explanation:
-                "Local: source IP נשמר ותנועה לא יוצאת מה-Node, אבל Nodes ללא Pod פעיל לא יקבלו תנועה ויגרמו לאי-איזון. Cluster: SNAT מאזן לכל Nodes אבל מאבד source IP.",
+                "ExternalTrafficPolicy הוא שדה ב-spec של Kubernetes Service מסוג NodePort או LoadBalancer שקובע איך תנועה חיצונית מנותבת ל-Pods בתוך ה-cluster.\n\nכשהערך הוא Cluster (ברירת מחדל): תנועה שמגיעה לכל Node מנותבת לכל Pod בכל ה-cluster, גם אם הוא רץ על Node אחר. kube-proxy מבצע SNAT (Source NAT) כדי להחזיר את התשובה דרך אותו Node שקיבל את הבקשה. כתוצאה מכך ה-Pod רואה את ה-IP של ה-Node ולא את ה-IP האמיתי של הלקוח.\n\nכשהערך הוא Local: תנועה מנותבת רק ל-Pods שרצים על אותו Node שקיבל את הבקשה. אין SNAT, כך שה-Pod רואה את ה-IP המקורי של הלקוח. החיסרון: Nodes שאין עליהם Pod פעיל של ה-Service לא יקבלו תנועה, מה שעלול ליצור חוסר איזון בעומס.\n\nלמה בוחרים Local? כשצריך לזהות את ה-IP האמיתי של הלקוח – למשל לצורך logging, rate limiting, או כשה-Load Balancer החיצוני צריך לבצע health checks ישירים.\n\nדוגמה לנתיב תנועה עם Local: לקוח → Load Balancer → Node A (שיש עליו Pod) → ה-Pod מקבל את ה-IP המקורי של הלקוח. אם ל-Node B אין Pod, ה-Load Balancer לא ישלח אליו תנועה בכלל.",
             },
             {
               q: "איך בודקים למה Service לא מגיע לPods?",
@@ -1030,16 +1030,16 @@ export const TOPICS = [
                 "Each rule in an Ingress contains a host field that specifies the hostname. For example, requests to api.example.com can route to one Service while requests to web.example.com route to another. This lets a single Ingress serve multiple domains.",
             },
             {
-              q: "What is ExternalTrafficPolicy:Local vs Cluster?",
+              q: "What is the difference between ExternalTrafficPolicy: Local and ExternalTrafficPolicy: Cluster in a Kubernetes Service?",
               options: [
-              "Local is always faster because it completely bypasses the kube-proxy NAT layer",
-              "Local preserves the source IP but only Nodes with an active Pod receive traffic; Cluster SNATs traffic",
-              "Cluster mode is for cloud deployments only while Local is for on-premises environments",
-              "There is no practical difference between the two modes - only the naming differs",
+              "Local routes traffic only to Pods on the same Node and preserves the original client IP; Cluster can forward traffic to any Pod in the cluster and performs SNAT",
+              "Local is always faster because it completely bypasses kube-proxy",
+              "Cluster is designed for cloud environments only while Local is for on-premises deployments",
+              "There is no practical difference between the two — they are just different names for the same kube-proxy mechanism",
               ],
-              answer: 1,
+              answer: 0,
               explanation:
-                "Local: source IP preserved and traffic stays on the same Node, but Nodes without an active Pod receive no traffic which can cause imbalance. Cluster: SNAT balances across all Nodes but loses source IP.",
+                "ExternalTrafficPolicy is a field in the spec of a Kubernetes Service of type NodePort or LoadBalancer that controls how external traffic is routed to Pods inside the cluster.\n\nWhen set to Cluster (the default): traffic arriving at any Node is forwarded to any Pod across the entire cluster, even if that Pod runs on a different Node. kube-proxy performs SNAT (Source NAT) so the return path goes through the same Node that received the request. As a result, the Pod sees the Node IP instead of the real client IP.\n\nWhen set to Local: traffic is routed only to Pods running on the same Node that received the request. No SNAT is performed, so the Pod sees the original client IP. The downside: Nodes with no active Pod for the Service receive no traffic, which can cause load imbalance.\n\nWhy choose Local? When you need to identify the real client IP — for example for logging, rate limiting, or when the external Load Balancer needs to perform direct health checks.\n\nExample traffic path with Local: Client → Load Balancer → Node A (which has a Pod) → the Pod receives the original client IP. If Node B has no Pod, the Load Balancer will not send traffic to it at all.",
             },
             {
               q: "How do you debug why a Service is not reaching its Pods?",

@@ -399,7 +399,7 @@ function renderQuestion(qText, lang) {
   if (paragraphs.length <= 1) {
     const qDir = hasHebrew(qText) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
     return (
-      <div dir={qDir} style={{color:"#e2e8f0",fontSize:18,fontWeight:700,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right"}}>
+      <div dir={qDir} style={{color:"#e2e8f0",fontSize:18,fontWeight:700,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
         {renderBidiBlock(qText, lang)}
       </div>
     );
@@ -418,7 +418,7 @@ function renderQuestion(qText, lang) {
         const isLast = idx === paragraphs.length - 1;
         const pDir = hasHebrew(para) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
         return (
-          <div key={idx} dir={pDir} style={{color:"#e2e8f0",fontSize:isLast?18:15,fontWeight:isLast?700:400,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"plaintext"}}>
+          <div key={idx} dir={pDir} style={{color:"#e2e8f0",fontSize:isLast?18:15,fontWeight:isLast?700:400,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
             {renderBidiBlock(para, lang)}
           </div>
         );
@@ -509,7 +509,7 @@ function isCodeTerm(token) {
 }
 
 // Inline-code style shared between backtick spans and K8s code terms
-const CODE_SPAN_STYLE = {background:"rgba(0,212,255,0.06)",borderRadius:4,padding:"1px 5px",fontSize:"0.88em",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",color:"#7dd3fc",whiteSpace:"nowrap"};
+const CODE_SPAN_STYLE = {background:"rgba(0,212,255,0.06)",borderRadius:4,padding:"1px 5px",fontSize:"0.88em",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",color:"#7dd3fc"};
 
 // Inner bidi logic: wraps Latin sequences in <span dir="ltr">, applies code styling to K8s terms.
 function renderBidiInner(text, lang, keyPrefix) {
@@ -521,7 +521,7 @@ function renderBidiInner(text, lang, keyPrefix) {
     const k = `${keyPrefix}-${idx}`;
     if (/^[A-Za-z]/.test(part)) {
       const codeStyle = isCodeTerm(part) ? CODE_SPAN_STYLE : undefined;
-      return <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...codeStyle}}>{(idx === 0 && startsWithLatin ? "\u200F" : "")}{part}</span>;
+      return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...codeStyle}}>{part}</span>];
     }
     if (idx > 0 && /^[A-Za-z]/.test(parts[idx - 1])) return "\u200F" + part;
     return part;
@@ -829,6 +829,24 @@ export default function K8sQuestApp() {
 
   useEffect(() => { const t = setTimeout(() => setMinLoadElapsed(true), 1000); return () => clearTimeout(t); }, []);
 
+  // Restore progress from local cache immediately on mount (before auth/Supabase resolves)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("k8s_progress_v2");
+      if (!raw) return;
+      const cached = JSON.parse(raw);
+      if (cached?.completedTopics && typeof cached.completedTopics === "object" && Object.keys(cached.completedTopics).length > 0) {
+        setCompletedTopics(cached.completedTopics);
+      }
+      if (cached?.stats && typeof cached.stats === "object") {
+        setStats(prev => ({ ...prev, ...cached.stats }));
+      }
+      if (Array.isArray(cached?.achievements)) {
+        setUnlockedAchievements(cached.achievements);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link)
     const hash = window.location.hash;
@@ -928,13 +946,23 @@ export default function K8sQuestApp() {
     if (savedQuiz && savedQuiz.userId === "guest") setResumeData(savedQuiz);
   }, [isGuest]);
 
-  // Save guest progress to localStorage
+  // Save guest progress to localStorage (backward compat)
   useEffect(() => {
     if (!isGuest) return;
     try {
       localStorage.setItem("k8s_quest_guest", JSON.stringify({ stats, completedTopics, unlockedAchievements }));
     } catch {}
   }, [isGuest, stats, completedTopics, unlockedAchievements]);
+
+  // Universal progress cache: persist for ALL users (guest + auth) as local safety net
+  useEffect(() => {
+    if (!user) return;
+    try {
+      localStorage.setItem("k8s_progress_v2", JSON.stringify({
+        userId: user.id, stats, completedTopics, achievements: unlockedAchievements,
+      }));
+    } catch {}
+  }, [user, stats, completedTopics, unlockedAchievements]);
 
   // Prefetch answer for current question so submit feedback is instant
   useEffect(() => {
@@ -2030,9 +2058,7 @@ export default function K8sQuestApp() {
     if (!selectedIncident) return "";
     const maxScore = selectedIncident.steps.length * 10;
     const time = formatIncidentTime(incidentElapsed);
-    return lang === "he"
-      ? `🚨 פתרתי את אירוע ה-Kubernetes "${selectedIncident.titleHe || selectedIncident.title}" ב-KubeQuest תוך ${time} עם ניקוד ${incidentScore}/${maxScore}!\nתוכלו לנצח? 💪\n\n#Kubernetes #DevOps #SRE #K8s\nhttps://kubequest.online`
-      : `🚨 I just resolved the Kubernetes incident "${selectedIncident.title}" on KubeQuest in ${time} with a score of ${incidentScore}/${maxScore}!\nCan you beat it? 💪\n\n#Kubernetes #DevOps #SRE #K8s\nhttps://kubequest.online`;
+    return `KubeQuest Incident\n\n${selectedIncident.title}\nTime: ${time}\n\nScore: ${incidentScore}/${maxScore}\n\nCan you beat this?\n\nhttps://kubequest.online`;
   };
 
   const handleIncidentShare = () => {
@@ -3832,7 +3858,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                     </button>
                   </div>
                   {hintVisible&&(
-                    <div role="note" style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"11px 14px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,wordBreak:"break-word",overflowWrap:"anywhere",animation:"fadeIn 0.2s ease"}}>
+                    <div role="note" dir={dir} style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"11px 14px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,unicodeBidi:"isolate",wordBreak:"break-word",overflowWrap:"anywhere",animation:"fadeIn 0.2s ease"}}>
                       {renderBidiBlock(currentQuestions[questionIndex].explanation.split(/\.\s+/)[0], lang)}
                     </div>
                   )}
@@ -3861,7 +3887,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                       dir={dir}
                       style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"14px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:12,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.7,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:12,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:56}}>
                       <span aria-hidden="true" style={{flexShrink:0,width:30,height:30,borderRadius:8,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.7}}>{renderBidiBlock(opt,lang)}</span>
+                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.7,unicodeBidi:"isolate"}}>{renderBidiBlock(opt,lang)}</span>
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:18,height:18,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
                       {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✓</span>}
                       {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✗</span>}
@@ -3912,7 +3938,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                         {/* Explanation body — paragraphs, no bullets */}
                         {!isInterviewMode&&<div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:18}}>
                           {paragraphs.map((s,idx,arr)=>(
-                            <div key={idx} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch"}}>
+                            <div key={idx} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
                               {renderBidiBlock(s+(idx<arr.length-1?".":""),lang)}
                             </div>
                           ))}
@@ -3933,7 +3959,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                         <div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:14}}>
                           <div dir="auto" style={{color:"#e2e8f0",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:dir==="rtl"?"right":"left"}}>{q.options[iCorrectIdx]}</div>
                           {iParagraphs.map((s,idx,arr)=>(
-                            <div key={idx} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch"}}>
+                            <div key={idx} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
                               {renderBidiBlock(s+(idx<arr.length-1?".":""),lang)}
                             </div>
                           ))}
@@ -4063,9 +4089,8 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                 const perfect = result?.correct === result?.total;
                 const isDaily = selectedTopic.id === "daily";
                 const dateStr = new Date().toLocaleDateString(lang==="en"?"en-US":"he-IL",{month:"short",day:"numeric"});
-                const msg = lang==="en"
-                  ? `🎯 I scored ${result?.correct}/${result?.total} on${isDaily?` the KubeQuest Daily Challenge (${dateStr})!`:` the ${lvlLabel} Kubernetes quiz on KubeQuest!`}${perfect?" 🌟 Perfect score!":""}\nThink you can beat it? 💪\n\nhttps://kubequest.online\n#Kubernetes #DevOps #CloudNative #K8s`
-                  : `🎯 קיבלתי ${result?.correct}/${result?.total}${isDaily?` באתגר היומי של KubeQuest (${dateStr})!`:` בחידון Kubernetes ברמת ${lvlLabel} ב-KubeQuest!`}${perfect?" 🌟 ניקוד מושלם!":""}\nתוכלו לנצח? 💪\n\nhttps://kubequest.online\n#Kubernetes #DevOps #CloudNative #K8s`;
+                const topicName = isDaily ? `Daily Challenge (${dateStr})` : selectedTopic.name;
+                const msg = `KubeQuest Challenge\n\n${topicName}\n${isDaily ? "" : lvlLabel + "\n"}\nScore: ${result?.correct}/${result?.total}\n\nCan you beat this?\n\nhttps://kubequest.online`;
                 const handleShare = async () => {
                   // Mobile: use native share sheet (works with LinkedIn, WhatsApp, etc.)
                   if (navigator.share) {
