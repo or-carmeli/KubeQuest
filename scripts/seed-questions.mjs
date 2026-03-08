@@ -33,7 +33,11 @@ const RESEED = process.argv.includes("--reseed");
 if (RESEED) {
   console.log("Re-seed mode: clearing existing data...");
   for (const table of ["incident_steps", "incidents", "daily_questions", "quiz_theories", "quiz_questions"]) {
-    const { error } = await supabase.from(table).delete().neq("id", 0);
+    // quiz_theories has no "id" column — use "topic_id" for the delete filter
+    const q = table === "quiz_theories"
+      ? supabase.from(table).delete().neq("topic_id", "")
+      : supabase.from(table).delete().neq("id", 0);
+    const { error } = await q;
     if (error) { console.error(`Error clearing ${table}:`, error); process.exit(1); }
     console.log(`  Cleared ${table}`);
   }
