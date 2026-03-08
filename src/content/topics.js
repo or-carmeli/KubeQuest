@@ -1315,7 +1315,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "כל Namespace מכיל ServiceAccount בשם 'default'. Pods שלא מציינים ServiceAccount מקבלים אותו אוטומטית.",
+                "ServiceAccount הוא זהות עבור Pod - מאפשר לו להזדהות מול ה-Kubernetes API server. כל Namespace מכיל ServiceAccount בשם 'default', ו-Pods שלא מציינים ServiceAccount מקבלים אותו אוטומטית. best practice: ליצור ServiceAccount ייעודי לכל workload עם ההרשאות המינימליות הנדרשות.",
             },
             {
               q: "מה ראשי התיבות RBAC?",
@@ -1327,7 +1327,7 @@ export const TOPICS = [
               ],
               answer: 0,
               explanation:
-                "RBAC = Role Based Access Control – מנגנון הרשאות ב-Kubernetes המבוסס על Roles ו-Bindings.",
+                "RBAC = Role Based Access Control – מנגנון הרשאות ב-Kubernetes. עובד עם שלושה אבני בניין: Roles (מגדירים אילו פעולות מותרות על אילו resources), Subjects (מי מורשה - Users, Groups, או ServiceAccounts), ו-Bindings (מחברים Role ל-Subject). לדוגמה, אפשר לאפשר למפתח לצפות ב-Pods אך לא למחוק אותם.",
             },
             {
               q: "מה LimitRange עושה ב-Namespace?",
@@ -1339,7 +1339,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "LimitRange מגדיר: default requests/limits לcontainers שלא מגדירים, ומגבלות min/max לresources. מונע Pods ללא limits.",
+                "LimitRange פועל ברמת Namespace ומגדיר ברירות מחדל ומגבלות per-Container ל-CPU ו-Memory. אם container לא מציין requests/limits, LimitRange מזריק ערכי default. בנוסף מאכף min/max - מונע container מלבקש יותר מדי או מעט מדי resources. ללא LimitRange, מפתחים עלולים לשכוח limits ו-Pod אחד יכול לצרוך את כל משאבי ה-Node.",
             },
             {
               q: "מה securityContext.runAsNonRoot: true עושה?",
@@ -1351,7 +1351,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "runAsNonRoot: true גורם לKubernetes לסרב להפעיל קונטיינר אם ה-image ריץ root (UID 0). עוזר למנוע privilege escalation.",
+                "ב-Linux, משתמש root (UID 0) מחזיק בהרשאות מלאות על המערכת. אם קונטיינר רץ כ-root ותוקף מנצל פרצת container escape, הוא עלול לקבל גישת root על ה-Node. runAsNonRoot: true מורה ל-Kubernetes לסרב להפעיל קונטיינר אם ה-image מוגדר לרוץ כ-root, ובכך מצמצם את רדיוס הפגיעה של כל פריצה.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -1479,10 +1479,10 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Role מגדיר הרשאות בNamespace ספציפי. ClusterRole מגדיר הרשאות ברמת הCluster.",
+                "Role מגדיר הרשאות (כמו list, get, delete על Pods) בתוך Namespace ספציפי בלבד - Role ב-prod לא מעניק גישה ב-staging. ClusterRole מגדיר הרשאות ברמת כל ה-Cluster, כולל resources ברמת Cluster כמו Nodes ו-PersistentVolumes. ניתן גם לקשור ClusterRole ל-Namespace בודד באמצעות RoleBinding - pattern נפוץ לשיתוף הרשאות זהות בין Namespaces.",
             },
             {
-              q: "מה זה RoleBinding?",
+              q: "מה תפקיד RoleBinding?",
               options: [
               "יצירת Role חדש",
               "חיבור בין Role למשתמש/ServiceAccount",
@@ -1494,7 +1494,7 @@ export const TOPICS = [
                 "ה-RoleBinding קושר Role (רשימת הרשאות) ל-subject: User, Group, או ServiceAccount - בתוך Namespace מסוים. לגישה בכל ה-Cluster משתמשים ב-ClusterRoleBinding. בלי RoleBinding, ה-Role לא נאכף על אף ישות.",
             },
             {
-              q: "מה זה ServiceAccount?",
+              q: "מה תפקיד ServiceAccount ב-Kubernetes?",
               options: [
               "חשבון למשתמש אנושי",
               "זהות לPod/תהליך בתוך הCluster",
@@ -1506,7 +1506,7 @@ export const TOPICS = [
                 "ה-ServiceAccount הוא זהות מכונה (machine identity) עבור Pods - לא למשתמשים אנושיים. Kubernetes מזריק token אוטומטית לכל Pod, שבאמצעותו הPod יכול לאמת את עצמו מול ה-API server ולקבל הרשאות לפי RBAC. לכל Namespace יש ServiceAccount בשם 'default'.",
             },
             {
-              q: "מה Pod Security Admission?",
+              q: "מה תפקיד Pod Security Admission?",
               options: [
               "Firewall לPods",
               "מנגנון Kubernetes (beta מ-1.23, GA מ-1.25) שאוכף Pod Security Standards (privileged/baseline/restricted)",
@@ -1515,10 +1515,10 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Pod Security Admission מחליף PodSecurityPolicy. מוגדר ברמת Namespace עם label pod-security.kubernetes.io/enforce.",
+                "Pod Security Admission (PSA) הוא controller מובנה ב-Kubernetes שאוכף תקני אבטחה על Pods לפני שהם מורשים לרוץ. מפעילים אותו על ידי הוספת label ל-Namespace (כמו pod-security.kubernetes.io/enforce=restricted), ו-Kubernetes דוחה אוטומטית כל Pod שלא עומד ברמה הנדרשת. מחליף את PodSecurityPolicy שהוסר ב-v1.25.",
             },
             {
-              q: "מה admission webhook?",
+              q: "מה תפקיד admission webhook ב-Kubernetes?",
               options: [
               "Webhook לgit",
               "HTTP callback שמופעל לפני שמירת resource ב-etcd, לאימות או לשינוי",
@@ -1527,7 +1527,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Admission webhooks (Validating/Mutating) מאפשרים לogic חיצוני לאמת או לשנות resources לפני שנשמרים ב-etcd.",
+                "Admission webhook מיירט כל בקשת create/update/delete ל-API server לפני שהשינוי נשמר ב-etcd. שני סוגים: Validating webhook בודק resource ודוחה אותו (למשל, חוסם images ממקורות לא מאושרים). Mutating webhook משנה resource לפני שמירה (למשל, מזריק sidecar אוטומטית לכל Pod). כלים כמו OPA Gatekeeper ו-Kyverno עובדים כ-admission webhooks.",
             },
             {
               q: "מה LimitRange לעומת ResourceQuota?",
@@ -1539,7 +1539,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "LimitRange מגדיר ברירות מחדל ומגבלות per-Pod/Container. ResourceQuota מגדיר מגבלות aggregate לNamespace (מקסימום סך-Pods, CPU, Memory).",
+                "LimitRange פועל ברמת container בודד - מגדיר default requests/limits ואוכף min/max per-container. ResourceQuota פועל ברמת Namespace שלם - מגביל את סך כל ה-resources (למשל, מקסימום 20 Pods, סה\"כ 8 CPU, 16Gi Memory). LimitRange מונע container בודד מלבקש יותר מדי, ResourceQuota מונע צוות שלם מלצרוך יותר מהמוקצה.",
             },
             {
               q: "מה seccomp profile עושה?",
@@ -1551,7 +1551,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "seccomp (secure computing mode) מגביל את system calls. Pod spec: securityContext.seccompProfile.type: RuntimeDefault מיישם הגנה מפני syscalls מסוכנות.",
+                "seccomp (secure computing mode) מגביל אילו system calls קונטיינר יכול לבצע. ל-Linux יש 300+ syscalls, אך רוב הקונטיינרים צריכים רק חלק קטן. חסימת syscalls מיותרות מצמצמת את attack surface - אם תוקף מנצל פרצה, הוא לא יכול להשתמש ב-syscalls מסוכנות להסלמת הרשאות. הגדרת seccompProfile.type: RuntimeDefault ב-Pod spec מיישמת את פרופיל ה-baseline המומלץ.",
             },
             {
               q: "כיצד מסנכרנים Secret מ-AWS Secrets Manager?",
@@ -1563,7 +1563,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "External Secrets Operator: יוצרים SecretStore (מגדיר access לAWS) ו-ExternalSecret (מגדיר מה לסנכרן ולאיפה). K8s Secret נוצר אוטומטית.",
+                "External Secrets Operator (ESO) מסנכרן secrets מmanagers חיצוניים (AWS Secrets Manager, GCP Secret Manager, HashiCorp Vault) אל Kubernetes Secrets. יוצרים SecretStore (מגדיר חיבור ל-provider), ואז ExternalSecret (מציין אילו secrets לסנכרן ולאיפה ב-K8s). ה-operator יוצר ומעדכן K8s Secret אוטומטית - כך הsecrets לא מנוהלים ידנית ולא נשמרים ב-git.",
             },
         ],
         questionsEn: [
@@ -1637,7 +1637,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "LimitRange sets per-Pod/Container defaults and constraints. ResourceQuota sets aggregate limits for a Namespace (total Pods, CPU, Memory across all workloads).",
+                "LimitRange operates at the individual container level - it sets default requests/limits and enforces min/max per container. ResourceQuota operates at the entire Namespace level - it caps the total resources consumed (e.g., max 20 Pods, total 8 CPU, 16Gi Memory across all workloads). LimitRange prevents a single container from requesting too much; ResourceQuota prevents a whole team from exceeding their allocation.",
             },
             {
               q: "What does a seccomp profile do?",
@@ -1661,7 +1661,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "External Secrets Operator: create a SecretStore (defines AWS access) and an ExternalSecret (defines what to sync). A K8s Secret is created and kept in sync automatically.",
+                "External Secrets Operator (ESO) synchronizes secrets from external managers (AWS Secrets Manager, GCP Secret Manager, HashiCorp Vault) into Kubernetes Secrets. You create a SecretStore (defines the connection to the provider) and an ExternalSecret (specifies which secrets to sync and where to store them in K8s). The operator automatically creates and refreshes the K8s Secret - so secrets are never managed manually or stored in git.",
             },
         ],
       },
@@ -1715,10 +1715,10 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "privileged – ללא הגבלות. baseline – מינימום הגנה. restricted – הגבלות מחמירות, best practice לproduction.",
+                "שלוש הרמות של Pod Security Standards: privileged – ללא הגבלות כלל, מאפשר הכל כולל hostNetwork ו-privileged containers. baseline – חוסם שימושים מסוכנים ידועים כמו hostPID, hostNetwork, ו-privileged mode, אך לא דורש הגדרות אבטחה מפורשות. restricted – הרמה המחמירה ביותר, דורשת runAsNonRoot, drop ALL capabilities, seccomp profile, ועוד. best practice ל-production.",
             },
             {
-              q: "מה OPA/Gatekeeper?",
+              q: "מה תפקיד OPA/Gatekeeper ב-Kubernetes?",
               options: [
               "Open Port Authority",
               "Open Policy Agent – מנגנון policy כ-code לK8s",
@@ -1727,7 +1727,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "OPA Gatekeeper הוא admission webhook שמאפשר לכתוב policies (Rego) שמונעות deployments שמפרים כללים.",
+                "OPA (Open Policy Agent) Gatekeeper הוא admission webhook שאוכף policies מותאמות אישית על כל resource שנוצר ב-Cluster. הpolicies נכתבות ב-Rego, שפת כללים דקלרטיבית. בניגוד ל-PSA (שמציע רמות קבועות), Gatekeeper מאפשר כללים שרירותיים - למשל: כל image חייב להגיע מ-registry מאושר, כל Pod חייב להגדיר limits, או אסור ליצור Service מסוג LoadBalancer. Kyverno הוא אלטרנטיבה עם תחביר YAML.",
             },
             {
               q: "ה-Pod מקבל שגיאה:\n\nError: pods is forbidden: User 'system:serviceaccount:default:my-sa' cannot list resource 'pods' in API group '' in the namespace 'prod'\n\nמה הפתרון?",
@@ -1813,7 +1813,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "privileged - no restrictions. baseline - minimal protection. restricted - strict settings, production best practice.",
+                "The three Pod Security Standard levels: privileged - no restrictions at all, allows everything including hostNetwork and privileged containers. baseline - blocks known dangerous practices like hostPID, hostNetwork, and privileged mode, but doesn't require explicit security settings. restricted - the strictest level, requires runAsNonRoot, drop ALL capabilities, seccomp profile, and more. This is the production best practice.",
             },
             {
               q: "What is OPA/Gatekeeper?",
@@ -1904,7 +1904,7 @@ export const TOPICS = [
                 "מצב ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה על ידי Node אחד בלבד בו-זמנית. מתאים לרוב ה-databases. ReadWriteMany (RWX) מאפשר כמה Nodes במקביל - נדרש NFS/EFS. ReadOnlyMany (ROX) קריאה בלבד ממספר Nodes.",
             },
             {
-              q: "מה זה Helm Chart?",
+              q: "מה תפקיד Helm Chart?",
               options: [
               "Docker image",
               "חבילה של Kubernetes manifests עם templates",
@@ -1913,7 +1913,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Helm Chart הוא חבילה המכילה templates, values, ומטה-נתונים להתקנת אפליקציה.",
+                "Helm הוא package manager ל-Kubernetes - כמו apt או npm, אבל לאפליקציות Kubernetes. Helm Chart הוא חבילה המכילה קבצי YAML עם templates (Deployments, Services, ConfigMaps), ערכי ברירת מחדל (values.yaml), ומטה-נתונים. במקום לנהל עשרות קבצי YAML, מתקינים Chart אחד ומגדירים אותו עם values.",
             },
             {
               q: "מה הפקודה להתקנת Helm Chart?",
@@ -1928,7 +1928,7 @@ export const TOPICS = [
                 "הכלי helm install [release-name] [chart] מתקין Chart ויוצר Release. Helm עוקב אחרי ה-Release ב-Cluster (כ-Secret) לניהול upgrades ו-rollbacks. ניתן להוסיף --set key=value לעקוף ערכים ב-values.yaml, או -f myvalues.yaml לקובץ ערכים מותאם.",
             },
             {
-              q: "מה emptyDir?",
+              q: "מה Volume מסוג emptyDir?",
               options: [
               "Volume ריק שנמחק עם ה-Pod",
               "Volume קבוע",
@@ -1937,10 +1937,10 @@ export const TOPICS = [
               ],
               answer: 0,
               explanation:
-                "emptyDir נוצר כשPod מתזמן ונמחק כשה-Pod מוחק. מתאים לshared temp files בין קונטיינרים.",
+                "emptyDir הוא volume זמני שנוצר ריק כשPod מתזמן על Node ונמחק לחלוטין כשה-Pod עצמו מוחק. שימושים נפוצים: שיתוף קבצים זמניים בין קונטיינרים באותו Pod (למשל, app שכותב logs ו-sidecar ששולח אותם). ניתן להשתמש ב-emptyDir.medium: Memory כדי ליצור tmpfs בRAM לביצועים גבוהים.",
             },
             {
-              q: "מה StorageClass?",
+              q: "מה תפקיד StorageClass ב-Kubernetes?",
               options: [
               "סוג Pod",
               "הגדרת provisioner לדיסקים דינמיים",
@@ -1949,7 +1949,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "StorageClass מגדיר provisioner (כמו gp2, pd-standard) ו-reclaim policy. ה-PVC מציין StorageClass לקבלת דיסק.",
+                "StorageClass הוא תבנית שמגדירה ל-Kubernetes כיצד ליצור דיסקים באופן דינמי. מגדיר provisioner (כמו aws-ebs, gcp-pd), reclaim policy (Delete או Retain), ופרמטרים (כמו סוג דיסק gp3/io2). כש-PVC מציין storageClassName, ה-provisioner יוצר PV ודיסק אמיתי אוטומטית - ללא צורך ב-admin.",
             },
             {
               q: "מה קורה לנתונים ב-emptyDir כש-Pod נמחק?",
@@ -1964,7 +1964,7 @@ export const TOPICS = [
                 "emptyDir נשאר חי כל עוד ה-Pod קיים - כולל בין restarts של קונטיינרים. אבל נמחק לחלוטין כשה-Pod עצמו מוחק או מועבר ל-Node אחר.",
             },
             {
-              q: "מה helm values.yaml?",
+              q: "מה תפקיד values.yaml ב-Helm Chart?",
               options: [
               "קובץ logs",
               "קובץ ברירות מחדל עבור templates של Chart",
@@ -1973,7 +1973,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "values.yaml מגדיר ברירות מחדל לall template variables. --set מ-CLI עוקף ערכים ספציפיים. -f my-values.yaml מחליף קובץ ברירות מחדל.",
+                "values.yaml הוא קובץ הקונפיגורציה המרכזי של Helm Chart. מכיל ברירות מחדל לכל ה-template variables (כמו replicaCount, image tag, resource limits). בזמן התקנה או upgrade, ניתן לעקוף ערכים עם --set key=value מה-CLI, או להחליף קובץ שלם עם -f my-values.yaml. כך Chart אחד משרת סביבות שונות (dev, staging, production) עם values שונים.",
             },
         ],
         questionsEn: [
@@ -1999,7 +1999,7 @@ export const TOPICS = [
               ],
               answer: 2,
               explanation:
-                "ReadWriteOnce (RWO) – can be mounted for read/write by only one node at a time.",
+                "ReadWriteOnce (RWO) allows the volume to be mounted for read/write by a single Node at a time. It is the most common mode and suitable for most databases. ReadWriteMany (RWX) allows multiple Nodes to mount simultaneously - requires a shared filesystem like NFS or AWS EFS. ReadOnlyMany (ROX) allows read-only access from multiple Nodes.",
             },
             {
               q: "What is a Helm Chart?",
@@ -2023,7 +2023,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "helm install [release-name] [chart] installs a Chart and creates a new Release.",
+                "helm install [release-name] [chart] installs a Chart and creates a new Release. Helm tracks the Release in the cluster (stored as a Secret) for managing upgrades and rollbacks. You can add --set key=value to override specific values from values.yaml, or -f myvalues.yaml for a custom values file.",
             },
             {
               q: "What is emptyDir?",
@@ -2035,7 +2035,7 @@ export const TOPICS = [
               ],
               answer: 0,
               explanation:
-                "emptyDir is created when a Pod is scheduled and deleted when the Pod is removed. Useful for temp files shared between containers.",
+                "emptyDir is a temporary volume created empty when a Pod is scheduled to a Node, and deleted entirely when the Pod is removed. Common uses: sharing files between containers in the same Pod (e.g., an app writes logs and a sidecar ships them), or caching data. You can set emptyDir.medium: Memory to create a tmpfs backed by RAM for higher performance.",
             },
             {
               q: "What is a StorageClass?",
@@ -2071,7 +2071,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "values.yaml sets defaults for all template variables. --set from the CLI overrides specific values. -f my-values.yaml replaces the entire defaults file.",
+                "values.yaml is the central configuration file of a Helm Chart. It contains default values for all template variables (such as replicaCount, image tag, resource limits). During install or upgrade, you can override values with --set key=value from the CLI, or supply an entirely different values file with -f my-values.yaml. This lets a single Chart serve multiple environments (dev, staging, production) with different configurations.",
             },
         ],
       },
@@ -2080,7 +2080,7 @@ export const TOPICS = [
         theoryEn: "StorageClass and Helm Values.\n🔹 StorageClass – defines storage type and provisioner\n🔹 Dynamic Provisioning – PV created automatically with PVC\n🔹 Reclaim Policy Delete – deletes PV when PVC is deleted\n🔹 helm upgrade / --set – update and change values\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
         questions: [
             {
-              q: "מה Dynamic Provisioning?",
+              q: "מה משמעות Dynamic Provisioning ב-Kubernetes?",
               options: [
               "הקצאת CPU",
               "PV נוצר אוטומטית כשנוצר PVC",
@@ -2089,7 +2089,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Dynamic Provisioning – כשנוצר PVC עם StorageClass, ה-provisioner יוצר PV אוטומטית.",
+                "ללא Dynamic Provisioning, admin חייב ליצור PV ידנית לפני כל PVC - לא סקיילבילי. Dynamic Provisioning הופך את התהליך לאוטומטי: כש-PVC נוצר עם StorageClass, ה-provisioner יוצר PV ודיסק אמיתי (EBS, GCP PD) אוטומטית. כשה-PVC נמחק, הדיסק מנוקה לפי Reclaim Policy. זו הגישה הסטנדרטית בכל Cluster ענן.",
             },
             {
               q: "מה Reclaim Policy Delete?",
@@ -2125,7 +2125,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "StorageClass חייב להגדיר allowVolumeExpansion: true. לאחר מכן שינוי storage request ב-PVC יגרום להרחבת הדיסק.",
+                "כדי להרחיב PVC, ה-StorageClass חייב להגדיר allowVolumeExpansion: true. לאחר מכן משנים את spec.resources.requests.storage ב-PVC לגודל גדול יותר, וה-provisioner מרחיב את הדיסק הפיזי. שים לב: הקטנה (shrink) לא נתמכת, ובחלק מהstorage backends הPod צריך restart כדי שהFS יתרחב.",
             },
             {
               q: "מה helm template עושה?",
@@ -2137,10 +2137,10 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "helm template מרנדר את ה-Chart עם values ומפיק YAML גולמי. שימושי לCI/CD, debug, ו-kubectl apply.",
+                "helm template מרנדר את ה-Chart עם values ומפיק YAML גולמי בלי להתקין שום דבר בCluster. שימושי ל: CI/CD pipelines שמשתמשים ב-kubectl apply במקום helm install, debug כדי לראות מה בדיוק Helm יפרוס, ו-GitOps workflows שדורשים YAML מפורש ב-git.",
             },
             {
-              q: "מה helm rollback?",
+              q: "מה עושה helm rollback?",
               options: [
               "מוחק Release",
               "מחזיר Release לrevision קודמת",
@@ -2149,7 +2149,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "helm rollback [release] [revision] מחזיר Release לrevision ספציפי. helm history מציג את כל ה-revisions.",
+                "helm rollback [release] [revision] מחזיר Release לrevision ספציפי. Helm שומר היסטוריה של כל upgrade כ-revision ממוספר. helm history my-release מציג את כל ה-revisions עם תאריכים וסטטוסים. rollback הוא למעשה upgrade חדש עם הmanifests של revision ישנה - כך שנוצר revision חדש.",
             },
             {
               q: "מה אומר PVC בסטטוס Pending?",
@@ -2223,7 +2223,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "The StorageClass must have allowVolumeExpansion: true. Then changing the PVC storage request triggers disk expansion.",
+                "To expand a PVC, the StorageClass must have allowVolumeExpansion: true. Then update spec.resources.requests.storage in the PVC to a larger value, and the provisioner resizes the underlying disk. Note: shrinking is not supported, and some storage backends require a Pod restart for the filesystem to expand.",
             },
             {
               q: "What does helm template do?",
@@ -2235,7 +2235,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "helm template renders the Chart with values and outputs raw YAML. Useful for CI/CD, debugging, and kubectl apply workflows.",
+                "helm template renders the Chart with values and outputs raw YAML without installing anything to the cluster. Useful for: CI/CD pipelines that use kubectl apply instead of helm install, debugging to see exactly what Helm would deploy, and GitOps workflows that require explicit YAML committed to git.",
             },
             {
               q: "What does helm rollback do?",
@@ -2247,7 +2247,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "helm rollback [release] [revision] reverts to a specific revision. Use helm history to see all revisions.",
+                "helm rollback [release] [revision] reverts a Release to a specific revision. Helm stores a numbered history of every upgrade. helm history my-release lists all revisions with timestamps and statuses. A rollback is technically a new upgrade using the manifests from an old revision - so it creates a new revision number.",
             },
             {
               q: "What does a PVC in Pending status mean?",
@@ -2280,7 +2280,7 @@ export const TOPICS = [
         theoryEn: "Advanced Storage and Helm.\n🔹 ReadWriteMany (RWX) – read/write from multiple Nodes (NFS, EFS)\n🔹 CSI – Container Storage Interface, standard for drivers\n🔹 VolumeSnapshot – point-in-time backup\n🔹 Helm Hooks – actions at lifecycle points: pre-install, post-upgrade\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
         questions: [
             {
-              q: "מה זה CSI?",
+              q: "מה תפקיד CSI ב-Kubernetes?",
               options: [
               "Container Security Interface",
               "Container Storage Interface – סטנדרט לdrivers",
@@ -2292,7 +2292,7 @@ export const TOPICS = [
                 "תקן CSI (Container Storage Interface) הוא סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers עבור Kubernetes (ו-Mesos, Nomad). כל vendor כותב CSI driver משלו (AWS EBS, Azure Disk, GCS, Ceph) שנפרס כ-DaemonSet/Deployment ב-Cluster.",
             },
             {
-              q: "מה Helm Hook?",
+              q: "מה תפקיד Helm Hook?",
               options: [
               "כלי debug",
               "פעולה שרצה בשלב מסוים במחזור חיי Release",
@@ -2301,10 +2301,10 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Helm Hooks מריצים Jobs/Pods בשלבים: pre-install, post-upgrade, pre-delete.",
+                "Helm Hooks הם resources מיוחדים (בדרך כלל Jobs) שרצים בשלבי מחזור חיים ספציפיים של Release: pre-install (לפני יצירת resources), post-install, pre-upgrade, post-upgrade, pre-delete, ו-post-rollback. שימושים נפוצים: הרצת DB migrations לפני upgrade, או שליחת התראת Slack אחרי deploy.",
             },
             {
-              q: "מה VolumeSnapshot?",
+              q: "מה תפקיד VolumeSnapshot?",
               options: [
               "גיבוי הCluster כולו",
               "גיבוי נקודתי של PersistentVolume",
@@ -2325,7 +2325,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "volumeClaimTemplates ב-StatefulSet יוצר PVC ייחודי לכל Pod. Pod-0 מקבל pvc-pod-0, Pod-1 מקבל pvc-pod-1.",
+                "volumeClaimTemplates ב-StatefulSet spec יוצר PVC ייחודי לכל Pod replica. Pod-0 מקבל data-myapp-0, Pod-1 מקבל data-myapp-1. כל PVC נשאר קשור ל-Pod שלו גם אחרי restart - כך databases כמו MySQL, PostgreSQL שומרים על נתונים persistent. Scale down לא מוחק PVCs; scale up מחדש מקשר את ה-PVCs הישנים.",
             },
             {
               q: "מה volume binding mode WaitForFirstConsumer?",
@@ -2337,7 +2337,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "WaitForFirstConsumer מונע יצירת PV עד ש-Pod יתזמן, כך ש-PV נוצר באותה Zone/Region כמו ה-Pod.",
+                "ברירת המחדל (Immediate) יוצרת PV ברגע שנוצר PVC - אך ה-PV עלול להיווצר ב-Zone שונה מה-Pod, ואז ה-Pod לא יוכל להשתמש בו. WaitForFirstConsumer מעכב את יצירת ה-PV עד שPod שמשתמש ב-PVC מתזמן ל-Node ספציפי, ורק אז יוצר PV באותה Zone כמו ה-Node. קריטי בסביבות multi-AZ.",
             },
             {
               q: "ה-PVC נשאר Pending.\n\nkubectl describe pvc מציג:\nEvents:\n  Warning  ProvisioningFailed  storageclass.storage.k8s.io 'fast-ssd' not found\n\nמה הבעיה?",
@@ -2423,7 +2423,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "volumeClaimTemplates in a StatefulSet creates a unique PVC per Pod. Pod-0 gets pvc-pod-0, Pod-1 gets pvc-pod-1.",
+                "volumeClaimTemplates in a StatefulSet spec creates a unique PVC for each Pod replica. Pod-0 gets data-myapp-0, Pod-1 gets data-myapp-1. Each PVC remains bound to its Pod even after restarts - this is how stateful databases like MySQL and PostgreSQL maintain persistent data. Scaling down does not delete the PVCs; scaling back up reconnects the existing PVCs.",
             },
             {
               q: "What does volume binding mode WaitForFirstConsumer do?",
@@ -2435,7 +2435,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "WaitForFirstConsumer delays PV creation until a Pod is scheduled, so the PV is created in the same Zone/Region as the Pod.",
+                "The default binding mode (Immediate) creates a PV as soon as a PVC is created - but the PV might be provisioned in a different Zone than where the Pod ends up, causing attachment failures. WaitForFirstConsumer delays PV creation until a Pod using the PVC is scheduled to a specific Node, then creates the PV in the same Zone. This is critical in multi-AZ environments like AWS EKS.",
             },
             {
               q: "A PVC stays Pending.\n\nkubectl describe pvc shows:\nEvents:\n  Warning  ProvisioningFailed  storageclass.storage.k8s.io 'fast-ssd' not found\n\nWhat is wrong?",
@@ -2523,7 +2523,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "kubectl get events מציג אירועים שנוצרו ב-Namespace. מסודר בזמן ומציג סיבות לבעיות.",
+                "kubectl get events מציג את כל האירועים שנרשמו ב-Namespace הנוכחי, ממוינים לפי זמן. Events הם הדרך של Kubernetes לתאר מה קרה: 'Pod תוזמן ל-node-1', 'Image נמשך בהצלחה', 'Liveness probe נכשל', 'OOMKilled'. בניגוד ל-logs (שמגיעים מהאפליקציה), events מגיעים מ-Kubernetes עצמו. הוסף --sort-by=.metadata.creationTimestamp לסדר לפי זמן.",
             },
             {
               q: "מה ההבדל בין Running ל-Ready?",
@@ -2535,7 +2535,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "Pod יכול להיות Running אבל לא Ready אם readiness probe לא עוברת. Service ישלח traffic רק לPods Ready.",
+                "Running אומר שתהליך הקונטיינר עלה - אך זה לא אומר שהוא מוכן לקבל בקשות. readiness probe היא בדיקת בריאות (למשל HTTP GET ל-/health) שKubernetes מריץ כדי לקבוע אם Pod מוכן לtraffic. Pod שהוא Running אבל נכשל ב-readiness probe יוצג כ-0/1 Ready ויוסר אוטומטית מEndpoints של ה-Service. זה מונע שליחת traffic ל-Pod שטרם סיים לעלות או עמוס זמנית.",
             },
             {
               q: "כיצד רואים לוגים של קונטיינר שקרס?",
@@ -2547,7 +2547,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "kubectl logs --previous מציג לוגים מהinstance הקודם של הקונטיינר לפני שקרס.",
+                "כשקונטיינר קורס (למשל CrashLoopBackOff), Kubernetes מפעיל instance חדש אוטומטית. kubectl logs ללא flags מציג את ה-logs של ה-instance החדש - שעלול להיות כמעט ריק אם קרס מיד. הflag --previous שולף את ה-logs מה-instance שקרס, שזה בדיוק מה שצריך כדי לאבחן את הסיבה לcrash.",
             },
             {
               q: "מה kubectl top nodes מציג?",
@@ -2559,7 +2559,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "kubectl top nodes מציג CPU ו-Memory usage של כל Node. דורש metrics-server מותקן.",
+                "kubectl top nodes מציג צריכת CPU ו-Memory בזמן אמת של כל Node ב-Cluster, כולל אחוז ניצול מסך ה-capacity. שימושי לזיהוי Nodes עמוסים או חוסר resources. דורש metrics-server מותקן בCluster. kubectl top pods מציג את אותו מידע ברמת Pod.",
             },
             {
               q: "כיצד בודקים health של ה-API server?",
@@ -2583,7 +2583,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "kubectl config get-contexts מציג את כל ה-contexts בkubeconfig. kubectl config use-context prod-cluster מחליף לcontext אחר.",
+                "kubectl config get-contexts מציג את כל ה-contexts המוגדרים ב-kubeconfig - כל context מכיל cluster, user, ו-namespace. הcontext הנוכחי מסומן בכוכבית (*). kubectl config use-context prod-cluster מחליף לcontext אחר, ו-kubectl config set-context --current --namespace=dev משנה namespace ברירת מחדל.",
             },
         ],
         questionsEn: [
@@ -2657,7 +2657,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "kubectl top nodes shows CPU and Memory usage per Node. Requires metrics-server to be installed.",
+                "kubectl top nodes shows real-time CPU and Memory consumption for every Node in the cluster, including utilization percentage of total capacity. Useful for identifying overloaded Nodes or resource shortages. Requires metrics-server installed in the cluster. kubectl top pods shows the same information at the Pod level.",
             },
             {
               q: "How do you check the health of the API server?",
@@ -2681,7 +2681,7 @@ export const TOPICS = [
               ],
               answer: 1,
               explanation:
-                "kubectl config get-contexts lists all contexts in kubeconfig. kubectl config use-context prod-cluster switches to a different context.",
+                "kubectl config get-contexts lists all contexts defined in kubeconfig - each context bundles a cluster, user, and default namespace. The current context is marked with an asterisk (*). kubectl config use-context prod-cluster switches to a different context, and kubectl config set-context --current --namespace=dev changes the default namespace.",
             },
         ],
       },
