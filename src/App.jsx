@@ -45,7 +45,7 @@ const SESSION_START = new Date();
 const RESUME_SESSION_KEY  = "resumeModalSeen";       // sessionStorage: shown once per tab
 const RESUME_DISMISS_KEY  = "resumeDismissedAt";     // localStorage: cooldown timestamp
 const RESUME_COOLDOWN_MS  = 10 * 60 * 1000;         // 10-minute cooldown after dismiss
-const RESUME_MIN_PROGRESS = 0.2;                     // <20% answered → skip modal, start fresh
+const RESUME_MIN_PROGRESS = 0;                        // any answered question → offer resume
 
 const MIXED_TOPIC     = { id: "mixed",     icon: "🎲", name: "Mixed Quiz",        color: "#A855F7", levels: {} };
 const DAILY_TOPIC     = { id: "daily",     icon: "🔥", name: "Daily Challenge",    color: "#F59E0B", levels: {} };
