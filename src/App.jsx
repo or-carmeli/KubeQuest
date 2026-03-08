@@ -3712,9 +3712,11 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
       {/* TOPIC */}
       {screen==="topic"&&selectedTopic&&selectedLevel&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease"}}>
-          <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:18,minHeight:34}}>
-            <button onClick={()=>setScreen("home")} aria-label={t("back")} style={{position:"absolute",[dir==="rtl"?"right":"left"]:0,top:0,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
-            <span style={{position:"absolute",[dir==="rtl"?"right":"left"]:42,top:8,fontSize:12,color:LEVEL_CONFIG[selectedLevel].color,background:`${LEVEL_CONFIG[selectedLevel].color}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap"}}>{LEVEL_CONFIG[selectedLevel].icon} {lang==="en"?LEVEL_CONFIG[selectedLevel].labelEn:LEVEL_CONFIG[selectedLevel].label}</span>
+          <div style={{marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",direction:dir,marginBottom:6}}>
+              <button onClick={()=>setScreen("home")} aria-label={t("back")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
+              <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel].color,background:`${LEVEL_CONFIG[selectedLevel].color}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap",flexShrink:0}}>{LEVEL_CONFIG[selectedLevel].icon} {lang==="en"?LEVEL_CONFIG[selectedLevel].labelEn:LEVEL_CONFIG[selectedLevel].label}</span>
+            </div>
             <h2 style={{margin:0,color:selectedTopic.color,fontSize:17,fontWeight:800,textAlign:"center"}}>{selectedTopic.name}</h2>
           </div>
 
