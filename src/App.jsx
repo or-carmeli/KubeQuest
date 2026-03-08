@@ -1033,6 +1033,7 @@ export default function K8sQuestApp() {
     if (screen !== "home" || !user) return;
     const saved = loadQuizState();
     if (saved && saved.userId === (user.id || "guest")) setResumeData(saved);
+    else setResumeData(null); // Clear stale resume data after quiz completion
     // Do NOT call setShowResumeModal(true) here — req 2
   }, [screen]);
 
@@ -1629,7 +1630,7 @@ export default function K8sQuestApp() {
     }
   };
 
-  const nextQuestion = () => {
+  const nextQuestion = async () => {
     const isLast = questionIndex >= currentQuestions.length - 1;
     if (isLast) {
       const finalCorrect = topicCorrectRef.current;
@@ -1645,7 +1646,7 @@ export default function K8sQuestApp() {
           if (prevResult) {
             const newCompleted = { ...completedTopics, [key]: { ...prevResult, retryComplete: true, wrongIndices: [], wrongQuestions: [] } };
             setCompletedTopics(newCompleted);
-            if (!isFreeMode(selectedTopic.id)) saveUserData(stats, newCompleted, unlockedAchievements);
+            if (!isFreeMode(selectedTopic.id)) await saveUserData(stats, newCompleted, unlockedAchievements);
           }
           setAllowNextLevel(true);
         } else {
@@ -1681,7 +1682,7 @@ export default function K8sQuestApp() {
       setSessionScore(0);
       setCompletedTopics(newCompleted); setStats(newStats); setUnlockedAchievements(newAch);
       if (!isFreeMode(selectedTopic.id)) {
-        saveUserData(newStats, newCompleted, newAch);
+        await saveUserData(newStats, newCompleted, newAch);
         const allPerfect = LEVEL_ORDER.every(lvl => {
           const r = newCompleted[`${selectedTopic.id}_${lvl}`];
           return r && r.correct === r.total;
@@ -2945,7 +2946,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"#94a3b8",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.04)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"#94a3b8"}}><span>{a.icon}</span>{lang==="en"?a.nameEn:a.name}</div>)}</div></div>}
           </>)}
-          {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={startTopic} startMixedQuiz={startMixedQuiz} lang={lang} t={t} dir={dir}/>}
+          {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl))} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz)} lang={lang} t={t} dir={dir}/>}
           <Footer lang={lang}/>
         </div>
       )}
