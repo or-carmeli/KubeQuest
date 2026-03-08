@@ -1604,11 +1604,12 @@ export default function K8sQuestApp() {
         const correctIndex = q._optionMap ? q._optionMap.indexOf(rpcResult.correct_answer) : rpcResult.correct_answer;
         result = { correct: rpcResult.correct, correctIndex, explanation: rpcResult.explanation };
       } else {
-        // RPC failed (likely stale question ID after DB re-seed) — clear the
-        // invalid saved quiz so it won't keep breaking on every submit.
+        // RPC failed (likely stale question ID after DB re-seed) — clear stale
+        // quiz and send user home so they can start fresh with valid questions.
         clearQuizState();
         submittingRef.current = false;
         setCheckingAnswer(false);
+        setScreen("home");
         return;
       }
     } else {
@@ -1686,7 +1687,7 @@ export default function K8sQuestApp() {
           const key = `${selectedTopic.id}_${selectedLevel}`;
           const prevResult = completedTopics[key];
           if (prevResult) {
-            const newCompleted = { ...completedTopics, [key]: { ...prevResult, retryComplete: true, wrongIndices: [], wrongQuestions: [] } };
+            const newCompleted = { ...completedTopics, [key]: { ...prevResult, correct: prevResult.total, retryComplete: true, wrongIndices: [], wrongQuestions: [] } };
             setCompletedTopics(newCompleted);
             if (!isFreeMode(selectedTopic.id)) await saveUserData(stats, newCompleted, unlockedAchievements);
           }
