@@ -3337,6 +3337,21 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                 <div><span style={{color:"#e2e8f0",fontWeight:600}}>Prevention: </span>Added volatility validation to migration review checklist — any function containing INSERT/UPDATE/DELETE must be marked VOLATILE. No user data was lost.</div>
               </div>
             </div>
+            <div dir="ltr" style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"4px 16px",textAlign:"left",marginTop:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>Authentication & Leaderboard Outage</div>
+                  <div style={{fontSize:11,color:"#64748b",marginTop:2}}>Mar 7, 2026 · Duration: ~1 hr · Severity: High</div>
+                </div>
+                <span style={{fontSize:11,color:"#10B981",fontWeight:700,background:"rgba(16,185,129,0.1)",padding:"3px 8px",borderRadius:6}}>Resolved</span>
+              </div>
+              <div style={{padding:"12px 0",fontSize:12,color:"#94a3b8",lineHeight:1.7}}>
+                <div style={{marginBottom:8}}><span style={{color:"#e2e8f0",fontWeight:600}}>Impact: </span>Users were unable to sign in or sign up. Leaderboard data failed to load. Core quiz functionality remained operational in offline mode.</div>
+                <div style={{marginBottom:8}}><span style={{color:"#e2e8f0",fontWeight:600}}>Root Cause: </span>Supabase project configuration was misconfigured, causing authentication endpoints and leaderboard RPC calls to fail.</div>
+                <div style={{marginBottom:8}}><span style={{color:"#e2e8f0",fontWeight:600}}>Resolution: </span>Corrected the Supabase configuration and verified auth flow and leaderboard queries were restored.</div>
+                <div><span style={{color:"#e2e8f0",fontWeight:600}}>Prevention: </span>Added post-deployment smoke tests for authentication and leaderboard endpoints. No user data was lost.</div>
+              </div>
+            </div>
 
             {/* ── SECURITY STATUS ── */}
             {sectionTitle(lang==="en"?"Security":"אבטחה")}
