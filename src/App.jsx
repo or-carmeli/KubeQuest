@@ -743,6 +743,7 @@ export default function K8sQuestApp() {
   const isGuest = user?.id === "guest";
   const achievementsLoaded = useRef(false);
   const quizRunIdRef  = useRef(null);
+  const answerCacheRef = useRef({});  // prefetched { [questionId]: { correctIndex, explanation } }
   const liveIndexRef  = useRef(0);   // highest question index reached; never decremented
   const questionRef   = useRef(null); // focus target when question changes
   const nextBtnRef    = useRef(null); // focus target after submitting an answer
@@ -934,6 +935,22 @@ export default function K8sQuestApp() {
       localStorage.setItem("k8s_quest_guest", JSON.stringify({ stats, completedTopics, unlockedAchievements }));
     } catch {}
   }, [isGuest, stats, completedTopics, unlockedAchievements]);
+
+  // Prefetch answer for current question so submit feedback is instant
+  useEffect(() => {
+    if (screen !== "topic" || topicScreen !== "quiz") return;
+    const q = currentQuestions[questionIndex];
+    if (!supabase || !q?.id || answerCacheRef.current[q.id]) return;
+    const originalIndex = q._optionMap ? q._optionMap[0] : 0;
+    const isDaily = selectedTopic?.id === "daily";
+    const rpc = isDaily ? checkDailyAnswer : checkQuizAnswer;
+    rpc(supabase, q.id, originalIndex).then(res => {
+      if (res) {
+        const ci = q._optionMap ? q._optionMap.indexOf(res.correct_answer) : res.correct_answer;
+        answerCacheRef.current[q.id] = { correctIndex: ci, explanation: res.explanation };
+      }
+    }).catch(() => {});
+  }, [questionIndex, screen, topicScreen]);
 
   // Move focus to the question container whenever the question changes so screen
   // readers announce the new question automatically.
@@ -1522,12 +1539,18 @@ export default function K8sQuestApp() {
     if (selectedAnswer === null || submitted || checkingAnswer || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitted(true);
-    setCheckingAnswer(true);
     const q = currentQuestions[questionIndex];
 
-    // Resolve answer via server RPC (online) or local field (offline)
+    // Resolve answer: prefetch cache → local field → server RPC (last resort)
     let result;
-    if (supabase && q.id) {
+    const cached = supabase && q.id ? answerCacheRef.current[q.id] : null;
+    if (cached) {
+      result = { correct: selectedAnswer === cached.correctIndex, correctIndex: cached.correctIndex, explanation: cached.explanation };
+    } else if (typeof q.answer === "number") {
+      result = { correct: selectedAnswer === q.answer, correctIndex: q.answer, explanation: q.explanation };
+    } else if (supabase && q.id) {
+      // Cache miss and no local answer — fall back to server call
+      setCheckingAnswer(true);
       const originalIndex = q._optionMap ? q._optionMap[selectedAnswer] : selectedAnswer;
       const isDaily = selectedTopic?.id === "daily";
       const callRpc = () => isDaily
@@ -1537,17 +1560,12 @@ export default function K8sQuestApp() {
       try {
         rpcResult = await callRpc();
       } catch {
-        // Retry once on transient failure
         try { rpcResult = await callRpc(); } catch { /* give up */ }
       }
       if (rpcResult) {
         const correctIndex = q._optionMap ? q._optionMap.indexOf(rpcResult.correct_answer) : rpcResult.correct_answer;
         result = { correct: rpcResult.correct, correctIndex, explanation: rpcResult.explanation };
-      } else if (typeof q.answer === "number") {
-        // Offline fallback — only when local answer data exists
-        result = { correct: selectedAnswer === q.answer, correctIndex: q.answer, explanation: q.explanation };
       } else {
-        // Server unreachable and no local answer — don't penalize the user
         result = { correct: true, correctIndex: selectedAnswer, explanation: q.explanation || "" };
       }
     } else {
@@ -1688,6 +1706,7 @@ export default function K8sQuestApp() {
 
   const startTopic = async (topic, level) => {
     quizRunIdRef.current = Date.now().toString(36);
+    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     submittingRef.current = false;
     clearQuizState();
@@ -1726,6 +1745,7 @@ export default function K8sQuestApp() {
 
   const startMixedQuiz = async () => {
     quizRunIdRef.current = Date.now().toString(36);
+    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     clearQuizState();
     setAnswerResult(null);
@@ -1777,6 +1797,7 @@ export default function K8sQuestApp() {
 
   const startDailyChallenge = async () => {
     quizRunIdRef.current = Date.now().toString(36);
+    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     clearQuizState();
     setAnswerResult(null);
@@ -1874,6 +1895,7 @@ export default function K8sQuestApp() {
   const startBookmarksQuiz = () => {
     if (!bookmarks.length) return;
     quizRunIdRef.current = Date.now().toString(36);
+    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     clearQuizState();
     const qs = bookmarks.map(b => ({ q: b.question_text, options: b.options, answer: b.answer, explanation: b.explanation }));
