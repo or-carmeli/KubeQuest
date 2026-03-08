@@ -225,7 +225,7 @@ export default function RoadmapView({
 
                 {/* Expanded difficulty grid */}
                 {isExpanded&&(
-                  <div style={{marginTop:10,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                  <div style={{marginTop:10,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,direction:dir}}>
                     {Object.entries(levelConfig).filter(([lvl]) => lvl !== "mixed" && lvl !== "daily").map(([lvl, cfg]) => {
                       const key       = `${topic.id}_${lvl}`;
                       const done      = completedTopics[key];
