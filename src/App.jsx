@@ -872,7 +872,11 @@ export default function K8sQuestApp() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(authTimeout);
       if (session) { setUser(session.user); loadUserData(session.user.id, session.user); }
-      else          { setDataLoaded(true); }   // no session → nothing to load
+      else {
+        // Restore guest session if user previously chose guest mode
+        try { if (localStorage.getItem("k8s_guest_session")) setUser(GUEST_USER); } catch {}
+        setDataLoaded(true);
+      }
       setAuthChecked(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -1180,8 +1184,9 @@ export default function K8sQuestApp() {
         const raw = localStorage.getItem("k8s_quest_guest");
         if (raw) guestSaved = JSON.parse(raw);
       } catch {}
-      // Always clear it immediately - prevents it leaking into whichever account logs in next
+      // Always clear guest data & session flag — prevents it leaking into whichever account logs in next
       if (guestSaved) { try { localStorage.removeItem("k8s_quest_guest"); } catch {} }
+      try { localStorage.removeItem("k8s_guest_session"); } catch {}
 
       const base = data || {};
       // Only perform merge for genuinely new accounts (no existing row in Supabase)
@@ -1351,6 +1356,7 @@ export default function K8sQuestApp() {
 
   const handleLogout = async () => {
     setDataLoaded(false);
+    try { localStorage.removeItem("k8s_guest_session"); } catch {}
     if (isGuest) {
       setUser(null);
       setStats({ total_answered:0, total_correct:0, total_score:0, max_streak:0, current_streak:0 });
@@ -2372,7 +2378,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <p style={{color:"#94a3b8",fontSize:14,margin:0}}>{t("tagline")}</p>
         </div>
 
-        <button className="gbtn" onClick={()=>setUser(GUEST_USER)}
+        <button className="gbtn" onClick={()=>{setUser(GUEST_USER);try{localStorage.setItem("k8s_guest_session","1")}catch{}}}
           style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"#7dd3fc",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
           {t("startPlaying")}
         </button>
