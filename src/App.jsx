@@ -400,7 +400,7 @@ function renderQuestion(qText, lang) {
     const qDir = hasHebrew(qText) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
     return (
       <div dir={qDir} style={{color:"#e2e8f0",fontSize:18,fontWeight:700,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
-        {renderBidiBlock(qText, lang)}
+        {lang==="he"?renderBidi(qText,lang):qText}
       </div>
     );
   }
@@ -422,7 +422,7 @@ function renderQuestion(qText, lang) {
         const pDir = hasHebrew(para) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
         return (
           <div key={idx} dir={pDir} style={{color:"#e2e8f0",fontSize:isLast?18:15,fontWeight:isLast?700:400,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
-            {renderBidiBlock(para, lang)}
+            {lang==="he"?renderBidi(para,lang):para}
           </div>
         );
       })}
@@ -451,63 +451,35 @@ function shuffleOptions(questions) {
 // Compared via lower-case; trailing "s" is also stripped for plural matching.
 const K8S_CODE_TERMS = new Set([
   // CLI tools
-  "kubectl","helm","docker","kubelet","kubeadm",
-  // kubectl subcommands
-  "kubectl get pods","kubectl get nodes","kubectl describe","kubectl logs",
-  "kubectl apply","kubectl delete","kubectl scale","kubectl rollout","kubectl exec",
-  "kubectl top pod","kubectl top","kubectl drain","kubectl cordon","kubectl debug",
-  "kubectl edit","kubectl patch","kubectl create","kubectl rollout undo",
-  "kubectl rollout status","kubectl rollout history",
-  // Core resources
-  "pod","node","namespace","service","deployment","replicaset",
+  "kubectl","helm","docker","kubelet","kubeadm","crictl","etcdctl",
+  // Core resource types (these are actual K8s API kinds)
+  "pod","node","namespace","deployment","replicaset",
   "statefulset","daemonset","job","cronjob","configmap","secret",
-  "ingress","networkpolicy","serviceaccount","endpoint",
-  // Storage
+  "ingress","networkpolicy","serviceaccount",
+  // Storage resources
   "pv","pvc","persistentvolume","persistentvolumeclaim",
-  // Scaling & scheduling
+  // Scaling resources
   "hpa","vpa","pdb","poddisruptionbudget",
   // Components
-  "api-server","kube-proxy","etcd","coredns","cni",
-  // Well-known namespaces / env names
-  "kube-system","production","staging","default",
+  "api-server","kube-proxy","etcd","coredns",
   // Pod states & errors
   "oomkilled","crashloopbackoff","imagepullbackoff","errimagepull",
   "containercreating",
-  // Concepts
-  "toleration","taint","affinity",
-  // Resources
-  "cpu","memory","gpu",
-  // QoS classes
-  "guaranteed","burstable","besteffort",
-  // Probes (multi-word)
-  "liveness probe","readiness probe","startup probe",
-  // Update strategies
-  "rolling update","rollback","rollout",
   // Service types
   "clusterip","nodeport","loadbalancer","externalname",
-  // Other K8s objects & terms
+  // Other K8s resources
   "resourcequota","limitrange","priorityclass",
-  "init container","ephemeral container","sidecar",
-  "replica","backofflimit",
-  // Config formats
-  "yaml","json","rbac","tls","dns",
-  // Monitoring / ecosystem
-  "prometheus","grafana","fluentd","pagerduty",
-  // Common k8s tool terms
-  "distroless","metrics-server",
 ]);
 
 // Check if a token (or multi-word phrase) is a known K8s / CLI term or DNS name.
 // For multi-word Latin runs, also checks each individual word so that
 // "CPU request" is recognised even if the exact phrase isn't in the set.
 function isCodeTerm(token) {
-  if (/\.\w/.test(token)) return true; // DNS name or dotted path
+  // Dotted paths like spec.containers or securityContext.runAsNonRoot (must have lowercase.lowercase pattern, not "e.g.")
+  if (/^[a-zA-Z][a-zA-Z0-9]*\.[a-zA-Z]/.test(token)) return true;
   const lower = token.toLowerCase();
+  // Exact match only — no single-word fallback for multi-word phrases
   if (K8S_CODE_TERMS.has(lower) || K8S_CODE_TERMS.has(lower.replace(/s$/,""))) return true;
-  // For multi-word tokens, check if any single word is a known term
-  if (lower.includes(" ")) {
-    return lower.split(/\s+/).some(w => K8S_CODE_TERMS.has(w) || K8S_CODE_TERMS.has(w.replace(/s$/,"")));
-  }
   return false;
 }
 
@@ -653,6 +625,7 @@ export default function K8sQuestApp() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [submitted, setSubmitted]         = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [expandedExplanation, setExpandedExplanation] = useState(false);
   const [flash, setFlash]                 = useState(false);
   const [tryAgainActive, setTryAgainActive]   = useState(false);
   const [tryAgainSelected, setTryAgainSelected] = useState(null);
@@ -896,7 +869,7 @@ export default function K8sQuestApp() {
     const handlePopState = () => {
       // If explanation is showing, dismiss it and stay in quiz
       if (screenRef.current === "topic" && topicScreenRef.current === "quiz" && showExplanationRef.current) {
-        setShowExplanation(false);
+        setShowExplanation(false); setExpandedExplanation(false);
       }
       // Re-push so the next back press is also caught
       window.history.pushState({ quiz: true }, "");
@@ -1725,7 +1698,7 @@ export default function K8sQuestApp() {
       setQuestionIndex(p => p + 1);
       setSelectedAnswer(null);
       setSubmitted(false);
-      setShowExplanation(false);
+      setShowExplanation(false); setExpandedExplanation(false);
       setAnswerResult(null);
       if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[selectedLevel] || 25) : (TIMER_DURATIONS[selectedLevel] || 30));
     }
@@ -1762,7 +1735,7 @@ export default function K8sQuestApp() {
     setTheoryContent(theory);
     setSelectedTopic(topic); setSelectedLevel(level); setTopicScreen("theory");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
-    setShowExplanation(false);
+    setShowExplanation(false); setExpandedExplanation(false);
     topicCorrectRef.current = 0;
     lastSessionScoreRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
@@ -1816,7 +1789,7 @@ export default function K8sQuestApp() {
     isRetryRef.current = false;
     setSelectedTopic(MIXED_TOPIC); setSelectedLevel("mixed"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
-    setShowExplanation(false);
+    setShowExplanation(false); setExpandedExplanation(false);
     topicCorrectRef.current = 0; lastSessionScoreRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
@@ -1860,7 +1833,7 @@ export default function K8sQuestApp() {
     isRetryRef.current = false;
     setSelectedTopic(DAILY_TOPIC); setSelectedLevel("daily"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
-    setShowExplanation(false);
+    setShowExplanation(false); setExpandedExplanation(false);
     topicCorrectRef.current = 0; lastSessionScoreRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
@@ -1932,7 +1905,7 @@ export default function K8sQuestApp() {
     isRetryRef.current = false;
     setSelectedTopic(BOOKMARKS_TOPIC); setSelectedLevel("mixed"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
-    setShowExplanation(false);
+    setShowExplanation(false); setExpandedExplanation(false);
     topicCorrectRef.current = 0; lastSessionScoreRef.current = 0;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
@@ -3896,7 +3869,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                       dir={dir}
                       style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"14px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:12,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.7,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:12,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:56}}>
                       <span aria-hidden="true" style={{flexShrink:0,width:30,height:30,borderRadius:8,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.7,unicodeBidi:"isolate"}}>{renderBidiBlock(opt,lang)}</span>
+                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.7,unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:18,height:18,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
                       {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✓</span>}
                       {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✗</span>}
@@ -3952,14 +3925,27 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                                 : (tryAgainActive ? t("tryAgainWrong") : t("incorrect"))}
                           </span>
                         </div>
-                        {/* Explanation body — one sentence per line */}
-                        {!isInterviewMode&&<div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:10}}>
-                          {paragraphs.map((s,idx)=>(
+                        {/* Explanation body — compact with Learn more toggle */}
+                        {!isInterviewMode&&(()=>{
+                          const visibleCount = Math.min(2, paragraphs.length);
+                          const hasMore = paragraphs.length > visibleCount;
+                          return <div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:10}}>
+                          {paragraphs.slice(0, visibleCount).map((s,idx)=>(
                             <div key={idx} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
                               {renderBidiBlock(s,lang)}
                             </div>
                           ))}
-                        </div>}
+                          {hasMore&&<button onClick={()=>setExpandedExplanation(p=>!p)} style={{background:"none",border:"none",color:"#64748b",fontSize:12,cursor:"pointer",padding:"4px 0",display:"flex",alignItems:"center",gap:4,direction:dir,alignSelf:dir==="rtl"?"flex-end":"flex-start"}}>
+                            <span style={{fontSize:10}}>{expandedExplanation?"▾":"▸"}</span>
+                            <span>{expandedExplanation?(lang==="en"?"Show less":"פחות"):(lang==="en"?"Learn more":"למידע נוסף")}</span>
+                          </button>}
+                          {expandedExplanation&&paragraphs.slice(visibleCount).map((s,idx)=>(
+                            <div key={`ext-${idx}`} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate",animation:"fadeIn 0.2s ease"}}>
+                              {renderBidiBlock(s,lang)}
+                            </div>
+                          ))}
+                        </div>;
+                        })()}
                       </div>
                     );
                   })()}
@@ -3980,8 +3966,17 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                         </div>
                         <div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:14}}>
                           <div dir="auto" style={{color:"#e2e8f0",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:dir==="rtl"?"right":"left"}}>{q.options[iCorrectIdx]}</div>
-                          {iParagraphs.map((s,idx,arr)=>(
+                          {iParagraphs.slice(0, Math.min(2, iParagraphs.length)).map((s,idx)=>(
                             <div key={idx} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
+                              {renderBidiBlock(s,lang)}
+                            </div>
+                          ))}
+                          {iParagraphs.length>2&&<button onClick={()=>setExpandedExplanation(p=>!p)} style={{background:"none",border:"none",color:"#64748b",fontSize:12,cursor:"pointer",padding:"4px 0",display:"flex",alignItems:"center",gap:4,direction:dir,alignSelf:dir==="rtl"?"flex-end":"flex-start"}}>
+                            <span style={{fontSize:10}}>{expandedExplanation?"▾":"▸"}</span>
+                            <span>{expandedExplanation?(lang==="en"?"Show less":"פחות"):(lang==="en"?"Learn more":"למידע נוסף")}</span>
+                          </button>}
+                          {expandedExplanation&&iParagraphs.slice(2).map((s,idx)=>(
+                            <div key={`iext-${idx}`} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate",animation:"fadeIn 0.2s ease"}}>
                               {renderBidiBlock(s,lang)}
                             </div>
                           ))}
@@ -4087,7 +4082,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                   setAllowNextLevel(false);
                   setTopicScreen("quiz");
                   setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
-                  setShowExplanation(false);
+                  setShowExplanation(false); setExpandedExplanation(false);
                   topicCorrectRef.current=0; lastSessionScoreRef.current=0;
                   liveIndexRef.current=0;
                   quizRunIdRef.current=Date.now().toString(36);
@@ -4271,7 +4266,7 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                     <span style={{flexShrink:0,width:24,height:24,borderRadius:6,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor,marginTop:1,direction:"ltr"}}>
                       {["A","B","C","D"][i]}
                     </span>
-                    <span dir={dir} style={{flex:1,direction:dir,wordBreak:"break-word",overflowWrap:"anywhere"}}>{renderBidiBlock(opt,lang)}</span>
+                    <span dir={dir} style={{flex:1,direction:dir,wordBreak:"break-word",overflowWrap:"anywhere"}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
                     {incidentSubmitted&&isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✓</span>}
                     {incidentSubmitted&&isChosen&&!isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✗</span>}
                   </button>
