@@ -1232,6 +1232,14 @@ export default function K8sQuestApp() {
           setTopicStats(data.topic_stats);
           try { localStorage.setItem("topicStats_v1", JSON.stringify(data.topic_stats)); } catch {}
         }
+        // Self-heal: if recomputed score > DB score (e.g. legacy row with total_score=0),
+        // persist the corrected value so leaderboard reflects the real score.
+        if (mergedStats.total_score > dbScore) {
+          supabase.from("user_stats").update({
+            total_score: mergedStats.total_score,
+            updated_at: new Date().toISOString(),
+          }).eq("user_id", userId).then(() => {});
+        }
       } else {
         // BUG-B fix: use INSERT (not upsert) for new accounts to guarantee one row per user
         const username = sessionUser?.user_metadata?.username || sessionUser?.email?.split("@")[0];
