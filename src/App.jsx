@@ -3827,8 +3827,8 @@ kubectl get pods -o jsonpath='{.items[*].metadata.name}'`},
                   {!isInHistoryMode&&<span aria-label={`${stats.current_streak} ${t("streakLabel")}`} style={{color:stats.current_streak>0?"#FF6B35":"#475569",fontSize:12,fontWeight:700}}>
                     <span aria-hidden="true">🔥 {stats.current_streak} {t("streakLabel")}</span>
                   </span>}
-                  {!isInHistoryMode&&<span aria-label={`${stats.total_score + sessionScore} ${t("pts")}`} style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
-                    <span aria-hidden="true">⭐ {stats.total_score + sessionScore} {t("pts")}</span>
+                  {!isInHistoryMode&&<span aria-label={`${stats.total_score} ${t("pts")}`} style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
+                    <span aria-hidden="true">⭐ {stats.total_score} {t("pts")}</span>
                   </span>}
                 </div>
                 <div style={{height:5,background:"rgba(255,255,255,0.06)",borderRadius:4,direction:"ltr",transform:lang==="he"?"scaleX(-1)":undefined}}>
