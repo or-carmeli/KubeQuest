@@ -618,7 +618,11 @@ export default function K8sQuestApp() {
   const [authError, setAuthError]         = useState("");
   const [saveError, setSaveError]         = useState("");
 
-  const [screen, setScreen]               = useState(()=>window.location.pathname==="/status"?"status":"home");
+  const [screen, setScreen]               = useState(()=>{
+    if (window.location.pathname==="/status") return "status";
+    try { const s=localStorage.getItem("kq_screen_v1"); if (s&&["home","incidentList","incident","incidentComplete","topic"].includes(s)) return s; } catch {}
+    return "home";
+  });
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [topicScreen, setTopicScreen]     = useState("theory");
@@ -892,8 +896,9 @@ export default function K8sQuestApp() {
   }, [stats, completedTopics]);
 
   // Load guest progress from localStorage
+  const guestLoadedRef = useRef(false);
   useEffect(() => {
-    if (!isGuest) return;
+    if (!isGuest) { guestLoadedRef.current = false; return; }
     try {
       const saved = localStorage.getItem("k8s_quest_guest");
       if (saved) {
@@ -903,6 +908,7 @@ export default function K8sQuestApp() {
         if (u) setUnlockedAchievements(u);
       }
     } catch {}
+    guestLoadedRef.current = true;
     achievementsLoaded.current = true;
     setDataLoaded(true);
     // Check for a saved in-progress quiz for the guest session
@@ -910,13 +916,13 @@ export default function K8sQuestApp() {
     if (savedQuiz && savedQuiz.userId === "guest") setResumeData(savedQuiz);
   }, [isGuest]);
 
-  // Save guest progress to localStorage (backward compat)
+  // Save guest progress to localStorage — skip until load effect's state updates have rendered
   useEffect(() => {
-    if (!isGuest) return;
+    if (!isGuest || !guestLoadedRef.current) return;
     try {
       localStorage.setItem("k8s_quest_guest", JSON.stringify({ stats, completedTopics, unlockedAchievements }));
     } catch {}
-  }, [isGuest, stats, completedTopics, unlockedAchievements]);
+  }, [stats, completedTopics, unlockedAchievements]);
 
   // Universal progress cache: persist for ALL users (guest + auth) as local safety net
   useEffect(() => {
@@ -1020,6 +1026,11 @@ export default function K8sQuestApp() {
     document.documentElement.dir  = lang === "he" ? "rtl" : "ltr";
   }, [lang]);
 
+  // Persist current screen to localStorage for refresh resilience
+  useEffect(() => {
+    try { localStorage.setItem("kq_screen_v1", screen); } catch {}
+  }, [screen]);
+
   // Pre-load saved quiz data when returning home (modal is NOT shown here — only when starting a quiz)
   useEffect(() => {
     if (screen !== "home" || !user) return;
@@ -1029,15 +1040,13 @@ export default function K8sQuestApp() {
     // Do NOT call setShowResumeModal(true) here — req 2
   }, [screen]);
 
-  // Auto-restore quiz or incident session on page load (refresh resilience)
-  // Only auto-resume if state was saved very recently (<2 min), indicating an
-  // actual page refresh. Older saves are offered via the resume modal instead.
+  // Auto-restore session on page load (refresh resilience)
   useEffect(() => {
     if (autoResumeAttempted.current) return;
     if (!dataLoaded || !user) return;
     autoResumeAttempted.current = true;
 
-    // Priority 1: Resume quiz — only if it's a recent refresh, not a new session
+    // Resume quiz — only if it's a recent refresh (<2 min), not a new session
     if (resumeData && isRecentQuizState(resumeData)) {
       const answered = resumeData.questionIndex ?? 0;
       const total = resumeData.questions?.length ?? 0;
@@ -1049,30 +1058,32 @@ export default function K8sQuestApp() {
       }
     }
 
-    // Priority 2: Resume incident (only if real progress was made)
-    try {
-      const saved = JSON.parse(localStorage.getItem(INCIDENT_SAVE_KEY));
-      const hasProgress = saved && ((saved.stepIndex ?? 0) > 0 || (saved.history && saved.history.length > 0));
-      if (saved?.incidentId && hasProgress) {
-        const incident = INCIDENTS.find(i => i.id === saved.incidentId);
-        if (incident) {
-          setSelectedIncident(incident);
-          setIncidentStepIndex(saved.stepIndex ?? 0);
-          setIncidentScore(saved.score ?? 0);
-          setIncidentMistakes(saved.mistakes ?? 0);
-          setIncidentElapsed(saved.elapsed ?? 0);
-          setIncidentAnswer(null);
-          setIncidentSubmitted(false);
-          setIncidentAnswerResult(null);
-          incidentCheckingRef.current = false;
-          setIncidentHistory(saved.history || []);
-          setScreen("incident");
-          setResumeToast(true);
-          setTimeout(() => setResumeToast(false), 3500);
-          return;
+    // If screen restored to "incident" via localStorage but React state is empty,
+    // hydrate incident state from saved progress (or fall back to home)
+    if (screen === "incident" && !selectedIncident) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(INCIDENT_SAVE_KEY));
+        if (saved?.incidentId) {
+          const incident = INCIDENTS.find(i => i.id === saved.incidentId);
+          if (incident) {
+            setSelectedIncident(incident);
+            setIncidentStepIndex(saved.stepIndex ?? 0);
+            setIncidentScore(saved.score ?? 0);
+            setIncidentMistakes(saved.mistakes ?? 0);
+            setIncidentElapsed(saved.elapsed ?? 0);
+            setIncidentAnswer(null);
+            setIncidentSubmitted(false);
+            setIncidentAnswerResult(null);
+            incidentCheckingRef.current = false;
+            setIncidentHistory(saved.history || []);
+            setResumeToast(true);
+            setTimeout(() => setResumeToast(false), 3500);
+            return;
+          }
         }
-      }
-    } catch {}
+      } catch {}
+      setScreen("home"); // no valid saved data — fall back
+    }
   }, [dataLoaded, user, resumeData]);
 
   // Fetch real monitoring data when status screen opens, poll every 30s
@@ -1591,8 +1602,17 @@ export default function K8sQuestApp() {
       if (prev.length > questionIndex) return prev; // guard against double-submit
       return [...prev, { q: q.q, options: q.options, answer: result.correctIndex, chosen: selectedAnswer, explanation: result.explanation }];
     });
-    // Single atomic setStats call — prevents React batching from clobbering streak
+    // Immediately persist wrong answer so it survives mid-quiz exits
     const isFree = isFreeMode(selectedTopic?.id);
+    if (!correct && !isFree && !isRetryRef.current && selectedTopic && selectedLevel) {
+      const key = `${selectedTopic.id}_${selectedLevel}`;
+      setCompletedTopics(prev => {
+        const existing = prev[key] || {};
+        const prevWrong = existing.wrongQuestions || [];
+        return { ...prev, [key]: { ...existing, wrongQuestions: [...prevWrong, { q: q.q, options: q.options, answer: result.correctIndex }], wrongIndices: [...(existing.wrongIndices || []), questionIndex] } };
+      });
+    }
+    // Single atomic setStats call — prevents React batching from clobbering streak
     let freeScoreAdd = 0;
     if (!isRetryRef.current && isFree && correct) {
       const freeKey = currentQuestions[questionIndex].q.slice(0, 100);
@@ -1740,6 +1760,13 @@ export default function K8sQuestApp() {
     }
     setTopicQuestions(shuffleOptions(rawQs || []));
     setTheoryContent(theory);
+    // Clear incremental wrong answers from any previous abandoned attempt
+    const tKey = `${topic.id}_${level}`;
+    setCompletedTopics(prev => {
+      const existing = prev[tKey];
+      if (!existing) return prev;
+      return { ...prev, [tKey]: { ...existing, wrongQuestions: [], wrongIndices: [] } };
+    });
     setSelectedTopic(topic); setSelectedLevel(level); setTopicScreen("theory");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
     setShowExplanation(false); setExpandedExplanation(false);
@@ -3890,6 +3917,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {/* Resume banner */}
+          {incidentResume&&(
+            <div style={{padding:16,background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:14,marginBottom:12,direction:dir}}>
+              <div style={{color:"#e2e8f0",fontSize:14,fontWeight:700,marginBottom:4}}>{lang==="he"?incidentResume.incident.titleHe:incidentResume.incident.title}</div>
+              <div style={{color:"#64748b",fontSize:12,marginBottom:12}}>{t("incidentStep")} {incidentResume.stepIndex+1}/{incidentResume.incident.steps.length}</div>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={resumeIncident} style={{flex:1,padding:"10px",background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,color:"#EF4444",fontSize:13,fontWeight:700,cursor:"pointer"}}>▶ {t("incidentResumeBanner")}</button>
+                <button onClick={()=>{clearIncidentProgress();setIncidentResume(null);}} style={{padding:"10px 16px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,color:"#64748b",fontSize:13,cursor:"pointer"}}>{t("incidentDiscard")}</button>
+              </div>
+            </div>
+          )}
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {INCIDENTS.map(incident=>{
               const diff = INCIDENT_DIFFICULTY_CONFIG[incident.difficulty] || INCIDENT_DIFFICULTY_CONFIG.medium;
