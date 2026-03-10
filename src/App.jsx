@@ -3267,12 +3267,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           : inMaintenance ? (lang==="en" ? "Scheduled Maintenance" : "תחזוקה מתוכננת")
           : allOperational ? (lang==="en" ? "All Systems Operational" : "כל המערכות פעילות")
           : (lang==="en" ? "Degraded Performance" : "ביצועים מופחתים");
-        const globalColor   = loading ? "#F59E0B" : anyDown ? "#EF4444" : inMaintenance ? "#D97706" : allOperational ? "#10B981" : "#F59E0B";
-        const globalGlow    = loading ? "rgba(245,158,11,0.25)" : anyDown ? "rgba(239,68,68,0.25)" : inMaintenance ? "rgba(217,119,6,0.25)" : allOperational ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)";
+        const globalColor   = loading ? "#F59E0B" : anyDown ? "#EF4444" : inMaintenance ? "#facc15" : allOperational ? "#10B981" : "#F59E0B";
+        const globalGlow    = loading ? "rgba(245,158,11,0.25)" : anyDown ? "rgba(239,68,68,0.25)" : inMaintenance ? "none" : allOperational ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)";
         const globalDot     = globalColor;
 
         const statusLabel = (s) => s === "operational" ? (lang==="en" ? "Operational" : "פעיל") : s === "degraded" ? (lang==="en" ? "Degraded" : "מופחת") : s === "down" ? (lang==="en" ? "Down" : "מושבת") : (lang==="en" ? "Maintenance" : "תחזוקה");
-        const statusColor = (s) => s === "operational" ? "#10B981" : s === "degraded" ? "#F59E0B" : s === "down" ? "#EF4444" : "#D97706";
+        const statusColor = (s) => s === "operational" ? "#10B981" : s === "degraded" ? "#F59E0B" : s === "down" ? "#EF4444" : "#facc15";
 
         // Default service list (used while loading or if no data)
         const defaultSvcNames = ["Quiz Engine","Authentication","Leaderboard","Database","Content API"];
@@ -3403,30 +3403,30 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
             {/* ── MAINTENANCE BANNER ── */}
             {activeMaintenance && (
-              <div dir="ltr" style={{background:"rgba(217,119,6,0.06)",border:"1px solid rgba(217,119,6,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:6}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                  <div style={{width:6,height:6,borderRadius:"50%",background:"#D97706",flexShrink:0}}/>
-                  <span style={{fontSize:13,fontWeight:600,color:"#D97706"}}>{activeMaintenance.title || "Scheduled Maintenance"}</span>
-                </div>
+              <div dir="ltr" style={{background:"rgba(250,204,21,0.06)",border:"1px solid rgba(250,204,21,0.35)",borderRadius:10,padding:"12px 16px",marginBottom:6}}>
+                <div style={{fontSize:13,fontWeight:600,color:"#facc15",marginBottom:6}}>Scheduled Maintenance</div>
                 {activeMaintenance.description && (
-                  <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.5,marginBottom:4}}>{activeMaintenance.description}</div>
+                  <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.5,marginBottom:8}}>{activeMaintenance.description}</div>
                 )}
-                <div style={{fontSize:11,color:"#78716c",fontFamily:"'Fira Code','Courier New',monospace",marginBottom:activeMaintenance.affected_services?.length ? 6 : 0}}>
-                  {new Date(activeMaintenance.starts_at).toLocaleDateString("en-US",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"})}, {new Date(activeMaintenance.starts_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})} – {new Date(activeMaintenance.ends_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})} UTC
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"'Fira Code','Courier New',monospace",marginBottom:activeMaintenance.affected_services?.length ? 8 : 0}}>
+                  {new Date(activeMaintenance.starts_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"})} · {new Date(activeMaintenance.starts_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})}–{new Date(activeMaintenance.ends_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})} UTC
                 </div>
                 {activeMaintenance.affected_services?.length > 0 && (
-                  <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                    {activeMaintenance.affected_services.map(s=>(
-                      <span key={s} style={{fontSize:10,color:"#D97706",background:"rgba(217,119,6,0.1)",border:"1px solid rgba(217,119,6,0.15)",borderRadius:4,padding:"1px 6px",fontWeight:500}}>{s}</span>
-                    ))}
+                  <div>
+                    <div style={{fontSize:10,color:"#64748b",fontWeight:500,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>Affected services</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                      {activeMaintenance.affected_services.map(s=>(
+                        <span key={s} style={{fontSize:11,color:"#facc15",background:"rgba(250,204,21,0.08)",border:"1px solid rgba(250,204,21,0.2)",borderRadius:4,padding:"2px 8px",fontWeight:500}}>{s}</span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             )}
             {upcomingMaintenance.length > 0 && !activeMaintenance && (
-              <div dir="ltr" style={{background:"rgba(217,119,6,0.04)",border:"1px solid rgba(217,119,6,0.12)",borderRadius:10,padding:"8px 14px",marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
-                <div style={{width:5,height:5,borderRadius:"50%",background:"#D97706",opacity:0.7,flexShrink:0}}/>
-                <span style={{fontSize:12,fontWeight:500,color:"#D97706"}}>
+              <div dir="ltr" style={{background:"rgba(250,204,21,0.04)",border:"1px solid rgba(250,204,21,0.2)",borderRadius:10,padding:"8px 16px",marginBottom:6,display:"flex",alignItems:"center",gap:8}}>
+                <div style={{width:5,height:5,borderRadius:"50%",background:"#facc15",flexShrink:0}}/>
+                <span style={{fontSize:12,fontWeight:500,color:"#facc15"}}>
                   {"Maintenance scheduled: "}{new Date(upcomingMaintenance[0].starts_at).toLocaleDateString("en-US",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})} UTC
                 </span>
               </div>
