@@ -3265,7 +3265,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const globalLabel   = loading ? "Checking…"
           : anyDown ? (lang==="en" ? "Major Outage" : "תקלה משמעותית")
           : inMaintenance ? (lang==="en" ? "Scheduled Maintenance" : "תחזוקה מתוכננת")
-          : allOperational ? (lang==="en" ? "All Systems Operational" : "כל המערכות פעילות")
+          : allOperational ? "All Systems Operational"
           : (lang==="en" ? "Degraded Performance" : "ביצועים מופחתים");
         const globalColor   = loading ? "#F59E0B" : anyDown ? "#EF4444" : inMaintenance ? "#facc15" : allOperational ? "#10B981" : "#F59E0B";
         const globalGlow    = loading ? "rgba(245,158,11,0.25)" : anyDown ? "rgba(239,68,68,0.25)" : inMaintenance ? "none" : allOperational ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)";
