@@ -22,6 +22,26 @@ if (!supabase) console.warn("[KubeQuest] Supabase not configured — VITE_SUPABA
 // Run version check before any component mounts — clears stale keys if data version changed
 console.info("[KubeQuest:boot] App.jsx module executing");
 checkDataVersion();
+
+// Proactively check Supabase auth token: if the stored session has an expired refresh token,
+// clear it now to prevent createClient/getSession from hanging on a doomed refresh attempt.
+try {
+  const sbUrl = SUPABASE_URL || "";
+  const projRef = sbUrl.replace("https://","").split(".")[0];
+  if (projRef) {
+    const sbKey = `sb-${projRef}-auth-token`;
+    const raw = localStorage.getItem(sbKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const expiresAt = parsed?.expires_at; // Unix timestamp (seconds)
+      if (expiresAt && expiresAt < Date.now() / 1000 - 86400) {
+        // Token expired >24h ago — the refresh token is almost certainly dead too
+        console.warn("[KubeQuest:boot] Clearing stale Supabase auth token (expired", Math.round((Date.now()/1000 - expiresAt)/3600), "h ago)");
+        localStorage.removeItem(sbKey);
+      }
+    }
+  }
+} catch { /* ignore — token check is best-effort */ }
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -653,8 +673,6 @@ export default function K8sQuestApp() {
   const [dataLoaded,  setDataLoaded]      = useState(false);
   const [minLoadElapsed, setMinLoadElapsed] = useState(false);
   const [user, setUser]                   = useState(null);
-  // Stuck-loading detector: switches to recovery UI after 10 s
-  const [loadingStuck, setLoadingStuck]   = useState(false);
   const [authScreen, setAuthScreen]       = useState("login");
   const authFormRef                       = useRef(null);
   const [authLoading, setAuthLoading]     = useState(false);
@@ -853,20 +871,36 @@ export default function K8sQuestApp() {
 
   useEffect(() => { const t = setTimeout(() => setMinLoadElapsed(true), 500); return () => clearTimeout(t); }, []);
 
-  // Stuck-loading safety net: if the loading gate is still active after 10 s,
-  // try to auto-recover once, then show recovery UI on second failure.
+  // Boot elapsed timer — updates every second while loading gate is active (for debug panel)
+  const [bootElapsed, setBootElapsed] = useState(0);
   useEffect(() => {
-    if (authChecked && (dataLoaded || !user)) return; // loading gate already passed
+    const gateActive = !authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded);
+    if (!gateActive) return;
+    const iv = setInterval(() => setBootElapsed(s => s + 1), 1000);
+    return () => clearInterval(iv);
+  }, [authChecked, minLoadElapsed, user, isGuest, dataLoaded]);
+
+  // Hard safety net: after 5 s on the loading gate, force everything open.
+  // If user was set but dataLoaded didn't resolve, clear user to bypass the gate.
+  useEffect(() => {
+    const gateActive = !authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded);
+    if (!gateActive) return;
     const t = setTimeout(() => {
-      console.error("[KubeQuest:boot] Loading stuck for 10 s — authChecked:", authChecked, "dataLoaded:", dataLoaded, "user:", !!user, "isGuest:", user?.id === "guest");
-      // First attempt: force-unblock by setting the stuck flags directly
-      // This handles the case where a promise silently never resolved
-      if (!authChecked) setAuthChecked(true);
-      if (!dataLoaded) setDataLoaded(true);
-      setLoadingStuck(true);
-    }, 10000);
+      console.error("[KubeQuest:boot] Loading gate still active after 5 s — force-unblocking");
+      console.error("[KubeQuest:boot] State: authChecked:", authChecked, "dataLoaded:", dataLoaded, "user:", !!user, "isGuest:", isGuest);
+      setAuthChecked(true);
+      setMinLoadElapsed(true);
+      setDataLoaded(true);
+      // If user is set but data never loaded, the Supabase session may be stale.
+      // Force to auth screen — user can log in again.
+      if (user && !isGuest && !dataLoaded) {
+        console.warn("[KubeQuest:boot] Clearing stale user to unblock UI");
+        setUser(null);
+        loadingDataRef.current = false;
+      }
+    }, 5000);
     return () => clearTimeout(t);
-  }, [authChecked, dataLoaded, user]);
+  }, [authChecked, minLoadElapsed, user, isGuest, dataLoaded]);
 
   // Restore progress from local cache immediately on mount (before auth/Supabase resolves)
   useEffect(() => {
@@ -914,12 +948,12 @@ export default function K8sQuestApp() {
       return;
     }
 
-    // Hard timeout: if auth never resolves, unblock the UI
+    // Hard timeout: if INITIAL_SESSION never fires, unblock the UI
     const hardTimeout = setTimeout(() => {
-      console.warn("[KubeQuest:boot] Auth hard timeout (5 s) — force-unblocking UI");
+      console.warn("[KubeQuest:boot] Auth hard timeout (3 s) — force-unblocking UI");
       setAuthChecked(true);
       setDataLoaded(true);
-    }, 5000);
+    }, 3000);
 
     // Use ONLY onAuthStateChange for session initialization.
     // In Supabase v2, it fires INITIAL_SESSION exactly once when the stored
@@ -2446,41 +2480,6 @@ export default function K8sQuestApp() {
 const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
 
   if (!authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded)) {
-    console.debug("[KubeQuest:boot] loading gate active — authChecked:", authChecked, "minLoadElapsed:", minLoadElapsed, "user:", !!user, "isGuest:", isGuest, "dataLoaded:", dataLoaded);
-
-    // After 10 s, swap spinner for recovery UI
-    if (loadingStuck) {
-      return (
-        <div data-kq-rendered="stuck" style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",padding:24}}>
-          <div style={{maxWidth:420,textAlign:"center",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"40px 32px"}}>
-            <div style={{fontSize:48,marginBottom:16}}>&#9888;&#65039;</div>
-            <h1 style={{color:"#e2e8f0",fontSize:20,fontWeight:700,margin:"0 0 8px"}}>Loading stuck</h1>
-            <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 12px",lineHeight:1.5}}>
-              The app could not finish loading.
-            </p>
-            <p style={{color:"#64748b",fontSize:11,margin:"0 0 20px",lineHeight:1.4,fontFamily:"monospace",textAlign:"left",background:"rgba(0,0,0,0.3)",padding:10,borderRadius:8}}>
-              authChecked: {String(authChecked)}<br/>
-              dataLoaded: {String(dataLoaded)}<br/>
-              user: {user ? "yes" : "no"}<br/>
-              isGuest: {String(isGuest)}<br/>
-              minLoadElapsed: {String(minLoadElapsed)}
-            </p>
-            <div style={{display:"flex",gap:12,justifyContent:"center"}}>
-              <button onClick={() => window.location.reload()} style={{padding:"10px 22px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,color:"#94a3b8",fontSize:14,fontWeight:600,cursor:"pointer"}}>
-                Reload
-              </button>
-              <button onClick={() => {try{localStorage.clear();sessionStorage.clear()}catch{} window.location.reload()}} style={{padding:"10px 22px",background:"linear-gradient(135deg,rgba(0,212,255,0.18),rgba(168,85,247,0.18))",border:"1px solid rgba(0,212,255,0.45)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer"}}>
-                Clear Data &amp; Reload
-              </button>
-            </div>
-            <p style={{color:"#64748b",fontSize:11,margin:"12px 0 0",lineHeight:1.4}}>
-              Your quiz progress is saved on the server.
-            </p>
-          </div>
-        </div>
-      );
-    }
-
     return (
     <div data-kq-rendered="loading" style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif"}}>
       <style>{`
@@ -2554,6 +2553,28 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
         {/* ── Loading text ── */}
         <div style={{color:"#475569",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
+
+        {/* ── Debug panel (visible after 2 s) ── */}
+        {bootElapsed >= 2 && (
+          <div style={{marginTop:20,fontFamily:"monospace",fontSize:10,color:"#475569",textAlign:"left",background:"rgba(0,0,0,0.3)",padding:8,borderRadius:6,lineHeight:1.6}}>
+            <div>boot: {bootElapsed}s | gate: auth={String(authChecked)} data={String(dataLoaded)} min={String(minLoadElapsed)}</div>
+            <div>user: {user ? (isGuest ? "guest" : user.id?.slice(0,8)) : "null"} | supabase: {supabase ? "ok" : "none"}</div>
+          </div>
+        )}
+
+        {/* ── Recovery buttons (visible after 3 s) ── */}
+        {bootElapsed >= 3 && (
+          <div style={{marginTop:12,display:"flex",gap:10,justifyContent:"center"}}>
+            <button onClick={() => { setAuthChecked(true); setDataLoaded(true); setUser(null); loadingDataRef.current = false; }}
+              style={{padding:"6px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"#94a3b8",fontSize:11,cursor:"pointer"}}>
+              Continue to login
+            </button>
+            <button onClick={() => {try{localStorage.clear();sessionStorage.clear()}catch{} window.location.reload()}}
+              style={{padding:"6px 14px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:8,color:"#ef4444",fontSize:11,cursor:"pointer"}}>
+              Clear data &amp; reload
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
