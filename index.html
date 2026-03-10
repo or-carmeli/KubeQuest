@@ -70,12 +70,13 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- Blank-screen safety net: if React never renders, show recovery UI -->
+    <!-- Blank-screen safety net: if React never renders visible content, show recovery UI -->
     <script>
       setTimeout(function() {
         var root = document.getElementById("root");
-        if (root && root.children.length === 0) {
-          console.error("[KubeQuest:boot] React did not render within 8 s — showing fallback");
+        // Check both: React never mounted (no children) OR mounted but rendered nothing visible (no data-kq-rendered)
+        if (root && (root.children.length === 0 || !root.querySelector("[data-kq-rendered]"))) {
+          console.error("[KubeQuest:boot] No visible content after 8 s — children:", root.children.length, "kq-rendered:", !!root.querySelector("[data-kq-rendered]"));
           root.innerHTML = '<div style="min-height:100vh;background:#020817;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;padding:24px">' +
             '<div style="max-width:420px;text-align:center;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:40px 32px">' +
             '<div style="font-size:48px;margin-bottom:16px">&#9888;&#65039;</div>' +

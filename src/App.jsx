@@ -638,6 +638,7 @@ function Footer({ lang }) {
 }
 
 export default function K8sQuestApp() {
+  console.info("[KubeQuest:boot] K8sQuestApp render");
   const { theme, toggleTheme } = useTheme();
   const [lang, setLang]                   = useState("he");
   const [gender, setGender]               = useState(() => safeGetItem("gender_v1", "m"));
@@ -652,6 +653,8 @@ export default function K8sQuestApp() {
   const [dataLoaded,  setDataLoaded]      = useState(false);
   const [minLoadElapsed, setMinLoadElapsed] = useState(false);
   const [user, setUser]                   = useState(null);
+  // Stuck-loading detector: switches to recovery UI after 10 s
+  const [loadingStuck, setLoadingStuck]   = useState(false);
   const [authScreen, setAuthScreen]       = useState("login");
   const authFormRef                       = useRef(null);
   const [authLoading, setAuthLoading]     = useState(false);
@@ -848,6 +851,16 @@ export default function K8sQuestApp() {
   const currentQuestions = isFreeMode(selectedTopic?.id) || retryMode ? mixedQuestions : (topicQuestions.length > 0 ? topicQuestions : (currentLevelData?.questions || []));
 
   useEffect(() => { const t = setTimeout(() => setMinLoadElapsed(true), 500); return () => clearTimeout(t); }, []);
+
+  // Stuck-loading safety net: if the loading gate is still active after 10 s, show recovery UI
+  useEffect(() => {
+    if (authChecked && (dataLoaded || !user)) return; // loading gate already passed
+    const t = setTimeout(() => {
+      console.error("[KubeQuest:boot] Loading stuck for 10 s — authChecked:", authChecked, "dataLoaded:", dataLoaded, "user:", !!user, "isGuest:", user?.id === "guest");
+      setLoadingStuck(true);
+    }, 10000);
+    return () => clearTimeout(t);
+  }, [authChecked, dataLoaded, user]);
 
   // Restore progress from local cache immediately on mount (before auth/Supabase resolves)
   useEffect(() => {
@@ -1472,18 +1485,19 @@ export default function K8sQuestApp() {
   };
 
   const handleLogout = async () => {
-    setDataLoaded(false);
     try { localStorage.removeItem("k8s_guest_session"); } catch {}
     if (isGuest) {
       setUser(null);
       setStats({ total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 });
       setCompletedTopics({}); setUnlockedAchievements([]);
       achievementsLoaded.current = false;
-      setDataLoaded(true); // guest has no async load
+      setDataLoaded(true);
       return;
     }
-    if (supabase) await supabase.auth.signOut(); setUser(null);
+    if (supabase) await supabase.auth.signOut();
+    setUser(null);
     achievementsLoaded.current = false;
+    setDataLoaded(true); // user=null means loading gate won't block on dataLoaded
   };
 
   const handleResetProgress = async () => {
@@ -2407,8 +2421,42 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (!authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded)) {
     console.debug("[KubeQuest:boot] loading gate active — authChecked:", authChecked, "minLoadElapsed:", minLoadElapsed, "user:", !!user, "isGuest:", isGuest, "dataLoaded:", dataLoaded);
+
+    // After 10 s, swap spinner for recovery UI
+    if (loadingStuck) {
+      return (
+        <div data-kq-rendered="stuck" style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",padding:24}}>
+          <div style={{maxWidth:420,textAlign:"center",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"40px 32px"}}>
+            <div style={{fontSize:48,marginBottom:16}}>&#9888;&#65039;</div>
+            <h1 style={{color:"#e2e8f0",fontSize:20,fontWeight:700,margin:"0 0 8px"}}>Loading stuck</h1>
+            <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 12px",lineHeight:1.5}}>
+              The app could not finish loading.
+            </p>
+            <p style={{color:"#64748b",fontSize:11,margin:"0 0 20px",lineHeight:1.4,fontFamily:"monospace",textAlign:"left",background:"rgba(0,0,0,0.3)",padding:10,borderRadius:8}}>
+              authChecked: {String(authChecked)}<br/>
+              dataLoaded: {String(dataLoaded)}<br/>
+              user: {user ? "yes" : "no"}<br/>
+              isGuest: {String(isGuest)}<br/>
+              minLoadElapsed: {String(minLoadElapsed)}
+            </p>
+            <div style={{display:"flex",gap:12,justifyContent:"center"}}>
+              <button onClick={() => window.location.reload()} style={{padding:"10px 22px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,color:"#94a3b8",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                Reload
+              </button>
+              <button onClick={() => {try{localStorage.clear();sessionStorage.clear()}catch{} window.location.reload()}} style={{padding:"10px 22px",background:"linear-gradient(135deg,rgba(0,212,255,0.18),rgba(168,85,247,0.18))",border:"1px solid rgba(0,212,255,0.45)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                Clear Data &amp; Reload
+              </button>
+            </div>
+            <p style={{color:"#64748b",fontSize:11,margin:"12px 0 0",lineHeight:1.4}}>
+              Your quiz progress is saved on the server.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
-    <div style={{minHeight:"100vh",background:"var(--bg-body)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif"}}>
+    <div data-kq-rendered="loading" style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif"}}>
       <style>{`
         @keyframes lspin  { from { transform: rotate(0deg)   } to { transform: rotate(360deg)  } }
         @keyframes lspin2 { from { transform: rotate(0deg)   } to { transform: rotate(-360deg) } }
@@ -2442,7 +2490,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
               backgroundClip:"text",backgroundSize:"300% auto",
               animation:"lshine 9s linear infinite"}}>KubeQuest</div>
-            <div style={{fontSize:11,color:"var(--text-dim)",letterSpacing:0.4,marginTop:3}}>Train Your Kubernetes Skills</div>
+            <div style={{fontSize:11,color:"#475569",letterSpacing:0.4,marginTop:3}}>Train Your Kubernetes Skills</div>
           </div>
         </div>
 
@@ -2456,7 +2504,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <stop offset="100%" stopColor="#00D4FF" stopOpacity="0"/>
               </linearGradient>
             </defs>
-            <circle cx="32" cy="32" r="28" fill="none" stroke="var(--glass-5)" strokeWidth="3"/>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3"/>
             <circle cx="32" cy="32" r="28" fill="none" stroke="url(#sg1)" strokeWidth="3"
               strokeLinecap="round" strokeDasharray="90 86"/>
           </svg>
@@ -2468,7 +2516,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <stop offset="100%" stopColor="#A855F7" stopOpacity="0"/>
               </linearGradient>
             </defs>
-            <circle cx="32" cy="32" r="18" fill="none" stroke="var(--glass-4)" strokeWidth="2.5"/>
+            <circle cx="32" cy="32" r="18" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="2.5"/>
             <circle cx="32" cy="32" r="18" fill="none" stroke="url(#sg2)" strokeWidth="2.5"
               strokeLinecap="round" strokeDasharray="56 57"/>
           </svg>
@@ -2479,7 +2527,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         </div>
 
         {/* ── Loading text ── */}
-        <div style={{color:"var(--text-dim)",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
+        <div style={{color:"#475569",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
       </div>
     </div>
   );
@@ -2518,7 +2566,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   })();
 
   if (!user && !isStatusDomain) return (
-    <div style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
+    <div data-kq-rendered="auth" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher + theme toggle */}
@@ -2639,7 +2687,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   );
 
   return (
-    <div dir={isStatusDomain?"ltr":undefined} style={{minHeight:"100vh",background:"var(--gradient-body)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:isStatusDomain?"ltr":dir,position:"relative",overflowX:"hidden"}}>
+    <div data-kq-rendered="app" dir={isStatusDomain?"ltr":undefined} style={{minHeight:"100vh",background:"var(--gradient-body)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:isStatusDomain?"ltr":dir,position:"relative",overflowX:"hidden"}}>
       {/* ── Standalone status header (status.kubequest.online only) ── */}
       {isStatusDomain && (
         <header style={{borderBottom:"1px solid var(--glass-5)",padding:"12px 24px"}}>
