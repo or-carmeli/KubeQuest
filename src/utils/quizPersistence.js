@@ -20,6 +20,29 @@ export function loadQuizState() {
     }
     // Validate minimum required fields
     if (!state.topicId || !state.level || !Array.isArray(state.questions) || !state.questions.length) return null;
+    // Clamp questionIndex to valid range to prevent out-of-bounds after back navigation
+    const maxIdx = state.questions.length - 1;
+    if (typeof state.questionIndex !== "number" || !isFinite(state.questionIndex) || state.questionIndex < 0) {
+      state.questionIndex = 0;
+    } else if (state.questionIndex > maxIdx) {
+      state.questionIndex = maxIdx;
+    }
+    // Sanitize numeric fields to prevent NaN propagation
+    state.sessionScore = Number(state.sessionScore) || 0;
+    state.topicCorrect = Number(state.topicCorrect) || 0;
+    if (state.statsDelta) {
+      state.statsDelta.answered = Number(state.statsDelta.answered) || 0;
+      state.statsDelta.correct = Number(state.statsDelta.correct) || 0;
+      state.statsDelta.currentStreak = Number(state.statsDelta.currentStreak) || 0;
+      state.statsDelta.maxStreak = Number(state.statsDelta.maxStreak) || 0;
+    }
+    if (state.savedStats) {
+      state.savedStats.total_answered = Number(state.savedStats.total_answered) || 0;
+      state.savedStats.total_correct = Number(state.savedStats.total_correct) || 0;
+      state.savedStats.total_score = Number(state.savedStats.total_score) || 0;
+      state.savedStats.current_streak = Number(state.savedStats.current_streak) || 0;
+      state.savedStats.max_streak = Number(state.savedStats.max_streak) || 0;
+    }
     return state;
   } catch {
     return null;
