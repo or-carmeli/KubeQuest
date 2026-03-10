@@ -715,7 +715,15 @@ export default function K8sQuestApp() {
 
   const [screen, setScreen]               = useState(()=>{
     if (window.location.pathname==="/status" || window.location.hostname==="status.kubequest.online") return "status";
-    const s = safeGetItem("kq_screen_v1"); if (s&&["home","incidentList","incident","incidentComplete","topic"].includes(s)) return s;
+    const s = safeGetItem("kq_screen_v1");
+    // "topic" and "incidentComplete" depend on transient React state (selectedTopic, selectedLevel,
+    // selectedIncident) that doesn't survive a page refresh.  Restoring to these screens without
+    // that state causes a blank content area.  Fall back to "home" and let auto-resume handle it.
+    if (s === "topic" || s === "incidentComplete") {
+      console.info("[KubeQuest:boot] Screen was", s, "— falling back to home (transient state lost on refresh)");
+      return "home";
+    }
+    if (s && ["home","incidentList","incident"].includes(s)) return s;
     return "home";
   });
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -1234,11 +1242,24 @@ export default function K8sQuestApp() {
   const isStatusDomain = window.location.hostname === "status.kubequest.online";
   useEffect(() => {
     if (isStatusDomain) return;
-    if (autoResumeAttempted.current) return;
     if (!dataLoaded || !user) return;
+
+    // Load saved quiz from localStorage if resumeData wasn't pre-populated
+    // (happens when screen was restored to non-"home" — the home-screen effect
+    // that normally sets resumeData never fired).
+    if (!resumeData && !autoResumeAttempted.current) {
+      const fromStorage = loadQuizState();
+      if (fromStorage && fromStorage.userId === (user.id || "guest")) {
+        console.info("[KubeQuest:boot] Loading saved quiz state directly from localStorage");
+        setResumeData(fromStorage);
+        return; // re-runs when resumeData updates
+      }
+    }
+
+    if (autoResumeAttempted.current) return;
     autoResumeAttempted.current = true;
 
-    // Resume quiz — only if it's a recent refresh (<2 min), not a new session
+    // Resume quiz — only if it's a recent refresh (<2 min), not a new session.
     if (resumeData && isRecentQuizState(resumeData)) {
       const answered = resumeData.questionIndex ?? 0;
       const total = resumeData.questions?.length ?? 0;
