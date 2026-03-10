@@ -1215,6 +1215,9 @@ export default function K8sQuestApp() {
     document.documentElement.dir  = lang === "he" ? "rtl" : "ltr";
   }, [lang]);
 
+  // Must be declared before any effect that references it
+  const isStatusDomain = window.location.hostname === "status.kubequest.online";
+
   // Persist current screen to localStorage for refresh resilience
   useEffect(() => {
     if (isStatusDomain) return;
@@ -1239,7 +1242,6 @@ export default function K8sQuestApp() {
   }, [screen]);
 
   // Auto-restore session on page load (refresh resilience)
-  const isStatusDomain = window.location.hostname === "status.kubequest.online";
   useEffect(() => {
     if (isStatusDomain) return;
     if (!dataLoaded || !user) return;
