@@ -3457,7 +3457,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             const key = d.toISOString().slice(0,10);
             const pct = uptimeByService[svcName]?.[key];
             if (pct === undefined || pct === null) days.push("nodata");
-            else if (pct >= 99) days.push("ok");
+            else if (pct >= 98) days.push("ok");
             else if (pct >= 90) days.push("incident");
             else days.push("error");
           }
@@ -3618,7 +3618,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     </div>
                     <div style={{display:"flex",gap:1.5,alignItems:"flex-end"}}>
                       {bars.map((type,i)=>(
-                        <div key={i} title={type==="nodata"?"No data":type} style={{flex:1,height:18,borderRadius:2,background:barColor(type),opacity:type==="ok"?0.6:type==="nodata"?0.2:0.85,transition:"opacity 0.2s"}} />
+                        <div key={i} title={type==="nodata"?"No data":type} style={{flex:1,height:18,borderRadius:2,background:barColor(type),opacity:type==="ok"?0.8:type==="nodata"?0.15:0.85,transition:"opacity 0.2s"}} />
                       ))}
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
