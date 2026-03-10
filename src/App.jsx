@@ -2490,13 +2490,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
     <div dir={isStatusDomain?"ltr":undefined} style={{minHeight:"100vh",background:"linear-gradient(160deg,#020817 0%,#0f172a 60%,#020817 100%)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:isStatusDomain?"ltr":dir,position:"relative",overflowX:"hidden"}}>
       {/* ── Standalone status header (status.kubequest.online only) ── */}
       {isStatusDomain && (
-        <header style={{borderBottom:"1px solid rgba(255,255,255,0.06)",padding:"14px 24px"}}>
+        <header style={{borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"12px 24px"}}>
           <div style={{maxWidth:720,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div>
-              <div style={{fontSize:15,fontWeight:700,color:"#e2e8f0",letterSpacing:-0.2}}>KubeQuest Status</div>
-              <div style={{fontSize:11,color:"#475569",marginTop:1}}>Real-time platform and service health</div>
-            </div>
-            <a href="https://kubequest.online" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#475569",textDecoration:"none"}}>← Back to kubequest.online</a>
+            <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0",letterSpacing:-0.2}}>KubeQuest Status</div>
+            <a href="https://kubequest.online" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#64748b",textDecoration:"none"}}>kubequest.online ↗</a>
           </div>
         </header>
       )}
@@ -3398,23 +3395,23 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const isStaleWarning  = secondsAgo !== null && secondsAgo > 300;
         const isStaleCritical = secondsAgo !== null && secondsAgo > 900;
 
-        const metricCard = (label, value, sub, accent="#00D4FF") => (
-          <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"16px 18px",minWidth:0}}>
-            <div style={{fontSize:11,color:"#475569",fontWeight:700,letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>{label}</div>
-            <div style={{fontSize:24,fontWeight:800,color:accent,fontFamily:"'Fira Code','Courier New',monospace",lineHeight:1}}>{value}</div>
-            {sub&&<div style={{fontSize:11,color:"#475569",marginTop:5}}>{sub}</div>}
+        const metricCard = (label, value, sub, accent="#94a3b8") => (
+          <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"14px 16px",minWidth:0}}>
+            <div style={{fontSize:11,color:"#64748b",fontWeight:600,marginBottom:6}}>{label}</div>
+            <div style={{fontSize:18,fontWeight:700,color:accent,fontFamily:"'Fira Code','Courier New',monospace",lineHeight:1}}>{value}</div>
+            {sub&&<div style={{fontSize:11,color:"#475569",marginTop:4}}>{sub}</div>}
           </div>
         );
 
-        const infoRow = (label, value, accent="#e2e8f0", mono=false) => (
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-            <span style={{fontSize:13,color:"#64748b",fontWeight:500}}>{label}</span>
-            <span style={{fontSize:13,color:accent,fontWeight:600,fontFamily:mono?"'Fira Code','Courier New',monospace":"inherit",textAlign:"end",maxWidth:"60%",wordBreak:"break-all"}}>{value}</span>
+        const infoRow = (label, value, accent="#cbd5e1", mono=false) => (
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+            <span style={{fontSize:12,color:"#64748b",fontWeight:500}}>{label}</span>
+            <span style={{fontSize:12,color:accent,fontWeight:500,fontFamily:mono?"'Fira Code','Courier New',monospace":"inherit",textAlign:"end",maxWidth:"60%",wordBreak:"break-all"}}>{value}</span>
           </div>
         );
 
         const sectionTitle = (title) => (
-          <div style={{fontSize:11,color:"#475569",fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",marginBottom:12,marginTop:28}}>{title}</div>
+          <div style={{fontSize:11,color:"#64748b",fontWeight:600,letterSpacing:0.5,textTransform:"uppercase",marginBottom:10,marginTop:32}}>{title}</div>
         );
 
         // Severity colors for incidents
@@ -3422,81 +3419,57 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const incStatusColor = (s) => s === "resolved" ? "#10B981" : s === "monitoring" ? "#3B82F6" : s === "identified" ? "#F59E0B" : "#EF4444";
 
         return (
-          <div className="page-pad" style={{maxWidth:720,margin:"0 auto",padding:"20px 16px 48px",animation:"fadeIn 0.3s ease"}}>
+          <div className="page-pad" style={{maxWidth:720,margin:"0 auto",padding:isStatusDomain?"28px 16px 48px":"20px 16px 48px",animation:"fadeIn 0.3s ease"}}>
 
             {/* Back (hidden on standalone status subdomain) */}
             {!isStatusDomain && (
-              <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:28,display:"flex",alignItems:"center",gap:6}}>
+              <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",color:"#94a3b8",padding:"7px 12px",borderRadius:6,cursor:"pointer",fontSize:12,marginBottom:24,display:"flex",alignItems:"center",gap:5}}>
                 {lang==="en"?"← Return":"→ חזרה"}
               </button>
             )}
 
             {/* ── GLOBAL STATUS BANNER ── */}
-            <div style={{background:`rgba(${globalOk===false?"239,68,68":globalOk?"16,185,129":"245,158,11"},0.04)`,border:`1px solid ${globalColor}22`,borderRadius:12,padding:"18px 22px",marginBottom:6,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+            <div style={{background:`rgba(${globalOk===false?"239,68,68":globalOk?"16,185,129":"245,158,11"},0.03)`,border:`1px solid ${globalColor}18`,borderRadius:12,padding:"20px 22px",marginBottom:8,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
               <div style={{position:"relative",flexShrink:0}}>
-                <div style={{width:12,height:12,borderRadius:"50%",background:globalDot}} />
-                {globalOk!==false&&<div style={{position:"absolute",inset:0,borderRadius:"50%",background:globalDot,animation:"ping 2s ease-out infinite",opacity:0.3}} />}
+                <div style={{width:10,height:10,borderRadius:"50%",background:globalDot}} />
+                {globalOk!==false&&<div style={{position:"absolute",inset:-2,borderRadius:"50%",background:globalDot,animation:"ping 2.5s ease-out infinite",opacity:0.2}} />}
               </div>
               <div style={{flex:1,minWidth:160}}>
-                <div style={{fontSize:18,fontWeight:800,color:"#e2e8f0"}}>{globalLabel}</div>
-                <div style={{fontSize:12,color:"#475569",marginTop:3}}>
-                  KubeQuest · {secondsAgo !== null ? `Updated ${secondsAgo}s ago` : "Checking…"}
+                <div style={{fontSize:17,fontWeight:700,color:"#e2e8f0",letterSpacing:-0.2}}>{globalLabel}</div>
+                <div style={{fontSize:12,color:"#64748b",marginTop:3}}>
+                  {secondsAgo !== null ? (secondsAgo < 60 ? "Updated just now" : secondsAgo < 120 ? "Updated 1 min ago" : `Updated ${Math.floor(secondsAgo/60)} min ago`) : "Checking…"}
                 </div>
-              </div>
-              <div style={{fontSize:11,color:"#475569",fontFamily:"'Fira Code','Courier New',monospace",flexShrink:0}}>
-                {new Date().toUTCString().replace(" GMT","")} UTC
               </div>
             </div>
 
             {/* ── STALE DATA WARNING ── */}
             {isStaleWarning && (
-              <div style={{background:isStaleCritical?"rgba(239,68,68,0.08)":"rgba(245,158,11,0.08)",border:`1px solid ${isStaleCritical?"rgba(239,68,68,0.3)":"rgba(245,158,11,0.3)"}`,borderRadius:10,padding:"10px 16px",marginBottom:6,display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:16}}>{isStaleCritical?"⚠":"⚡"}</span>
-                <span style={{fontSize:13,fontWeight:600,color:isStaleCritical?"#EF4444":"#F59E0B"}}>
+              <div style={{background:isStaleCritical?"rgba(239,68,68,0.05)":"rgba(245,158,11,0.05)",border:`1px solid ${isStaleCritical?"rgba(239,68,68,0.15)":"rgba(245,158,11,0.15)"}`,borderRadius:10,padding:"10px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:14}}>{isStaleCritical?"⚠":"⚡"}</span>
+                <span style={{fontSize:12,fontWeight:500,color:isStaleCritical?"#EF4444":"#F59E0B"}}>
                   {isStaleCritical ? "Status data is stale" : "Status data may be stale"}
                 </span>
               </div>
             )}
 
             {/* ── MAINTENANCE BANNER ── */}
-            {activeMaintenance && (
-              <div dir="ltr" style={{background:"rgba(250,204,21,0.06)",border:"1px solid rgba(250,204,21,0.35)",borderRadius:10,padding:"12px 16px",marginBottom:6}}>
-                <div style={{fontSize:13,fontWeight:600,color:"#facc15",marginBottom:6}}>Scheduled Maintenance</div>
-                {activeMaintenance.description && (
-                  <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.5,marginBottom:8}}>{activeMaintenance.description}</div>
-                )}
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"'Fira Code','Courier New',monospace",marginBottom:activeMaintenance.affected_services?.length ? 8 : 0}}>
-                  {new Date(activeMaintenance.starts_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"})} · {new Date(activeMaintenance.starts_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})}–{new Date(activeMaintenance.ends_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})} UTC
+            {(activeMaintenance || upcomingMaintenance.length > 0) && (() => { const mw = activeMaintenance || upcomingMaintenance[0]; return (
+              <div dir="ltr" style={{background:"rgba(250,204,21,0.04)",border:"1px solid rgba(250,204,21,0.15)",borderRadius:10,padding:"14px 16px",marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:"#facc15"}} />
+                  <span style={{fontSize:13,fontWeight:600,color:"#facc15"}}>{activeMaintenance ? "Maintenance in Progress" : "Upcoming Maintenance"}</span>
                 </div>
-                {activeMaintenance.affected_services?.length > 0 && (
-                  <div>
-                    <div style={{fontSize:10,color:"#64748b",fontWeight:500,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>Affected services</div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                      {activeMaintenance.affected_services.map(s=>(
-                        <span key={s} style={{fontSize:11,color:"#facc15",background:"rgba(250,204,21,0.08)",border:"1px solid rgba(250,204,21,0.2)",borderRadius:4,padding:"2px 8px",fontWeight:500}}>{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {upcomingMaintenance.length > 0 && !activeMaintenance && (() => { const mw = upcomingMaintenance[0]; return (
-              <div dir="ltr" style={{background:"rgba(250,204,21,0.06)",border:"1px solid rgba(250,204,21,0.35)",borderRadius:10,padding:"12px 16px",marginBottom:6}}>
-                <div style={{fontSize:13,fontWeight:600,color:"#facc15",marginBottom:6}}>Scheduled Maintenance</div>
                 {mw.description && (
                   <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.5,marginBottom:8}}>{mw.description}</div>
                 )}
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"'Fira Code','Courier New',monospace",marginBottom:mw.affected_services?.length ? 8 : 0}}>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"'Fira Code','Courier New',monospace",marginBottom:mw.affected_services?.length ? 10 : 0}}>
                   {new Date(mw.starts_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"})} · {new Date(mw.starts_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})}–{new Date(mw.ends_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"})} UTC
                 </div>
                 {mw.affected_services?.length > 0 && (
-                  <div>
-                    <div style={{fontSize:10,color:"#64748b",fontWeight:500,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>Affected services</div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                      {mw.affected_services.map(s=>(
-                        <span key={s} style={{fontSize:11,color:"#facc15",background:"rgba(250,204,21,0.08)",border:"1px solid rgba(250,204,21,0.2)",borderRadius:4,padding:"2px 8px",fontWeight:500}}>{s}</span>
-                      ))}
-                    </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                    {mw.affected_services.map(s=>(
+                      <span key={s} style={{fontSize:10,color:"#a3a3a3",background:"rgba(255,255,255,0.04)",borderRadius:4,padding:"2px 8px",fontWeight:500}}>{s}</span>
+                    ))}
                   </div>
                 )}
               </div>
@@ -3504,15 +3477,17 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
             {/* ── SERVICE HEALTH ── */}
             {sectionTitle("Services")}
-            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,overflow:"hidden"}}>
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,overflow:"hidden"}}>
               {services.map((svc,i)=>(
-                <div key={svc.service_name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 16px",borderBottom:i<services.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
-                  <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                    <span style={{fontSize:13,color:"#cbd5e1",fontWeight:500}}>{svc.service_name}</span>
-                    {svc.latency_ms!=null&&<span style={{fontSize:10,color:"#475569",fontFamily:"'Fira Code','Courier New',monospace"}}>{svc.latency_ms}ms</span>}
+                <div key={svc.service_name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 16px",borderBottom:i<services.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{width:7,height:7,borderRadius:"50%",background:statusColor(svc.status),flexShrink:0}} />
+                    <div>
+                      <span style={{fontSize:13,color:"#cbd5e1",fontWeight:500}}>{svc.service_name}</span>
+                      {svc.latency_ms!=null&&<span style={{fontSize:11,color:"#475569",fontFamily:"'Fira Code','Courier New',monospace",marginLeft:8}}>{svc.latency_ms} ms</span>}
+                    </div>
                   </div>
-                  <span style={{display:"flex",alignItems:"center",gap:6,fontSize:13,fontWeight:700,color:statusColor(svc.status)}}>
-                    <span style={{width:8,height:8,borderRadius:"50%",background:statusColor(svc.status),display:"inline-block"}} />
+                  <span style={{fontSize:12,fontWeight:600,color:statusColor(svc.status)}}>
                     {loading?"Checking…":statusLabel(svc.status)}
                   </span>
                 </div>
@@ -3520,25 +3495,25 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
 
             {/* ── UPTIME - LAST 30 DAYS ── */}
-            {sectionTitle(`Uptime — Last ${monitoringDays} Days`)}
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {sectionTitle(`Uptime — last ${monitoringDays} days`)}
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {services.map((svc)=>{
                 const bars = getDayBars(svc.service_name);
                 const checks = checksByService[svc.service_name];
                 const pct = checks && checks.total > 0 ? (checks.ok / checks.total * 100).toFixed(1) : "-";
                 const ok = svc.status === "operational";
                 return (
-                  <div key={svc.service_name} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:"12px 14px"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                      <span style={{fontSize:12,color:"#94a3b8",fontWeight:600}}>{svc.service_name}</span>
-                      <span style={{fontSize:12,color:ok?"#10B981":"#EF4444",fontWeight:700,fontFamily:"'Fira Code','Courier New',monospace"}}>{pct=== "-" ? "-" : `${pct}%`}</span>
+                  <div key={svc.service_name} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"10px 14px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <span style={{fontSize:12,color:"#94a3b8",fontWeight:500}}>{svc.service_name}</span>
+                      <span style={{fontSize:12,color:ok?"#94a3b8":"#EF4444",fontWeight:600,fontFamily:"'Fira Code','Courier New',monospace"}}>{pct=== "-" ? "-" : `${pct}%`}</span>
                     </div>
-                    <div style={{display:"flex",gap:2,alignItems:"flex-end"}}>
+                    <div style={{display:"flex",gap:1.5,alignItems:"flex-end"}}>
                       {bars.map((type,i)=>(
-                        <div key={i} title={type==="nodata"?"No data":type} style={{flex:1,height:24,borderRadius:3,background:barColor(type),opacity:type==="ok"?0.8:type==="nodata"?0.3:1,transition:"opacity 0.2s"}} />
+                        <div key={i} title={type==="nodata"?"No data":type} style={{flex:1,height:18,borderRadius:2,background:barColor(type),opacity:type==="ok"?0.6:type==="nodata"?0.2:0.85,transition:"opacity 0.2s"}} />
                       ))}
                     </div>
-                    <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
                       <span style={{fontSize:10,color:"#334155"}}>{monitoringDays >= 30 ? "30 days ago" : `${monitoringDays}d ago`}</span>
                       <span style={{fontSize:10,color:"#334155"}}>Today</span>
                     </div>
@@ -3548,39 +3523,39 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
 
             {/* ── PERFORMANCE METRICS ── */}
-            {sectionTitle("Performance Metrics")}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:10}}>
-              {metricCard("Avg Latency", avgLatency!=null?`${avgLatency}ms`:"-", loading?"checking…":"across services", "#00D4FF")}
-              {metricCard("Max Latency", maxLatency!=null?`${maxLatency}ms`:"-", loading?"checking…":"slowest service", "#A855F7")}
-              {metricCard("Uptime", overallUptime?`${overallUptime}%`:"-", "last 30 days", "#10B981")}
-              {metricCard("Active Incidents", String(activeIncidents.length), activeIncidents.length===0?"all clear":"in progress", activeIncidents.length===0?"#10B981":"#EF4444")}
+            {sectionTitle("Performance")}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
+              {metricCard("Avg Latency", avgLatency!=null?`${avgLatency}ms`:"-", loading?"checking…":"across services", "#94a3b8")}
+              {metricCard("Max Latency", maxLatency!=null?`${maxLatency}ms`:"-", loading?"checking…":"slowest service", "#94a3b8")}
+              {metricCard("Uptime", overallUptime?`${overallUptime}%`:"-", `last ${monitoringDays} days`, "#94a3b8")}
+              {metricCard("Incidents", String(activeIncidents.length), activeIncidents.length===0?"all clear":"active", activeIncidents.length===0?"#94a3b8":"#EF4444")}
             </div>
 
             {/* ── DEPLOYMENT INFO ── */}
             {sectionTitle("Deployment")}
-            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"4px 16px"}}>
-              {infoRow("Version",     `v${APP_VERSION}`,                                      "#00D4FF", true)}
-              {infoRow("Environment", env,                                                     isProd?"#10B981":"#F59E0B")}
-              {infoRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "-", "#94a3b8", true)}
-              {infoRow("Branch",      "main",                                                  "#94a3b8", true)}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                <span style={{fontSize:13,color:"#64748b",fontWeight:500}}>CI Status</span>
-                <span style={{fontSize:13,color:"#10B981",fontWeight:700,display:"flex",alignItems:"center",gap:5}}>
-                  <span style={{width:7,height:7,borderRadius:"50%",background:"#10B981",display:"inline-block"}} />
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"2px 16px"}}>
+              {infoRow("Version", `v${APP_VERSION}`, "#cbd5e1", true)}
+              {infoRow("Environment", env, isProd?"#94a3b8":"#F59E0B")}
+              {infoRow("Branch", "main", "#94a3b8", true)}
+              {infoRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "-", "#64748b", true)}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                <span style={{fontSize:12,color:"#64748b",fontWeight:500}}>CI Status</span>
+                <span style={{fontSize:12,color:"#94a3b8",fontWeight:500,display:"flex",alignItems:"center",gap:5}}>
+                  <span style={{width:6,height:6,borderRadius:"50%",background:"#10B981",display:"inline-block"}} />
                   Passing
                 </span>
               </div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0"}}>
-                <span style={{fontSize:13,color:"#64748b",fontWeight:500}}>Repository</span>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0"}}>
+                <span style={{fontSize:12,color:"#64748b",fontWeight:500}}>Repository</span>
                 <a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer"
-                  style={{fontSize:13,color:"#7dd3fc",fontWeight:600,textDecoration:"none",fontFamily:"'Fira Code','Courier New',monospace"}}>
+                  style={{fontSize:12,color:"#94a3b8",fontWeight:500,textDecoration:"none",fontFamily:"'Fira Code','Courier New',monospace"}}>
                   or-carmeli/KubeQuest
                 </a>
               </div>
             </div>
 
             {/* ── INCIDENT HISTORY ── */}
-            {sectionTitle("Incident History")}
+            {sectionTitle("Incidents")}
             {monitorIncidents && monitorIncidents.length > 0 ? monitorIncidents.map((inc) => {
               const started = new Date(inc.started_at);
               const resolved = inc.resolved_at ? new Date(inc.resolved_at) : null;
@@ -3588,44 +3563,46 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               const durationHrs = durationMs / 3600000;
               const durationStr = durationHrs >= 1 ? `~${Math.round(durationHrs)} hr${Math.round(durationHrs)>1?"s":""}` : `~${Math.round(durationMs/60000)} min`;
               return (
-                <div key={inc.id} dir="ltr" style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"4px 16px",textAlign:"left",marginBottom:10}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{inc.title}</div>
-                      <div style={{fontSize:11,color:"#64748b",marginTop:2}}>
-                        {started.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})} · Duration: {durationStr} · Severity: <span style={{color:sevColor(inc.severity),fontWeight:600}}>{inc.severity.charAt(0).toUpperCase()+inc.severity.slice(1)}</span>
+                <div key={inc.id} dir="ltr" style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 16px",textAlign:"left",marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{inc.title}</div>
+                      <div style={{fontSize:11,color:"#64748b",marginTop:3,display:"flex",flexWrap:"wrap",gap:"0 12px"}}>
+                        <span>{started.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>
+                        <span>{durationStr}</span>
+                        <span style={{color:sevColor(inc.severity)}}>{inc.severity.charAt(0).toUpperCase()+inc.severity.slice(1)}</span>
                       </div>
-                      {inc.affected_services?.length>0&&<div style={{fontSize:10,color:"#475569",marginTop:2}}>Affected: {inc.affected_services.join(", ")}</div>}
+                      {inc.affected_services?.length>0&&<div style={{fontSize:10,color:"#475569",marginTop:3}}>{inc.affected_services.join(", ")}</div>}
                     </div>
-                    <span style={{fontSize:11,color:incStatusColor(inc.status),fontWeight:700,background:`${incStatusColor(inc.status)}1a`,padding:"3px 8px",borderRadius:6,whiteSpace:"nowrap",flexShrink:0}}>
+                    <span style={{fontSize:10,fontWeight:600,color:incStatusColor(inc.status),background:`${incStatusColor(inc.status)}12`,padding:"3px 8px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0,marginTop:1}}>
                       {inc.status.charAt(0).toUpperCase()+inc.status.slice(1)}
                     </span>
                   </div>
                   {(inc.impact||inc.root_cause||inc.resolution||inc.prevention)&&(
-                    <div style={{padding:"12px 0",fontSize:12,color:"#94a3b8",lineHeight:1.7}}>
-                      {inc.impact&&<div style={{marginBottom:8}}><span style={{color:"#e2e8f0",fontWeight:600}}>Impact: </span>{inc.impact}</div>}
-                      {inc.root_cause&&<div style={{marginBottom:8}}><span style={{color:"#e2e8f0",fontWeight:600}}>Root Cause: </span>{inc.root_cause}</div>}
-                      {inc.resolution&&<div style={{marginBottom:8}}><span style={{color:"#e2e8f0",fontWeight:600}}>Resolution: </span>{inc.resolution}</div>}
-                      {inc.prevention&&<div><span style={{color:"#e2e8f0",fontWeight:600}}>Prevention: </span>{inc.prevention}</div>}
+                    <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,0.04)",fontSize:12,color:"#64748b",lineHeight:1.6}}>
+                      {inc.impact&&<div style={{marginBottom:6}}><span style={{color:"#94a3b8",fontWeight:600}}>Impact</span> — {inc.impact}</div>}
+                      {inc.root_cause&&<div style={{marginBottom:6}}><span style={{color:"#94a3b8",fontWeight:600}}>Root Cause</span> — {inc.root_cause}</div>}
+                      {inc.resolution&&<div style={{marginBottom:6}}><span style={{color:"#94a3b8",fontWeight:600}}>Resolution</span> — {inc.resolution}</div>}
+                      {inc.prevention&&<div><span style={{color:"#94a3b8",fontWeight:600}}>Prevention</span> — {inc.prevention}</div>}
                     </div>
                   )}
                 </div>
               );
             }) : (
-              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"16px",textAlign:"center",color:"#475569",fontSize:13}}>
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:16,textAlign:"center",color:"#475569",fontSize:12}}>
                 {loading ? "Loading incidents…" : "No incidents recorded"}
               </div>
             )}
 
             {/* ── SECURITY STATUS ── */}
             {sectionTitle("Security")}
-            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"4px 16px"}}>
-              {infoRow("TLS Certificate", isSecure ? "✓ Valid · Let's Encrypt" : "Not active", isSecure?"#10B981":"#EF4444")}
-              {infoRow("Connection",      isSecure ? "HTTPS · Encrypted" : "HTTP · Unencrypted",   isSecure?"#10B981":"#F59E0B")}
-              {infoRow("HSTS",            "Enabled",  "#10B981")}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0"}}>
-                <span style={{fontSize:13,color:"#64748b",fontWeight:500}}>Security Headers</span>
-                <span style={{fontSize:13,color:"#10B981",fontWeight:700}}>✓ Active</span>
+            <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"2px 16px"}}>
+              {infoRow("TLS Certificate", isSecure ? "Valid · Let's Encrypt" : "Not active", isSecure?"#94a3b8":"#EF4444")}
+              {infoRow("Connection",      isSecure ? "HTTPS · Encrypted" : "HTTP · Unencrypted",   isSecure?"#94a3b8":"#F59E0B")}
+              {infoRow("HSTS",            "Enabled",  "#94a3b8")}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0"}}>
+                <span style={{fontSize:12,color:"#64748b",fontWeight:500}}>Security Headers</span>
+                <span style={{fontSize:12,color:"#94a3b8",fontWeight:500}}>Active</span>
               </div>
             </div>
 
