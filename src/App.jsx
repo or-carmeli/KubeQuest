@@ -78,7 +78,7 @@ function mulberry32(seed) {
 
 const TRANSLATIONS = {
   he: {
-    tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
+    tagline: "תרגלי Kubernetes עם תרחישי DevOps אמיתיים",
     startPlaying: "⚡ התחילי לשחק עכשיו",
     noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
     saveProgress: "רוצה לשמור את ההתקדמות?",
@@ -93,6 +93,13 @@ const TRANSLATIONS = {
     didntReceive: "לא קיבלת את המייל?", resendBtn: "שלח שוב",
     resendSuccess: "✅ אימייל חדש נשלח! בדקי את תיבת הדואר.",
     resendError: "❌ שגיאה בשליחה מחדש. נסי שוב.",
+    guestPlayNow: "שחקי מיד כאורחת",
+    noSignupNeeded: "אין צורך בהרשמה",
+    forgotPassword: "שכחת סיסמה?",
+    resetEmailSent: "✅ נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
+    resetEmailError: "❌ שגיאה בשליחת קישור איפוס. נסי שוב.",
+    sendResetLink: "שלחי קישור איפוס",
+    resetPasswordTitle: "איפוס סיסמה",
     greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
     leaderboardBtn: "🏆 דירוג", logout: "יציאה",
     guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
@@ -150,13 +157,18 @@ const TRANSLATIONS = {
     hint_m: "💡 רמז", eliminate_m: "❌ הסר תשובה שגויה",
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
-    tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
+    tagline_m: "תרגל Kubernetes עם תרחישי DevOps אמיתיים",
     startPlaying_m: "⚡ התחל לשחק עכשיו",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
     otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
     resendSuccess_m: "✅ אימייל חדש נשלח! בדוק את תיבת הדואר.",
     resendError_m: "❌ שגיאה בשליחה מחדש. נסה שוב.",
+    guestPlayNow_m: "שחק מיד כאורח",
+    noSignupNeeded_m: "אין צורך בהרשמה",
+    sendResetLink_m: "שלח קישור איפוס",
+    resetEmailSent_m: "✅ נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
+    resetEmailError_m: "❌ שגיאה בשליחת קישור איפוס. נסה שוב.",
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow_m: "הרשם",
@@ -231,7 +243,7 @@ const TRANSLATIONS = {
     dailyStreak: "ימים ברצף",
   },
   en: {
-    tagline: "Learn Kubernetes in a fun and interactive way",
+    tagline: "Practice Kubernetes with real DevOps scenarios",
     startPlaying: "⚡ Start Playing Now",
     noRegNoPass: "No registration · No password · Instant",
     saveProgress: "Want to save your progress?",
@@ -246,6 +258,13 @@ const TRANSLATIONS = {
     didntReceive: "Didn't receive the email?", resendBtn: "Resend",
     resendSuccess: "✅ New email sent! Check your inbox.",
     resendError: "❌ Failed to resend. Please try again.",
+    guestPlayNow: "Play instantly as guest",
+    noSignupNeeded: "No signup needed",
+    forgotPassword: "Forgot password?",
+    resetEmailSent: "✅ Password reset link sent! Check your inbox.",
+    resetEmailError: "❌ Failed to send reset link. Please try again.",
+    sendResetLink: "Send reset link",
+    resetPasswordTitle: "Reset Password",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
     leaderboardBtn: "🏆 Leaderboard", logout: "Logout",
     guestBanner: "💡 Sign up to save progress and appear on the leaderboard",
@@ -620,6 +639,9 @@ export default function K8sQuestApp() {
   const [authLoading, setAuthLoading]     = useState(false);
   const [authError, setAuthError]         = useState("");
   const [saveError, setSaveError]         = useState("");
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail]       = useState("");
+  const [resetStatus, setResetStatus]     = useState("");
 
   const [screen, setScreen]               = useState(()=>{
     if (window.location.pathname==="/status" || window.location.hostname==="status.kubequest.online") return "status";
@@ -1386,6 +1408,15 @@ export default function K8sQuestApp() {
     });
     setAuthError(error ? t("resendError") : t("resendSuccess"));
     setAuthLoading(false);
+  };
+
+  const handleResetPassword = async () => {
+    if (!supabase || !resetEmail) return;
+    setResetStatus("");
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: window.location.origin,
+    });
+    setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
   };
 
   const handleLogout = async () => {
@@ -2431,10 +2462,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (!user) return (
     <div style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes ctaGlow{0%,100%{box-shadow:0 0 8px rgba(0,212,255,0.15)}50%{box-shadow:0 0 22px rgba(0,212,255,0.35),0 0 44px rgba(0,212,255,0.1)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px);animation-play-state:paused!important}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher + theme toggle */}
-        <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:12,gap:8}}>
+        <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:20,gap:8,opacity:0.8}}>
           {lang==="he"&&<GenderToggle gender={gender} setGender={handleSetGender}/>}
           <LangSwitcher lang={lang} setLang={setLang}/>
           <button onClick={toggleTheme} aria-label={theme==="dark"?"Switch to light mode":"Switch to dark mode"}
@@ -2457,10 +2488,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </svg>
           <h1 style={{fontSize:33,fontWeight:900,margin:"0 0 6px",background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))"}}>KubeQuest</h1>
           <p style={{color:"var(--text-secondary)",fontSize:14,margin:0}}>{t("tagline")}</p>
+          <p style={{color:"var(--text-secondary)",fontSize:13,margin:"6px 0 2px",opacity:0.85}}>{t("guestPlayNow")}</p>
+          <p style={{color:"var(--text-dim)",fontSize:11,margin:"0 0 0",opacity:0.7}}>{t("noSignupNeeded")}</p>
         </div>
 
         <button className="gbtn" onClick={()=>{setUser(GUEST_USER);try{localStorage.setItem("k8s_guest_session","1")}catch{}}}
-          style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
+          style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"ctaGlow 3s ease-in-out infinite"}}>
           {t("startPlaying")}
         </button>
         <p style={{textAlign:"center",color:"var(--code-text)",opacity:0.75,fontSize:12,margin:"0 0 26px"}}>{t("noRegNoPass")}</p>
@@ -2496,11 +2529,19 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <input id="auth-email" type="email" name="email" autoComplete={authScreen==="login"?"username":"email"} defaultValue="" placeholder="you@example.com"
               style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
-          <div style={{marginBottom:14}}>
+          <div style={{marginBottom:authScreen==="login"?8:14}}>
             <label htmlFor="auth-password" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("password")}</label>
             <input id="auth-password" type="password" name="password" autoComplete={authScreen==="login"?"current-password":"new-password"} defaultValue="" placeholder="••••••••"
               style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
+          {authScreen==="login"&&(
+            <div style={{textAlign:dir==="rtl"?"right":"left",marginBottom:10}}>
+              <button type="button" onClick={()=>{setShowResetModal(true);setResetStatus("");setResetEmail("");}}
+                style={{background:"none",border:"none",color:"var(--text-dim)",fontSize:11,cursor:"pointer",padding:0,textDecoration:"underline",opacity:0.8}}>
+                {t("forgotPassword")}
+              </button>
+            </div>
+          )}
           {authError&&<div style={{marginBottom:12}}>
             <div role="alert" aria-live="assertive" style={{color:authError.startsWith("✅")?"#10B981":"#EF4444",fontSize:12,padding:"8px 12px",background:authError.startsWith("✅")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",borderRadius:8}}>{authError}</div>
             {authScreen==="signup"&&authError.startsWith("✅")&&<div style={{textAlign:"center",marginTop:8,fontSize:12,color:"var(--text-dim)"}}>
@@ -2522,6 +2563,23 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Or Carmeli</a>
         </p>
       </div>
+      {showResetModal&&(
+        <div onClick={()=>setShowResetModal(false)} style={{position:"fixed",inset:0,background:"var(--overlay)",zIndex:5010,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
+          <div role="dialog" aria-modal="true" onClick={e=>e.stopPropagation()}
+            style={{background:"var(--bg-card)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:18,padding:"24px 22px",width:"min(380px,100%)",animation:"fadeIn 0.3s ease",direction:dir,position:"relative"}}>
+            <button onClick={()=>setShowResetModal(false)} aria-label="Close" style={{position:"absolute",top:12,[dir==="rtl"?"left":"right"]:14,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",lineHeight:1}}>✕</button>
+            <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700,color:"var(--text-primary)"}}>{t("resetPasswordTitle")}</h3>
+            <label style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
+            <input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} placeholder="you@example.com"
+              style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:14}}/>
+            {resetStatus&&<div style={{marginBottom:12,fontSize:12,padding:"8px 12px",borderRadius:8,color:resetStatus.includes("\u2705")?"#10B981":"#EF4444",background:resetStatus.includes("\u2705")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)"}}>{resetStatus}</div>}
+            <button onClick={handleResetPassword} disabled={!resetEmail}
+              style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",opacity:resetEmail?1:0.5}}>
+              {t("sendResetLink")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
