@@ -3587,15 +3587,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {sectionTitle("Services")}
             <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,overflow:"hidden"}}>
               {services.map((svc,i)=>(
-                <div key={svc.service_name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 16px",borderBottom:i<services.length-1?"1px solid var(--glass-4)":"none"}}>
+                <div key={svc.service_name} className="svc-row" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 16px",borderBottom:i<services.length-1?"1px solid var(--glass-4)":"none",background:"rgba(255,255,255,0.02)",transition:"background 0.2s ease"}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <span style={{width:7,height:7,borderRadius:"50%",background:statusColor(svc.status),flexShrink:0}} />
+                    <span style={{width:7,height:7,borderRadius:"50%",background:statusColor(svc.status),flexShrink:0,boxShadow:`0 0 4px ${statusColor(svc.status)}CC, 0 0 10px ${statusColor(svc.status)}66`}} />
                     <div>
                       <span style={{fontSize:13,color:"var(--text-light)",fontWeight:500}}>{svc.service_name}</span>
                       {svc.latency_ms!=null&&<span style={{fontSize:11,color:"var(--text-dim)",fontFamily:"'Fira Code','Courier New',monospace",marginLeft:8}}>{svc.latency_ms} ms</span>}
                     </div>
                   </div>
-                  <span style={{fontSize:12,fontWeight:600,color:statusColor(svc.status)}}>
+                  <span style={{fontSize:12,fontWeight:600,color:svc.status==="operational"?"#34f5c5":statusColor(svc.status),textShadow:svc.status==="operational"?"0 0 6px rgba(52,245,197,0.35)":"none"}}>
                     {loading?"Checking…":statusLabel(svc.status)}
                   </span>
                 </div>
@@ -3714,7 +3714,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             </div>
 
-            <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}`}</style>
+            <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}.svc-row:hover{background:rgba(0,255,170,0.04)!important}`}</style>
           </div>
         );
       })()}
