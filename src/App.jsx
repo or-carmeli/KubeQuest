@@ -3166,23 +3166,22 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const handleCopy = (cmd) => {
           navigator.clipboard?.writeText(cmd).catch(()=>{});
           setCopiedCmd(cmd);
-          setTimeout(()=>setCopiedCmd(c=>c===cmd?null:c),1500);
+          setTimeout(()=>setCopiedCmd(c=>c===cmd?null:c),1800);
         };
         const totalCmds = CHEATSHEET.reduce((s,sec)=>s+sec.commands.length,0);
-        const isRtl = dir==="rtl";
         return (
-          <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"16px 12px",animation:"fadeIn 0.3s ease",direction:dir}}>
-            <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",padding:"6px 12px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:14,display:"flex",alignItems:"center",gap:6}}>
-              {isRtl?"→ חזרה":"← Return"}
+          <div className="page-pad" style={{maxWidth:700,margin:"0 auto",padding:"16px 14px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
+            <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13,marginBottom:16,display:"inline-flex",alignItems:"center",gap:5}}>
+              ← Back
             </button>
 
             {/* Header */}
-            <div style={{marginBottom:14}}>
-              <h2 style={{color:"#e2e8f0",fontSize:18,fontWeight:800,marginBottom:4,display:"flex",alignItems:"center",gap:8}}>{t("guideBtn")}</h2>
-              <p style={{color:"#64748b",fontSize:12,lineHeight:1.4,margin:0}}>{t("guideSub")}</p>
-              <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
-                <span style={{fontSize:11,color:"#94a3b8",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"2px 8px"}}>{CHEATSHEET.length} {lang==="en"?"sections":"קטגוריות"}</span>
-                <span style={{fontSize:11,color:"#94a3b8",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"2px 8px"}}>{totalCmds} {lang==="en"?"commands":"פקודות"}</span>
+            <div style={{marginBottom:16}}>
+              <h2 style={{color:"#e2e8f0",fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.3}}>kubectl Cheat Sheet</h2>
+              <p style={{color:"#64748b",fontSize:12,lineHeight:1.4,margin:"4px 0 0"}}>Copy-ready commands — click to expand</p>
+              <div style={{display:"flex",gap:6,marginTop:8}}>
+                <span style={{fontSize:11,color:"#94a3b8",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,padding:"2px 8px"}}>{CHEATSHEET.length} sections</span>
+                <span style={{fontSize:11,color:"#94a3b8",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,padding:"2px 8px"}}>{totalCmds} commands</span>
               </div>
             </div>
 
@@ -3191,49 +3190,45 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               const open = isOpen(section.id);
               const cmdCount = section.commands.length;
               return (
-              <div key={section.id} style={{marginBottom:6}}>
-                {/* Section header — RTL-aware */}
+              <div key={section.id} style={{marginBottom:4}}>
+                {/* Section header */}
                 <button onClick={()=>setExpandedGuideSection(s=>s===section.id?null:section.id)}
-                  style={{width:"100%",background:open?`${section.color}0D`:"rgba(255,255,255,0.025)",
-                    border:`1px solid ${open?section.color+"40":"rgba(255,255,255,0.07)"}`,
-                    borderRadius:open?"10px 10px 0 0":10,
-                    padding:"10px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,direction:dir,
-                    transition:"all 0.2s ease"}}>
-                  {/* Arrow — appears first in DOM, in RTL it sits on the right (start), in LTR on the left */}
-                  <span style={{color:open?section.color:"#475569",fontSize:10,fontWeight:700,flexShrink:0,
-                    transition:"transform 0.2s",
-                    transform:open?"rotate(0deg)":(isRtl?"rotate(90deg)":"rotate(-90deg)")}}>▼</span>
-                  <span style={{fontSize:18,flexShrink:0}}>{section.icon}</span>
-                  <div style={{flex:1,textAlign:isRtl?"right":"left",display:"flex",flexDirection:"column",gap:1}}>
-                    <span style={{color:"#e2e8f0",fontSize:14,fontWeight:700,letterSpacing:-0.2}}>{lang==="en"?section.title:section.titleHe}</span>
-                    <span style={{color:"#64748b",fontSize:11}}>{cmdCount} {lang==="en"?"commands":"פקודות"}</span>
-                  </div>
+                  style={{width:"100%",background:open?`${section.color}08`:"transparent",
+                    border:"none",borderBottom:`1px solid ${open?section.color+"30":"rgba(255,255,255,0.06)"}`,
+                    borderRadius:0,
+                    padding:"10px 4px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,
+                    transition:"all 0.15s ease"}}>
+                  <span style={{color:open?section.color:"#475569",fontSize:14,flexShrink:0,
+                    transition:"transform 0.2s",transform:open?"rotate(90deg)":"rotate(0deg)",lineHeight:1}}>&#9656;</span>
+                  <span style={{fontSize:16,flexShrink:0}}>{section.icon}</span>
+                  <span style={{flex:1,color:"#e2e8f0",fontSize:14,fontWeight:600,textAlign:"left"}}>{section.title}</span>
+                  <span style={{color:"#475569",fontSize:11,flexShrink:0}}>{cmdCount}</span>
                 </button>
 
                 {/* Expanded command list */}
                 {open&&(
-                  <div style={{background:"rgba(0,0,0,0.25)",border:`1px solid ${section.color}20`,borderTop:"none",borderRadius:"0 0 10px 10px",padding:"4px 0",overflow:"hidden"}}>
+                  <div style={{padding:"2px 0 8px",borderBottom:`1px solid ${section.color}15`}}>
                     {section.commands.map((entry,i)=>{
                       const isCopied = copiedCmd===entry.cmd;
                       return (
-                      <div key={i} style={{padding:"8px 10px",borderBottom:i<cmdCount-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                      <div key={i} style={{padding:"5px 4px 5px 30px"}}>
                         {/* Code block — always LTR */}
-                        <div style={{display:"flex",alignItems:"center",gap:8,direction:"ltr",
-                          background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,255,255,0.06)",
-                          borderRadius:6,padding:"6px 10px"}}>
-                          <code style={{flex:1,fontFamily:"'SF Mono','Cascadia Code','Fira Code',monospace",fontSize:12.5,color:"#7dd3fc",lineHeight:1.5,whiteSpace:"nowrap",overflowX:"auto",display:"block"}}>{entry.cmd}</code>
+                        <div style={{display:"flex",alignItems:"center",gap:8,
+                          background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.06)",
+                          borderRadius:5,padding:"5px 6px 5px 12px",position:"relative"}}>
+                          <code style={{flex:1,fontFamily:"'SF Mono','Cascadia Code','Fira Code',monospace",fontSize:12.5,color:"#7dd3fc",lineHeight:1.6,whiteSpace:"nowrap",overflowX:"auto",display:"block"}}>{entry.cmd}</code>
                           <button
                             onClick={(e)=>{e.stopPropagation();handleCopy(entry.cmd);}}
                             aria-label="Copy command"
-                            style={{flexShrink:0,background:isCopied?"rgba(16,185,129,0.15)":"rgba(255,255,255,0.04)",
-                              border:`1px solid ${isCopied?"rgba(16,185,129,0.3)":"rgba(255,255,255,0.08)"}`,
-                              borderRadius:5,padding:"3px 7px",cursor:"pointer",color:isCopied?"#10B981":"#64748b",
-                              fontSize:11,lineHeight:1,transition:"all 0.15s ease",display:"flex",alignItems:"center",gap:3}}>
-                            {isCopied?<>&#10003;</>:<>&#9112;</>}
+                            style={{flexShrink:0,background:isCopied?"rgba(16,185,129,0.12)":"rgba(255,255,255,0.03)",
+                              border:`1px solid ${isCopied?"rgba(16,185,129,0.25)":"rgba(255,255,255,0.07)"}`,
+                              borderRadius:4,padding:"3px 8px",cursor:"pointer",color:isCopied?"#10B981":"#64748b",
+                              fontSize:11,lineHeight:1,transition:"all 0.15s ease",display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap"}}>
+                            {isCopied?<><span style={{fontSize:12}}>&#10003;</span> Copied</>:<>Copy</>}
                           </button>
                         </div>
-                        {/* Description — respects page direction */}
-                        <div style={{color:"#94a3b8",fontSize:11.5,lineHeight:1.4,marginTop:4,direction:dir,paddingInlineStart:4}}>{lang==="en"?entry.desc:entry.descHe}</div>
+                        {/* Description */}
+                        <div style={{color:"#64748b",fontSize:11.5,lineHeight:1.3,marginTop:3,paddingLeft:12}}>{entry.desc}</div>
                       </div>
                     );})}
                   </div>
