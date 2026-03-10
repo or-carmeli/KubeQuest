@@ -78,7 +78,7 @@ function mulberry32(seed) {
 
 const TRANSLATIONS = {
   he: {
-    tagline: "תרגלי Kubernetes עם תרחישי DevOps אמיתיים",
+    tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
     startPlaying: "⚡ התחילי לשחק עכשיו",
     noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
     saveProgress: "רוצה לשמור את ההתקדמות?",
@@ -93,8 +93,6 @@ const TRANSLATIONS = {
     didntReceive: "לא קיבלת את המייל?", resendBtn: "שלח שוב",
     resendSuccess: "✅ אימייל חדש נשלח! בדקי את תיבת הדואר.",
     resendError: "❌ שגיאה בשליחה מחדש. נסי שוב.",
-    guestPlayNow: "שחקי מיד כאורחת",
-    noSignupNeeded: "אין צורך בהרשמה",
     forgotPassword: "שכחת סיסמה?",
     resetEmailSent: "✅ נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
     resetEmailError: "❌ שגיאה בשליחת קישור איפוס. נסי שוב.",
@@ -157,15 +155,13 @@ const TRANSLATIONS = {
     hint_m: "💡 רמז", eliminate_m: "❌ הסר תשובה שגויה",
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
-    tagline_m: "תרגל Kubernetes עם תרחישי DevOps אמיתיים",
+    tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
     startPlaying_m: "⚡ התחל לשחק עכשיו",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
     otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
     resendSuccess_m: "✅ אימייל חדש נשלח! בדוק את תיבת הדואר.",
     resendError_m: "❌ שגיאה בשליחה מחדש. נסה שוב.",
-    guestPlayNow_m: "שחק מיד כאורח",
-    noSignupNeeded_m: "אין צורך בהרשמה",
     sendResetLink_m: "שלח קישור איפוס",
     resetEmailSent_m: "✅ נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "❌ שגיאה בשליחת קישור איפוס. נסה שוב.",
@@ -243,7 +239,7 @@ const TRANSLATIONS = {
     dailyStreak: "ימים ברצף",
   },
   en: {
-    tagline: "Practice Kubernetes with real DevOps scenarios",
+    tagline: "Learn Kubernetes in a fun and interactive way",
     startPlaying: "⚡ Start Playing Now",
     noRegNoPass: "No registration · No password · Instant",
     saveProgress: "Want to save your progress?",
@@ -258,8 +254,6 @@ const TRANSLATIONS = {
     didntReceive: "Didn't receive the email?", resendBtn: "Resend",
     resendSuccess: "✅ New email sent! Check your inbox.",
     resendError: "❌ Failed to resend. Please try again.",
-    guestPlayNow: "Play instantly as guest",
-    noSignupNeeded: "No signup needed",
     forgotPassword: "Forgot password?",
     resetEmailSent: "✅ Password reset link sent! Check your inbox.",
     resetEmailError: "❌ Failed to send reset link. Please try again.",
@@ -2462,10 +2456,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (!user) return (
     <div style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes ctaGlow{0%,100%{box-shadow:0 0 8px rgba(0,212,255,0.15)}50%{box-shadow:0 0 22px rgba(0,212,255,0.35),0 0 44px rgba(0,212,255,0.1)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px);animation-play-state:paused!important}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher + theme toggle */}
-        <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:20,gap:8,opacity:0.8}}>
+        <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:12,gap:8}}>
           {lang==="he"&&<GenderToggle gender={gender} setGender={handleSetGender}/>}
           <LangSwitcher lang={lang} setLang={setLang}/>
           <button onClick={toggleTheme} aria-label={theme==="dark"?"Switch to light mode":"Switch to dark mode"}
@@ -2488,12 +2482,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </svg>
           <h1 style={{fontSize:33,fontWeight:900,margin:"0 0 6px",background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))"}}>KubeQuest</h1>
           <p style={{color:"var(--text-secondary)",fontSize:14,margin:0}}>{t("tagline")}</p>
-          <p style={{color:"var(--text-secondary)",fontSize:13,margin:"6px 0 2px",opacity:0.85}}>{t("guestPlayNow")}</p>
-          <p style={{color:"var(--text-dim)",fontSize:11,margin:"0 0 0",opacity:0.7}}>{t("noSignupNeeded")}</p>
         </div>
 
         <button className="gbtn" onClick={()=>{setUser(GUEST_USER);try{localStorage.setItem("k8s_guest_session","1")}catch{}}}
-          style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"ctaGlow 3s ease-in-out infinite"}}>
+          style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
           {t("startPlaying")}
         </button>
         <p style={{textAlign:"center",color:"var(--code-text)",opacity:0.75,fontSize:12,margin:"0 0 26px"}}>{t("noRegNoPass")}</p>
