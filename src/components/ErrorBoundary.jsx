@@ -2,20 +2,14 @@ import { Component } from "react";
 import { clearAppData } from "../utils/storage";
 
 export default class ErrorBoundary extends Component {
-  state = { hasError: false, errorMessage: "", errorStack: "", componentStack: "", showDetails: false };
+  state = { hasError: false };
 
-  static getDerivedStateFromError(error) {
-    return {
-      hasError: true,
-      errorMessage: error?.message || String(error),
-      errorStack: error?.stack || "",
-    };
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
   componentDidCatch(error, info) {
-    this.setState({ componentStack: info?.componentStack || "" });
-
-    // Always log full diagnostics to console for developers
+    // Log diagnostics to console only — never expose to UI
     const diag = {
       error: error?.message,
       stack: error?.stack,
@@ -33,7 +27,7 @@ export default class ErrorBoundary extends Component {
   handleReset = () => {
     try { localStorage.removeItem("kq_screen_v1"); } catch {}
     try { localStorage.removeItem("k8s_quiz_inprogress_v1"); } catch {}
-    this.setState({ hasError: false, errorMessage: "", errorStack: "", componentStack: "", showDetails: false });
+    this.setState({ hasError: false });
   };
 
   handleClearAndReload = async () => {
@@ -43,11 +37,6 @@ export default class ErrorBoundary extends Component {
 
   render() {
     if (!this.state.hasError) return this.props.children;
-
-    const { errorMessage, errorStack, componentStack, showDetails } = this.state;
-    const stackPreview = errorStack
-      ? errorStack.split("\n").slice(0, 4).map(l => l.trim()).join("\n")
-      : "";
 
     return (
       <div style={{
@@ -134,52 +123,6 @@ export default class ErrorBoundary extends Component {
               Your quiz progress is saved on the server.
             </p>
           </div>
-
-          {/* Collapsible technical details */}
-          {errorMessage && (
-            <div style={{ marginTop: 20 }}>
-              <button
-                onClick={() => this.setState(s => ({ showDetails: !s.showDetails }))}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#475569",
-                  fontSize: 11,
-                  cursor: "pointer",
-                  padding: "4px 8px",
-                }}
-              >
-                {showDetails ? "Hide" : "Show"} technical details {showDetails ? "▲" : "▼"}
-              </button>
-
-              {showDetails && (
-                <div style={{
-                  marginTop: 8,
-                  background: "rgba(239,68,68,0.06)",
-                  border: "1px solid rgba(239,68,68,0.15)",
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  textAlign: "left",
-                  maxHeight: 220,
-                  overflow: "auto",
-                }}>
-                  <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
-                    {errorMessage}
-                  </div>
-                  {stackPreview && (
-                    <pre style={{ color: "#94a3b8", fontSize: 9, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.4 }}>
-                      {stackPreview}
-                    </pre>
-                  )}
-                  {componentStack && (
-                    <pre style={{ color: "#64748b", fontSize: 8, margin: "6px 0 0", whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.3 }}>
-                      {componentStack.slice(0, 300)}
-                    </pre>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     );
