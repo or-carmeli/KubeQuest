@@ -3172,7 +3172,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         return (
           <div className="page-pad" style={{maxWidth:700,margin:"0 auto",padding:"16px 14px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
             <button onClick={()=>setScreen("home")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"#94a3b8",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13,marginBottom:16,display:"inline-flex",alignItems:"center",gap:5}}>
-              ← Back
+              {lang==="he"?"→ חזרה":"← Back"}
             </button>
 
             {/* Header */}
@@ -3227,8 +3227,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             {isCopied?<><span style={{fontSize:12}}>&#10003;</span> Copied</>:<>Copy</>}
                           </button>
                         </div>
-                        {/* Description */}
-                        <div style={{color:"#64748b",fontSize:11.5,lineHeight:1.3,marginTop:3,paddingLeft:12}}>{entry.desc}</div>
+                        {/* Description — Hebrew in Hebrew mode */}
+                        <div style={{color:"#64748b",fontSize:11.5,lineHeight:1.3,marginTop:3,paddingLeft:12,direction:lang==="he"?"rtl":"ltr",textAlign:lang==="he"?"right":"left"}}>{lang==="he"?entry.descHe:entry.desc}</div>
                       </div>
                     );})}
                   </div>
