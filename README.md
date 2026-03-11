@@ -76,33 +76,52 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 ```mermaid
 flowchart LR
-    USER(["User"]) -->|HTTPS| SPA
+    USER(["User"])
 
-    subgraph Vercel
-        SPA["React SPA"]
+    subgraph Frontend["Frontend"]
+        SPA["React SPA\n(Vercel)"]
     end
 
-    subgraph Supabase
-        AUTH["Auth"]
-        DB[("PostgreSQL")]
+    subgraph Backend["Backend"]
+        AUTH["Supabase Auth"]
         EDGE["Edge Functions"]
     end
 
+    subgraph Data["Database"]
+        DB[("PostgreSQL")]
+    end
+
+    USER -->|HTTPS| SPA
     SPA --> AUTH
     SPA --> DB
-    EDGE -->|health checks| DB
     EDGE -->|health checks| AUTH
+    EDGE -->|health checks| DB
+
+    style Frontend fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style Backend fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style Data fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
 ```
 
 ### CI/CD Pipeline
 
 ```mermaid
 flowchart LR
-    PUSH["git push"] --> BUILD["Build Image"] --> SCAN["Trivy Scan"] --> PUSH_IMG["Push to GHCR"]
-    PUSH_IMG --> ATTEST["SBOM + Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
-    PUSH --> CI["CI Check"]
+    PUSH["git push"] --> CI["CI Check"] --> BUILD["Build Image"] --> SCAN["Trivy Scan"]
+    SCAN --> PUSH_IMG["Push to GHCR"] --> ATTEST["SBOM +\nProvenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
     BOT["Dependabot"] -.->|weekly PRs| CI
+
+    style PUSH fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style CI fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style BUILD fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style SCAN fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
+    style PUSH_IMG fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style ATTEST fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style SIGN fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
+    style VERIFY fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
+    style BOT fill:#1a1a2e,stroke:#00D4FF,stroke-dasharray:5 5,color:#fff
 ```
+
+**Dependabot** runs weekly and opens PRs automatically when newer versions are available for npm packages, the Dockerfile base image, or GitHub Actions — keeping dependencies up to date and patching known vulnerabilities.
 
 > **Production** runs on Vercel + Supabase. The `k8s/` manifests and Docker image on GHCR enable self-hosting on any Kubernetes cluster.
 
