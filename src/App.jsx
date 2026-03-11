@@ -3418,18 +3418,18 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {/* Dashboard Stats — total_score is the accumulated permanent score (leaderboard-ranked).
                best_score (canonical topic-best via computeScore()) is separate and not shown here.
                Subtitles clarify each metric's meaning for users. */}
-          <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+          <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22}}>
             {[
               {label:t("score"),value:stats.total_score,icon:"⭐",color:"#F59E0B",sub:t("scoreSub"),premium:true},
               {label:t("accuracy"),value:`${accuracy}%`,icon:"🎯",color:"#10B981",sub:t("accuracySub")},
               {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"🔥",color:"#FF6B35",sub:t("streakSub"),premium:true},
               {label:t("completed"),value:Object.keys(completedTopics).filter(k=>!isFreeMode(k.split("_")[0])).length,icon:"📚",color:"#00D4FF",sub:t("completedSub")},
             ].map((s,i)=>(
-              <div key={i} className="stats-cell" style={{background:s.premium?`${s.color}08`:"var(--glass-3)",border:`1px solid ${s.premium?`${s.color}30`:"var(--glass-7)"}`,borderRadius:12,padding:"12px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,boxShadow:s.premium?`0 0 10px ${s.color}15`:"none"}}>
-                <div style={{fontSize:16,lineHeight:1}}>{s.icon}</div>
-                <div style={{fontSize:s.premium?24:20,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:s.premium?-0.5:0,direction:"ltr"}}>{s.displayValue||s.value}</div>
-                <div style={{fontSize:11,fontWeight:700,color:s.premium?s.color:"var(--text-dim)",opacity:s.premium?0.85:0.7,lineHeight:1,letterSpacing:0.5,direction:"ltr"}}>{s.label}</div>
-                {s.sub&&<div style={{fontSize:9,color:"var(--text-dim)",opacity:0.45,lineHeight:1.2,textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%",paddingInline:2}}>{s.sub}</div>}
+              <div key={i} className="stats-cell" style={{background:s.premium?`${s.color}08`:"var(--glass-3)",border:`1px solid ${s.premium?`${s.color}30`:"var(--glass-7)"}`,borderRadius:12,padding:"12px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,boxShadow:s.premium?`0 0 10px ${s.color}15`:"none"}}>
+                <div style={{fontSize:17,lineHeight:1}}>{s.icon}</div>
+                <div style={{fontSize:22,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr"}}>{s.displayValue||s.value}</div>
+                <div style={{fontSize:11,fontWeight:700,color:s.premium?s.color:"var(--text-dim)",opacity:s.premium?0.85:0.65,lineHeight:1,letterSpacing:0.5,direction:"ltr"}}>{s.label}</div>
+                {s.sub&&<div style={{fontSize:9,color:"var(--text-dim)",opacity:0.4,lineHeight:1.2,textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%",paddingInline:2}}>{s.sub}</div>}
               </div>
             ))}
           </div>
@@ -3450,7 +3450,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{color:"#F59E0B",fontSize:10,fontWeight:700,marginTop:2,opacity:0.7,letterSpacing:0.3}}>+15 XP · {t("freeModeTag")}</div>
               </div>
             </div>
-            <span style={{color:"#F59E0B",fontSize:20,flexShrink:0}}>{dir==="rtl"?"←":"→"}</span>
+            <span dir="ltr" style={{color:"#F59E0B",fontSize:18,flexShrink:0,opacity:0.7,unicodeBidi:"isolate"}}>{dir==="rtl"?"‹":"›"}</span>
           </button>
           <button onClick={()=>tryStartQuiz(startMixedQuiz)} className="action-card" style={{width:"100%",marginBottom:12,padding:"16px 20px",background:"linear-gradient(135deg,#A855F722,#7C3AED22)",border:"1px solid #A855F755",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s"}}
             onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
@@ -3460,7 +3460,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{color:"var(--text-muted)",fontSize:12,marginTop:2}}>{t("mixedQuizDesc")} · <span style={{opacity:0.6}}>{t("freeModeTag")}</span></div>
               </div>
             </div>
-            <span style={{color:"#A855F7",fontSize:20,flexShrink:0}}>{dir==="rtl"?"←":"→"}</span>
+            <span dir="ltr" style={{color:"#A855F7",fontSize:18,flexShrink:0,opacity:0.7,unicodeBidi:"isolate"}}>{dir==="rtl"?"‹":"›"}</span>
           </button>
 
           {/* Incident Mode entry */}
@@ -3476,7 +3476,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{color:"var(--text-muted)",fontSize:12,marginTop:2}}>{t("incidentModeDesc")}</div>
               </div>
             </div>
-            <span style={{color:"#EF4444",fontSize:20,flexShrink:0}}>{dir==="rtl"?"←":"→"}</span>
+            <span dir="ltr" style={{color:"#EF4444",fontSize:18,flexShrink:0,opacity:0.7,unicodeBidi:"isolate"}}>{dir==="rtl"?"‹":"›"}</span>
           </button>
           {(()=>{const nextTopicId=TOPICS.find(t=>computeTopicProgress(t.id)<100)?.id;return(
           <div className="topic-list" style={{display:"flex",flexDirection:"column",gap:12}}>
