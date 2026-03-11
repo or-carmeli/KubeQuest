@@ -619,9 +619,12 @@ function renderBidiInner(text, lang, keyPrefix) {
       const termStyle = kind === "code" ? CODE_SPAN_STYLE : kind === "concept" ? CONCEPT_TAG_STYLE : undefined;
       return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...termStyle}}>{part}</span>];
     }
-    // Arrow characters — wrap in LTR isolation to prevent bidi reordering
+    // Arrow characters — wrap in LTR isolation to prevent bidi reordering.
+    // In Hebrew RTL context, flip arrow direction so cause (right) → result (left)
+    // renders with the arrow visually pointing in the reading direction.
     if (/^[→←]$/.test(part)) {
-      return <span key={k} dir="ltr" style={{unicodeBidi:"isolate",padding:"0 2px"}}>{part}</span>;
+      const arrow = lang === "he" ? (part === "→" ? "←" : "→") : part;
+      return <span key={k} dir="ltr" style={{unicodeBidi:"isolate",padding:"0 2px"}}>{arrow}</span>;
     }
     // Non-matched (RTL) text
     let result = part;
@@ -4079,7 +4082,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <div style={{display:"flex",gap:8,marginBottom:0}}>
                 <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));}} style={{flex:1,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`,lineHeight:1.4}}>
                   <div style={{fontSize:15}}>{t("startQuiz")}</div>
-                  <div style={{fontSize:12,opacity:0.85,fontWeight:600}}>(+{LEVEL_CONFIG[selectedLevel]?.points ?? 0} {t("ptsPerQ")})</div>
+                  <div style={{fontSize:12,opacity:0.85,fontWeight:600}}>+{LEVEL_CONFIG[selectedLevel]?.points ?? 0} {t("ptsPerQ")}</div>
                 </button>
               </div>
               {!isInterviewMode&&<div style={{display:"flex",justifyContent:"center",marginTop:10}}>
@@ -4129,7 +4132,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                        In free mode, points go to total_score in-memory but are NOT persisted to Supabase. */}
                   {!isInHistoryMode&&<span aria-label={`${stats.total_score||0} ${t("pts")}${sessionScore>0?`, +${sessionScore} ${t("completionAdded")}`:""}`} style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
                     <span aria-hidden="true">⭐ {stats.total_score||0} {t("pts")}</span>
-                    {sessionScore>0&&<span style={{color:"#00D4FF",fontSize:10,fontWeight:600,marginLeft:4,opacity:0.8}}>(+{sessionScore})</span>}
+                    {sessionScore>0&&<span style={{color:"#00D4FF",fontSize:10,fontWeight:600,marginInlineStart:4,opacity:0.8}}>· +{sessionScore}</span>}
                   </span>}
                   {!isInHistoryMode&&isFreeMode(selectedTopic?.id)&&<span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,opacity:0.6,background:"var(--glass-4)",padding:"2px 6px",borderRadius:4}}>{t("freeModeBadge")}</span>}
                 </div>
