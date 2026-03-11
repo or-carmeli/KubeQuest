@@ -14,6 +14,9 @@ RUN npm run build
 # ── Stage 2: Serve ────────────────────────────────────────────────────────────
 FROM nginx:alpine AS runner
 
+# Patch OS-level vulnerabilities
+RUN apk upgrade --no-cache
+
 # Copy built assets
 COPY --from=builder /app/dist /usr/share/nginx/html
 
