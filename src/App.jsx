@@ -494,9 +494,38 @@ function renderQuestion(qText, lang) {
     );
   }
   const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized|Events:|Warning\s|Normal\s|\d+\/\d+\s|\d+[a-z]*\s{2,})/;
+  // Pre-process: merge fenced code blocks (```...```) that may have been split across paragraphs
+  const merged = [];
+  let inFence = false, fenceBuf = [];
+  for (const para of paragraphs) {
+    if (!inFence && para.trimStart().startsWith("```")) {
+      // Check if fence opens and closes in same paragraph
+      const fenceCount = (para.match(/```/g) || []).length;
+      if (fenceCount >= 2) { merged.push(para); continue; }
+      inFence = true; fenceBuf = [para]; continue;
+    }
+    if (inFence) {
+      fenceBuf.push(para);
+      if (para.trim().startsWith("```") || para.trim().endsWith("```")) {
+        merged.push(fenceBuf.join("\n\n")); inFence = false; fenceBuf = [];
+      }
+      continue;
+    }
+    merged.push(para);
+  }
+  if (fenceBuf.length) merged.push(fenceBuf.join("\n\n"));
   return (
     <div style={{display:"flex",flexDirection:"column",gap:12}}>
-      {paragraphs.map((para, idx) => {
+      {merged.map((para, idx) => {
+        // Fenced code block (```...```)
+        if (para.trimStart().startsWith("```")) {
+          const code = para.replace(/^```[a-z]*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+          return (
+            <pre key={idx} style={{margin:0,background:"var(--code-bg)",border:"1px solid var(--glass-7)",borderRadius:10,padding:"14px 16px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext",lineHeight:1.7}}>
+              {code}
+            </pre>
+          );
+        }
         const lines = para.split("\n");
         const nonEmpty = lines.filter(l => l.trim());
         const matchCount = nonEmpty.filter(l => !hasHebrew(l) && terminalPat.test(l)).length;

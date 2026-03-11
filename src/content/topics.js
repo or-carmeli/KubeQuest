@@ -932,7 +932,7 @@ export const TOPICS = [
                 "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\napi.example.com מופנה ל-Service אחד, web.example.com ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.",
             },
             {
-              q: "מה ההבדל בין ExternalTrafficPolicy: Local לבין ExternalTrafficPolicy: Cluster ב-Kubernetes Service?",
+              q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
               options: [
               "Cluster מפזר עומס שווה בין כל ה-Pods; Local שולח תנועה רק ל-Pod הקרוב ביותר",
               "Local דורש externalIPs מוגדרים; Cluster עובד עם כל סוגי Service כולל ClusterIP",
@@ -1030,7 +1030,7 @@ export const TOPICS = [
                 "Each Ingress rule has a host field for hostname-based routing.\napi.example.com → one Service, web.example.com → another.\nA single Ingress can serve multiple domains.",
             },
             {
-              q: "What is the difference between ExternalTrafficPolicy: Local and ExternalTrafficPolicy: Cluster in a Kubernetes Service?",
+              q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
               options: [
               "Local maintains automatic session affinity; Cluster requires explicit sessionAffinity: ClientIP",
               "Local routes traffic only to Pods on the same Node and preserves client IP; Cluster forwards to any Pod and performs SNAT",
