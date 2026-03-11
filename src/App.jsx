@@ -499,7 +499,7 @@ function renderQuestion(qText, lang) {
         const isCode = nonEmpty.length > 1 && nonEmpty.every(l => !hasHebrew(l) && terminalPat.test(l));
         if (isCode) {
           return (
-            <pre key={idx} style={{margin:0,background:"var(--code-bg)",border:"1px solid var(--glass-10)",borderRadius:8,padding:"10px 14px",fontFamily:"monospace",fontSize:13,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext"}}>
+            <pre key={idx} style={{margin:0,background:"var(--code-bg)",border:"1px solid var(--glass-10)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:13,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext"}}>
               {para}
             </pre>
           );
@@ -540,8 +540,14 @@ const K8S_CONCEPT_TERMS = new Set([
   "pod","node","namespace","deployment","replicaset",
   "statefulset","daemonset","job","cronjob","configmap","secret",
   "ingress","networkpolicy","serviceaccount",
+  "service","endpoint","endpoints","selector","label","labels",
+  "annotation","annotations","taint","taints","toleration","tolerations",
+  "affinity","container","containers","volume","volumes",
+  "probe","livenessprobe","readinessprobe","startupprobe",
+  // Plurals of common resources
+  "replicasets","deployments","services","nodes","namespaces",
   // Storage resources
-  "pv","pvc","persistentvolume","persistentvolumeclaim",
+  "pv","pvc","persistentvolume","persistentvolumeclaim","storageclass",
   // Scaling resources
   "hpa","vpa","pdb","poddisruptionbudget",
   // Pod states & errors
@@ -549,14 +555,17 @@ const K8S_CONCEPT_TERMS = new Set([
   "containercreating",
   // Service types
   "clusterip","nodeport","loadbalancer","externalname",
-  // Other K8s resources
-  "resourcequota","limitrange","priorityclass",
+  // RBAC & other K8s resources
+  "role","clusterrole","rolebinding","clusterrolebinding",
+  "resourcequota","limitrange","priorityclass","ingresscontroller",
 ]);
 
 // CLI tools & infrastructure components — rendered as inline code.
 const K8S_CODE_TERMS = new Set([
   "kubectl","helm","docker","kubelet","kubeadm","crictl","etcdctl",
   "api-server","kube-proxy","etcd","coredns",
+  "kube-scheduler","kube-controller-manager","containerd","cri-o",
+  "flannel","calico","cilium","istio","prometheus","grafana",
 ]);
 
 // Returns "code", "concept", or null for a given token.
@@ -565,6 +574,10 @@ function getTermKind(token) {
   if (/^--?[A-Za-z]/.test(token)) return "code";
   // Dotted paths like spec.containers or securityContext.runAsNonRoot → code
   if (/^[a-zA-Z][a-zA-Z0-9]*\.[a-zA-Z]/.test(token)) return "code";
+  // Label selectors: app=backend, tier=frontend, key=value → code
+  if (/^[a-zA-Z][\w.-]*=[^\s]*$/.test(token)) return "code";
+  // Slash-paths: /api/v1, /healthz, /etc/kubernetes → code
+  if (/^\/[a-zA-Z]/.test(token)) return "code";
   const lower = token.toLowerCase();
   const bare = lower.replace(/s$/, "");
   if (K8S_CODE_TERMS.has(lower) || K8S_CODE_TERMS.has(bare)) return "code";
@@ -583,17 +596,27 @@ function renderBidiInner(text, lang, keyPrefix) {
   if (!text || (!/[A-Za-z]/.test(text) && !/[→←]/.test(text) && !/(->|<-)/.test(text))) return text;
   // Normalize ASCII arrows to Unicode before splitting
   text = text.replace(/-->/g, "\u2192").replace(/<--/g, "\u2190").replace(/->/g, "\u2192").replace(/<-(?!-)/g, "\u2190");
-  // Split on: flag sequences (--flag, -f), Latin word sequences, or arrow chars
-  const parts = text.split(/((?:--?[A-Za-z][\w\-]*(?:=[^\s\u0590-\u05FF]*)?(?:\s+(?=(?:--?)?[A-Za-z]))?)+|(?:[A-Za-z](?:[A-Za-z0-9\-_:/=]|\.[A-Za-z0-9])*(?:\s+(?=(?:--?)?[A-Za-z]))?)+|[→←])/);
+  // Split on: flag sequences (--flag, -f), slash-paths (/api/v1), Latin word sequences, or arrow chars
+  const parts = text.split(/((?:--?[A-Za-z][\w\-]*(?:=[^\s\u0590-\u05FF]*)?(?:\s+(?=(?:--?)?[A-Za-z]))?)+|(?:\/[A-Za-z][A-Za-z0-9\-_/.:]*)|(?:[A-Za-z](?:[A-Za-z0-9\-_:/=]|\.[A-Za-z0-9])*(?:\s+(?=(?:--?)?[A-Za-z]))?)+|[→←])/);
   if (parts.length <= 1) return text;
-  const startsWithLatin = /^[A-Za-z]/.test(text) || /^--?[A-Za-z]/.test(text);
-  const isLtrPart = (p) => /^[A-Za-z]/.test(p) || /^--?[A-Za-z]/.test(p) || /^[→←]$/.test(p);
+  const startsWithLatin = /^[A-Za-z]/.test(text) || /^--?[A-Za-z]/.test(text) || /^\/[A-Za-z]/.test(text);
+  const isLtrPart = (p) => /^[A-Za-z]/.test(p) || /^--?[A-Za-z]/.test(p) || /^\/[A-Za-z]/.test(p) || /^[→←]$/.test(p);
+  // Fix Hebrew article hyphens (ה-Pod, ב-namespace, ל-Service, מה-registry):
+  // move trailing hyphen from RTL part into the following LTR span so bidi doesn't misplace it
+  const hyphenBefore = new Set();
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (parts[i] && /[\u0590-\u05FF]-$/.test(parts[i]) && parts[i + 1] && isLtrPart(parts[i + 1])) {
+      parts[i] = parts[i].slice(0, -1);
+      hyphenBefore.add(i + 1);
+    }
+  }
   return parts.map((part, idx) => {
     const k = `${keyPrefix}-${idx}`;
-    if (/^[A-Za-z]/.test(part) || /^--?[A-Za-z]/.test(part)) {
+    if (/^[A-Za-z]/.test(part) || /^--?[A-Za-z]/.test(part) || /^\/[A-Za-z]/.test(part)) {
       const kind = getTermKind(part);
       const termStyle = kind === "code" ? CODE_SPAN_STYLE : kind === "concept" ? CONCEPT_TAG_STYLE : undefined;
-      return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...termStyle}}>{part}</span>];
+      const hyph = hyphenBefore.has(idx);
+      return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...termStyle}}>{hyph?"-":""}{part}</span>];
     }
     // Arrow characters — wrap in LTR isolation to prevent bidi reordering
     if (/^[→←]$/.test(part)) {
@@ -2511,7 +2534,7 @@ export default function K8sQuestApp() {
         return <div key={i} style={{color:"#00D4FF",fontSize:10,fontWeight:800,marginTop:14,marginBottom:4,letterSpacing:2,opacity:0.7,direction:"ltr",textAlign:"left"}}>YAML / BASH</div>;
       }
       if (inCode) return (
-        <div key={i} style={{fontFamily:"monospace",fontSize:11,color:"var(--code-text)",lineHeight:1.8,
+        <div key={i} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:11,color:"var(--code-text)",lineHeight:1.8,
           whiteSpace:"pre",direction:"ltr",textAlign:"left"}}>  {line}</div>
       );
       if (line.startsWith('🔹')) {
@@ -2533,7 +2556,7 @@ export default function K8sQuestApp() {
     const parts = text.split(/(`[^`]+`)/g);
     return parts.map((part, i) =>
       part.startsWith("`") && part.endsWith("`") && part.length > 2
-        ? <code key={i} style={{fontFamily:"'Fira Code','Courier New',monospace",fontSize:"0.88em",color:"var(--code-text)",background:"rgba(125,211,252,0.06)",borderRadius:4,padding:"1px 5px",direction:"ltr",unicodeBidi:"isolate"}}>{part.slice(1,-1)}</code>
+        ? <code key={i} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:"0.88em",color:"var(--code-text)",background:"rgba(0,212,255,0.06)",borderRadius:4,padding:"1px 5px",direction:"ltr",unicodeBidi:"isolate"}}>{part.slice(1,-1)}</code>
         : part
     );
   };
@@ -2544,7 +2567,7 @@ export default function K8sQuestApp() {
     if (!text) return null;
     const sentences = text.split(/\.\s+(?=[A-Z\u0590-\u05FFa-z`])/).filter(s => s.trim());
     if (sentences.length <= 1) {
-      return <div dir="auto" style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.8}}>{lang === "he" ? renderBidiBlock(text, lang) : renderInline(text)}</div>;
+      return <div dir={lang==="he"?"rtl":"ltr"} style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.8,direction:lang==="he"?"rtl":"ltr",textAlign:lang==="he"?"right":"left"}}>{lang === "he" ? renderBidiBlock(text, lang) : renderInline(text)}</div>;
     }
     return (
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -2572,7 +2595,7 @@ export default function K8sQuestApp() {
     return lines.map((line, i) => {
       if (!line.trim()) return <div key={i} style={{height:6}}/>;
       if (!_hasHe(line) && terminalPat.test(line)) {
-        return <div key={i} style={{fontFamily:"'Fira Code','Courier New',monospace",fontSize:12,color:"var(--code-text)",lineHeight:1.9,direction:"ltr",textAlign:"left",whiteSpace:"pre"}}>{line}</div>;
+        return <div key={i} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"var(--code-text)",lineHeight:1.9,direction:"ltr",textAlign:"left",whiteSpace:"pre"}}>{line}</div>;
       }
       const isTitle = i === titleIdx;
       const isQ = i === questionIdx && i !== titleIdx;
@@ -2824,12 +2847,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
       </a>}
-      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.quiz-text{direction:rtl;unicode-bidi:plaintext;text-align:right}.quiz-text[dir="ltr"]{direction:ltr;text-align:left}.code-inline{direction:ltr;display:inline-block;unicode-bidi:isolate}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;display:block;background:rgba(0,212,255,0.06);border-radius:6px;padding:4px 10px;color:var(--code-text);font-size:0.88em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;display:block;background:rgba(0,212,255,0.06);border-radius:6px;padding:4px 10px;color:var(--code-text);font-size:0.88em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar-right{gap:8px!important}
 .quiz-bar-right span,.quiz-bar-right button{font-size:11px!important}
 .opt-btn{padding:13px 14px!important;font-size:14px!important;gap:10px!important;min-height:52px!important;line-height:1.7!important}
+.incident-opt{padding:12px 12px!important;font-size:13px!important;gap:8px!important;border-radius:9px!important;line-height:1.7!important}
 .explanation-card{border-radius:12px!important}
 .explanation-card>div:first-child{padding:12px 16px!important}
 .explanation-card>div:last-child{padding:16px!important}
@@ -3415,7 +3439,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     <span style={{color:topic.color,fontSize:12,fontWeight:700}}>{topic.name}</span>
                     <span style={{marginLeft:"auto",background:`${LEVEL_CONFIG[level]?.color}22`,color:LEVEL_CONFIG[level]?.color,fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6}}>{lang==="en"?LEVEL_CONFIG[level]?.labelEn:LEVEL_CONFIG[level]?.label}</span>
                   </div>
-                  <div dir={dir} style={{color:"var(--text-light)",fontSize:13,lineHeight:1.5,marginBottom:10}}>{lang==="en"?(question.qEn||question.q):question.q}</div>
+                  <div dir={dir} style={{color:"var(--text-light)",fontSize:13,lineHeight:1.5,marginBottom:10}}>{renderBidiBlock(lang==="en"?(question.qEn||question.q):question.q, lang)}</div>
                   <button onClick={()=>tryStartQuiz(()=>startTopic(topic,level))} style={{padding:"7px 14px",background:`${topic.color}15`,border:`1px solid ${topic.color}44`,borderRadius:8,color:topic.color,fontSize:12,fontWeight:700,cursor:"pointer"}}>
                     {lang==="en"?"Go to Topic →":"עבור לנושא →"}
                   </button>
@@ -3484,11 +3508,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           {lang==="en"?LEVEL_CONFIG[level]?.labelEn:LEVEL_CONFIG[level]?.label}
                         </span>
                       </div>
-                      <div style={{color:"var(--text-primary)",fontSize:14,lineHeight:1.5,marginBottom:8,direction:dir}}>{q.q}</div>
+                      <div style={{color:"var(--text-primary)",fontSize:14,lineHeight:1.5,marginBottom:8,direction:dir}}>{renderBidiBlock(q.q, lang)}</div>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
                         <div style={{display:"flex",alignItems:"flex-start",gap:6}}>
                           <span style={{color:"#10B981",fontSize:13,flexShrink:0,marginTop:1}}>✓</span>
-                          <span style={{color:"#10B981",fontSize:13,lineHeight:1.4}}>{q.options[q.answer]}</span>
+                          <span style={{color:"#10B981",fontSize:13,lineHeight:1.4}}>{lang==="he"?renderBidi(q.options[q.answer],lang):q.options[q.answer]}</span>
                         </div>
                         <button onClick={()=>tryStartQuiz(()=>startTopic(topic,level))} style={{flexShrink:0,padding:"6px 12px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,color:"#EF4444",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                           {lang==="en"?"Retry":"נסה שוב"}
@@ -4156,7 +4180,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             {isCorrect
                               ? (tryAgainActive ? t("tryAgainCorrect") : `${t("correct")}${isInHistoryMode?"":" +"+(LEVEL_CONFIG[selectedLevel]?.points??0)+" "+t("pts")}`)
                               : timedOut
-                                ? `${t("timeUp")} ${lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: ${q.options[correctIdx]}`
+                                ? <>{t("timeUp")} {lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: <span dir={hasHebrew(q.options[correctIdx])?"rtl":"ltr"} style={{unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(q.options[correctIdx],lang):q.options[correctIdx]}</span></>
                                 : (tryAgainActive ? t("tryAgainWrong") : t("incorrect"))}
                           </span>
                         </div>
@@ -4187,7 +4211,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           <span style={{fontSize:12,fontWeight:800,color:"#A855F7",letterSpacing:0.5}}>{lang==="he"?"תשובה אידיאלית":"Ideal Answer"}</span>
                         </div>
                         <div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:14}}>
-                          <div dir="auto" style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:dir==="rtl"?"right":"left"}}>{q.options[iCorrectIdx]}</div>
+                          {(()=>{const idDir=hasHebrew(q.options[iCorrectIdx])?"rtl":"ltr";return <div dir={idDir} style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:idDir,textAlign:idDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(q.options[iCorrectIdx],lang):q.options[iCorrectIdx]}</div>;})()}
                           {iParagraphs.map((s,idx)=>(
                             <div key={idx} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
                               {renderBidiBlock(s,lang)}
@@ -4505,7 +4529,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 }
                 const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
                 return(
-                  <button key={i} onClick={()=>{ if (!incidentSubmitted) submitIncidentStep(i); }}
+                  <button key={i} className="incident-opt" onClick={()=>{ if (!incidentSubmitted) submitIncidentStep(i); }}
                     aria-pressed={!incidentSubmitted ? i===incidentAnswer : undefined}
                     style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${border}`,borderRadius:10,color,fontSize:14,cursor:incidentSubmitted?"default":"pointer",lineHeight:1.55,display:"flex",alignItems:"flex-start",gap:10,transition:"all 0.15s",direction:optDir}}>
                     <span style={{flexShrink:0,width:24,height:24,borderRadius:6,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor,marginTop:1,direction:"ltr"}}>
