@@ -601,29 +601,24 @@ function renderBidiInner(text, lang, keyPrefix) {
   if (parts.length <= 1) return text;
   const startsWithLatin = /^[A-Za-z]/.test(text) || /^--?[A-Za-z]/.test(text) || /^\/[A-Za-z]/.test(text);
   const isLtrPart = (p) => /^[A-Za-z]/.test(p) || /^--?[A-Za-z]/.test(p) || /^\/[A-Za-z]/.test(p) || /^[→←]$/.test(p);
-  // Fix Hebrew article hyphens (ה-Pod, ב-namespace, ל-Service, מה-registry):
-  // move trailing hyphen from RTL part into the following LTR span so bidi doesn't misplace it
-  const hyphenBefore = new Set();
-  for (let i = 0; i < parts.length - 1; i++) {
-    if (parts[i] && /[\u0590-\u05FF]-$/.test(parts[i]) && parts[i + 1] && isLtrPart(parts[i + 1])) {
-      parts[i] = parts[i].slice(0, -1);
-      hyphenBefore.add(i + 1);
-    }
-  }
   return parts.map((part, idx) => {
     const k = `${keyPrefix}-${idx}`;
     if (/^[A-Za-z]/.test(part) || /^--?[A-Za-z]/.test(part) || /^\/[A-Za-z]/.test(part)) {
       const kind = getTermKind(part);
       const termStyle = kind === "code" ? CODE_SPAN_STYLE : kind === "concept" ? CONCEPT_TAG_STYLE : undefined;
-      const hyph = hyphenBefore.has(idx);
-      return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...termStyle}}>{hyph?"-":""}{part}</span>];
+      return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...termStyle}}>{part}</span>];
     }
     // Arrow characters — wrap in LTR isolation to prevent bidi reordering
     if (/^[→←]$/.test(part)) {
       return <span key={k} dir="ltr" style={{unicodeBidi:"isolate",padding:"0 2px"}}>{part}</span>;
     }
-    if (idx > 0 && isLtrPart(parts[idx - 1])) return "\u200F" + part;
-    return part;
+    // Non-matched (RTL) text
+    let result = part;
+    if (idx > 0 && isLtrPart(parts[idx - 1])) result = "\u200F" + result;
+    // Anchor trailing Hebrew-hyphen to RTL context (ה-Pod, ב-namespace, ל-Service)
+    // so bidi algorithm doesn't visually misplace the hyphen
+    if (/[\u0590-\u05FF]-$/.test(part) && idx + 1 < parts.length && isLtrPart(parts[idx + 1])) result += "\u200F";
+    return result;
   });
 }
 
@@ -645,6 +640,21 @@ function renderBidi(text, lang) {
         }
         if (!part) return null;
         return <span key={`seg-${i}`}>{renderBidiInner(part, lang, `s${i}`)}</span>;
+      });
+    }
+  }
+
+  // CLI commands in mixed text: wrap entire command as single inline LTR span
+  // to prevent bidi line-wrapping from reordering flags (e.g. -- migrating away from its flag)
+  const bare = text.replace(/`[^`]+`/g, "");
+  if (CLI_COMMAND_RE.test(bare)) {
+    const cliParts = text.split(CLI_COMMAND_RE);
+    if (cliParts.length > 1) {
+      return cliParts.map((part, i) => {
+        if (!part) return null;
+        if (i % 2 === 1) return <span key={`cli-${i}`} dir="ltr" style={{unicodeBidi:"isolate",...CODE_SPAN_STYLE}}>{part}</span>;
+        const trimmed = part.trim();
+        return trimmed ? <span key={`seg-${i}`}>{renderBidiInner(trimmed, lang, `b${i}`)}</span> : null;
       });
     }
   }
@@ -3237,7 +3247,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               const logoText=(
                 <div style={{textAlign:"left"}}>
-                  <h1 className="home-title-text" style={{fontSize:28,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.5,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
+                  <div style={{display:"inline-flex",alignItems:"center",gap:6}}><h1 className="home-title-text" style={{fontSize:28,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.5,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><span style={{fontSize:11,padding:"2px 6px",borderRadius:6,background:"rgba(255,255,255,0.08)",color:"#bbb",fontWeight:600,letterSpacing:0.3,lineHeight:1,flexShrink:0}}>Beta</span></div>
                   <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}>
                     <span style={{fontSize:11,color:"var(--text-dim)",letterSpacing:0.4}}>Train Your Kubernetes Skills</span>
                     <span style={{fontSize:10,color:"#00D4FF",background:"rgba(0,212,255,0.1)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:4,padding:"1px 5px",fontWeight:700,letterSpacing:0.3}}>v{APP_VERSION}</span>
