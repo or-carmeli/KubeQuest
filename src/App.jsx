@@ -24,7 +24,7 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // See: https://github.com/supabase/supabase-js/issues/1594
 function supabaseLock(name, acquireTimeout, fn) {
   if (typeof navigator === "undefined" || !navigator.locks) {
-    // No Web Locks API — just run without locking (same as Supabase's fallback)
+    // No Web Locks API. Just run without locking (same as Supabase's fallback)
     return fn();
   }
   // Force a max 5 s timeout regardless of what Supabase requests (-1 = infinite)
@@ -38,8 +38,8 @@ function supabaseLock(name, acquireTimeout, fn) {
   }).catch((err) => {
     clearTimeout(timer);
     if (err.name === "AbortError") {
-      console.warn(`[KubeQuest] Lock "${name}" timed out after ${effectiveTimeout}ms — proceeding without lock`);
-      // Run without lock to avoid deadlock — better than hanging forever
+      console.warn(`[KubeQuest] Lock "${name}" timed out after ${effectiveTimeout}ms. Proceeding without lock`);
+      // Run without lock to avoid deadlock. Better than hanging forever
       return fn();
     }
     throw err;
@@ -49,9 +49,9 @@ function supabaseLock(name, acquireTimeout, fn) {
 const supabase = (SUPABASE_URL && SUPABASE_KEY) ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { lock: supabaseLock }
 }) : null;
-if (!supabase) console.warn("[KubeQuest] Supabase not configured — VITE_SUPABASE_URL:", !!SUPABASE_URL, "VITE_SUPABASE_ANON_KEY:", !!SUPABASE_KEY);
+if (!supabase) console.warn("[KubeQuest] Supabase not configured. VITE_SUPABASE_URL:", !!SUPABASE_URL, "VITE_SUPABASE_ANON_KEY:", !!SUPABASE_KEY);
 
-// Run version check before any component mounts — clears stale keys if data version changed
+// Run version check before any component mounts. Clears stale keys if data version changed
 console.info("[KubeQuest:boot] App.jsx module executing");
 checkDataVersion();
 
@@ -67,13 +67,13 @@ try {
       const parsed = JSON.parse(raw);
       const expiresAt = parsed?.expires_at; // Unix timestamp (seconds)
       if (expiresAt && expiresAt < Date.now() / 1000 - 86400) {
-        // Token expired >24h ago — the refresh token is almost certainly dead too
+        // Token expired >24h ago. The refresh token is almost certainly dead too
         console.warn("[KubeQuest:boot] Clearing stale Supabase auth token (expired", Math.round((Date.now()/1000 - expiresAt)/3600), "h ago)");
         localStorage.removeItem(sbKey);
       }
     }
   }
-} catch { /* ignore — token check is best-effort */ }
+} catch { /* ignore. Token check is best-effort */ }
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -101,11 +101,11 @@ const INCIDENT_DIFFICULTY_CONFIG = {
 };
 
 const INCIDENT_SAVE_KEY = "incident_progress_v1";
-// v2.0.0 — major: portfolio repo refactor (BSL 1.1, proprietary content extracted)
-// v2.1.0 — security hardening, scoring fixes, question rebalance, incident history
-// v2.2.0 — real-time monitoring system (health checks, uptime history, auto-incidents)
-// v2.3.0 — startup resilience (SW cache, localStorage defence, Supabase lock fix, NaN guards)
-// v2.4.0 — analytics events, RTL fixes (hyphens, arrows), quiz UX improvements, score display cleanup
+// v2.0.0: major: portfolio repo refactor (BSL 1.1, proprietary content extracted)
+// v2.1.0: security hardening, scoring fixes, question rebalance, incident history
+// v2.2.0: real-time monitoring system (health checks, uptime history, auto-incidents)
+// v2.3.0: startup resilience (SW cache, localStorage defence, Supabase lock fix, NaN guards)
+// v2.4.0: analytics events, RTL fixes (hyphens, arrows), quiz UX improvements, score display cleanup
 const APP_VERSION  = "2.4.0";
 const SESSION_START = new Date();
 
@@ -171,7 +171,7 @@ const TRANSLATIONS = {
     scoreSub: "XP מכל החידונים", accuracySub: "אחוז תשובות נכונות", streakSub: "תשובות נכונות ברצף", completedSub: "רמות שהושלמו",
     leaderboardRankedBy: "מדורג לפי סך הנקודות שנצברו", leaderboardScoreCol: "סה״כ נק׳",
     completionNoImprovement: "התוצאה הטובה שלך בנושא הזה כבר גבוהה יותר", completionAdded: "נוספו לסך שלך",
-    freeModeBadge: "סבב בונוס — צוברים נקודות!", freeModeTag: "בונוס",
+    freeModeBadge: "סבב בונוס: צוברים נקודות!", freeModeTag: "בונוס",
     pts: "נק׳",
     achievementsTitle: "🏅 הישגים",
     leaderboardTitle: "🏆 לוח תוצאות", noData: "אין נתונים עדיין", anonymous: "אנונימי",
@@ -303,7 +303,7 @@ const TRANSLATIONS = {
     bookmark_m: "☆ שמור", bookmarkActive_m: "★ שמור",
     searchBtn: "🔎 חיפוש שאלה", searchPlaceholder: "חפשי לפי מילת מפתח...", searchNoResults: "לא נמצאו תוצאות",
     mistakesBtn: "❌ טעויות שלי", mistakesEmpty: "אין טעויות! כל הכבוד 🎉", mistakesHint: "שאלות שטעית בהן",
-    guideBtn: "📘 פקודות", guideSub: "פקודות kubectl מוכנות להעתקה — לחצו לפתיחה", aboutBtn: "ℹ️ אודות האפליקציה",
+    guideBtn: "📘 פקודות", guideSub: "פקודות kubectl מוכנות להעתקה. לחצו לפתיחה", aboutBtn: "ℹ️ אודות האפליקציה",
     shareBtn: "📤 שתפי עם חבר", shareBtn_m: "📤 שתף עם חבר",
     dailyStreak: "ימים ברצף",
   },
@@ -336,7 +336,7 @@ const TRANSLATIONS = {
     scoreSub: "XP from all quizzes", accuracySub: "Overall correct rate", streakSub: "Correct answers in a row", completedSub: "Topic-levels passed",
     leaderboardRankedBy: "Ranked by total accumulated points", leaderboardScoreCol: "Total Pts",
     completionNoImprovement: "Your best result for this topic was already higher", completionAdded: "added to your total",
-    freeModeBadge: "Bonus round — earns points!", freeModeTag: "Bonus",
+    freeModeBadge: "Bonus round: earns points!", freeModeTag: "Bonus",
     pts: "pts",
     achievementsTitle: "🏅 Achievements",
     leaderboardTitle: "🏆 Leaderboard", noData: "No data yet", anonymous: "Anonymous",
@@ -424,7 +424,7 @@ const TRANSLATIONS = {
     bookmark: "☆ Save", bookmarkActive: "★ Saved",
     searchBtn: "🔎 Search Question", searchPlaceholder: "Search by keyword...", searchNoResults: "No results found",
     mistakesBtn: "❌ My Mistakes", mistakesEmpty: "No mistakes! Great job 🎉", mistakesHint: "Questions you answered incorrectly",
-    guideBtn: "📘 Commands", guideSub: "Copy-ready kubectl commands — tap to expand", aboutBtn: "ℹ️ About the App",
+    guideBtn: "📘 Commands", guideSub: "Copy-ready kubectl commands. Tap to expand", aboutBtn: "ℹ️ About the App",
     shareBtn: "📤 Share with a Friend",
     dailyStreak: "day streak",
   },
@@ -551,7 +551,7 @@ function renderQuestion(qText, lang) {
 }
 
 // Shuffle quiz options while tracking the index mapping.
-// _optionMap[shuffledIdx] = originalIdx — used to translate back for server-side validation.
+// _optionMap[shuffledIdx] = originalIdx. Used to translate back for server-side validation.
 // When q.answer exists (offline mode), it is also remapped to the shuffled position.
 function shuffleOptions(questions) {
   return questions.map(q => {
@@ -575,7 +575,7 @@ function shuffleOptions(questions) {
   });
 }
 
-// Kubernetes concept terms — highlighted as concept tags (not code).
+// Kubernetes concept terms - highlighted as concept tags (not code).
 // These are K8s resource types, states, and service types.
 const K8S_CONCEPT_TERMS = new Set([
   // Core resource types
@@ -602,7 +602,7 @@ const K8S_CONCEPT_TERMS = new Set([
   "resourcequota","limitrange","priorityclass","ingresscontroller",
 ]);
 
-// CLI tools & infrastructure components — rendered as inline code.
+// CLI tools & infrastructure components - rendered as inline code.
 const K8S_CODE_TERMS = new Set([
   "kubectl","helm","docker","kubelet","kubeadm","crictl","etcdctl",
   "api-server","kube-proxy","etcd","coredns",
@@ -630,7 +630,7 @@ function getTermKind(token) {
 // Inline-code style for CLI tools, dotted paths, backtick spans
 const CODE_SPAN_STYLE = {background:"rgba(0,212,255,0.06)",borderRadius:4,padding:"1px 5px",fontSize:"0.88em",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",color:"var(--code-text)"};
 
-// Concept tag style for K8s resource types — highlighted but not code
+// Concept tag style for K8s resource types - highlighted but not code
 const CONCEPT_TAG_STYLE = {background:"var(--concept-bg)",border:"1px solid var(--concept-border)",borderRadius:6,padding:"1px 6px",fontSize:"0.92em",fontWeight:600,color:"var(--concept-text)"};
 
 // Inner bidi logic: wraps Latin sequences, flags, and arrows in <span dir="ltr">, applies code styling to K8s terms.
@@ -652,7 +652,7 @@ function renderBidiInner(text, lang, keyPrefix) {
       const termStyle = kind === "code" ? CODE_SPAN_STYLE : kind === "concept" ? CONCEPT_TAG_STYLE : undefined;
       return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",...termStyle}}>{part}</span>];
     }
-    // Left-arrow — wrap in LTR isolation to prevent bidi reordering
+    // Left-arrow - wrap in LTR isolation to prevent bidi reordering
     if (/^[←]$/.test(part)) {
       return <span key={k} dir="ltr" style={{unicodeBidi:"isolate",padding:"0 2px"}}>{part}</span>;
     }
@@ -807,7 +807,7 @@ export default function K8sQuestApp() {
     // selectedIncident) that doesn't survive a page refresh.  Restoring to these screens without
     // that state causes a blank content area.  Fall back to "home" and let auto-resume handle it.
     if (s === "topic" || s === "incidentComplete") {
-      console.info("[KubeQuest:boot] Screen was", s, "— falling back to home (transient state lost on refresh)");
+      console.info("[KubeQuest:boot] Screen was", s, "- falling back to home (transient state lost on refresh)");
       return "home";
     }
     if (s && ["home","incidentList","incident"].includes(s)) return s;
@@ -853,10 +853,10 @@ export default function K8sQuestApp() {
   //   Derived from completedTopics via computeScore().
   //   Represents sum(correct * level_points) for each topic's best attempt.
   //   Recalculated at quiz completion, topic reset, and guest merge.
-  //   Exists as a tamper-proof audit baseline — not used for ranking.
+  //   Exists as a tamper-proof audit baseline - not used for ranking.
   //
   // ⚠  Do NOT show best_score in UI or use it for leaderboard ranking.
-  // ⚠  Do NOT derive total_score from completedTopics — it is purely accumulated.
+  // ⚠  Do NOT derive total_score from completedTopics - it is purely accumulated.
   // ─────────────────────────────────────────────────────────────────────────────
   const [stats, setStats] = useState({
     total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0,
@@ -892,7 +892,7 @@ export default function K8sQuestApp() {
   const [searchQuery, setSearchQuery]                   = useState("");
   const [expandedGuideSection, setExpandedGuideSection] = useState(null);
   const [copiedCmd, setCopiedCmd]                       = useState(null);  // tracks last copied command for visual feedback
-  const [answerResult, setAnswerResult]                 = useState(null); // { correct, correctIndex, explanation } — set after server-side validation
+  const [answerResult, setAnswerResult]                 = useState(null); // { correct, correctIndex, explanation } - set after server-side validation
   const [checkingAnswer, setCheckingAnswer]             = useState(false);
   const [theoryContent, setTheoryContent]               = useState(null);
   const [loadingQuestions, setLoadingQuestions]          = useState(false);
@@ -988,7 +988,7 @@ export default function K8sQuestApp() {
   };
 
   // Compute best_score (internal canonical metric) from completedTopics.
-  // NOT used for user-visible score or leaderboard — those use total_score.
+  // NOT used for user-visible score or leaderboard - those use total_score.
   // best_score = sum(correct * level_points) for each topic's best attempt.
   // Exists as a tamper-proof baseline; never shown in UI.
   // Free-mode keys (mixed_mixed, daily_daily, bookmarks_bookmarks) are excluded.
@@ -1001,7 +1001,7 @@ export default function K8sQuestApp() {
       return sum + ((res.correct ?? 0) * (LEVEL_CONFIG[lvl]?.points ?? 0));
     }, 0);
   const currentLevelData = selectedTopic && selectedLevel && !isFreeMode(selectedTopic.id) && !retryMode ? getLevelData(selectedTopic, selectedLevel) : null;
-  // SAFETY: never fall back to unshuffled currentLevelData.questions — that would serve
+  // SAFETY: never fall back to unshuffled currentLevelData.questions - that would serve
   // raw data with original answer indices, causing answer/option mismatch after shuffle.
   const currentQuestions = isFreeMode(selectedTopic?.id) || retryMode ? mixedQuestions : topicQuestions;
 
@@ -1039,7 +1039,7 @@ export default function K8sQuestApp() {
 
   useEffect(() => { const t = setTimeout(() => setMinLoadElapsed(true), 500); return () => clearTimeout(t); }, []);
 
-  // Boot elapsed timer — updates every second while loading gate is active (for debug panel)
+  // Boot elapsed timer - updates every second while loading gate is active (for debug panel)
   const [bootElapsed, setBootElapsed] = useState(0);
   const [lockInfo, setLockInfo] = useState("");
   useEffect(() => {
@@ -1062,13 +1062,13 @@ export default function K8sQuestApp() {
     const gateActive = !authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded);
     if (!gateActive) return;
     const t = setTimeout(() => {
-      console.error("[KubeQuest:boot] Loading gate still active after 5 s — force-unblocking");
+      console.error("[KubeQuest:boot] Loading gate still active after 5 s - force-unblocking");
       console.error("[KubeQuest:boot] State: authChecked:", authChecked, "dataLoaded:", dataLoaded, "user:", !!user, "isGuest:", isGuest);
       setAuthChecked(true);
       setMinLoadElapsed(true);
       setDataLoaded(true);
       // If user is set but data never loaded, the Supabase session may be stale.
-      // Force to auth screen — user can log in again.
+      // Force to auth screen - user can log in again.
       if (user && !isGuest && !dataLoaded) {
         console.warn("[KubeQuest:boot] Clearing stale user to unblock UI");
         setUser(null);
@@ -1126,7 +1126,7 @@ export default function K8sQuestApp() {
 
     // Hard timeout: if INITIAL_SESSION never fires, unblock the UI
     const hardTimeout = setTimeout(() => {
-      console.warn("[KubeQuest:boot] Auth hard timeout (3 s) — force-unblocking UI");
+      console.warn("[KubeQuest:boot] Auth hard timeout (3 s) - force-unblocking UI");
       setAuthChecked(true);
       setDataLoaded(true);
     }, 3000);
@@ -1238,7 +1238,7 @@ export default function K8sQuestApp() {
     if (savedQuiz && savedQuiz.userId === "guest") setResumeData(savedQuiz);
   }, [isGuest]);
 
-  // Save guest progress to localStorage — skip until load effect's state updates have rendered
+  // Save guest progress to localStorage - skip until load effect's state updates have rendered
   useEffect(() => {
     if (!isGuest || !guestLoadedRef.current) return;
     try {
@@ -1320,7 +1320,7 @@ export default function K8sQuestApp() {
       timerEnabled,
       isInterviewMode,
       timeLeft,
-      // Absolute stats snapshot — used by resume to reconcile without double-counting
+      // Absolute stats snapshot - used by resume to reconcile without double-counting
       savedStats: {
         total_answered: stats.total_answered,
         total_correct:  stats.total_correct,
@@ -1366,7 +1366,7 @@ export default function K8sQuestApp() {
     // Signal to SW update handler whether a quiz/incident is active
     const quizActive = (screen === "topic" && topicScreen === "quiz") || screen === "incident";
     window.__KQ_QUIZ_ACTIVE__ = quizActive;
-    // If a SW update was deferred while a quiz was active, reload now —
+    // If a SW update was deferred while a quiz was active, reload now -
     // but only on truly idle screens. "topicComplete" and "incidentComplete"
     // depend on transient React state, so reloading there sends the user to
     // home and loses the results screen (looks like "Finish Topic" did nothing).
@@ -1377,13 +1377,13 @@ export default function K8sQuestApp() {
     }
   }, [screen, topicScreen]);
 
-  // Pre-load saved quiz data when returning home (modal is NOT shown here — only when starting a quiz)
+  // Pre-load saved quiz data when returning home (modal is NOT shown here - only when starting a quiz)
   useEffect(() => {
     if (screen !== "home" || !user) return;
     const saved = loadQuizState();
     if (saved && saved.userId === (user.id || "guest")) setResumeData(saved);
     else setResumeData(null); // Clear stale resume data after quiz completion
-    // Do NOT call setShowResumeModal(true) here — req 2
+    // Do NOT call setShowResumeModal(true) here - req 2
   }, [screen]);
 
   // Auto-restore session on page load (refresh resilience)
@@ -1392,7 +1392,7 @@ export default function K8sQuestApp() {
     if (!dataLoaded || !user) return;
 
     // Load saved quiz from localStorage if resumeData wasn't pre-populated
-    // (happens when screen was restored to non-"home" — the home-screen effect
+    // (happens when screen was restored to non-"home" - the home-screen effect
     // that normally sets resumeData never fired).
     if (!resumeData && !autoResumeAttempted.current) {
       const fromStorage = loadQuizState();
@@ -1406,7 +1406,7 @@ export default function K8sQuestApp() {
     if (autoResumeAttempted.current) return;
     autoResumeAttempted.current = true;
 
-    // Resume quiz — only if it's a recent refresh (<2 min), not a new session.
+    // Resume quiz - only if it's a recent refresh (<2 min), not a new session.
     if (resumeData && isRecentQuizState(resumeData)) {
       const answered = resumeData.questionIndex ?? 0;
       const total = resumeData.questions?.length ?? 0;
@@ -1442,7 +1442,7 @@ export default function K8sQuestApp() {
           }
         }
       } catch {}
-      setScreen("home"); // no valid saved data — fall back
+      setScreen("home"); // no valid saved data - fall back
     }
   }, [dataLoaded, user, resumeData]);
 
@@ -1544,14 +1544,14 @@ export default function K8sQuestApp() {
 
     // Prevent concurrent calls (race between onAuthStateChange and login flows)
     if (loadingDataRef.current) {
-      console.info("[KubeQuest:boot] loadUserData skipped — already in progress");
+      console.info("[KubeQuest:boot] loadUserData skipped - already in progress");
       return;
     }
     loadingDataRef.current = true;
 
     // Timeout guard: if data loading takes too long, unblock the UI
     const dataTimeout = setTimeout(() => {
-      console.warn("[KubeQuest:boot] loadUserData timeout (5 s) — unblocking UI");
+      console.warn("[KubeQuest:boot] loadUserData timeout (5 s) - unblocking UI");
       loadingDataRef.current = false;
       setDataLoaded(true);
     }, 5000);
@@ -1563,7 +1563,7 @@ export default function K8sQuestApp() {
       // BUG-A fix: only merge guest data into brand-new accounts (no existing Supabase row).
       // Merging into existing accounts causes cross-account contamination when users switch accounts.
       let guestSaved = safeGetJSON("k8s_quest_guest");
-      // Always clear guest data & session flag — prevents it leaking into whichever account logs in next
+      // Always clear guest data & session flag - prevents it leaking into whichever account logs in next
       if (guestSaved) { try { localStorage.removeItem("k8s_quest_guest"); } catch {} }
       try { localStorage.removeItem("k8s_guest_session"); } catch {}
 
@@ -1615,7 +1615,7 @@ export default function K8sQuestApp() {
           ...mergedStats, completed_topics: cleanNc, achievements: mergedAch,
           topic_stats: guestTopicStats,
           updated_at: new Date().toISOString(),
-        }).then(() => {});  // fire-and-forget — don't block the UI for new account creation
+        }).then(() => {});  // fire-and-forget - don't block the UI for new account creation
       }
 
       achievementsLoaded.current = true;
@@ -1623,7 +1623,7 @@ export default function K8sQuestApp() {
       loadingDataRef.current = false;
       setDataLoaded(true);
     } catch {
-      // Network error or unexpected failure — unblock the UI
+      // Network error or unexpected failure - unblock the UI
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
       achievementsLoaded.current = true;
@@ -1800,7 +1800,7 @@ export default function K8sQuestApp() {
     });
     const newStats = {
       ...stats,
-      // total_score is accumulated and permanent — never deducted on reset
+      // total_score is accumulated and permanent - never deducted on reset
       best_score:     computeScore(newCompleted),
       total_answered: Math.max(0, stats.total_answered - removedAnswered),
       total_correct:  Math.max(0, stats.total_correct  - removedCorrect),
@@ -1884,7 +1884,7 @@ export default function K8sQuestApp() {
           max_streak:     Math.max(prev.max_streak,     snap.max_streak     || 0),
         }));
       } else if (delta.answered > 0 || delta.correct > 0) {
-        // Backward compat: old save states without savedStats — use additive delta
+        // Backward compat: old save states without savedStats - use additive delta
         setStats(prev => ({
           ...prev,
           total_answered: prev.total_answered + (delta.answered || 0),
@@ -2010,7 +2010,7 @@ export default function K8sQuestApp() {
     } else if (typeof q.answer === "number") {
       result = { correct: selectedAnswer === q.answer, correctIndex: q.answer, explanation: q.explanation };
     } else if (supabase && q.id) {
-      // Cache miss and no local answer — fall back to server call
+      // Cache miss and no local answer - fall back to server call
       setCheckingAnswer(true);
       const originalIndex = q._optionMap ? q._optionMap[selectedAnswer] : selectedAnswer;
       const isDaily = selectedTopic?.id === "daily";
@@ -2027,7 +2027,7 @@ export default function K8sQuestApp() {
         const correctIndex = q._optionMap ? q._optionMap.indexOf(rpcResult.correct_answer) : rpcResult.correct_answer;
         result = { correct: rpcResult.correct, correctIndex, explanation: rpcResult.explanation };
       } else {
-        // RPC failed (likely stale question ID after DB re-seed) — clear stale
+        // RPC failed (likely stale question ID after DB re-seed) - clear stale
         // quiz and send user home so they can start fresh with valid questions.
         clearQuizState();
         submittingRef.current = false;
@@ -2076,7 +2076,7 @@ export default function K8sQuestApp() {
         return { ...prev, [key]: { ...existing, wrongQuestions: [...(existing.wrongQuestions || []), { q: q.q, options: q.options, answer: result.correctIndex }], wrongIndices: [...(existing.wrongIndices || []), questionIndex] } };
       });
     }
-    // Single atomic setStats call — prevents React batching from clobbering streak
+    // Single atomic setStats call - prevents React batching from clobbering streak
     // total_score accumulates on every correct answer (all modes). It never snaps back.
     // best_score (canonical) is computed separately at quiz completion.
     setStats(prev => {
@@ -2161,7 +2161,7 @@ export default function K8sQuestApp() {
         ? quizHistory.filter(h=>h.chosen!==h.answer).map(h=>({q:h.q,options:h.options,answer:h.answer}))
         : (completedTopics[key]?.wrongQuestions??[]);
       const newCompleted = { ...completedTopics, [key]: { correct: bestCorrect, total: currentQuestions.length, wrongIndices: wrongIdx, wrongQuestions, ...(keepRetryComplete ? { retryComplete: true } : {}) } };
-      // total_score is already accumulated per-answer — don't override it.
+      // total_score is already accumulated per-answer - don't override it.
       // best_score tracks the canonical best-topic score separately.
       const newStats = { ...stats, best_score: computeScore(newCompleted) };
       const newAch = [
@@ -2324,7 +2324,7 @@ export default function K8sQuestApp() {
       setLoadingQuestions(false);
     }
     if (!dailyQs) {
-      // Offline fallback — annual-seeded shuffle + daily window
+      // Offline fallback - annual-seeded shuffle + daily window
       const pool = lang === "en" ? DAILY_QUESTIONS.en : DAILY_QUESTIONS.he;
       const annualSeed = new Date().getFullYear() * 31337;
       const annualRng = mulberry32(annualSeed);
@@ -3057,7 +3057,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
               </div>
             </div>
-            {/* Progress display — req 6 */}
+            {/* Progress display - req 6 */}
             <div style={{marginBottom:16}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--text-muted)",marginBottom:4}}>
                 <span>{lang==="en"?"Progress":"התקדמות"}</span>
@@ -3162,7 +3162,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
-           best_score is NOT used for ranking — it's a per-topic canonical metric. */}
+           best_score is NOT used for ranking - it's a per-topic canonical metric. */}
       {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"0 10px 4px",marginBottom:4}}><span style={{width:28,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 10px",background:i===0?"rgba(245,158,11,0.1)":"var(--glass-3)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"var(--glass-6)"}`}}><span style={{fontSize:18,width:28,flexShrink:0,textAlign:"center"}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1,minWidth:0}}><div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{entry.username ? (entry.username.includes("@") ? entry.username.split("@")[0] : entry.username) : t("anonymous")}</div><div style={{color:"var(--text-dim)",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0}}>{entry.total_score}</div></div>)}</div>}{userRank&&<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600,flexShrink:0}}><span>{lang==="en"?"Your Rank":"הדירוג שלך"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div>}</div></div>}
 
       {showBookmarks&&(
@@ -3422,7 +3422,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             ))}
           </div>
           {homeTab==="categories"&&(<>
-          {/* Dashboard Stats — total_score is the accumulated permanent score (leaderboard-ranked).
+          {/* Dashboard Stats - total_score is the accumulated permanent score (leaderboard-ranked).
                best_score (canonical topic-best via computeScore()) is separate and not shown here.
                Subtitles clarify each metric's meaning for users. */}
           <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22}}>
@@ -3654,7 +3654,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         );
       })()}
 
-      {/* ── GUIDE — kubectl Cheat Sheet ── */}
+      {/* ── GUIDE - kubectl Cheat Sheet ── */}
       {screen==="guide"&&(()=>{
         const isOpen = id => expandedGuideSection===id;
         const handleCopy = (cmd) => {
@@ -3696,7 +3696,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {/* Header */}
             <div style={{marginBottom:16}}>
               <h2 style={{color:"var(--text-primary)",fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.3}}>kubectl Cheat Sheet</h2>
-              <p style={{color:"var(--text-muted)",fontSize:12,lineHeight:1.4,margin:"4px 0 0"}}>Copy-ready commands — click to expand</p>
+              <p style={{color:"var(--text-muted)",fontSize:12,lineHeight:1.4,margin:"4px 0 0"}}>Copy-ready commands - click to expand</p>
               <div style={{display:"flex",gap:6,marginTop:8}}>
                 <span style={{fontSize:11,color:"var(--text-secondary)",background:"var(--glass-4)",border:"1px solid var(--glass-8)",borderRadius:4,padding:"2px 8px"}}>{CHEATSHEET.length} sections</span>
                 <span style={{fontSize:11,color:"var(--text-secondary)",background:"var(--glass-4)",border:"1px solid var(--glass-8)",borderRadius:4,padding:"2px 8px"}}>{totalCmds} commands</span>
@@ -3885,7 +3885,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         // Active incidents count
         const activeIncidents = monitorIncidents ? monitorIncidents.filter(i => i.status !== "resolved") : [];
 
-        // Last checked time — statusTick dependency keeps this value live
+        // Last checked time - statusTick dependency keeps this value live
         void statusTick;
         const lastChecked = !loading && services.length
           ? new Date(Math.max(...services.map(s => new Date(s.last_checked).getTime())))
@@ -3996,7 +3996,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
 
             {/* ── UPTIME - LAST 30 DAYS ── */}
-            {sectionTitle(`Uptime — last ${monitoringDays} days`)}
+            {sectionTitle(`Uptime - last ${monitoringDays} days`)}
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {services.map((svc)=>{
                 const bars = getDayBars(svc.service_name);
@@ -4081,10 +4081,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </div>
                   {(inc.impact||inc.root_cause||inc.resolution||inc.prevention)&&(
                     <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid var(--glass-4)",fontSize:12,color:"var(--text-muted)",lineHeight:1.6}}>
-                      {inc.impact&&<div style={{marginBottom:6}}><span style={{color:"var(--text-secondary)",fontWeight:600}}>Impact</span> — {inc.impact}</div>}
-                      {inc.root_cause&&<div style={{marginBottom:6}}><span style={{color:"var(--text-secondary)",fontWeight:600}}>Root Cause</span> — {inc.root_cause}</div>}
-                      {inc.resolution&&<div style={{marginBottom:6}}><span style={{color:"var(--text-secondary)",fontWeight:600}}>Resolution</span> — {inc.resolution}</div>}
-                      {inc.prevention&&<div><span style={{color:"var(--text-secondary)",fontWeight:600}}>Prevention</span> — {inc.prevention}</div>}
+                      {inc.impact&&<div style={{marginBottom:6}}><span style={{color:"var(--text-secondary)",fontWeight:600}}>Impact</span> - {inc.impact}</div>}
+                      {inc.root_cause&&<div style={{marginBottom:6}}><span style={{color:"var(--text-secondary)",fontWeight:600}}>Root Cause</span> - {inc.root_cause}</div>}
+                      {inc.resolution&&<div style={{marginBottom:6}}><span style={{color:"var(--text-secondary)",fontWeight:600}}>Resolution</span> - {inc.resolution}</div>}
+                      {inc.prevention&&<div><span style={{color:"var(--text-secondary)",fontWeight:600}}>Prevention</span> - {inc.prevention}</div>}
                     </div>
                   )}
                 </div>
@@ -4155,7 +4155,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             ) : (
             <div>
               <div style={{marginBottom:18}}>
-                {/* Row 1: progress indicator — prominent and centered */}
+                {/* Row 1: progress indicator - prominent and centered */}
                 <div className="quiz-bar" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8,direction:dir}}>
                   {questionIndex > 0 && (
                     <button onClick={()=>setQuestionIndex(p=>Math.max(0, p-1))}
@@ -4169,7 +4169,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   {isInHistoryMode && !tryAgainActive && <span style={{fontSize:11,color:"#A855F7",fontWeight:700,background:"rgba(168,85,247,0.12)",padding:"2px 8px",borderRadius:6}}>{t("reviewing")}</span>}
                   {tryAgainActive && <span style={{fontSize:11,color:"#F59E0B",fontWeight:700,background:"rgba(245,158,11,0.12)",padding:"2px 8px",borderRadius:6}}>{t("tryAgainBadge")}</span>}
                 </div>
-                {/* Row 2: stats bar — timer, streak, score */}
+                {/* Row 2: stats bar - timer, streak, score */}
                 <div className="quiz-bar-right" style={{display:"flex",gap:10,alignItems:"center",justifyContent:"center",marginBottom:8,direction:"ltr"}}>
                   {!isInHistoryMode&&(timerEnabled||isInterviewMode)&&<span aria-live="off" aria-label={`${timeLeft} ${lang==="en"?"seconds":"שניות"}`} style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}><span aria-hidden="true">⏱ {timeLeft}</span></span>}
                   {!isInHistoryMode&&!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} aria-pressed={timerEnabled} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"var(--text-dim)",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
@@ -4444,7 +4444,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <button onClick={()=>{window.va?.track("signup_clicked",{source:"quiz_game"});setAuthScreen("signup");setUser(null);}} style={{background:"none",border:"none",color:"#00D4FF",fontWeight:700,cursor:"pointer",fontSize:13,textDecoration:"underline"}}>{t("signupLink")}</button>
             </div>}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {/* Next topic button — only shown when ALL levels of current topic are mastered */}
+              {/* Next topic button - only shown when ALL levels of current topic are mastered */}
               {nextTopicIdx>0&&nextTopicIdx<TOPICS.length&&effectivelyComplete&&LEVEL_ORDER.every(lvl=>{if(lvl===selectedLevel) return effectivelyComplete; const r=completedTopics[`${selectedTopic.id}_${lvl}`]; return r&&(r.correct===r.total||r.retryComplete);})&&(()=>{
                 const nt=TOPICS[nextTopicIdx];
                 return<button onClick={()=>startTopic(nt,"easy")}
