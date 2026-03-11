@@ -490,17 +490,19 @@ function renderQuestion(qText, lang) {
       </div>
     );
   }
-  const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized)/;
+  const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized|Events:|Warning\s|Normal\s|\d+\/\d+\s|\d+[a-z]*\s{2,})/;
   return (
     <div style={{display:"flex",flexDirection:"column",gap:12}}>
       {paragraphs.map((para, idx) => {
         const lines = para.split("\n");
         const nonEmpty = lines.filter(l => l.trim());
-        const isCode = nonEmpty.length > 1 && nonEmpty.every(l => !hasHebrew(l) && terminalPat.test(l));
+        const matchCount = nonEmpty.filter(l => !hasHebrew(l) && terminalPat.test(l)).length;
+        const noHebrew = nonEmpty.every(l => !hasHebrew(l));
+        const isCode = noHebrew && nonEmpty.length >= 1 && matchCount >= Math.ceil(nonEmpty.length * 0.5);
         if (isCode) {
           return (
-            <pre key={idx} style={{margin:0,background:"var(--code-bg)",border:"1px solid var(--glass-10)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:13,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext"}}>
-              {para}
+            <pre key={idx} style={{margin:0,background:"rgba(0,0,0,0.5)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"14px 16px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext",lineHeight:1.7}}>
+              {para.replace(/^["״"]+|["״"]+$/g, "").trim()}
             </pre>
           );
         }
