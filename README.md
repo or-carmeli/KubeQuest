@@ -72,52 +72,43 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    USER(["👤 User"])
+### Runtime
 
-    subgraph VERCEL["Vercel Edge Network"]
-        SPA["React SPA\nReact 18 + Vite 5"]
+```mermaid
+flowchart LR
+    USER(["User"]) -->|HTTPS| SPA
+
+    subgraph Vercel
+        SPA["React SPA"]
     end
 
-    subgraph SB["Supabase"]
-        AUTH["Auth Service"]
+    subgraph Supabase
+        AUTH["Auth"]
         DB[("PostgreSQL")]
         EDGE["Edge Functions"]
-        CRON["pg_cron"]
     end
 
-    subgraph GH["GitHub Actions"]
-        CI["CI\nBuild Check"]
-        DOCK["Docker Pipeline\nBuild · Trivy Scan · Push\nSBOM · Provenance · Cosign Sign"]
-        SEC["Security Scan\nnpm audit · CodeQL"]
-        BOT["Dependabot"]
-    end
-
-    GHCR["📦 GHCR\nghcr.io/or-carmeli/kubequest"]
-
-    subgraph K8S["Kubernetes — Optional"]
-        ING["Ingress + TLS"] --> SVC["ClusterIP Service"] --> PODS["Pods ×2-10"]
-        HPA["HPA"] -.->|autoscales| PODS
-    end
-
-    USER -->|HTTPS| SPA
-    SPA -->|auth| AUTH
-    SPA -->|read / write| DB
-    CRON -->|every 60s| EDGE
+    SPA --> AUTH
+    SPA --> DB
     EDGE -->|health checks| DB
     EDGE -->|health checks| AUTH
-    SPA -->|status page| DB
-
-    DOCK -->|signed image + SBOM + provenance| GHCR
-    GHCR -.->|kubectl apply / ArgoCD| K8S
-    BOT -.->|dependency PRs| CI
 ```
 
-The application consists of:
-- **Frontend** — React SPA deployed on Vercel, with Supabase for auth, database, and edge functions
-- **CI/CD** — GitHub Actions pipeline that builds, scans, signs, and publishes container images to GHCR
-- **Kubernetes** _(optional)_ — production-ready manifests in `k8s/` for self-hosting on any cluster using the signed GHCR image
+### CI/CD Pipeline
+
+```mermaid
+flowchart LR
+    PUSH["git push"] --> CI["CI Check"]
+    PUSH --> BUILD["Build Image"]
+    BUILD --> SCAN["Trivy Scan"]
+    SCAN --> PUSH_IMG["Push to GHCR"]
+    PUSH_IMG --> ATTEST["SBOM + Provenance"]
+    ATTEST --> SIGN["Cosign Sign"]
+    SIGN --> VERIFY["Verify"]
+    VERIFY --> REF["Image Digest"]
+
+    BOT["Dependabot"] -.->|weekly PRs| CI
+```
 
 > **Production** runs on Vercel + Supabase. The `k8s/` manifests and Docker image on GHCR enable self-hosting on any Kubernetes cluster.
 
