@@ -947,10 +947,11 @@ export default function K8sQuestApp() {
     let score = 0;
     LEVEL_ORDER.forEach(lvl => {
       const r = completedTopics[`${topicId}_${lvl}`];
-      if (!r || r.total === 0) return;
-      score += r.retryComplete ? 1 : Math.min(r.correct, r.total) / r.total;
+      if (!r || !r.total) return;
+      score += r.retryComplete ? 1 : Math.min(r.correct ?? 0, r.total) / r.total;
     });
-    return LEVEL_ORDER.length > 0 ? Math.min(100, Math.round((score / LEVEL_ORDER.length) * 100)) : 0;
+    const pct = LEVEL_ORDER.length > 0 ? Math.min(100, Math.round((score / LEVEL_ORDER.length) * 100)) : 0;
+    return Number.isFinite(pct) ? pct : 0;
   };
 
   // Compute best_score (internal canonical metric) from completedTopics.
@@ -964,7 +965,7 @@ export default function K8sQuestApp() {
       const topicId = parts.slice(0, -1).join("_");
       if (isFreeMode(topicId)) return sum;               // BUG-E fix: skip mixed/daily
       const lvl = parts[parts.length - 1];
-      return sum + (res.correct * (LEVEL_CONFIG[lvl]?.points ?? 0));
+      return sum + ((res.correct ?? 0) * (LEVEL_CONFIG[lvl]?.points ?? 0));
     }, 0);
   const currentLevelData = selectedTopic && selectedLevel && !isFreeMode(selectedTopic.id) && !retryMode ? getLevelData(selectedTopic, selectedLevel) : null;
   // SAFETY: never fall back to unshuffled currentLevelData.questions — that would serve
@@ -2034,9 +2035,8 @@ export default function K8sQuestApp() {
     if (!correct && !isFree && !isRetryRef.current && selectedTopic && selectedLevel) {
       const key = `${selectedTopic.id}_${selectedLevel}`;
       setCompletedTopics(prev => {
-        const existing = prev[key] || {};
-        const prevWrong = existing.wrongQuestions || [];
-        return { ...prev, [key]: { ...existing, wrongQuestions: [...prevWrong, { q: q.q, options: q.options, answer: result.correctIndex }], wrongIndices: [...(existing.wrongIndices || []), questionIndex] } };
+        const existing = prev[key] || { correct: 0, total: 0, wrongQuestions: [], wrongIndices: [] };
+        return { ...prev, [key]: { ...existing, wrongQuestions: [...(existing.wrongQuestions || []), { q: q.q, options: q.options, answer: result.correctIndex }], wrongIndices: [...(existing.wrongIndices || []), questionIndex] } };
       });
     }
     // Single atomic setStats call — prevents React batching from clobbering streak

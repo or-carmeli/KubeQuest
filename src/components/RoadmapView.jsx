@@ -17,16 +17,17 @@ function stageProgress(topicId, completedTopics) {
   let score = 0;
   LVL_ORDER.forEach(lvl => {
     const r = completedTopics[`${topicId}_${lvl}`];
-    if (!r || r.total === 0) return;
-    score += r.retryComplete ? 1 : Math.min(r.correct, r.total) / r.total;
+    if (!r || !r.total) return;
+    score += r.retryComplete ? 1 : Math.min(r.correct ?? 0, r.total) / r.total;
   });
-  return LVL_ORDER.length > 0 ? Math.min(100, Math.round((score / LVL_ORDER.length) * 100)) : 0;
+  const pct = LVL_ORDER.length > 0 ? Math.min(100, Math.round((score / LVL_ORDER.length) * 100)) : 0;
+  return Number.isFinite(pct) ? pct : 0;
 }
 
 function isStageCompleted(topicId, completedTopics) {
   return LVL_ORDER.every(lvl => {
     const r = completedTopics[`${topicId}_${lvl}`];
-    return r && (r.correct === r.total || r.retryComplete);
+    return r && r.total && (r.correct === r.total || r.retryComplete);
   });
 }
 
