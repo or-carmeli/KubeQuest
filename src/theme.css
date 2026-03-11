@@ -61,6 +61,9 @@
   /* Gradients */
   --gradient-body: linear-gradient(160deg, #020817 0%, #0f172a 60%, #020817 100%);
   --gradient-body-simple: linear-gradient(160deg, #020817, #0f172a);
+
+  /* Grid overlay */
+  --grid-line: rgba(0,212,255,0.02);
 }
 
 /* ── Light theme ─────────────────────────────────────────────────── */
@@ -118,6 +121,9 @@
 
   --gradient-body: linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 60%, #f0f4f8 100%);
   --gradient-body-simple: linear-gradient(160deg, #f0f4f8, #e2e8f0);
+
+  /* Grid overlay for light mode — invisible on light bg */
+  --grid-line: rgba(0,0,0,0.03);
 }
 
 body {

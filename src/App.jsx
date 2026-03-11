@@ -533,7 +533,7 @@ function renderQuestion(qText, lang) {
         const isCode = noHebrew && nonEmpty.length >= 1 && matchCount >= Math.ceil(nonEmpty.length * 0.5);
         if (isCode) {
           return (
-            <pre key={idx} style={{margin:0,background:"rgba(0,0,0,0.5)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"14px 16px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext",lineHeight:1.7}}>
+            <pre key={idx} style={{margin:0,background:"var(--code-bg)",border:"1px solid var(--glass-8)",borderRadius:10,padding:"14px 16px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext",lineHeight:1.7}}>
               {para.replace(/^["״"]+|["״"]+$/g, "").trim()}
             </pre>
           );
@@ -2727,7 +2727,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (!authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded)) {
     return (
-    <div data-kq-rendered="loading" style={{minHeight:"100vh",background:"#020817",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif"}}>
+    <div data-kq-rendered="loading" style={{minHeight:"100vh",background:"var(--bg-body)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif"}}>
       <style>{`
         @keyframes lspin  { from { transform: rotate(0deg)   } to { transform: rotate(360deg)  } }
         @keyframes lspin2 { from { transform: rotate(0deg)   } to { transform: rotate(-360deg) } }
@@ -2798,11 +2798,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         </div>
 
         {/* ── Loading text ── */}
-        <div style={{color:"#475569",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
+        <div style={{color:"var(--text-dim)",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
 
         {/* ── Debug panel (visible after 2 s) ── */}
         {bootElapsed >= 2 && (
-          <div style={{marginTop:20,fontFamily:"monospace",fontSize:10,color:"#475569",textAlign:"left",background:"rgba(0,0,0,0.3)",padding:8,borderRadius:6,lineHeight:1.6}}>
+          <div style={{marginTop:20,fontFamily:"monospace",fontSize:10,color:"var(--text-dim)",textAlign:"left",background:"var(--glass-20)",padding:8,borderRadius:6,lineHeight:1.6}}>
             <div>boot: {bootElapsed}s | gate: auth={String(authChecked)} data={String(dataLoaded)} min={String(minLoadElapsed)}</div>
             <div>user: {user ? (isGuest ? "guest" : user.id?.slice(0,8)) : "null"} | supabase: {supabase ? "ok" : "none"}</div>
             {lockInfo && <div>{lockInfo}</div>}
@@ -2961,7 +2961,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
       {/* Skip-to-content - invisible until focused by keyboard */}
       {!isStatusDomain && <a href="#main-content"
-        style={{position:"fixed",top:-100,left:8,zIndex:9999,padding:"8px 16px",background:"#00D4FF",color:"#020817",borderRadius:8,fontWeight:700,fontSize:14,textDecoration:"none",transition:"top 0.15s",direction:"ltr"}}
+        style={{position:"fixed",top:-100,left:8,zIndex:9999,padding:"8px 16px",background:"#00D4FF",color:"var(--text-bright)",borderRadius:8,fontWeight:700,fontSize:14,textDecoration:"none",transition:"top 0.15s",direction:"ltr"}}
         onFocus={e=>e.currentTarget.style.top="8px"}
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
@@ -3027,9 +3027,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .stats-grid{gap:5px!important}
 .stats-cell{padding:9px 3px!important}
 .action-card{padding:11px 10px!important}
-}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .stats-grid{margin-bottom:18px!important}.home-screen .action-card{margin-bottom:8px!important}.topic-list{gap:10px!important}}`}</style>
+}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .stats-grid{margin-bottom:18px!important}.home-screen .action-card{margin-bottom:8px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,100,180,0.07)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284c7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.12)}[data-theme="light"] .topic-next{border-color:rgba(0,130,199,0.22)!important;box-shadow:0 2px 16px rgba(0,130,199,0.07)!important}`}</style>
       {!isStatusDomain && <>
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(rgba(0,212,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.02) 1px,transparent 1px)",backgroundSize:"48px 48px"}}/>
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)",backgroundSize:"48px 48px"}}/>
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
       {showConfetti&&!a11y.reduceMotion&&<Confetti/>}
       {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span aria-hidden="true" style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"var(--text-primary)",fontSize:14,fontWeight:700}}>{lang==="en"?newAchievement.nameEn:newAchievement.name}</div></div></div>}
@@ -3312,11 +3312,18 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {/* ── Theme toggle ── */}
-          <div style={{padding:"4px 14px 6px"}}>
+          <div style={{padding:"6px 14px 8px"}}>
             <button onClick={toggleTheme}
-              aria-pressed={theme==="light"}
-              style={{width:"100%",padding:"6px 4px",background:theme==="light"?"rgba(245,158,11,0.1)":"var(--glass-4)",border:`1px solid ${theme==="light"?"rgba(245,158,11,0.35)":"var(--glass-8)"}`,borderRadius:6,color:theme==="light"?"#F59E0B":"var(--text-muted)",fontSize:11,cursor:"pointer",fontWeight:theme==="light"?700:400}}>
-              {theme==="dark"?(lang==="en"?"☀️ Light Mode":"☀️ מצב בהיר"):(lang==="en"?"🌙 Dark Mode":"🌙 מצב כהה")}
+              role="switch"
+              aria-checked={theme==="light"}
+              aria-label={theme==="dark"?"Switch to light mode":"Switch to dark mode"}
+              style={{width:"100%",padding:"8px 12px",background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:8,cursor:"pointer",display:"flex",alignItems:dir==="rtl"?"center":"center",justifyContent:"space-between",flexDirection:dir==="rtl"?"row-reverse":"row",gap:10}}>
+              <span style={{fontSize:12,color:"var(--text-secondary)",fontWeight:600,direction:dir}}>
+                {lang==="en"?(theme==="dark"?"Dark Mode":"Light Mode"):(theme==="dark"?"מצב כהה":"מצב בהיר")}
+              </span>
+              <span style={{position:"relative",width:36,height:20,borderRadius:10,background:theme==="light"?"#F59E0B":"var(--glass-15)",border:`1px solid ${theme==="light"?"rgba(245,158,11,0.4)":"var(--glass-10)"}`,transition:"background 0.2s,border-color 0.2s",flexShrink:0,display:"inline-block"}}>
+                <span style={{position:"absolute",top:2,left:theme==="light"?18:2,width:14,height:14,borderRadius:"50%",background:theme==="light"?"#fff":"var(--text-muted)",transition:"left 0.2s,background 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
+              </span>
             </button>
           </div>
 
@@ -3356,7 +3363,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               const logoText=(
                 <div style={{textAlign:"left"}}>
-                  <div style={{display:"inline-flex",alignItems:"center",gap:6}}><h1 className="home-title-text" style={{fontSize:28,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.5,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><span style={{fontSize:11,padding:"2px 6px",borderRadius:6,background:"rgba(255,255,255,0.08)",color:"#bbb",fontWeight:600,letterSpacing:0.3,lineHeight:1,flexShrink:0}}>Beta</span></div>
+                  <div style={{display:"inline-flex",alignItems:"center",gap:6}}><h1 className="home-title-text" style={{fontSize:28,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.5,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><span style={{fontSize:11,padding:"2px 6px",borderRadius:6,background:"var(--glass-8)",color:"var(--text-muted)",fontWeight:600,letterSpacing:0.3,lineHeight:1,flexShrink:0}}>Beta</span></div>
                   <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}>
                     <span style={{fontSize:12,color:"var(--text-muted)",letterSpacing:0.3}}>Train Your Kubernetes Skills</span>
                     <span style={{fontSize:9,color:"var(--text-dim)",background:"var(--glass-5)",borderRadius:4,padding:"1px 5px",fontWeight:600,letterSpacing:0.3}}>v{APP_VERSION}</span>
@@ -4313,7 +4320,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         {/* Explanation body */}
                         {!isInterviewMode&&<div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:10}}>
                           {paragraphs.map((s,idx)=>(
-                            <div key={idx} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
+                            <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
                               {renderBidiBlock(s,lang)}
                             </div>
                           ))}
@@ -4339,7 +4346,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         <div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:14}}>
                           {(()=>{const idDir=hasHebrew(q.options[iCorrectIdx])?"rtl":"ltr";return <div dir={idDir} style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:idDir,textAlign:idDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(q.options[iCorrectIdx],lang):q.options[iCorrectIdx]}</div>;})()}
                           {iParagraphs.map((s,idx)=>(
-                            <div key={idx} dir={dir} style={{color:"#c8d2de",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
+                            <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
                               {renderBidiBlock(s,lang)}
                             </div>
                           ))}
