@@ -88,12 +88,16 @@ jobs:
       - name: Sign image with Cosign (keyless)
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
-        run: cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: cosign sign --yes "${IMAGE,,}@${DIGEST}"
 
       - name: Verify signature
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
-        run: cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com --certificate-identity-regexp "github\.com/or-carmeli/KubeQuest" "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com --certificate-identity-regexp "github\.com/or-carmeli/KubeQuest" "${IMAGE,,}@${DIGEST}"
 
       - name: Print immutable image reference
-        run: echo "Image published → ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: echo "Image published → ${IMAGE,,}@${{ steps.push.outputs.digest }}"
