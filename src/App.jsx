@@ -104,7 +104,9 @@ const INCIDENT_SAVE_KEY = "incident_progress_v1";
 // v2.0.0 — major: portfolio repo refactor (BSL 1.1, proprietary content extracted)
 // v2.1.0 — security hardening, scoring fixes, question rebalance, incident history
 // v2.2.0 — real-time monitoring system (health checks, uptime history, auto-incidents)
-const APP_VERSION  = "2.2.0";
+// v2.3.0 — startup resilience (SW cache, localStorage defence, Supabase lock fix, NaN guards)
+// v2.4.0 — analytics events, RTL fixes (hyphens, arrows), quiz UX improvements, score display cleanup
+const APP_VERSION  = "2.4.0";
 const SESSION_START = new Date();
 
 // Resume modal behaviour constants
