@@ -310,16 +310,16 @@ export const TOPICS = [
                 "limits מגדיר את כמות המשאבים המקסימלית שקונטיינר יכול להשתמש בהם.\nחריגת memory גורמת להריגת הקונטיינר (OOMKill, exit code 137).\nחריגת CPU גורמת ל-throttling בלבד, ללא הריגה.\nההבדל בין requests ל-limits:\n• requests = משאבים מינימליים שה-Scheduler משתמש בהם כדי לתזמן Pod ל-Node.\n• limits = תקרת השימוש במשאבים בזמן ריצה.\nדוגמה:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nה-Scheduler מתזמן את ה-Pod לפי requests, אבל הקונטיינר לא יכול לחרוג מה-limits בזמן ריצה.",
             },
             {
-              q: "מה taints ו-tolerations פותרים?",
+              q: "מה עושים taints ו-tolerations ב-Kubernetes?",
               options: [
-              "בעיות TLS certificates שפגו ב-ingress controllers",
-              "שליטה על איזה Pods מותרים לרוץ על Nodes מסוימים",
-              "בעיות DNS שנגרמות מNodeים שמשתמשים ב-CoreDNS ישן",
-              "בעיות storage כשPVCs לא מצליחים להתחבר ל-Nodes",
+              "מאפשרים scheduling של Pods על Nodes מסוימים רק אם ל-Pod יש toleration תואם",
+              "מגבילים תעבורת רשת נכנסת ויוצאת בין Pods ב-Cluster",
+              "מגדירים כללי RBAC שמגבילים גישה של ServiceAccounts ל-Nodes",
+              "קובעים סדר עדיפויות scheduling בין Pods שמתחרים על משאבים",
 ],
-              answer: 1,
+              answer: 0,
               explanation:
-                "Taint = שלט \"כניסה אסורה\" על Node. Toleration = אישור ב-Pod spec לרוץ שם.\nPods ללא toleration תואם לא יתוזמנו על Node עם taint.\nמשמש לייחוד Nodes ל-GPU workloads, spot instances וכו׳.",
+                "`taint` = הגבלה שמוצבת על Node. רק Pods עם toleration תואם יתוזמנו עליו.\n`toleration` = הרשאה שמוגדרת ב-Pod spec ומאפשרת לו לרוץ על Node עם אותו taint.\nPods ללא toleration תואם לא יתוזמנו על Node עם אותו taint.",
             },
             {
               q: "מה שלוש קלאסות QoS של Pod?",
@@ -408,16 +408,16 @@ export const TOPICS = [
                 "limits define the maximum amount of resources a container can use.\nExceeding a memory limit causes the container to be killed (OOMKill, exit code 137).\nExceeding a CPU limit causes throttling, not termination.\nThe difference between requests and limits:\n• requests = minimum resources the Scheduler uses to place a Pod on a Node.\n• limits = the hard ceiling on resource usage at runtime.\nExample:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nThe Scheduler schedules the Pod based on requests, but the container cannot exceed the limits during runtime.",
             },
             {
-              q: "What problem do taints and tolerations solve?",
+              q: "What do taints and tolerations do in Kubernetes?",
               options: [
-              "Controlling which Pods are allowed to run on specific Nodes",
-              "DNS resolution failures caused by Nodes running outdated CoreDNS versions",
-              "TLS certificate expiry issues on ingress controllers",
-              "Storage binding failures when PVCs cannot attach to specific Nodes",
+              "Allow Pods to be scheduled on tainted Nodes only if the Pod has a matching toleration",
+              "Restrict inbound and outbound network traffic between Pods in the Cluster",
+              "Define RBAC rules that limit ServiceAccount access to specific Nodes",
+              "Set scheduling priority order between Pods competing for resources",
 ],
               answer: 0,
               explanation:
-                "Taint = \"No entry\" sign on a Node. Toleration = Pod's pass to ignore that taint.\nPods without a matching toleration cannot be scheduled on tainted Nodes.\nUsed to reserve specialized Nodes (GPU, spot instances) for specific workloads.",
+                "`taint` = a restriction placed on a Node. Only Pods with a matching toleration can be scheduled on it.\n`toleration` = permission defined in the Pod spec that allows it to run on a Node with that taint.\nPods without a matching toleration will not be scheduled on a Node with that taint.",
             },
             {
               q: "What are the three Pod QoS classes?",
