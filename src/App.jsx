@@ -1382,6 +1382,10 @@ export default function K8sQuestApp() {
   // Pre-load saved quiz data when returning home (modal is NOT shown here - only when starting a quiz)
   useEffect(() => {
     if (screen !== "home" || !user) return;
+    // Clear the "once per session" gate so the resume modal can reappear if the
+    // user leaves a quiz and comes back.  Without this, the second exit-and-return
+    // within the same tab skips the modal and starts a fresh quiz (bug).
+    try { sessionStorage.removeItem(RESUME_SESSION_KEY); } catch {}
     const saved = loadQuizState();
     if (saved && saved.userId === (user.id || "guest")) setResumeData(saved);
     else setResumeData(null); // Clear stale resume data after quiz completion
