@@ -322,16 +322,16 @@ export const TOPICS = [
                 "`taint` = הגבלה שמוצבת על Node. רק Pods עם toleration תואם יתוזמנו עליו.\n`toleration` = הרשאה שמוגדרת ב-Pod spec ומאפשרת לו לרוץ על Node עם אותו taint.\nPods ללא toleration תואם לא יתוזמנו על Node עם אותו taint.",
             },
             {
-              q: "מה שלוש קלאסות QoS של Pod?",
+              q: "`Node` חווה לחץ זיכרון. שלושה `Pods` רצים עליו: אחד `Guaranteed`, אחד `Burstable` ואחד `BestEffort`. איזה `Pod` יפונה ראשון?",
               options: [
-              "Guaranteed, Burstable, BestEffort – לפי יחס בין requests ל-limits",
-              "Low, Medium, High – לפי מספר ה-replicas שהוגדרו",
-              "Bronze, Silver, Gold – לפי עדיפות PriorityClass שהוגדרה",
-              "Fast, Normal, Slow – לפי זמן תגובת readiness probe",
+              "ה-`Pod` עם `QoS` class `BestEffort` יפונה ראשון",
+              "ה-`Pod` עם `QoS` class `Guaranteed` יפונה ראשון",
+              "ה-`Pod` עם הכי הרבה replicas יפונה ראשון",
+              "Kubernetes יפנה את כל ה-`Pods` בו-זמנית",
 ],
               answer: 0,
               explanation:
-                "QoS class נקבע אוטומטית לפי requests ו-limits.\nGuaranteed (requests=limits) - אחרון להיגרש.\nBurstable - חלקי.\nBestEffort (ללא הגדרות) - ראשון להיגרש.\nהגדרת requests=limits לכל הקונטיינרים = Guaranteed = הגנה מקסימלית.",
+                "`QoS` (Quality of Service) קובע את סדר העדיפויות של `Pods` כש-`Node` נמצא בלחץ משאבים, בעיקר לחץ זיכרון.\nKubernetes קובע את ה-`QoS` class באופן אוטומטי לפי ה-`requests` וה-`limits` שמוגדרים לקונטיינרים.\n\n`Guaranteed`: `requests` ו-`limits` מוגדרים ושווים בכל הקונטיינרים. הגנה מקסימלית מפינוי.\n`Burstable`: `requests` מוגדרים אבל `limits` גבוהים יותר. הגנה חלקית.\n`BestEffort`: אין `requests` ואין `limits`. `Pods` אלו יפונו ראשונים כש-`Node` חווה לחץ זיכרון.",
             },
             {
               q: "מה ephemeral container ב-Kubernetes?",
@@ -420,16 +420,16 @@ export const TOPICS = [
                 "`taint` = a restriction placed on a Node. Only Pods with a matching toleration can be scheduled on it.\n`toleration` = permission defined in the Pod spec that allows it to run on a Node with that taint.\nPods without a matching toleration will not be scheduled on a Node with that taint.",
             },
             {
-              q: "What are the three Pod QoS classes?",
+              q: "A `Node` is experiencing memory pressure. Three `Pods` are running on it: one `Guaranteed`, one `Burstable`, and one `BestEffort`. Which `Pod` is evicted first?",
               options: [
-              "Low, Medium, High - based on the number of configured replicas",
-              "Bronze, Silver, Gold - based on the assigned PriorityClass value",
-              "Fast, Normal, Slow - based on the readiness probe response time",
-              "Guaranteed, Burstable, BestEffort - based on the relationship between requests and limits",
+              "The `Pod` with `QoS` class `Guaranteed` is evicted first",
+              "The `Pod` with `QoS` class `BestEffort` is evicted first",
+              "The `Pod` with the most replicas is evicted first",
+              "Kubernetes evicts all `Pods` at the same time",
 ],
-              answer: 3,
+              answer: 1,
               explanation:
-                "QoS class is auto-assigned based on requests and limits settings.\nGuaranteed (requests=limits) → last evicted. Burstable → partial. BestEffort (none set) → first evicted.\nSet requests=limits on all containers for Guaranteed - maximum protection.",
+                "`QoS` (Quality of Service) determines the priority of `Pods` when a `Node` experiences resource pressure, especially memory pressure.\nKubernetes determines the `QoS` class automatically based on the `requests` and `limits` defined for containers.\n\n`Guaranteed`: `requests` and `limits` are defined and equal for all containers. Highest protection from eviction.\n`Burstable`: `requests` are defined but `limits` are higher. Partial protection.\n`BestEffort`: no `requests` and no `limits` defined. These `Pods` are the first to be evicted when the `Node` experiences memory pressure.",
             },
             {
               q: "What is an ephemeral container in Kubernetes?",
