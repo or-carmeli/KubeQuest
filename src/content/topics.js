@@ -298,16 +298,16 @@ export const TOPICS = [
                 "PodDisruptionBudget (PDB) מגדיר את מספר ה-Pods המינימלי שחייב להישאר זמין בזמן disruptions מתוכננות, כמו `kubectl drain`.\nדוגמה: עם replicas: 3 ו-minAvailable: 2, Kubernetes יאשר פינוי רק אם לפחות 2 Pods נשארים זמינים.\nמגן על זמינות אפליקציות קריטיות בזמן maintenance.",
             },
             {
-              q: "מה resource limits?",
+              q: "מה מגדירים resource limits ב-Kubernetes?",
               options: [
-              "מגבלת ports נכנסים שה-Service מאפשר לPod",
-              "כמות משאבים מינימלית שה-Scheduler מבטיח לPod לפני תזמון",
-              "גודל ה-container image שנשמר ב-Node cache",
-              "כמות משאבים מקסימלית שקונטיינר רשאי להשתמש",
+              "כמות משאבים מקסימלית שקונטיינר רשאי להשתמש בהם בזמן ריצה",
+              "כמות משאבים מינימלית שה-Scheduler מבטיח לפני תזמון Pod",
+              "מגבלת ports נכנסים שה-Service מאפשר ל-Pod",
+              "גודל container image מקסימלי שמותר לשמור ב-Node",
 ],
-              answer: 3,
+              answer: 0,
               explanation:
-                "limits מגדיר תקרת משאבים מקסימלית לקונטיינר.\nחריגת memory גורמת ל-OOMKill (exit code 137).\nחריגת CPU גורמת ל-throttling בלבד.\nrequests = תזמון. limits = תקרה קשיחה.",
+                "limits מגדיר את כמות המשאבים המקסימלית שקונטיינר יכול להשתמש בהם.\nחריגת memory גורמת להריגת הקונטיינר (OOMKill, exit code 137).\nחריגת CPU גורמת ל-throttling בלבד, ללא הריגה.\nההבדל בין requests ל-limits:\n• requests = משאבים מינימליים שה-Scheduler משתמש בהם כדי לתזמן Pod ל-Node.\n• limits = תקרת השימוש במשאבים בזמן ריצה.\nדוגמה:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nה-Scheduler מתזמן את ה-Pod לפי requests, אבל הקונטיינר לא יכול לחרוג מה-limits בזמן ריצה.",
             },
             {
               q: "מה taints ו-tolerations פותרים?",
@@ -396,16 +396,16 @@ export const TOPICS = [
                 "PodDisruptionBudget (PDB) defines the minimum number of Pods that must remain available during voluntary disruptions such as `kubectl drain`.\nExample: with replicas: 3 and minAvailable: 2, Kubernetes will only allow eviction if at least 2 Pods remain available.\nProtects critical application availability during Node maintenance.",
             },
             {
-              q: "What are resource limits?",
+              q: "What do resource limits define in Kubernetes?",
               options: [
-              "Size of the container image cached on the Node",
-              "Maximum resources a container is allowed to use",
-              "Minimum resources the Scheduler guarantees to the Pod before placing it",
-              "Maximum number of ports the Service exposes for the Pod",
+              "The maximum resources a container is allowed to use at runtime",
+              "The minimum resources the Scheduler guarantees before placing a Pod",
+              "The maximum number of inbound ports a Service allows for a Pod",
+              "The maximum container image size that can be cached on a Node",
 ],
-              answer: 1,
+              answer: 0,
               explanation:
-                "limits is the hard ceiling on resources a container can use.\nExceeding memory limit → OOMKill (exit code 137). Exceeding CPU limit → throttling only.\nrequests = scheduling hint. limits = hard cap.",
+                "limits define the maximum amount of resources a container can use.\nExceeding a memory limit causes the container to be killed (OOMKill, exit code 137).\nExceeding a CPU limit causes throttling, not termination.\nThe difference between requests and limits:\n• requests = minimum resources the Scheduler uses to place a Pod on a Node.\n• limits = the hard ceiling on resource usage at runtime.\nExample:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nThe Scheduler schedules the Pod based on requests, but the container cannot exceed the limits during runtime.",
             },
             {
               q: "What problem do taints and tolerations solve?",
