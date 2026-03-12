@@ -260,9 +260,10 @@ const TRANSLATIONS = {
     weakAreaEmpty_m: "עדיין אין מספיק נתונים, התחל לענות כדי שנמליץ מה לחזק.",
     goBackToTopic_m: "חזור לנושא הזה",
     resumeTitle: "המשך חידון?", resumeTitle_m: "המשך חידון?",
-    resumeBody: "נמצא חידון שלא הסתיים. רוצה להמשיך מהיכן שהפסקת?",
-    resumeBody_m: "נמצא חידון שלא הסתיים. רוצה להמשיך מהיכן שהפסקת?",
+    resumeBody: "נמצא חידון שלא הסתיים. רוצה להמשיך מאיפה שהפסקת?",
+    resumeBody_m: "נמצא חידון שלא הסתיים. רוצה להמשיך מאיפה שהפסקת?",
     resumeBtn: "המשיכי", resumeBtn_m: "המשך",
+    resumeHint: "החידון ייפתח מהשאלה שבה עצרת", resumeHint_m: "החידון ייפתח מהשאלה שבה עצרת",
     resumeToast: "ממשיכים מאיפה שהפסקת.", resumeToast_m: "ממשיכים מאיפה שהפסקת.",
     resumeDiscard: "התחילי מחדש", resumeDiscard_m: "התחל מחדש",
     prevQuestion: "→ שאלה קודמת", backToCurrent: "→ חזרי לחידון", backToCurrent_m: "→ חזור לחידון",
@@ -388,6 +389,7 @@ const TRANSLATIONS = {
     resumeTitle: "Resume Quiz?",
     resumeBody: "You have an unfinished quiz. Continue where you left off?",
     resumeBtn: "Continue",
+    resumeHint: "You'll pick up from the exact question you stopped at",
     resumeToast: "Resuming your quiz where you left off.",
     resumeDiscard: "Start Fresh",
     prevQuestion: "← Previous Question", backToCurrent: "Back to Quiz →",
@@ -3061,7 +3063,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <div style={{marginBottom:16}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--text-muted)",marginBottom:4}}>
                 <span>{lang==="en"?"Progress":"התקדמות"}</span>
-                <span style={{color:"#00D4FF",fontWeight:700}}>{answered} / {total} {lang==="en"?"questions answered":"שאלות נענו"}</span>
+                <span style={{color:"#00D4FF",fontWeight:700}}>{lang==="en"?`${answered} / ${total} questions answered`:`ענית על ${answered} מתוך ${total} שאלות`}</span>
               </div>
               <div style={{height:6,background:"var(--glass-7)",borderRadius:4,overflow:"hidden"}}>
                 <div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#00D4FF,#A855F7)",borderRadius:4,transition:"width 0.3s ease"}}/>
@@ -3072,6 +3074,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,rgba(0,212,255,0.15),rgba(168,85,247,0.15))",border:"1px solid rgba(0,212,255,0.35)",borderRadius:12,color:"#00D4FF",fontSize:15,fontWeight:800,cursor:"pointer"}}>
                 {t("resumeBtn")} ▶
               </button>
+              <div style={{color:"var(--text-dim)",fontSize:11,textAlign:"center",marginTop:-4}}>{t("resumeHint")}</div>
               <button onClick={handleDiscardResume}
                 style={{width:"100%",padding:"12px",background:"var(--glass-3)",border:"1px solid var(--glass-9)",borderRadius:12,color:"var(--text-muted)",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                 {t("resumeDiscard")}
