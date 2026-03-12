@@ -75,31 +75,35 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 ### Runtime
 
 ```mermaid
-flowchart LR
-    USER(["User"])
+flowchart TB
+    USER([User])
 
     subgraph Frontend["Frontend"]
-        SPA["React SPA\n(Vercel)"]
+        SPA["React SPA (Vercel)"]
+        PWA["PWA Service Worker\nOffline Cache"]
     end
 
-    subgraph Backend["Backend"]
-        AUTH["Supabase Auth"]
-        EDGE["Edge Functions"]
+    subgraph Backend["Supabase Backend"]
+        AUTH["Authentication"]
+        API["API / Data Access"]
+        EDGE["Edge Functions\nHealth Checks"]
     end
 
-    subgraph Data["Database"]
+    subgraph Database["Database"]
         DB[("PostgreSQL")]
     end
 
     USER -->|HTTPS| SPA
+    SPA --> PWA
     SPA --> AUTH
-    SPA --> DB
-    EDGE -->|health checks| AUTH
-    EDGE -->|health checks| DB
+    SPA --> API
+    API --> DB
+    EDGE --> AUTH
+    EDGE --> API
 
-    style Frontend fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
-    style Backend fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
-    style Data fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style Frontend fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#ffffff
+    style Backend fill:#111827,stroke:#A855F7,stroke-width:2px,color:#ffffff
+    style Database fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#ffffff
 ```
 
 ### CI/CD Pipeline
