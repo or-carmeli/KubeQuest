@@ -112,8 +112,7 @@ const SESSION_START = new Date();
 
 // Resume modal behaviour constants
 const RESUME_SESSION_KEY  = "resumeModalSeen";       // sessionStorage: shown once per tab
-const RESUME_DISMISS_KEY  = "resumeDismissedAt";     // localStorage: cooldown timestamp
-const RESUME_COOLDOWN_MS  = 10 * 60 * 1000;         // 10-minute cooldown after dismiss
+const RESUME_DISMISS_KEY  = "resumeDismissedAt";     // localStorage: legacy (kept for cleanup)
 const RESUME_MIN_PROGRESS = 0;                        // any answered question → offer resume
 
 const MIXED_TOPIC     = { id: "mixed",     icon: "🎲", name: "Mixed Quiz",        color: "#A855F7", levels: {} };
@@ -1699,9 +1698,8 @@ export default function K8sQuestApp() {
 
     // Resume quiz - only if it's a recent refresh (<2 min), not a new session.
     if (resumeData && isRecentQuizState(resumeData)) {
-      const answered = resumeData.questionIndex ?? 0;
-      const total = resumeData.questions?.length ?? 0;
-      if (answered < total) {
+      const { answered, total } = getResumeProgress(resumeData);
+      if (answered > 0 && answered <= total) {
         handleResumeQuiz();
         setResumeToast(true);
         setTimeout(() => setResumeToast(false), 3500);
@@ -2213,12 +2211,10 @@ export default function K8sQuestApp() {
   const shouldShowResumeModal = (saved) => {
     if (!saved) return false;
     const { answered, total } = getResumeProgress(saved);
-    if (answered <= 0 || answered >= total) return false;          // req 1
-    if (total > 0 && answered / total < RESUME_MIN_PROGRESS) return false; // req 5
+    if (answered <= 0) return false;
+    if (total > 0 && answered / total < RESUME_MIN_PROGRESS) return false;
     try {
-      if (sessionStorage.getItem(RESUME_SESSION_KEY)) return false; // req 3: once per session
-      const dismissedAt = safeGetItem(RESUME_DISMISS_KEY);
-      if (dismissedAt && Date.now() - parseInt(dismissedAt) < RESUME_COOLDOWN_MS) return false; // req 4
+      if (sessionStorage.getItem(RESUME_SESSION_KEY)) return false;
     } catch {}
     return true;
   };
@@ -2240,7 +2236,6 @@ export default function K8sQuestApp() {
   const handleResumeDismiss = () => {
     setShowResumeModal(false);
     pendingQuizStartRef.current = null;
-    try { localStorage.setItem(RESUME_DISMISS_KEY, Date.now().toString()); } catch {}
   };
 
   const updateA11y = (key, val) => setA11y(prev => {
