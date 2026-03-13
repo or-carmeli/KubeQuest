@@ -905,6 +905,12 @@ function renderHebrewPrefixTerms(text, lang, keyPrefix) {
 function renderBidi(text, lang) {
   if (!text || lang !== "he") return text;
 
+  // DNS/FQDN template patterns (e.g. <service-name>.<namespace>.svc.cluster.local)
+  // Render as a single isolated LTR code span to prevent bidi fragmentation on <> and dots
+  if (/^[<\w][\w.<>\-]*\.svc\.cluster\.local$/.test(text.trim()) || /^<[\w-]+>(\.<[\w-]+>)*(\.[a-z.]+)*$/.test(text.trim())) {
+    return <span dir="ltr" style={{unicodeBidi:"isolate",...CODE_SPAN_STYLE}}>{text}</span>;
+  }
+
   // Handle inline backtick code spans first: `term` → <span dir="ltr" style={code}>term</span>
   if (text.includes("`")) {
     const btParts = text.split(/`([^`]+)`/);
