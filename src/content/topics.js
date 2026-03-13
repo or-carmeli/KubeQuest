@@ -64,8 +64,8 @@ export const TOPICS = [
             {
               q: "מה Deployment עושה?",
               options: [
-              "מנהל IP addresses ומאפשר גישה חיצונית לאפליקציות מחוץ לCluster",
-              "מנהל הרשאות גישה לSecrets ו-ConfigMaps בין Namespaces",
+              "מנהל IP addresses ומאפשר גישה חיצונית לאפליקציות מחוץ ל-Cluster",
+              "מנהל הרשאות גישה ל-Secrets ו-ConfigMaps בין Namespaces",
               "מנהל קבוצת Pods זהים ושומר על מספרם",
               "מנהל אחסון מתמיד עבור StatefulSets ו-Databases",
 ],
@@ -76,9 +76,9 @@ export const TOPICS = [
             {
               q: "מה liveness probe עושה?",
               options: [
-              "בודק שקבצי הקונפיגורציה נטענו בהצלחה בהפעלת הPod",
+              "בודק שקבצי הקונפיגורציה נטענו בהצלחה בהפעלת ה-Pod",
               "בודק שהקונטיינר חי – אם נכשל, Kubernetes מפעיל אותו מחדש",
-              "בודק שהPod מחובר לService המתאים ומקבל traffic",
+              "בודק שה-Pod מחובר ל-Service המתאים ומקבל traffic",
               "בודק שגישה ל-API server עדיין תקינה מתוך הקונטיינר",
 ],
               answer: 1,
@@ -88,9 +88,9 @@ export const TOPICS = [
             {
               q: "מה readiness probe עושה?",
               options: [
-              "מאתחל מחדש את הPod לאחר שינוי ב-ConfigMap",
+              "מאתחל מחדש את ה-Pod לאחר שינוי ב-ConfigMap",
               "מוחק Pods ישנים כשגרסה חדשה עוברת rolling update",
-              "בודק שהPod מוכן לקבל traffic",
+              "בודק שה-Pod מוכן לקבל traffic",
               "מגדיר את כמות הזיכרון המינימלית שהקונטיינר צריך להפעלה",
 ],
               answer: 2,
@@ -113,9 +113,9 @@ export const TOPICS = [
               q: "מה ההבדל בין Job ל-CronJob?",
               options: [
               "Job רץ פעם אחת עד להשלמה, CronJob מתזמן Jobs לפי לוח זמנים",
-              "CronJob רץ מהר יותר כי הוא שומר containers בcache בין הרצות",
+              "CronJob רץ מהר יותר כי הוא שומר containers ב-cache בין הרצות",
               "Job ו-CronJob זהים אבל CronJob נתמך רק בגרסאות Kubernetes חדשות",
-              "Job מיועד לproduction בלבד, CronJob מיועד לסביבות פיתוח",
+              "Job מיועד ל-production בלבד, CronJob מיועד לסביבות פיתוח",
 ],
               answer: 0,
               explanation:
@@ -136,7 +136,7 @@ export const TOPICS = [
             {
               q: "מה מטרת Namespace ב-Kubernetes?",
               options: [
-              "שכבת רשת וירטואלית שמבדילה בין Pods בNodeים שונים",
+              "שכבת רשת וירטואלית שמבדילה בין Pods ב-Nodes שונים",
               "מנגנון לאחסון logs ומטריקות של Pods לטווח ארוך",
               "סוג מיוחד של Service שמאפשר גישה בין Clusters",
               "בידוד לוגי של משאבים לסביבות, צוותים, ופרויקטים",
@@ -253,8 +253,8 @@ export const TOPICS = [
               q: "מה היתרון של Rolling Update?",
               options: [
               "מאפשר לחזור לגרסה קודמת ללא שמירת revisions",
-              "מגביל את מספר הPods המחוברים ל-Service בזמן עדכון",
-              "מעדכן את כל הPods בבת אחת לחיסכון בזמן הפריסה",
+              "מגביל את מספר ה-Pods המחוברים ל-Service בזמן עדכון",
+              "מעדכן את כל ה-Pods בבת אחת לחיסכון בזמן הפריסה",
               "Zero downtime בזמן עדכון",
 ],
               answer: 3,
@@ -276,10 +276,10 @@ export const TOPICS = [
             {
               q: "מה ההבדל בין StatefulSet ל-Deployment?",
               options: [
-              "StatefulSet מתזמן Pods מהר יותר כי הוא שומר cache של הnode selection",
+              "StatefulSet מתזמן Pods מהר יותר כי הוא שומר cache של ה-node selection",
               "Pods ב-StatefulSet מקבלים שמות קבועים ואחסון קבוע",
               "StatefulSet לא תומך ב-rolling updates ומצריך manual restart",
-              "StatefulSet תומך רק בcloud providers ולא ב-on-premise clusters",
+              "StatefulSet תומך רק ב-cloud providers ולא ב-on-premise clusters",
 ],
               answer: 1,
               explanation:
@@ -289,8 +289,8 @@ export const TOPICS = [
               q: "מה PodDisruptionBudget עושה?",
               options: [
               "מגדיר מינימום Pods זמינים בזמן disruptions מתוכננות",
-              "מגביל את כמות ה-CPU שDeployment יכול לצרוך בזמן rolling update",
-              "מגביל תנועת רשת נכנסת לPods בזמן maintenance",
+              "מגביל את כמות ה-CPU ש-Deployment יכול לצרוך בזמן rolling update",
+              "מגביל תנועת רשת נכנסת ל-Pods בזמן maintenance",
               "מנהל את ה-scaling האוטומטי לפי מדדי CPU ו-Memory",
 ],
               answer: 0,
@@ -446,14 +446,14 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "DaemonSets, HPA, ומצבי כשל.\n🔹 DaemonSet – Pod אחד על כל Node (logging, monitoring, CNI)\n🔹 HPA – Horizontal Pod Autoscaler, מגדיל/מקטין replicas לפי CPU/Memory\n🔹 CrashLoopBackOff – קונטיינר קורס שוב ושוב\n🔹 OOMKilled – חרגנו ממגבלת הזיכרון\nCODE:\nkubectl autoscale deployment my-app --cpu-percent=50 --min=2 --max=10\napiVersion: apps/v1\nkind: DaemonSet",
+        theory: "DaemonSets, HPA, ומצבי כשל.\n🔹 DaemonSet – Pod אחד על כל Node (logging, monitoring, CNI)\n🔹 HPA – Horizontal Pod Autoscaler, מגדיל ומקטין replicas לפי CPU ו-Memory\n🔹 CrashLoopBackOff – קונטיינר קורס שוב ושוב\n🔹 OOMKilled – חרגנו ממגבלת הזיכרון\nCODE:\nkubectl autoscale deployment my-app --cpu-percent=50 --min=2 --max=10\napiVersion: apps/v1\nkind: DaemonSet",
         theoryEn: "DaemonSets, HPA, and failure states.\n🔹 DaemonSet – one Pod per Node (logging, monitoring, CNI)\n🔹 HPA – Horizontal Pod Autoscaler, scales replicas by CPU/Memory\n🔹 CrashLoopBackOff – container crashes repeatedly\n🔹 OOMKilled – container exceeded memory limit\nCODE:\nkubectl autoscale deployment my-app --cpu-percent=50 --min=2 --max=10\napiVersion: apps/v1\nkind: DaemonSet",
         questions: [
             {
               q: "מה DaemonSet מבטיח?",
               options: [
               "שה-Pod רץ פעם אחת עד להשלמה ולא מופעל מחדש. התנהגות של Job",
-              "שDaemonSet מבטיח שPod אחד רץ על כל Node ב-Cluster",
+              "ש-DaemonSet מבטיח ש-Pod אחד רץ על כל Node ב-Cluster",
               "שה-Pod רץ רק על Node שמסומן עם label מתאים דרך nodeSelector",
               "שה-Pod מופעל מחדש לפי לוח זמנים קבוע. התנהגות של CronJob",
 ],
@@ -464,10 +464,10 @@ export const TOPICS = [
             {
               q: "מה תפקיד ה-HPA ב-Kubernetes?",
               options: [
-              "Horizontal Pod Autoscaler – מגדיל/מקטין Pods לפי עומס",
+              "Horizontal Pod Autoscaler – מגדיל ומקטין Pods לפי עומס",
               "High Performance App – תצורת Pod מותאמת לביצועים גבוהים",
               "Helm Package Archive – פורמט שמירה של Helm charts",
-              "Host Port Assignment – מקצה ports ב-Node לPods",
+              "Host Port Assignment – מקצה ports ב-Node ל-Pods",
 ],
               answer: 0,
               explanation:
@@ -519,7 +519,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "StatefulSet יוצר Pods בסדר (OrderedReady): Pod-0 חייב להיות Ready לפני שPod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר podManagementPolicy: Parallel.\n• PVC: Pod-1 לא נוצר בכלל. • Quota: גם Pod-0 לא היה עולה. • imagePullSecret: היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
+                "StatefulSet יוצר Pods בסדר (OrderedReady): Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר podManagementPolicy: Parallel.\n• PVC: Pod-1 לא נוצר בכלל. • Quota: גם Pod-0 לא היה עולה. • imagePullSecret: היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
             },
             {
               q: "עדכון Rolling update נתקע.\n\nkubectl rollout status מציג:\nWaiting for rollout to finish: 3 out of 5 new replicas have been updated...\nה-YAML מגדיר maxUnavailable: 0.\n\nמה הסיבה?",
@@ -687,8 +687,8 @@ export const TOPICS = [
               q: "מה Service מסוג ClusterIP?",
               options: [
               "חשיפה חיצונית עם IP קבוע שמנתב תנועה ל-Nodes ב-cloud",
-              "DNS חיצוני שמאפשר לPods לגשת לשירותים מחוץ לCluster",
-              "גישה פנימית בלבד בתוך הCluster – ברירת המחדל של Service",
+              "DNS חיצוני שמאפשר ל-Pods לגשת לשירותים מחוץ ל-Cluster",
+              "גישה פנימית בלבד בתוך ה-Cluster – ברירת המחדל של Service",
               "VPN שמחבר Pods ב-Clusters שונים לתקשורת מאובטחת",
 ],
               answer: 2,
@@ -710,10 +710,10 @@ export const TOPICS = [
             {
               q: "מה ההבדל בין port ל-targetPort ב-Service?",
               options: [
-              "targetPort משמש לHTTP בלבד, port משמש לכל הפרוטוקולים",
+              "targetPort משמש ל-HTTP בלבד, port משמש לכל הפרוטוקולים",
               "port הוא לתנועה חיצונית, targetPort לתנועה פנימית בין Services",
               "port הוא הפורט של ה-Service, targetPort הוא הפורט של הקונטיינר",
-              "אין הבדל, שניהם מגדירים את הפורט שהService מאזין עליו",
+              "אין הבדל, שניהם מגדירים את הפורט שה-Service מאזין עליו",
 ],
               answer: 2,
               explanation:
@@ -722,9 +722,9 @@ export const TOPICS = [
             {
               q: "מה kube-dns/CoreDNS ב-Kubernetes?",
               options: [
-              "Firewall שמסנן תנועה DNS ומונע גישה לdomains זדוניים",
+              "Firewall שמסנן תנועה DNS ומונע גישה ל-domains זדוניים",
               "Load balancer שמנתב בקשות DNS בין Nodes",
-              "Certificate manager שמנפיק TLS certs לServices",
+              "Certificate manager שמנפיק TLS certs ל-Services",
               "שרת DNS פנימי שמתרגם שמות Services ל-IPs",
 ],
               answer: 3,
@@ -736,7 +736,7 @@ export const TOPICS = [
               options: [
               "סוג Pod מיוחד שאחראי על ניהול חיבורי HTTPS",
               "storage manager שמנהל PVCs מסוג network storage",
-              "ניתוב HTTP/HTTPS לפי path/hostname לServices שונים דרך כניסה אחת",
+              "ניתוב HTTP/HTTPS לפי path/hostname ל-Services שונים דרך כניסה אחת",
               "Service פנימי שמספק load balancing בין Pods ב-Namespace",
 ],
               answer: 2,
@@ -744,11 +744,11 @@ export const TOPICS = [
                 "Ingress חושף Services HTTP/HTTPS לחוץ עם ניתוב לפי path או hostname.\nמנתב /api ל-Service אחד ו-/web לאחר דרך כניסה אחת.\nחוסך LoadBalancer נפרד לכל Service.",
             },
             {
-              q: "מה NetworkPolicy בKubernetes?",
+              q: "מה NetworkPolicy ב-Kubernetes?",
               options: [
               "DNS server פנימי שמנהל name resolution בין Pods",
               "סוג Service שמגביל גישה לפי Namespace",
-              "storage class שמגביל גישה לPVs לפי Pod labels",
+              "storage class שמגביל גישה ל-PVs לפי Pod labels",
               "חוק firewall ברמת Pod שמגדיר מי מורשה לתקשר עם מי",
 ],
               answer: 3,
@@ -887,7 +887,7 @@ export const TOPICS = [
               q: "כיצד מגדירים TLS ב-Ingress?",
               options: [
               "דרך Service מסוג ClusterIP שמגדיר TLS termination פנימי",
-              "דרך NodePort שמגדיר TLS certificate לport ספציפי",
+              "דרך NodePort שמגדיר TLS certificate ל-port ספציפי",
               "דרך ConfigMap שמכיל את ה-certificate ומוסיפים אותו ל-Ingress annotations",
               "דרך Secret מסוג TLS וציון שמות hosts ב-Ingress",
 ],
@@ -898,10 +898,10 @@ export const TOPICS = [
             {
               q: "מה path-based routing ב-Ingress?",
               options: [
-              "ניתוב לפי IP המקור של הבקשה לService ספציפי",
+              "ניתוב לפי IP המקור של הבקשה ל-Service ספציפי",
               "ניתוב לפי Namespace שממנו הבקשה נשלחת",
-              "ניתוב לפי HTTP header כמו X-User-Type לService שונה",
-              "ניתוב בקשות HTTP לפי URL path לServices שונים",
+              "ניתוב לפי HTTP header כמו X-User-Type ל-Service שונה",
+              "ניתוב בקשות HTTP לפי URL path ל-Services שונים",
 ],
               answer: 3,
               explanation:
@@ -910,10 +910,10 @@ export const TOPICS = [
             {
               q: "מה egress NetworkPolicy?",
               options: [
-              "מגביל תנועה נכנסת לPod לפי labels של Pod המקור",
+              "מגביל תנועה נכנסת ל-Pod לפי labels של Pod המקור",
               "מגביל bandwidth של Pod לפי annotations",
               "מנהל DNS resolution עבור Pods ב-Namespace",
-              "מגביל תנועה יוצאת מPods",
+              "מגביל תנועה יוצאת מ-Pods",
 ],
               answer: 3,
               explanation:
@@ -944,7 +944,7 @@ export const TOPICS = [
                 "Local שולח traffic רק ל-Pods על אותו Node ושומר על IP הלקוח. Cluster (ברירת מחדל) שולח לכל Pod ומבצע SNAT.\nLocal = שומר client IP, אבל Nodes ללא Pods לא מקבלים traffic.\nבחר Local כשצריך לזהות IP אמיתי של לקוח (logging, rate limiting).",
             },
             {
-              q: "איך בודקים למה Service לא מגיע לPods?",
+              q: "איך בודקים למה Service לא מגיע ל-Pods?",
               options: [
               "בדוק kubectl get endpoints <service> – אם ריק, selector לא תואם labels",
               "kubectl describe service/<name> --show-pods מציג Pods מחוברים",
@@ -1084,11 +1084,11 @@ export const TOPICS = [
                 "NetworkPolicy היא רק spec. האכיפה תלויה ב-CNI plugin.\nCalico, Cilium ו-Weave אוכפים. Flannel ו-kubenet: לא.\nב-Flannel, NetworkPolicy נוצרת אבל לא נאכפת. אפס הגנה.",
             },
             {
-              q: "מה היתרון של IPVS על iptables בkube-proxy?",
+              q: "מה היתרון של IPVS על iptables ב-kube-proxy?",
               options: [
               "יותר מאובטח כי הוא מצפין את כל התנועה ברמת kernel",
               "זול יותר כי הוא דורש פחות משאבי CPU מ-Node",
-              "ביצועים טובים יותר בCluster גדול עם Hashing",
+              "ביצועים טובים יותר ב-Cluster גדול עם Hashing",
               "פשוט יותר להגדרה ולא דורש קונפיגורציה ב-kube-proxy",
 ],
               answer: 2,
@@ -1113,7 +1113,7 @@ export const TOPICS = [
               "ingress rule",
               "TLS certificate",
               "namespaceSelector",
-              "egress rule לport 53 (DNS) לCoreDNS",
+              "egress rule ל-port 53 (DNS) ל-CoreDNS",
 ],
               answer: 3,
               explanation:
@@ -1275,7 +1275,7 @@ export const TOPICS = [
               "אין הבדל – שניהם מאחסנים key-value data בצורה זהה ב-etcd",
               "ConfigMap מהיר יותר לגישה כי הוא לא עובר base64 encoding",
               "Secret מיועד לנתונים רגישים",
-              "Secret מיועד רק לpasswords ולא לסוגי sensitive data אחרים",
+              "Secret מיועד רק ל-passwords ולא לסוגי sensitive data אחרים",
 ],
               answer: 2,
               explanation:
@@ -1287,7 +1287,7 @@ export const TOPICS = [
               "תלוי בגרסת Kubernetes – מגרסה 1.25 מוצפנים אוטומטית",
               "כן, Kubernetes מצפין את כל ה-Secrets תמיד ב-AES-256 כברירת מחדל",
               "לא, רק מקודדים ב-base64 כברירת מחדל",
-              "כן, עם AES-256 שמוגדר אוטומטית בעת התקנת הCluster",
+              "כן, עם AES-256 שמוגדר אוטומטית בעת התקנת ה-Cluster",
 ],
               answer: 2,
               explanation:
@@ -1296,10 +1296,10 @@ export const TOPICS = [
             {
               q: "כיצד משתמשים ב-ConfigMap ב-Pod?",
               options: [
-              "רק כenv variables ישירות ב-containers spec ולא בצורות אחרות",
+              "רק כ-env variables ישירות ב-containers spec ולא בצורות אחרות",
               "רק כקובץ – מוסיפים דרך volume ואין דרך אחרת לגשת לנתונים",
               "לא ניתן – Pod ניגש ל-ConfigMap רק דרך Kubernetes API call",
-              "כenv variables או כvolume files",
+              "כ-env variables או כ-volume files",
 ],
               answer: 3,
               explanation:
@@ -1332,9 +1332,9 @@ export const TOPICS = [
             {
               q: "מה LimitRange עושה ב-Namespace?",
               options: [
-              "מגביל את מספר ה-Nodes שPods ב-Namespace יכולים לרוץ עליהם",
+              "מגביל את מספר ה-Nodes ש-Pods ב-Namespace יכולים לרוץ עליהם",
               "מגביל DNS queries מ-Pods ב-Namespace",
-              "מגדיר ברירות מחדל ומגבלות לCPU/Memory לPods וcontainers בNamespace",
+              "מגדיר ברירות מחדל ומגבלות ל-CPU/Memory ל-Pods ו-containers ב-Namespace",
               "מנטר logs ושולח alerts כשצריכת CPU עולה על threshold",
 ],
               answer: 2,
@@ -1345,9 +1345,9 @@ export const TOPICS = [
               q: "מה securityContext.runAsNonRoot: true עושה?",
               options: [
               "מגביל CPU usage של הקונטיינר לערך שנקבע ב-limits",
-              "מונע הפעלת קונטיינר כuser 0 (root)",
+              "מונע הפעלת קונטיינר כ-user 0 (root)",
               "מצפין את כל ה-filesystem של הקונטיינר",
-              "מגביל גישת רשת של הקונטיינר לaddresses ספציפיות",
+              "מגביל גישת רשת של הקונטיינר ל-addresses ספציפיות",
 ],
               answer: 1,
               explanation:
@@ -1356,8 +1356,8 @@ export const TOPICS = [
             {
               q: "מה ההבדל בין resource requests ל-limits?",
               options: [
-              "requests – הכמות המינימלית שהScheduler מבטיח; limits – הכמות המקסימלית שהקונטיינר יכול להשתמש",
-              "requests וlimits מגדירים את אותם ערכים – הם תמיד שווים",
+              "requests – הכמות המינימלית שה-Scheduler מבטיח; limits – הכמות המקסימלית שהקונטיינר יכול להשתמש",
+              "requests ו-limits מגדירים את אותם ערכים – הם תמיד שווים",
               "limits קובעים עדיפות Scheduling; requests קובעים QoS class בלבד",
               "requests מגדירים כמות CPU ו-memory שמוקצית בעת יצירת ה-Node",
 ],
@@ -1466,15 +1466,15 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "RBAC – Role-Based Access Control.\n🔹 Role – הרשאות בNamespace אחד\n🔹 ClusterRole – הרשאות לכל הCluster\n🔹 RoleBinding – קושר Role למשתמש/ServiceAccount\n🔹 ServiceAccount – זהות לPod בתוך הCluster\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
+        theory: "RBAC – Role-Based Access Control.\n🔹 Role – הרשאות ב-Namespace אחד\n🔹 ClusterRole – הרשאות לכל ה-Cluster\n🔹 RoleBinding – קושר Role למשתמש או ל-ServiceAccount\n🔹 ServiceAccount – זהות ל-Pod בתוך ה-Cluster\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
         theoryEn: "RBAC – Role-Based Access Control.\n🔹 Role – permissions in one Namespace\n🔹 ClusterRole – permissions across the whole Cluster\n🔹 RoleBinding – binds a Role to a user/ServiceAccount\n🔹 ServiceAccount – identity for a Pod within the Cluster\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
         questions: [
             {
               q: "מה ההבדל בין Role ל-ClusterRole?",
               options: [
-              "Role מוגבל לNamespace, ClusterRole לכל הCluster",
+              "Role מוגבל ל-Namespace, ClusterRole לכל ה-Cluster",
               "ClusterRole חזק יותר תמיד",
-              "Role לusers בלבד",
+              "Role ל-users בלבד",
               "אין הבדל",
 ],
               answer: 0,
@@ -1487,7 +1487,7 @@ export const TOPICS = [
               "שכפול הרשאות Role אחד ל-Namespace אחר",
               "הגדרת כללי RBAC חדשים בתוך Namespace",
               "הסלמת הרשאות Role קיים לרמת ClusterRole",
-              "חיבור בין Role למשתמש/ServiceAccount בתוך Namespace",
+              "חיבור בין Role למשתמש או ServiceAccount בתוך Namespace",
 ],
               answer: 3,
               explanation:
@@ -1496,7 +1496,7 @@ export const TOPICS = [
             {
               q: "מה תפקיד ServiceAccount ב-Kubernetes?",
               options: [
-              "זהות לPod/תהליך בתוך הCluster לאימות מול API server",
+              "זהות ל-Pod או תהליך בתוך ה-Cluster לאימות מול API server",
               "שם DNS פנימי שה-Service מקבל בתוך ה-Namespace",
               "token חד-פעמי שנוצר בעת Deployment חדש",
               "זהות למשתמש אנושי שמתחבר דרך kubectl",
@@ -1532,8 +1532,8 @@ export const TOPICS = [
             {
               q: "מה LimitRange לעומת ResourceQuota?",
               options: [
-              "LimitRange מגדיר CPU quota לNode; ResourceQuota מגדיר memory quota לCluster",
-              "LimitRange מגביל מספר Pods בNamespace; ResourceQuota מגביל מספר Nodes בCluster",
+              "LimitRange מגדיר CPU quota ל-Node; ResourceQuota מגדיר memory quota ל-Cluster",
+              "LimitRange מגביל מספר Pods ב-Namespace; ResourceQuota מגביל מספר Nodes ב-Cluster",
               "LimitRange – ברירות מחדל ומגבלות per-container; ResourceQuota – מגבלות aggregate לכל ה-Namespace",
               "LimitRange חל רק על Pods חדשים; ResourceQuota חל רק על Pods קיימים",
 ],
@@ -1666,7 +1666,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "אבטחה מתקדמת.\n🔹 Least Privilege – רק ההרשאות הנחוצות\n🔹 External Secrets Operator – מסנכרן מ-AWS/GCP/Azure\n🔹 Sealed Secrets – מצפין secrets בgit\n🔹 Encryption at Rest – הצפנת etcd\nCODE:\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nspec:\n  secretStoreRef:\n    name: aws-secretsmanager\n  target:\n    name: my-k8s-secret",
+        theory: "אבטחה מתקדמת.\n🔹 Least Privilege – רק ההרשאות הנחוצות\n🔹 External Secrets Operator – מסנכרן מ-AWS/GCP/Azure\n🔹 Sealed Secrets – מצפין secrets ב-git\n🔹 Encryption at Rest – הצפנת etcd\nCODE:\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nspec:\n  secretStoreRef:\n    name: aws-secretsmanager\n  target:\n    name: my-k8s-secret",
         theoryEn: "Advanced security.\n🔹 Least Privilege – only necessary permissions\n🔹 External Secrets Operator – syncs from AWS/GCP/Azure\n🔹 Sealed Secrets – encrypts secrets in git\n🔹 Encryption at Rest – encrypting etcd\nCODE:\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nspec:\n  secretStoreRef:\n    name: aws-secretsmanager\n  target:\n    name: my-k8s-secret",
         questions: [
             {
@@ -1876,7 +1876,7 @@ export const TOPICS = [
     descriptionEn: "PersistentVolumes · StorageClass · Helm · Operators",
     levels: {
       easy: {
-        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 PV – יחידת אחסון בCluster (admin מגדיר)\n🔹 PVC – בקשה לאחסון מ-Pod\n🔹 Helm Chart – חבילה של Kubernetes manifests עם templates\n🔹 helm install – מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
+        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 PV – יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 PVC – בקשה לאחסון מ-Pod\n🔹 Helm Chart – חבילה של Kubernetes manifests עם templates\n🔹 helm install – מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         theoryEn: "PersistentVolumes and basic Helm.\n🔹 PV – a storage unit in the Cluster (defined by admin)\n🔹 PVC – a request for storage by a Pod\n🔹 Helm Chart – a package of K8s manifests with templates\n🔹 helm install – installs a Chart and creates a Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         questions: [
             {
@@ -1884,7 +1884,7 @@ export const TOPICS = [
               options: [
               "PV מוגדר בתוך Pod spec; PVC מוגדר ברמת Namespace",
               "PV נוצר אוטומטית ע״י kubelet; PVC נוצר ע״י ה-Scheduler",
-              "PV הוא משאב אחסון בCluster; PVC הוא בקשה לאחסון מPod",
+              "PV הוא משאב אחסון ב-Cluster; PVC הוא בקשה לאחסון מ-Pod",
               "PV הוא volume זמני שנמחק כשה-Pod נגמר; PVC הוא volume קבוע",
 ],
               answer: 2,
@@ -1894,10 +1894,10 @@ export const TOPICS = [
             {
               q: "מה AccessMode ReadWriteOnce?",
               options: [
-              "כתיבה מNode אחד בלבד",
-              "קריאה וכתיבה מnode אחד בו-זמנית",
+              "כתיבה מ-Node אחד בלבד",
+              "קריאה וכתיבה מ-node אחד בו-זמנית",
               "קריאה בלבד",
-              "קריאה מכל הNodes",
+              "קריאה מכל ה-Nodes",
 ],
               answer: 1,
               explanation:
@@ -1931,7 +1931,7 @@ export const TOPICS = [
               q: "מה Volume מסוג emptyDir?",
               options: [
               "Volume קבוע",
-              "Volume לDB",
+              "Volume ל-DB",
               "Volume ריק שנמחק עם ה-Pod",
               "Volume לקבצי logs",
 ],
@@ -1956,7 +1956,7 @@ export const TOPICS = [
               options: [
               "נמחקים",
               "נשמרים לתמיד",
-              "מועברים לPV",
+              "מועברים ל-PV",
               "מגובים אוטומטית",
 ],
               answer: 0,
@@ -2076,7 +2076,7 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "StorageClass ו-Helm Values.\n🔹 StorageClass – מגדיר סוג אחסון וprovisioner\n🔹 Dynamic Provisioning – PV נוצר אוטומטית עם PVC\n🔹 Reclaim Policy Delete – מוחק PV כשPVC נמחק\n🔹 helm upgrade / --set – עדכון ושינוי values\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
+        theory: "StorageClass ו-Helm Values.\n🔹 StorageClass – מגדיר סוג אחסון ו-provisioner\n🔹 Dynamic Provisioning – PV נוצר אוטומטית עם PVC\n🔹 Reclaim Policy Delete – מוחק PV כש-PVC נמחק\n🔹 helm upgrade / --set – עדכון ושינוי values\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
         theoryEn: "StorageClass and Helm Values.\n🔹 StorageClass – defines storage type and provisioner\n🔹 Dynamic Provisioning – PV created automatically with PVC\n🔹 Reclaim Policy Delete – deletes PV when PVC is deleted\n🔹 helm upgrade / --set – update and change values\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
         questions: [
             {
@@ -2095,9 +2095,9 @@ export const TOPICS = [
               q: "מה Reclaim Policy Delete?",
               options: [
               "שומר נתונים",
-              "מעביר לbackup",
+              "מעביר ל-backup",
               "מוחק רק PVC",
-              "מוחק PV ואחסון פיזי כשPVC נמחק",
+              "מוחק PV ואחסון פיזי כש-PVC נמחק",
 ],
               answer: 3,
               explanation:
@@ -2133,7 +2133,7 @@ export const TOPICS = [
               "יוצר Helm Chart חדש מתוך תבנית scaffold מובנית",
               "שומר snapshot של ה-Chart הנוכחי לצורך rollback עתידי",
               "מעדכן את ה-values.yaml של Chart קיים מ-remote repository",
-              "מרנדר את ה-Chart ל-YAML בלי להתקין אותו – לpipelines ו-dry-run",
+              "מרנדר את ה-Chart ל-YAML בלי להתקין אותו – ל-pipelines ו-dry-run",
 ],
               answer: 3,
               explanation:
@@ -2145,7 +2145,7 @@ export const TOPICS = [
               "מוחק Release",
               "שינוי Chart version",
               "reset values",
-              "מחזיר Release לrevision קודמת",
+              "מחזיר Release ל-revision קודמת",
 ],
               answer: 3,
               explanation:
@@ -2157,7 +2157,7 @@ export const TOPICS = [
               "ה-StorageClass מבצע replication ל-Zone משני לפני binding",
               "ה-PVC ממתין לסיום backup של Volume קיים לפני mount",
               "PV תואם לא נמצא – בגלל AccessMode שגוי, storage לא מספיק, או StorageClass שגוי",
-              "ה-PVC נמצא בתהליך הצפנה לפני שהוא זמין לPod",
+              "ה-PVC נמצא בתהליך הצפנה לפני שהוא זמין ל-Pod",
 ],
               answer: 2,
               explanation:
@@ -2276,14 +2276,14 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "אחסון ו-Helm מתקדם.\n🔹 ReadWriteMany (RWX) – קריאה/כתיבה ממספר Nodes (NFS, EFS)\n🔹 CSI – Container Storage Interface, סטנדרט לdrivers\n🔹 VolumeSnapshot – גיבוי נקודתי\n🔹 Helm Hooks – פעולות בשלבים: pre-install, post-upgrade\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
+        theory: "אחסון ו-Helm מתקדם.\n🔹 ReadWriteMany (RWX) – קריאה וכתיבה ממספר Nodes (NFS, EFS)\n🔹 CSI – Container Storage Interface, סטנדרט ל-drivers\n🔹 VolumeSnapshot – גיבוי נקודתי\n🔹 Helm Hooks – פעולות בשלבים: pre-install, post-upgrade\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
         theoryEn: "Advanced Storage and Helm.\n🔹 ReadWriteMany (RWX) – read/write from multiple Nodes (NFS, EFS)\n🔹 CSI – Container Storage Interface, standard for drivers\n🔹 VolumeSnapshot – point-in-time backup\n🔹 Helm Hooks – actions at lifecycle points: pre-install, post-upgrade\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
         questions: [
             {
               q: "מה תפקיד CSI ב-Kubernetes?",
               options: [
               "Cluster Sync",
-              "Container Storage Interface – סטנדרט לdrivers",
+              "Container Storage Interface – סטנדרט ל-drivers",
               "Cloud Storage Integration",
               "Container Security Interface",
 ],
@@ -2296,7 +2296,7 @@ export const TOPICS = [
               options: [
               "כלי debug",
               "type של Chart",
-              "חלופה לRollback",
+              "חלופה ל-Rollback",
               "פעולה שרצה בשלב מסוים במחזור חיי Release",
 ],
               answer: 3,
@@ -2306,7 +2306,7 @@ export const TOPICS = [
             {
               q: "מה תפקיד VolumeSnapshot?",
               options: [
-              "גיבוי הCluster כולו",
+              "גיבוי ה-Cluster כולו",
               "snapshot של Pod",
               "גיבוי ConfigMap",
               "גיבוי נקודתי של PersistentVolume",
@@ -2486,7 +2486,7 @@ export const TOPICS = [
     descriptionEn: "Debugging · Observability · Diagnosis · Tools",
     levels: {
       easy: {
-        theory: "פקודות Debug בסיסיות.\n🔹 kubectl describe – events ומידע מפורט על resource\n🔹 kubectl logs – לוגים של קונטיינר\n🔹 kubectl exec – מריץ פקודה בתוך Pod\n🔹 kubectl get pods -A – כל הPods בכל הNamespaces\nCODE:\nkubectl describe pod my-pod\nkubectl logs my-pod\nkubectl logs my-pod -c my-container\nkubectl exec -it my-pod -- bash\nkubectl get pods -A",
+        theory: "פקודות Debug בסיסיות.\n🔹 kubectl describe – events ומידע מפורט על resource\n🔹 kubectl logs – לוגים של קונטיינר\n🔹 kubectl exec – מריץ פקודה בתוך Pod\n🔹 kubectl get pods -A – כל ה-Pods בכל ה-Namespaces\nCODE:\nkubectl describe pod my-pod\nkubectl logs my-pod\nkubectl logs my-pod -c my-container\nkubectl exec -it my-pod -- bash\nkubectl get pods -A",
         theoryEn: "Basic Debug Commands.\n🔹 kubectl describe – events and detailed info about a resource\n🔹 kubectl logs – container logs\n🔹 kubectl exec – runs a command inside a Pod\n🔹 kubectl get pods -A – all Pods in all Namespaces\nCODE:\nkubectl describe pod my-pod\nkubectl logs my-pod\nkubectl logs my-pod -c my-container\nkubectl exec -it my-pod -- bash\nkubectl get pods -A",
         questions: [
             {
@@ -2552,7 +2552,7 @@ export const TOPICS = [
             {
               q: "מה kubectl top nodes מציג?",
               options: [
-              "שימוש בCPU/Memory של כל Node בזמן אמת (דורש metrics-server)",
+              "שימוש ב-CPU/Memory של כל Node בזמן אמת (דורש metrics-server)",
               "רשימת Nodes",
               "Nodes logs",
               "Nodes עם בעיות",
@@ -2686,7 +2686,7 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "שגיאות נפוצות ב-Pods.\n🔹 CrashLoopBackOff – קונטיינר קורס שוב ושוב\n🔹 ImagePullBackOff – לא ניתן להוריד image (שם שגוי/credentials)\n🔹 OOMKilled – חרגנו ממגבלת הזיכרון\n🔹 Pending – אין Node פנוי (resources / nodeSelector)\nCODE:\nkubectl describe pod my-pod   # בדוק Events\nkubectl logs my-pod --previous  # לוגים לפני crash\nkubectl top pod                 # CPU/Memory",
+        theory: "שגיאות נפוצות ב-Pods.\n🔹 CrashLoopBackOff – קונטיינר קורס שוב ושוב\n🔹 ImagePullBackOff – לא ניתן להוריד image (שם שגוי או credentials חסרים)\n🔹 OOMKilled – חרגנו ממגבלת הזיכרון\n🔹 Pending – אין Node פנוי (resources / nodeSelector)\nCODE:\nkubectl describe pod my-pod   # בדוק Events\nkubectl logs my-pod --previous  # לוגים לפני crash\nkubectl top pod                 # CPU/Memory",
         theoryEn: "Common Pod errors.\n🔹 CrashLoopBackOff – container crashes repeatedly\n🔹 ImagePullBackOff – cannot pull image (wrong name/credentials)\n🔹 OOMKilled – exceeded memory limit\n🔹 Pending – no available Node (resources / nodeSelector)\nCODE:\nkubectl describe pod my-pod   # check Events\nkubectl logs my-pod --previous  # logs before crash\nkubectl top pod                 # CPU/Memory",
         questions: [
             {
@@ -2706,7 +2706,7 @@ export const TOPICS = [
               options: [
               "Node חסר disk + Port שגוי",
               "הרשאות RBAC + ConfigMap חסר",
-              "שם image שגוי/tag שגוי, או imagePullSecret חסר עבור registry פרטי",
+              "שם image שגוי או tag שגוי, או imagePullSecret חסר עבור registry פרטי",
               "resource limits שגויים + Namespace חסר",
 ],
               answer: 2,
@@ -2738,7 +2738,7 @@ export const TOPICS = [
                 "ה-CPU request של ה-Pod גדול מה-capacity הפנוי בכל Node.\nהקטינו requests.cpu לפי actual usage, או הוסיפו Nodes עם capacity פנוי.",
             },
             {
-              q: "מה קורה כשliveness probe נכשל?",
+              q: "מה קורה כש-liveness probe נכשל?",
               options: [
               "Pod מוגדר NotReady",
               "Pod נמחק לצמיתות",
@@ -2754,7 +2754,7 @@ export const TOPICS = [
               options: [
               "Image pull איטי בגלל registry עמוס, או חוסר bandwidth ב-Node",
               "PVC שלא נמצא, Secret חסר, image pull איטי, או בעיה ב-CNI",
-              "Init container שנתקע בלופ ומעכב את הפעלת הcontainer הראשי",
+              "Init container שנתקע בלופ ומעכב את הפעלת ה-container הראשי",
               "Node עם disk pressure שמונע mount של Volumes חדשים",
 ],
               answer: 1,
@@ -2886,7 +2886,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "Debug מתקדם.\n🔹 kubectl port-forward – מנתב port מ-Pod לlocal machine\n🔹 kubectl cp – מעתיק קבצים מ/ל-Pod\n🔹 kubectl top – CPU/Memory usage בזמן אמת\n🔹 Pod ב-Terminating לא נמחק – בגלל finalizer\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
+        theory: "Debug מתקדם.\n🔹 kubectl port-forward – מנתב port מ-Pod לlocal machine\n🔹 kubectl cp – מעתיק קבצים מ-Pod ואליו\n🔹 kubectl top – CPU/Memory usage בזמן אמת\n🔹 Pod ב-Terminating לא נמחק – בגלל finalizer\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
         theoryEn: "Advanced debugging.\n🔹 kubectl port-forward – routes a port from Pod to local machine\n🔹 kubectl cp – copies files from/to a Pod\n🔹 kubectl top – real-time CPU/Memory usage\n🔹 Pod stuck in Terminating – blocked by a finalizer\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
         questions: [
             {
@@ -2916,8 +2916,8 @@ export const TOPICS = [
             {
               q: "מה kubectl drain עושה ומתי משתמשים בו?",
               options: [
-              "מפנה Pods מNode בצורה graceful לפני maintenance (node upgrade, reboot)",
-              "מנתק Node מNetwork",
+              "מפנה Pods מ-Node בצורה graceful לפני maintenance (node upgrade, reboot)",
+              "מנתק Node מ-Network",
               "Scale down",
               "מוחק Node",
 ],
@@ -2966,7 +2966,7 @@ export const TOPICS = [
               options: [
               "הוסף sidecar",
               "Pod Running בטח",
-              "Pod לא Running – בדוק kubectl get pod my-pod לראות סטטוס, ואז kubectl describe pod my-pod לEvents",
+              "Pod לא Running – בדוק kubectl get pod my-pod לראות סטטוס, ואז kubectl describe pod my-pod ל-Events",
               "מחק Pod",
 ],
               answer: 2,
