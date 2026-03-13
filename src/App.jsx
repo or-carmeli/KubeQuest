@@ -324,6 +324,7 @@ const TRANSLATIONS = {
     searchBtn: "🔎 חיפוש שאלה", searchPlaceholder: "חפשי לפי מילת מפתח...", searchNoResults: "לא נמצאו תוצאות",
     mistakesBtn: "❌ טעויות שלי", mistakesEmpty: "אין טעויות! כל הכבוד 🎉", mistakesHint: "שאלות שטעית בהן",
     guideBtn: "📘 פקודות", guideSub: "פקודות kubectl מוכנות להעתקה. לחצו לפתיחה", aboutBtn: "ℹ️ אודות האפליקציה",
+    privacyBtn: "🔒 מדיניות פרטיות",
     shareBtn: "📤 שתפי עם חבר", shareBtn_m: "📤 שתף עם חבר",
     dailyStreak: "ימים ברצף",
   },
@@ -454,6 +455,7 @@ const TRANSLATIONS = {
     searchBtn: "🔎 Search Question", searchPlaceholder: "Search by keyword...", searchNoResults: "No results found",
     mistakesBtn: "❌ My Mistakes", mistakesEmpty: "No mistakes! Great job 🎉", mistakesHint: "Questions you answered incorrectly",
     guideBtn: "📘 Commands", guideSub: "Copy-ready kubectl commands. Tap to expand", aboutBtn: "ℹ️ About the App",
+    privacyBtn: "🔒 Privacy Policy",
     shareBtn: "📤 Share with a Friend",
     dailyStreak: "day streak",
   },
@@ -825,7 +827,7 @@ function renderBidiBlock(text, lang) {
   return splitCliParts(text, lang, "b");
 }
 
-function Footer({ lang }) {
+function Footer({ lang, onPrivacy }) {
   const txt = TRANSLATIONS[lang] || TRANSLATIONS.he;
   return (
     <div style={{textAlign:"center",marginTop:28,paddingTop:18,borderTop:"1px solid var(--glass-5)"}}>
@@ -840,12 +842,20 @@ function Footer({ lang }) {
         <a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer"
           style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Or Carmeli</a>{lang==="he" && ` \u200F© ${year}`}
       </p>
-      <a href="mailto:ocarmeli7@gmail.com?subject=KubeQuest%20Feedback"
-        style={{display:"inline-flex",alignItems:"center",gap:5,color:"var(--text-muted)",fontSize:11,textDecoration:"none",padding:"5px 12px",border:"1px solid var(--glass-7)",borderRadius:20,transition:"color 0.2s,border-color 0.2s"}}
-        onMouseEnter={e=>{e.currentTarget.style.color="var(--text-primary)";e.currentTarget.style.borderColor="var(--glass-20)";}}
-        onMouseLeave={e=>{e.currentTarget.style.color="var(--text-muted)";e.currentTarget.style.borderColor="var(--glass-7)";}}>
-        ✉ {lang==="en"?"Contact me":"צור קשר"}
-      </a>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,flexWrap:"wrap"}}>
+        <a href="mailto:ocarmeli7@gmail.com?subject=KubeQuest%20Feedback"
+          style={{display:"inline-flex",alignItems:"center",gap:5,color:"var(--text-muted)",fontSize:11,textDecoration:"none",padding:"5px 12px",border:"1px solid var(--glass-7)",borderRadius:20,transition:"color 0.2s,border-color 0.2s"}}
+          onMouseEnter={e=>{e.currentTarget.style.color="var(--text-primary)";e.currentTarget.style.borderColor="var(--glass-20)";}}
+          onMouseLeave={e=>{e.currentTarget.style.color="var(--text-muted)";e.currentTarget.style.borderColor="var(--glass-7)";}}>
+          ✉ {lang==="en"?"Contact me":"צור קשר"}
+        </a>
+        {onPrivacy&&<button onClick={onPrivacy}
+          style={{display:"inline-flex",alignItems:"center",gap:5,color:"var(--text-muted)",fontSize:11,background:"none",border:"1px solid var(--glass-7)",borderRadius:20,padding:"5px 12px",cursor:"pointer",transition:"color 0.2s,border-color 0.2s"}}
+          onMouseEnter={e=>{e.currentTarget.style.color="var(--text-primary)";e.currentTarget.style.borderColor="var(--glass-20)";}}
+          onMouseLeave={e=>{e.currentTarget.style.color="var(--text-muted)";e.currentTarget.style.borderColor="var(--glass-7)";}}>
+          🔒 {lang==="en"?"Privacy Policy":"מדיניות פרטיות"}
+        </button>}
+      </div>
     </div>
   );
 }
@@ -885,7 +895,7 @@ export default function K8sQuestApp() {
       console.info("[KubeQuest:boot] Screen was", s, "- falling back to home (transient state lost on refresh)");
       return "home";
     }
-    if (s && ["home","incidentList","incident"].includes(s)) return s;
+    if (s && ["home","incidentList","incident","privacy"].includes(s)) return s;
     return "home";
   });
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -1458,7 +1468,7 @@ export default function K8sQuestApp() {
     // but only on truly idle screens. "topicComplete" and "incidentComplete"
     // depend on transient React state, so reloading there sends the user to
     // home and loses the results screen (looks like "Finish Topic" did nothing).
-    const canReload = screen === "home" || screen === "incidentList";
+    const canReload = screen === "home" || screen === "incidentList" || screen === "privacy";
     if (!quizActive && canReload && window.__KQ_PENDING_RELOAD__) {
       window.__KQ_PENDING_RELOAD__ = false;
       window.location.reload();
@@ -3366,6 +3376,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <button onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("aboutBtn")}
           </button>
+          <button onClick={()=>{setScreen("privacy");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            {t("privacyBtn")}
+          </button>
           <button onClick={()=>{
             const url="https://kubequest.online";
             const text=lang==="en"?"KubeQuest – Practice Kubernetes Through Real DevOps Scenarios":"מצאתי דרך נחמדה לתרגל Kubernetes. משחק עם שאלות DevOps ותרחישי troubleshooting אמיתיים";
@@ -3632,7 +3645,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><span>{a.icon}</span>{lang==="en"?a.nameEn:a.name}</div>)}</div></div>}
           </>)}
           {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl))} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz)} lang={lang} t={t} dir={dir}/>}
-          <Footer lang={lang}/>
+          <Footer lang={lang} onPrivacy={()=>setScreen("privacy")}/>
         </div>
       )}
 
@@ -3836,6 +3849,53 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
         );
       })()}
+
+      {/* ── PRIVACY POLICY ── */}
+      {screen==="privacy"&&(
+        <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
+          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
+            {dir==="rtl"?"→ חזרה":"← Return"}
+          </button>
+          <div style={{textAlign:"center",marginBottom:28}}>
+            <div style={{fontSize:40,marginBottom:8}}>🔒</div>
+            <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Privacy Policy":"מדיניות פרטיות"}</h1>
+            <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עדכון אחרון: מרץ 2026"}</p>
+          </div>
+          {(lang==="en"?[
+            {icon:"📋",title:"Introduction",body:<>KubeQuest is a free, open-source Kubernetes learning application. Your privacy is important to us. This policy explains what data we collect, how we use it, and your rights regarding your information.</>},
+            {icon:"📊",title:"Information We Collect",body:<><span style={{fontWeight:600}}>Account Data (optional)</span><br/>If you sign up via Supabase Auth, we store your email address and a unique user ID for authentication purposes.<br/><br/><span style={{fontWeight:600}}>Progress Data</span><br/>Quiz scores, accuracy, streaks, completed topics, and achievements. This data is stored locally in your browser and optionally synced to our database if you create an account.<br/><br/><span style={{fontWeight:600}}>Technical Data</span><br/>We do not collect IP addresses, device fingerprints, or browsing history. No analytics or tracking scripts are used.</>},
+            {icon:"🎯",title:"How We Use Information",body:<>• Saving and displaying your learning progress<br/>• Powering the global leaderboard (username and score only)<br/>• Syncing progress across devices when signed in<br/><br/>We do not use your data for advertising, profiling, or any purpose beyond the app's core functionality.</>},
+            {icon:"🍪",title:"Cookies and Local Storage",body:<>KubeQuest does not use cookies for tracking. We use browser localStorage to save:<br/><br/>• Your quiz progress and scores<br/>• Theme preference (dark/light)<br/>• Accessibility settings<br/>• Language preference<br/><br/>This data never leaves your browser unless you create an account to sync it.</>},
+            {icon:"🔗",title:"Third-Party Services",body:<><span style={{fontWeight:600}}>Supabase</span><br/>Used for authentication and database storage. Supabase processes data under their <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Privacy Policy</a>.<br/><br/><span style={{fontWeight:600}}>Vercel</span><br/>Used for hosting. Vercel processes data under their <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Privacy Policy</a>.<br/><br/>No other third-party services, analytics, or advertising networks are used.</>},
+            {icon:"🛡️",title:"Data Protection",body:<>• All data is transmitted over HTTPS<br/>• Database access is protected by Row Level Security (RLS). Users can only access their own data<br/>• No sensitive personal information is collected<br/>• Guest mode requires no personal data at all</>},
+            {icon:"🤝",title:"Data Sharing",body:<>We do not sell, trade, or share your personal data with any third parties. The only publicly visible data is your username and score on the leaderboard, which is opt-in through account creation.</>},
+            {icon:"✉️",title:"Contact",body:<>If you have questions about this privacy policy or your data, contact us at:<br/><br/><a href="mailto:ocarmeli7@gmail.com?subject=KubeQuest%20Privacy" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>ocarmeli7@gmail.com</a></>},
+          ]:[
+            {icon:"📋",title:"מבוא",body:<>KubeQuest היא אפליקציה חינמית וקוד פתוח ללימוד Kubernetes. הפרטיות שלכם חשובה לנו. מדיניות זו מסבירה אילו נתונים אנחנו אוספים, כיצד אנחנו משתמשים בהם ומהן הזכויות שלכם.</>},
+            {icon:"📊",title:"מידע שאנחנו אוספים",body:<><span style={{fontWeight:600}}>נתוני חשבון (אופציונלי)</span><br/>אם נרשמתם דרך Supabase Auth, אנחנו שומרים את כתובת האימייל ומזהה ייחודי לצורך אימות.<br/><br/><span style={{fontWeight:600}}>נתוני התקדמות</span><br/>ציונים, דיוק, רצפים, נושאים שהושלמו והישגים. המידע נשמר מקומית בדפדפן ומסונכרן לבסיס הנתונים רק אם יצרתם חשבון.<br/><br/><span style={{fontWeight:600}}>נתונים טכניים</span><br/>איננו אוספים כתובות IP, טביעות אצבע של מכשירים או היסטוריית גלישה. לא נעשה שימוש בכלי מעקב או אנליטיקה.</>},
+            {icon:"🎯",title:"כיצד אנחנו משתמשים במידע",body:<>• שמירה והצגה של התקדמות הלמידה שלכם<br/>• הפעלת לוח המובילים הגלובלי (שם משתמש וציון בלבד)<br/>• סנכרון התקדמות בין מכשירים כשאתם מחוברים<br/><br/>איננו משתמשים במידע שלכם לפרסום, יצירת פרופילים או כל מטרה מעבר לפונקציונליות הליבה של האפליקציה.</>},
+            {icon:"🍪",title:"עוגיות ואחסון מקומי",body:<>KubeQuest לא משתמשת בעוגיות למעקב. אנחנו משתמשים ב-localStorage של הדפדפן כדי לשמור:<br/><br/>• התקדמות וציונים בחידונים<br/>• העדפת ערכת נושא (כהה/בהיר)<br/>• הגדרות נגישות<br/>• העדפת שפה<br/><br/>מידע זה לעולם לא יוצא מהדפדפן שלכם אלא אם יצרתם חשבון לסנכרון.</>},
+            {icon:"🔗",title:"שירותי צד שלישי",body:<><span style={{fontWeight:600}}>Supabase</span><br/>משמש לאימות ואחסון בבסיס נתונים. Supabase מעבדת נתונים בהתאם ל<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>מדיניות הפרטיות</a> שלהם.<br/><br/><span style={{fontWeight:600}}>Vercel</span><br/>משמש לאירוח. Vercel מעבדת נתונים בהתאם ל<a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>מדיניות הפרטיות</a> שלהם.<br/><br/>לא נעשה שימוש בשירותי צד שלישי, אנליטיקה או רשתות פרסום נוספים.</>},
+            {icon:"🛡️",title:"הגנה על נתונים",body:<>• כל המידע מועבר דרך HTTPS<br/>• הגישה לבסיס הנתונים מוגנת באמצעות Row Level Security. משתמשים יכולים לגשת רק לנתונים שלהם<br/>• לא נאסף מידע אישי רגיש<br/>• מצב אורח לא דורש מידע אישי כלל</>},
+            {icon:"🤝",title:"שיתוף מידע",body:<>איננו מוכרים, סוחרים או משתפים את המידע האישי שלכם עם צד שלישי. המידע הציבורי היחיד הוא שם המשתמש והציון בלוח המובילים, שהוא בהסכמה בלבד דרך יצירת חשבון.</>},
+            {icon:"✉️",title:"יצירת קשר",body:<>לשאלות בנוגע למדיניות פרטיות זו או למידע שלכם, פנו אלינו:<br/><br/><a href="mailto:ocarmeli7@gmail.com?subject=KubeQuest%20Privacy" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>ocarmeli7@gmail.com</a></>},
+          ]).map(({icon,title,body},i)=>(
+            <div key={i} style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"10px 16px",marginBottom:8,display:"flex",gap:14,alignItems:"flex-start"}}>
+              <span style={{fontSize:22,flexShrink:0,marginTop:1}}>{icon}</span>
+              <div>
+                <div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,marginBottom:4}}>{title}</div>
+                <div style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,direction:dir}}>{body}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{marginTop:16,textAlign:"center"}}>
+            <button onClick={()=>setScreen("home")} style={{padding:"10px 24px",background:"linear-gradient(135deg,rgba(0,212,255,0.1),rgba(168,85,247,0.1))",border:"1px solid rgba(0,212,255,0.25)",borderRadius:10,color:"#00D4FF",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+              {lang==="en"?"Back to Home":"חזרה לדף הבית"}
+            </button>
+          </div>
+          <Footer lang={lang} onPrivacy={()=>setScreen("privacy")}/>
+        </div>
+      )}
 
       {/* ── ABOUT ── */}
       {screen==="about"&&(
@@ -4755,7 +4815,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             );
           })}
-          <Footer lang={lang}/>
+          <Footer lang={lang} onPrivacy={()=>setScreen("privacy")}/>
         </div>
       )}
 
@@ -4917,7 +4977,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 {t("backToTopics")}
               </button>
             </div>
-            <Footer lang={lang}/>
+            <Footer lang={lang} onPrivacy={()=>setScreen("privacy")}/>
           </div>
         );
       })()}
