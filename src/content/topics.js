@@ -1530,12 +1530,12 @@ export const TOPICS = [
                 "Admission webhook מיירט בקשות ל-API server לפני שמירה ב-etcd.\nValidating: דוחה resources לא תקינים. Mutating: משנה resources לפני שמירה.\nכלים כמו OPA Gatekeeper ו-Kyverno עובדים כ-admission webhooks.",
             },
             {
-              q: "מה LimitRange לעומת ResourceQuota?",
+              q: "מה ההבדל בין LimitRange ל-ResourceQuota?",
               options: [
-              "LimitRange מגדיר CPU quota ל-Node; ResourceQuota מגדיר memory quota ל-Cluster",
-              "LimitRange מגביל מספר Pods ב-Namespace; ResourceQuota מגביל מספר Nodes ב-Cluster",
-              "LimitRange: ברירות מחדל ומגבלות per-container; ResourceQuota: מגבלות aggregate לכל ה-Namespace",
-              "LimitRange חל רק על Pods חדשים; ResourceQuota חל רק על Pods קיימים",
+              "LimitRange: CPU quota ל-Node. ResourceQuota: memory quota ל-Cluster",
+              "LimitRange: מגביל מספר Pods. ResourceQuota: מגביל מספר Nodes",
+              "LimitRange: ברירות מחדל per-container. ResourceQuota: מגבלות לכל ה-Namespace",
+              "LimitRange: חל רק על Pods חדשים. ResourceQuota: חל רק על קיימים",
 ],
               answer: 2,
               explanation:
