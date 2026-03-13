@@ -302,7 +302,7 @@ const TRANSLATIONS = {
     incidentDiscard: "נטשי", incidentDiscard_m: "נטוש",
     incidentActiveLabel: "אירוע פעיל", incidentAvailableLabel: "אירועים זמינים",
     incidentHeaderSub: "תרגלו תרחישי Troubleshooting אמיתיים ב-Kubernetes.\nחקרו סימפטומים, זהו את שורש הבעיה ופתרו את האירוע.",
-    incidentResumeBtn: "המשיכי את האירוע", incidentResumeBtn_m: "המשך את האירוע",
+    incidentResumeBtn: "המשיכי חקירה", incidentResumeBtn_m: "המשך חקירה",
     incidentUnlockIntermediate: "השלימו 2 אירועים קלים כדי לפתוח",
     incidentUnlockHard: "השלימו 2 אירועים בינוניים כדי לפתוח",
     incidentLocked: "נעול",
@@ -453,7 +453,7 @@ const TRANSLATIONS = {
     incidentDiscard: "Discard",
     incidentActiveLabel: "Active Incident", incidentAvailableLabel: "Available Incidents",
     incidentHeaderSub: "Practice real Kubernetes troubleshooting scenarios.\nInvestigate symptoms, identify the root cause, and resolve the incident.",
-    incidentResumeBtn: "Resume Incident",
+    incidentResumeBtn: "Resume Investigation",
     incidentUnlockIntermediate: "Complete 2 Easy incidents to unlock",
     incidentUnlockHard: "Complete 2 Intermediate incidents to unlock",
     incidentLocked: "Locked",
@@ -548,19 +548,154 @@ function GenderToggle({ gender, setGender }) {
 
 const hasHebrew = (text) => /[\u05D0-\u05EA]/.test(text ?? "");
 
+// Detects whether a sentence fragment is a CLI command or error/output message.
+// Returns "command" for kubectl/helm/docker commands, "error" for error messages/output, or null.
+function classifyFragment(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  // CLI commands: starts with a known CLI tool
+  if (/^(kubectl|helm|docker|kubeadm|kubelet|crictl|etcdctl|curl|wget|git|aws)\s/.test(trimmed)) return "command";
+  // Error/output messages: starts with error indicators or typical K8s output patterns
+  if (/^(error:|Error:|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|connection refused|Could not|cannot|Back-off|warning:|Warning:)/i.test(trimmed)) return "error";
+  // Quoted output that looks like an error or status message (no Hebrew)
+  if (/^['"]/.test(trimmed) && !hasHebrew(trimmed) && trimmed.length > 10) return "error";
+  return null;
+}
+
+// Splits a single-paragraph question into structured segments: intro text, commands, errors, and final question.
+// Returns an array of { type: "text"|"command"|"error"|"question", content: string }.
+// Only splits when there are clearly delimited quoted error/output strings or substantial CLI commands.
+function splitQuestionSegments(qText) {
+  const segments = [];
+  // Only match: quoted strings (single/double) with 8+ chars, and CLI commands with 3+ tokens
+  const splitPat = /('(?:[^']{8,})'|"(?:[^"]{8,})")/g;
+
+  let last = 0;
+  const matches = [];
+  let match;
+  while ((match = splitPat.exec(qText)) !== null) {
+    matches.push({ start: match.index, end: match.index + match[0].length, text: match[0] });
+  }
+
+  if (matches.length === 0) {
+    // No quoted blocks — return as single segment
+    return [{ type: "question", content: qText }];
+  }
+
+  for (const m of matches) {
+    if (m.start > last) {
+      const before = qText.slice(last, m.start).trim();
+      if (before) segments.push({ type: "text", content: before });
+    }
+    let content = m.text.replace(/^['"]|['"]$/g, "").trim();
+    const kind = classifyFragment(content);
+    segments.push({ type: kind || "error", content });
+    last = m.end;
+  }
+  if (last < qText.length) {
+    const after = qText.slice(last).trim();
+    if (after) segments.push({ type: "text", content: after });
+  }
+
+  // Merge small text fragments: if a text segment is very short (just punctuation or a couple words)
+  // merge it into the adjacent text segment
+  const merged = [];
+  for (let i = 0; i < segments.length; i++) {
+    const s = segments[i];
+    if (s.type === "text" && s.content.replace(/[.\s,:;?!]/g, "").length < 3) {
+      // Too short to stand alone — merge with nearest text neighbor
+      if (merged.length > 0 && merged[merged.length - 1].type === "text") {
+        merged[merged.length - 1].content += " " + s.content;
+      } else if (i + 1 < segments.length && segments[i + 1].type === "text") {
+        segments[i + 1].content = s.content + " " + segments[i + 1].content;
+      } else {
+        // Can't merge, keep it
+        merged.push(s);
+      }
+    } else {
+      merged.push(s);
+    }
+  }
+
+  // Mark the last Hebrew text segment as the "question" (the actual prompt line)
+  for (let i = merged.length - 1; i >= 0; i--) {
+    if (merged[i].type === "text" && hasHebrew(merged[i].content)) {
+      merged[i].type = "question";
+      break;
+    }
+  }
+  // If no question found, mark last text as question
+  if (!merged.some(s => s.type === "question")) {
+    for (let i = merged.length - 1; i >= 0; i--) {
+      if (merged[i].type === "text") { merged[i].type = "question"; break; }
+    }
+  }
+
+  // If we ended up with just one segment, type it as question
+  if (merged.length <= 1) return [{ type: "question", content: qText }];
+
+  return merged;
+}
+
 // Render a question text that may contain \n\n paragraphs and code blocks.
+// Single-paragraph questions with embedded commands/errors are split into structured sections.
 // Paragraphs with inner \n are rendered as monospace code blocks.
 function renderQuestion(qText, lang) {
   if (!qText) return null;
   const paragraphs = qText.split(/\n\n+/);
+
+  // Single paragraph — try structured split for mixed Hebrew+command+error questions
   if (paragraphs.length <= 1) {
+    const segments = splitQuestionSegments(qText);
     const qDir = hasHebrew(qText) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
+
+    // If only one segment (no embedded commands/errors), render as before
+    if (segments.length <= 1) {
+      return (
+        <div dir={qDir} style={{color:"var(--text-primary)",fontSize:17,fontWeight:700,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
+          {lang==="he"?renderBidi(qText,lang):renderBidiInner(qText,lang,"q")}
+        </div>
+      );
+    }
+
+    // Multiple segments — render structured layout
     return (
-      <div dir={qDir} style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
-        {lang==="he"?renderBidi(qText,lang):renderBidiInner(qText,lang,"q")}
+      <div dir={qDir} style={{display:"flex",flexDirection:"column",gap:10}}>
+        {segments.map((seg, idx) => {
+          if (seg.type === "command") {
+            return (
+              <pre key={idx} dir="ltr" style={{margin:0,background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"#7dd3fc",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
+                <span style={{color:"rgba(0,212,255,0.45)",fontSize:10,fontWeight:600,letterSpacing:0.5,display:"block",marginBottom:4}}>$</span>{seg.content}
+              </pre>
+            );
+          }
+          if (seg.type === "error") {
+            return (
+              <div key={idx} dir="ltr" style={{margin:0,background:"rgba(239,68,68,0.05)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"#fca5a5",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
+                {seg.content}
+              </div>
+            );
+          }
+          if (seg.type === "question") {
+            return (
+              <div key={idx} dir={qDir} style={{color:"var(--text-primary)",fontSize:17,fontWeight:700,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate",marginTop:2}}>
+                {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`q${idx}`)}
+              </div>
+            );
+          }
+          // Regular text (intro)
+          const tDir = hasHebrew(seg.content) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
+          return (
+            <div key={idx} dir={tDir} style={{color:"var(--text-secondary)",fontSize:14,fontWeight:400,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:tDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
+              {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`t${idx}`)}
+            </div>
+          );
+        })}
       </div>
     );
   }
+
+  // Multi-paragraph with code block detection
   const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized|Events:|Warning\s|Normal\s|\d+\/\d+\s|\d+[a-z]*\s{2,})/;
   // Pre-process: merge fenced code blocks (```...```) that may have been split across paragraphs
   const merged = [];
@@ -583,13 +718,13 @@ function renderQuestion(qText, lang) {
   }
   if (fenceBuf.length) merged.push(fenceBuf.join("\n\n"));
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
       {merged.map((para, idx) => {
         // Fenced code block (```...```)
         if (para.trimStart().startsWith("```")) {
           const code = para.replace(/^```[a-z]*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
           return (
-            <pre key={idx} style={{margin:0,background:"var(--code-bg)",border:"1px solid var(--glass-7)",borderRadius:10,padding:"14px 16px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext",lineHeight:1.7}}>
+            <pre key={idx} dir="ltr" style={{margin:0,background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"#7dd3fc",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
               {code}
             </pre>
           );
@@ -600,16 +735,22 @@ function renderQuestion(qText, lang) {
         const noHebrew = nonEmpty.every(l => !hasHebrew(l));
         const isCode = noHebrew && nonEmpty.length >= 1 && matchCount >= Math.ceil(nonEmpty.length * 0.5);
         if (isCode) {
+          // Detect if this looks like an error/output vs a command
+          const firstLine = nonEmpty[0]?.trim() || "";
+          const isError = /^(error:|Error:|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:)/i.test(firstLine);
+          const blockBg = isError ? "rgba(239,68,68,0.05)" : "rgba(0,212,255,0.05)";
+          const blockBorder = isError ? "rgba(239,68,68,0.15)" : "rgba(0,212,255,0.15)";
+          const blockColor = isError ? "#fca5a5" : "#7dd3fc";
           return (
-            <pre key={idx} style={{margin:0,background:"var(--code-bg)",border:"1px solid var(--glass-8)",borderRadius:10,padding:"14px 16px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"var(--code-text)",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",unicodeBidi:"plaintext",lineHeight:1.7}}>
+            <pre key={idx} dir="ltr" style={{margin:0,background:blockBg,border:`1px solid ${blockBorder}`,borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:blockColor,overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
               {para.replace(/^["״"]+|["״"]+$/g, "").trim()}
             </pre>
           );
         }
-        const isLast = idx === paragraphs.length - 1;
+        const isLast = idx === merged.length - 1;
         const pDir = hasHebrew(para) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
         return (
-          <div key={idx} dir={pDir} style={{color:"var(--text-primary)",fontSize:isLast?18:15,fontWeight:isLast?700:400,lineHeight:1.65,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
+          <div key={idx} dir={pDir} style={{color:"var(--text-primary)",fontSize:isLast?17:14,fontWeight:isLast?700:400,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
             {lang==="he"?renderBidi(para,lang):renderBidiInner(para,lang,`p${idx}`)}
           </div>
         );
@@ -4449,7 +4590,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
 
               <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
-                style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:14,padding:"22px 20px 24px",marginBottom:20,outline:"none",position:"relative"}}>
+                style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"20px 18px 22px",marginBottom:16,outline:"none",position:"relative"}}>
                 {renderQuestion(currentQuestions[questionIndex].q, lang)}
                 {!isInHistoryMode&&!tryAgainActive&&!isFreeMode(selectedTopic?.id)&&(
                   <button onClick={toggleBookmark}
@@ -4487,7 +4628,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
               )}
 
-              <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
                 {(currentQuestions[questionIndex]?.options || []).map((opt,i)=>{
                   const q_cur = currentQuestions[questionIndex];
                   const isCorrect = dispAnswerResult ? i === dispAnswerResult.correctIndex : (typeof q_cur?.answer === "number" ? i === q_cur.answer : false);
@@ -4506,18 +4647,19 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     else if (isChosen)          { borderColor = "#EF4444"; bg = "rgba(239,68,68,0.1)";   color = "#EF4444"; labelBg = "rgba(239,68,68,0.2)";   labelColor = "#EF4444"; }
                   }
                   const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
+                  const isCodeOption = !hasHebrew(opt) && /^(kubectl|helm|docker|kubeadm|crictl|etcdctl)\s/.test(opt.trim());
                   return (
                     <button key={opt} className="opt-btn"
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
                       dir={dir}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"14px 16px",background:bg,border:`1px solid ${borderColor}`,borderRadius:12,color,fontSize:15,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.7,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:12,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:56}}>
-                      <span aria-hidden="true" style={{flexShrink:0,width:30,height:30,borderRadius:8,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.7,unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
-                      {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:18,height:18,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
-                      {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✓</span>}
-                      {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:18,lineHeight:1}}>✗</span>}
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"12px 14px",background:bg,border:`1px solid ${borderColor}`,borderRadius:12,color,fontSize:isCodeOption?13:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.6,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:10,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:50}}>
+                      <span aria-hidden="true" style={{flexShrink:0,width:28,height:28,borderRadius:8,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
+                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.6,unicodeBidi:"isolate",...(isCodeOption?{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",letterSpacing:-0.3}:{})}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
+                      {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:16,height:16,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
+                      {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✓</span>}
+                      {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✗</span>}
                     </button>
                   );
                 })}
@@ -4851,8 +4993,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
             </button>
             <div>
-              <h2 style={{margin:0,color:"#EF4444",fontSize:20,fontWeight:900}}>{t("incidentModeBtn")}</h2>
-              <p style={{margin:"4px 0 0",color:"var(--text-dim)",fontSize:12,lineHeight:1.5,whiteSpace:"pre-line"}}>{t("incidentHeaderSub")}</p>
+              <h2 style={{margin:0,color:"var(--text-primary)",fontSize:20,fontWeight:900}}>{t("incidentModeBtn")}</h2>
+              <p style={{margin:"4px 0 0",color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,whiteSpace:"pre-line"}}>{t("incidentHeaderSub")}</p>
             </div>
           </div>
 
@@ -4860,14 +5002,18 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {incidentResume&&(
             <div style={{marginBottom:28}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"var(--text-dim)",marginBottom:10}}>{t("incidentActiveLabel")}</div>
-              <div style={{padding:18,background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.25)",borderInlineStart:"3px solid #EF4444",borderRadius:14,direction:dir}}>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
+              <div style={{padding:18,background:"var(--glass-2)",border:"1px solid rgba(239,68,68,0.2)",borderInlineStart:"3px solid #EF4444",borderRadius:14,boxShadow:"0 0 12px rgba(239,68,68,0.06)",direction:dir}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <span style={{fontSize:22}}>{incidentResume.incident.icon}</span>
-                  <span style={{color:"var(--text-primary)",fontWeight:800,fontSize:15}}>{lang==="he"?incidentResume.incident.titleHe:incidentResume.incident.title}</span>
+                  <span style={{color:"var(--text-primary)",fontWeight:800,fontSize:15,lineHeight:1.4}}>{lang==="he"?incidentResume.incident.titleHe:incidentResume.incident.title}</span>
                 </div>
-                <div style={{color:"var(--text-muted)",fontSize:12,marginBottom:14}}>{t("incidentStep")} {incidentResume.stepIndex+1}/{incidentResume.incident.steps.length}</div>
-                <button onClick={resumeIncident} style={{width:"100%",padding:"12px 20px",background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,color:"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8}}>{t("incidentResumeBtn")}</button>
-                <button onClick={()=>{clearIncidentProgress();setIncidentResume(null);}} style={{width:"100%",padding:"8px",background:"none",border:"none",color:"var(--text-dim)",fontSize:12,cursor:"pointer"}}>{t("incidentDiscard")}</button>
+                <div style={{marginBottom:14}}>
+                  <span style={{background:"var(--glass-4)",padding:"3px 10px",borderRadius:8,fontSize:11,fontWeight:600,color:"var(--text-muted)",display:"inline-flex",alignItems:"center",gap:4}}>
+                    {t("incidentStep")} {incidentResume.stepIndex+1}/{incidentResume.incident.steps.length}
+                  </span>
+                </div>
+                <button onClick={resumeIncident} style={{width:"100%",padding:"12px 20px",background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,color:"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8}}>{t("incidentResumeBtn")}</button>
+                <button onClick={()=>{clearIncidentProgress();setIncidentResume(null);}} style={{width:"100%",padding:"8px",background:"none",border:"none",color:"var(--text-dim)",fontSize:12,cursor:"pointer",borderRadius:8}}>{t("incidentDiscard")}</button>
               </div>
             </div>
           )}
@@ -4879,32 +5025,34 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             const locked = (difficulty==="intermediate"&&!intermediateUnlocked)||(difficulty==="hard"&&!hardUnlocked);
             const unlockMsg = difficulty==="intermediate"?t("incidentUnlockIntermediate"):difficulty==="hard"?t("incidentUnlockHard"):null;
             return(
-              <div key={difficulty} style={{marginBottom:24}}>
+              <div key={difficulty} style={{marginBottom:28}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                  <span style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:config.color}}>{lang==="he"?config.labelHe:config.label}</span>
-                  {locked&&<span style={{fontSize:12,color:"var(--text-dim)"}}>🔒</span>}
+                  <span style={{background:`${config.color}12`,padding:"3px 10px",borderRadius:8,fontSize:11,fontWeight:700,letterSpacing:0.5,color:config.color,display:"inline-flex",alignItems:"center",gap:5}}>
+                    {lang==="he"?config.labelHe:config.label}
+                    {locked&&<span style={{fontSize:11}}>🔒</span>}
+                  </span>
                 </div>
                 {locked&&unlockMsg&&(
-                  <div style={{fontSize:12,color:"var(--text-dim)",marginBottom:10,marginTop:-4}}>{unlockMsg}</div>
+                  <div style={{fontSize:12,color:"var(--text-dim)",marginBottom:10,paddingInlineStart:4}}>{unlockMsg}</div>
                 )}
-                <div style={{display:"flex",flexDirection:"column",gap:16}}>
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
                   {incidents.map(incident=>{
                     const completed = completedIncidentIds.includes(incident.id);
                     return(
                       <button key={incident.id} onClick={locked?undefined:()=>startIncident(incident)} disabled={locked}
-                        style={{width:"100%",padding:"16px 18px",background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,cursor:locked?"default":"pointer",display:"flex",alignItems:"center",gap:14,textAlign:dir==="rtl"?"right":"left",transition:"all 0.2s",opacity:locked?0.45:1}}
+                        style={{width:"100%",padding:"16px 20px",background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,cursor:locked?"default":"pointer",display:"flex",alignItems:"center",gap:12,textAlign:dir==="rtl"?"right":"left",transition:"all 0.2s",opacity:locked?0.5:1,filter:locked?"grayscale(0.3)":"none"}}
                         onMouseEnter={locked?undefined:e=>{e.currentTarget.style.background="rgba(239,68,68,0.06)";e.currentTarget.style.borderColor="rgba(239,68,68,0.3)";}}
                         onMouseLeave={locked?undefined:e=>{e.currentTarget.style.background="var(--glass-2)";e.currentTarget.style.borderColor="var(--glass-7)";}}>
-                        <span style={{fontSize:30,flexShrink:0}}>{incident.icon}</span>
+                        <span style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--glass-3)",borderRadius:10,flexShrink:0,fontSize:24}}>{incident.icon}</span>
                         <div style={{flex:1}}>
-                          <div style={{color:"var(--text-primary)",fontWeight:800,fontSize:15,marginBottom:4}}>{lang==="he"?incident.titleHe:incident.title}</div>
+                          <div style={{color:"var(--text-primary)",fontWeight:800,fontSize:14,marginBottom:4,lineHeight:1.4}}>{lang==="he"?incident.titleHe:incident.title}</div>
                           <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",color:"var(--text-muted)",fontSize:12}}>
                             <span>{incident.steps.length} {t("incidentSteps")}</span>
                             <span style={{color:"var(--text-dim)"}}>·</span>
                             <span>{incident.estimatedTime}</span>
                           </div>
                         </div>
-                        {completed&&<span style={{color:"#10B981",fontSize:14,flexShrink:0}}>✓</span>}
+                        {completed&&<span style={{width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(16,185,129,0.1)",borderRadius:20,flexShrink:0,color:"#10B981",fontSize:12}}>✓</span>}
                       </button>
                     );
                   })}
