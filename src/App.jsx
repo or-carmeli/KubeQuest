@@ -189,7 +189,8 @@ const TRANSLATIONS = {
     leaderboardTitle: "🏆 לוח תוצאות", noData: "אין נתונים עדיין", anonymous: "אנונימי",
     back: "→ חזרה", theory: "📖 תיאוריה",
     startQuiz: "🎯 התחילי חידון!", ptsPerQ: "נק׳ לשאלה",
-    question: "שאלה", of: "/", streakLabel: "רצף",
+    question: "שאלה", of: "מתוך", streakLabel: "רצף",
+    answerPrompt: "מה נכון לעשות?",
     confirmAnswer: "✔ אשרי תשובה",
     correct: "✅ נכון!", incorrect: "❌ לא נכון",
     finishTopic: "🎉 סיימי נושא!", nextQuestion: "שאלה הבאה ←",
@@ -400,7 +401,8 @@ const TRANSLATIONS = {
     leaderboardTitle: "🏆 Leaderboard", noData: "No data yet", anonymous: "Anonymous",
     back: "← Return", theory: "📖 Theory",
     startQuiz: "🎯 Start Quiz!", ptsPerQ: "pts per question",
-    question: "Question", of: "/", streakLabel: "Streak",
+    question: "Question", of: "of", streakLabel: "Streak",
+    answerPrompt: "What should you do?",
     confirmAnswer: "✔ Confirm Answer",
     correct: "✅ Correct!", incorrect: "❌ Incorrect",
     finishTopic: "🎉 Finish Topic!", nextQuestion: "Next Question →",
@@ -686,41 +688,46 @@ function renderQuestion(qText, lang) {
     // If only one segment (no embedded commands/errors), render as before
     if (segments.length <= 1) {
       return (
-        <div dir={qDir} style={{color:"var(--text-primary)",fontSize:17,fontWeight:700,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
+        <div dir={qDir} style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
           {lang==="he"?renderBidi(qText,lang):renderBidiInner(qText,lang,"q")}
         </div>
       );
     }
 
     // Multiple segments - render structured layout
+    // Reorder: put "question" segment first as a title, then the rest in natural order
+    const reordered = [];
+    const questionSeg = segments.find(s => s.type === "question");
+    if (questionSeg) reordered.push(questionSeg);
+    for (const s of segments) { if (s !== questionSeg) reordered.push(s); }
     return (
-      <div dir={qDir} style={{display:"flex",flexDirection:"column",gap:10}}>
-        {segments.map((seg, idx) => {
+      <div dir={qDir} style={{display:"flex",flexDirection:"column",gap:8}}>
+        {reordered.map((seg, idx) => {
           if (seg.type === "command") {
             return (
-              <pre key={idx} dir="ltr" style={{margin:0,background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"#7dd3fc",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
-                <span style={{color:"rgba(0,212,255,0.45)",fontSize:10,fontWeight:600,letterSpacing:0.5,display:"block",marginBottom:4}}>$</span>{seg.content}
+              <pre key={idx} dir="ltr" style={{margin:0,background:"rgba(0,212,255,0.06)",border:"1px solid rgba(0,212,255,0.12)",borderRadius:8,padding:"10px 14px",fontFamily:"'JetBrains Mono','Fira Code',monospace",fontSize:13,color:"#7dd3fc",overflowX:"auto",whiteSpace:"pre",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
+                <span style={{color:"rgba(0,212,255,0.4)",fontSize:9,fontWeight:600,letterSpacing:0.5,display:"block",marginBottom:2}}>$</span>{seg.content}
               </pre>
             );
           }
           if (seg.type === "error") {
             return (
-              <div key={idx} dir="ltr" style={{margin:0,background:"rgba(239,68,68,0.05)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"#fca5a5",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
+              <div key={idx} dir="ltr" style={{margin:0,background:"rgba(239,68,68,0.05)",border:"1px solid rgba(239,68,68,0.12)",borderRadius:8,padding:"10px 14px",fontFamily:"'JetBrains Mono','Fira Code',monospace",fontSize:13,color:"rgba(252,165,165,0.85)",overflowX:"auto",whiteSpace:"pre",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
                 {seg.content}
               </div>
             );
           }
           if (seg.type === "question") {
             return (
-              <div key={idx} dir={qDir} style={{color:"var(--text-primary)",fontSize:17,fontWeight:700,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate",marginTop:2}}>
+              <div key={idx} dir={qDir} style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:qDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
                 {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`q${idx}`)}
               </div>
             );
           }
-          // Regular text (intro)
+          // Regular text (description)
           const tDir = hasHebrew(seg.content) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
           return (
-            <div key={idx} dir={tDir} style={{color:"var(--text-secondary)",fontSize:14,fontWeight:400,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:tDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
+            <div key={idx} dir={tDir} style={{color:"var(--text-secondary)",fontSize:13.5,fontWeight:400,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:tDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
               {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`t${idx}`)}
             </div>
           );
@@ -730,7 +737,7 @@ function renderQuestion(qText, lang) {
   }
 
   // Multi-paragraph with code block detection
-  const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized|Events:|Warning\s|Normal\s|\d+\/\d+\s|\d+[a-z]*\s{2,})/;
+  const terminalPat = /^(\$\s*kubectl|kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized|Events:|Warning\s|Normal\s|\d+\/\d+\s|\d+[a-z]*\s{2,})/;
   // Pre-process: merge fenced code blocks (```...```) that may have been split across paragraphs
   const merged = [];
   let inFence = false, fenceBuf = [];
@@ -751,14 +758,17 @@ function renderQuestion(qText, lang) {
     merged.push(para);
   }
   if (fenceBuf.length) merged.push(fenceBuf.join("\n\n"));
+  // Find last text paragraph index for title/hierarchy detection
+  const firstTextIdx = merged.findIndex(p => !p.trimStart().startsWith("```") && (() => { const ls = p.split("\n").filter(l => l.trim()); return !ls.every(l => !hasHebrew(l)) || ls.filter(l => terminalPat.test(l)).length < Math.ceil(ls.length * 0.5); })());
+  const lastTextIdx = (() => { for (let i = merged.length - 1; i >= 0; i--) { const p = merged[i]; if (!p.trimStart().startsWith("```")) { const ls = p.split("\n").filter(l => l.trim()); const noHe = ls.every(l => !hasHebrew(l)); const mc = ls.filter(l => terminalPat.test(l)).length; if (!(noHe && ls.length >= 1 && mc >= Math.ceil(ls.length * 0.5))) return i; } } return -1; })();
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {merged.map((para, idx) => {
         // Fenced code block (```...```)
         if (para.trimStart().startsWith("```")) {
           const code = para.replace(/^```[a-z]*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
           return (
-            <pre key={idx} dir="ltr" style={{margin:0,background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:"#7dd3fc",overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
+            <pre key={idx} dir="ltr" style={{margin:0,background:"rgba(0,212,255,0.06)",border:"1px solid rgba(0,212,255,0.12)",borderRadius:8,padding:"10px 14px",fontFamily:"'JetBrains Mono','Fira Code',monospace",fontSize:13,color:"#7dd3fc",overflowX:"auto",whiteSpace:"pre",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
               {code}
             </pre>
           );
@@ -772,19 +782,20 @@ function renderQuestion(qText, lang) {
           // Detect if this looks like an error/output vs a command
           const firstLine = nonEmpty[0]?.trim() || "";
           const isError = /^(error:|Error:|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:)/i.test(firstLine);
-          const blockBg = isError ? "rgba(239,68,68,0.05)" : "rgba(0,212,255,0.05)";
-          const blockBorder = isError ? "rgba(239,68,68,0.15)" : "rgba(0,212,255,0.15)";
-          const blockColor = isError ? "#fca5a5" : "#7dd3fc";
+          const blockBg = isError ? "rgba(239,68,68,0.03)" : "rgba(0,212,255,0.04)";
+          const blockBorder = isError ? "rgba(239,68,68,0.08)" : "rgba(0,212,255,0.10)";
+          const blockColor = isError ? "rgba(252,165,165,0.85)" : "#7dd3fc";
           return (
-            <pre key={idx} dir="ltr" style={{margin:0,background:blockBg,border:`1px solid ${blockBorder}`,borderRadius:8,padding:"10px 14px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12.5,color:blockColor,overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
+            <pre key={idx} dir="ltr" style={{margin:0,background:blockBg,border:`1px solid ${blockBorder}`,borderRadius:8,padding:"10px 14px",fontFamily:"'JetBrains Mono','Fira Code',monospace",fontSize:13,color:blockColor,overflowX:"auto",whiteSpace:"pre",textAlign:"left",direction:"ltr",lineHeight:1.6}}>
               {para.replace(/^["״"]+|["״"]+$/g, "").trim()}
             </pre>
           );
         }
-        const isLast = idx === merged.length - 1;
+        const isFirst = idx === firstTextIdx;
+        const isLast = idx === lastTextIdx;
         const pDir = hasHebrew(para) ? (lang === "he" ? "rtl" : "ltr") : "ltr";
         return (
-          <div key={idx} dir={pDir} style={{color:"var(--text-primary)",fontSize:isLast?17:14,fontWeight:isLast?700:400,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
+          <div key={idx} dir={pDir} style={{color:isFirst||isLast?"var(--text-primary)":"var(--text-secondary)",fontSize:isFirst?16:(isLast?15:13.5),fontWeight:isFirst?700:(isLast?600:400),lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:pDir==="ltr"?"left":"right",unicodeBidi:"isolate"}}>
             {lang==="he"?renderBidi(para,lang):renderBidiInner(para,lang,`p${idx}`)}
           </div>
         );
@@ -3191,7 +3202,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .page-pad{padding:12px 14px!important}
 .quiz-bar-right{gap:8px!important}
 .quiz-bar-right span,.quiz-bar-right button{font-size:11px!important}
-.opt-btn{padding:13px 14px!important;font-size:14px!important;gap:10px!important;min-height:52px!important;line-height:1.7!important}
+.opt-btn{padding:10px 12px!important;font-size:14px!important;gap:8px!important;min-height:46px!important;line-height:1.55!important}
 .incident-opt{padding:12px 12px!important;font-size:13px!important;gap:8px!important;border-radius:9px!important;line-height:1.7!important}
 .explanation-card{border-radius:12px!important}
 .explanation-card>div:first-child{padding:12px 16px!important}
@@ -3223,7 +3234,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .topic-card-section{padding:13px 14px!important}
 .stats-grid{gap:7px!important}
 .stats-cell{padding:11px 6px!important}
-.opt-btn{padding:12px 12px!important;font-size:13px!important;gap:8px!important;border-radius:10px!important;min-height:48px!important}
+.opt-btn{padding:9px 10px!important;font-size:13px!important;gap:7px!important;border-radius:9px!important;min-height:44px!important}
 }
 @media(max-width:390px){
 .home-logo{width:40px!important;height:40px!important}
@@ -4599,7 +4610,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
 
               <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
-                style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"20px 18px 22px",marginBottom:16,outline:"none",position:"relative"}}>
+                style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"18px 16px 18px",marginBottom:10,outline:"none",position:"relative"}}>
                 {renderQuestion(currentQuestions[questionIndex].q, lang)}
                 {!isInHistoryMode&&!tryAgainActive&&!isFreeMode(selectedTopic?.id)&&(
                   <button onClick={toggleBookmark}
@@ -4637,7 +4648,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
               )}
 
-              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
+              <div dir={dir} style={{color:"var(--text-secondary)",fontSize:13,fontWeight:600,marginBottom:8,textAlign:dir==="rtl"?"right":"left",opacity:0.7}}>{t("answerPrompt")}</div>
+
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
                 {(currentQuestions[questionIndex]?.options || []).map((opt,i)=>{
                   const q_cur = currentQuestions[questionIndex];
                   const isCorrect = dispAnswerResult ? i === dispAnswerResult.correctIndex : (typeof q_cur?.answer === "number" ? i === q_cur.answer : false);
@@ -4663,9 +4676,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
                       dir={dir}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"12px 14px",background:bg,border:`1px solid ${borderColor}`,borderRadius:12,color,fontSize:isCodeOption?13:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.6,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:10,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:50}}>
-                      <span aria-hidden="true" style={{flexShrink:0,width:28,height:28,borderRadius:8,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.6,unicodeBidi:"isolate",...(isCodeOption?{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",letterSpacing:-0.3}:{})}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
+                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:isCodeOption?13:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46}}>
+                      <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
+                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate",...(isCodeOption?{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",letterSpacing:-0.3}:{})}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:16,height:16,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
                       {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✓</span>}
                       {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✗</span>}
