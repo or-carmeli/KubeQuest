@@ -1,6 +1,6 @@
 # ☸️ KubeQuest
 
-**A Kubernetes learning and interview practice game for DevOps engineers.**
+**Interactive Kubernetes learning game for DevOps engineers.**
 
 Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, and prepare for CKA-level interviews - through interactive quizzes, incident simulations, and daily challenges.
 
@@ -8,20 +8,14 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/or-carmeli/KubeQuest/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/or-carmeli/KubeQuest/actions/workflows/ci.yml)
 [![Security](https://img.shields.io/github/actions/workflow/status/or-carmeli/KubeQuest/security.yml?branch=main&style=flat-square&label=security)](https://github.com/or-carmeli/KubeQuest/actions/workflows/security.yml)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat-square&logo=docker)](https://github.com/or-carmeli/KubeQuest/pkgs/container/kubequest)
 
 ---
 
-## Live Demo
-
 [kubequest.online](https://www.kubequest.online/) - no registration required, works instantly in guest mode.
-
----
-
-## Demo
 
 <div align="center">
   <img src="public/GIF-Demo-README.gif" alt="KubeQuest Demo" width="420">
@@ -29,20 +23,27 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 ---
 
-## How It Works
+## Table of Contents
 
-1. **Pick a topic** - Workloads, Networking, Config & Security, Storage & Helm, or Troubleshooting
-2. **Choose a difficulty** - Easy, Medium, or Hard (levels unlock as you progress)
-3. **Answer questions** - multiple choice with instant feedback and detailed explanations
-4. **Practice incidents** - step through multi-step real-world failure scenarios (CrashLoopBackOff, ImagePullBackOff, misconfigured NetworkPolicy, and more)
-5. **Track your progress** - score, accuracy, streaks, weak areas, and achievements
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Security Model](#security-model)
+- [Observability](#observability)
+- [CI/CD & Supply Chain Security](#cicd--supply-chain-security)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [Local Development](#local-development)
+- [Docker](#docker)
+- [Testing](#testing)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
 
 ---
 
 ## Features
 
 - **🚨 Incident Mode** - multi-step Kubernetes failure scenarios with step-by-step diagnosis and scoring
-- **🧠 Topic Quizzes** - 5 topics × 3 difficulty levels, progressively unlocked
+- **🧠 Topic Quizzes** - 5 topics x 3 difficulty levels, progressively unlocked
 - **🔥 Daily Challenge** - 5 fresh questions every day
 - **🎲 Mixed Quiz** - random questions across all topics
 - **🎯 Interview Mode** - mandatory timer, hints disabled, exam pressure
@@ -54,7 +55,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 - **🏅 Achievements** - milestone-based reward system
 - **🌐 Hebrew / English** - full bilingual support with RTL layout
 - **👤 Guest Mode** - no account needed; sign up to sync progress across devices
-- **📊 Real-Time Monitoring** - live system status page with service health checks, uptime history, and incident tracking ([docs](docs/monitoring.md))
+- **📊 Real-Time Monitoring** - live status page with health checks, uptime history, and auto-detected incidents
 
 ---
 
@@ -62,9 +63,17 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | [React 18](https://react.dev) + [Vite 5](https://vitejs.dev) |
-| Auth & Database | [Supabase](https://supabase.com) (PostgreSQL + Auth) |
-| Deployment | Vercel |
+| Frontend | [React 19](https://react.dev) + [Vite 5](https://vitejs.dev) |
+| Backend | [Supabase](https://supabase.com) (PostgreSQL + Auth + Edge Functions) |
+| Hosting | [Vercel](https://vercel.com) (Edge Network + CDN) |
+| Containerization | Docker (multi-stage build, nginx:alpine, ~25MB) |
+| Orchestration | Kubernetes (Deployment, HPA, Ingress, cert-manager) |
+| CI/CD | GitHub Actions (build, scan, sign, attest) |
+| Supply Chain | [Cosign](https://docs.sigstore.dev/cosign/overview/) + [Trivy](https://trivy.dev/) + SBOM + Provenance |
+| Security | CSP, HSTS, CORS, RLS, CodeQL, npm audit |
+| Monitoring | Supabase Edge Functions + pg_cron (60s interval) |
+| Testing | [Vitest](https://vitest.dev) |
+| Dependency Management | [Dependabot](https://docs.github.com/en/code-security/dependabot) (weekly - npm, Docker, Actions) |
 
 ---
 
@@ -104,29 +113,6 @@ flowchart TB
     style Database fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#ffffff
 ```
 
-### CI/CD Pipeline
-
-```mermaid
-flowchart LR
-    PUSH["git push"] --> CI["CI Check"] --> BUILD["Build Image"] --> SCAN["Trivy Scan"]
-    SCAN --> PUSH_IMG["Push to GHCR"] --> ATTEST["SBOM +<br/>Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
-    BOT["Dependabot"] -.->|weekly PRs| CI
-
-    style PUSH fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
-    style CI fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
-    style BUILD fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
-    style SCAN fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
-    style PUSH_IMG fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
-    style ATTEST fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
-    style SIGN fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
-    style VERIFY fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
-    style BOT fill:#1a1a2e,stroke:#00D4FF,stroke-dasharray:5 5,color:#fff
-```
-
-**Dependabot** runs weekly and opens PRs automatically when newer versions are available for npm packages, the Dockerfile base image, or GitHub Actions - keeping dependencies up to date and patching known vulnerabilities.
-
-> **Production** runs on Vercel + Supabase. The `k8s/` manifests and Docker image on GHCR enable self-hosting on any Kubernetes cluster.
-
 ### Stack Layers
 
 **Frontend** - React single-page application built with Vite, deployed on Vercel. Includes a manual service worker for offline caching and a PWA manifest for installability. All routing is handled client-side.
@@ -159,16 +145,163 @@ flowchart TB
     style DB fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#ffffff
 ```
 
-### Security Highlights
+| Layer | Controls |
+|-------|----------|
+| Edge | HTTPS enforced, HSTS (1 year, preload), strict CORS |
+| Application | Content Security Policy (no inline scripts), X-Frame-Options DENY, COOP/CORP same-origin |
+| API | `SECURITY DEFINER` RPC endpoints, rate limiting on answer verification |
+| Database | Row Level Security on all tables, server-side validation |
+| Container | Cosign-signed images, SBOM attestations, Trivy scanning |
+| Code | CodeQL static analysis, npm audit, Dependabot weekly updates |
 
-- HTTPS enforced with HSTS and strict Content Security Policy (no inline scripts)
-- Edge protection and request filtering at the platform layer
-- Strict CORS policy restricting cross-origin access
-- Backend validation through controlled RPC endpoints
-- Rate limiting applied to answer verification operations
-- PostgreSQL protected with Row Level Security (RLS)
-- Container images signed with Cosign and published with SBOM attestations
-- Automated vulnerability scanning (Trivy, npm audit, CodeQL)
+---
+
+## Observability
+
+A Supabase Edge Function executes health checks every 60 seconds via `pg_cron`, monitoring 5 services:
+
+| Service | Check |
+|---------|-------|
+| Database | `SELECT` on `user_stats` |
+| Content API | `get_mixed_questions` RPC |
+| Quiz Engine | `check_quiz_answer` RPC |
+| Leaderboard | `get_leaderboard` RPC |
+| Authentication | GoTrue `/auth/v1/health` |
+
+```mermaid
+flowchart LR
+    CRON["pg_cron<br/>every 60s"] --> EDGE["Edge Function<br/>health-check"]
+    EDGE --> DB["Database"]
+    EDGE --> API["Content API"]
+    EDGE --> QUIZ["Quiz Engine"]
+    EDGE --> LB["Leaderboard"]
+    EDGE --> AUTH["Auth"]
+    EDGE --> STORE[("PostgreSQL<br/>status tables")]
+    STORE --> UI["Frontend<br/>polls every 30s"]
+
+    style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style STORE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style UI fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
+```
+
+- **Status classification** - operational (<2s), degraded (>2s), down (error)
+- **Auto-incident detection** - 3 consecutive failures trigger automatic incident creation
+- **Data retention** - append-only `system_status_history` table for uptime tracking
+- **Frontend** - live status page with real-time polling
+
+Full documentation: [docs/monitoring.md](docs/monitoring.md)
+
+---
+
+## CI/CD & Supply Chain Security
+
+### Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| [ci.yml](.github/workflows/ci.yml) | Every PR / push to `main` | Build validation - ensures `npm run build` succeeds |
+| [docker.yml](.github/workflows/docker.yml) | Push to `main` / version tags | Build, scan, push to GHCR, SBOM + provenance, Cosign sign |
+| [security.yml](.github/workflows/security.yml) | Weekly (Monday) + on-demand | npm audit + Trivy container scan + CodeQL static analysis |
+
+### Container Pipeline
+
+```mermaid
+flowchart LR
+    PUSH["git push"] --> CI["CI Check"] --> BUILD["Build Image"] --> SCAN["Trivy Scan"]
+    SCAN --> PUSH_IMG["Push to GHCR"] --> ATTEST["SBOM +<br/>Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
+    BOT["Dependabot"] -.->|weekly PRs| CI
+
+    style PUSH fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style CI fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style BUILD fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style SCAN fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
+    style PUSH_IMG fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style ATTEST fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style SIGN fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
+    style VERIFY fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
+    style BOT fill:#1a1a2e,stroke:#00D4FF,stroke-dasharray:5 5,color:#fff
+```
+
+**Dependabot** runs weekly and opens PRs automatically for npm packages, the Dockerfile base image, and GitHub Actions - keeping dependencies up to date and patching known vulnerabilities.
+
+> **Production** runs on Vercel + Supabase. The `k8s/` manifests and Docker image on GHCR enable self-hosting on any Kubernetes cluster.
+
+### Image Tags
+
+| Trigger | Tag | Example |
+|---------|-----|---------|
+| Push to `main` | `latest` + `sha-<commit>` | `latest`, `sha-a1b2c3d` |
+| Git tag `v1.2.0` | Semver + `sha-<commit>` | `1.2.0`, `sha-a1b2c3d` |
+| Manual dispatch | `sha-<commit>` | `sha-a1b2c3d` |
+
+### Supply Chain Security
+
+- **Vulnerability scanning** - [Trivy](https://trivy.dev/) scans the image before push; the workflow fails on HIGH and CRITICAL vulnerabilities (unfixed CVEs excluded)
+- **SBOM** - Software Bill of Materials attached to every published image
+- **Provenance** - build provenance attestation (`mode=max`) provides cryptographic proof of build origin
+- **Keyless signing** - [Cosign](https://docs.sigstore.dev/cosign/overview/) signs images by digest using GitHub OIDC; no secret keys to manage or rotate
+- **In-pipeline verification** - the signature is verified in CI before the workflow completes
+
+### Verify Locally
+
+```bash
+cosign verify \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp "github\.com/or-carmeli/KubeQuest" \
+  ghcr.io/or-carmeli/kubequest:latest
+```
+
+### Deploying by Digest
+
+Every workflow run outputs an immutable image reference by digest. Use it in Kubernetes manifests, Helm values, or ArgoCD application specs to pin the exact image that was built, scanned, and signed:
+
+```yaml
+image: ghcr.io/or-carmeli/kubequest@sha256:<digest>
+```
+
+---
+
+## Kubernetes Deployment
+
+The `k8s/` directory contains production-ready manifests to deploy KubeQuest on any Kubernetes cluster.
+
+```mermaid
+flowchart TB
+    INTERNET([Internet]) -->|HTTPS| ING["Ingress<br/>nginx + TLS via cert-manager"]
+    ING --> SVC["Service<br/>ClusterIP :80"]
+    SVC --> POD1["Pod 1"]
+    SVC --> POD2["Pod 2"]
+
+    HPA["HPA<br/>2-10 replicas<br/>70% CPU target"] -.->|scales| SVC
+
+    subgraph NS["Namespace: kubequest"]
+        ING
+        SVC
+        POD1
+        POD2
+        HPA
+    end
+
+    style NS fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style ING fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style SVC fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style HPA fill:#1a1a2e,stroke:#10B981,stroke-dasharray:5 5,color:#fff
+```
+
+| Manifest | What it does |
+|----------|-------------|
+| `namespace.yaml` | Isolated namespace `kubequest` |
+| `deployment.yaml` | 2 replicas, resource limits (200m CPU / 128Mi), liveness + readiness probes |
+| `service.yaml` | ClusterIP on port 80 |
+| `ingress.yaml` | nginx Ingress with TLS via cert-manager, HTTP-to-HTTPS redirect |
+| `hpa.yaml` | HorizontalPodAutoscaler: 2-10 pods at 70% CPU |
+
+```bash
+kubectl apply -f k8s/
+```
+
+> Requires: nginx ingress controller + cert-manager installed in the cluster.
 
 ---
 
@@ -204,35 +337,10 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 npm run dev      # development server
 npm run build    # production build
 npm run preview  # preview production build locally
+npm run test     # run tests (vitest)
 ```
 
-### Docker
-
-KubeQuest is a **Single Page Application (SPA)** - React handles all navigation client-side from a single `index.html` file. The web server must serve `index.html` for every URL so React can take over routing.
-
-The Dockerfile uses a **multi-stage build** to keep the production image small and clean:
-
-```
-Stage 1 - Builder  (node:20-alpine)
-  npm ci              → install dependencies
-  npm run build       → compile React source → static HTML/CSS/JS in /dist
-
-Stage 2 - Runner   (nginx:alpine)
-  copies /dist        → only the built output (no Node.js, no source code)
-  serves via nginx    → fast, lightweight web server with SPA routing
-```
-
-Final image size: ~25MB (vs ~500MB if Node.js were included).
-
-```bash
-docker build -t kubequest .
-docker run -p 8080:80 kubequest
-# → http://localhost:8080
-```
-
----
-
-## Supabase Setup
+### Supabase Setup
 
 Create a `user_stats` table:
 
@@ -262,72 +370,49 @@ using (auth.uid() = user_id);
 
 ---
 
-## Kubernetes Deployment
+## Docker
 
-The `k8s/` directory contains production-ready manifests to deploy KubeQuest on any Kubernetes cluster.
+KubeQuest is a **Single Page Application (SPA)** - React handles all navigation client-side from a single `index.html` file. The web server must serve `index.html` for every URL so React can take over routing.
+
+The Dockerfile uses a **multi-stage build** to keep the production image small and clean:
 
 ```
-k8s/
-  namespace.yaml    # Isolated namespace: kubequest
-  deployment.yaml   # 2 replicas, resource limits, liveness & readiness probes
-  service.yaml      # ClusterIP service (internal traffic only)
-  ingress.yaml      # Nginx Ingress with TLS via cert-manager + HTTP→HTTPS redirect
-  hpa.yaml          # HorizontalPodAutoscaler: scale 2→10 pods at 70% CPU
+Stage 1 - Builder  (node:20-alpine)
+  npm ci              → install dependencies
+  npm run build       → compile React source → static HTML/CSS/JS in /dist
+
+Stage 2 - Runner   (nginx:alpine)
+  copies /dist        → only the built output (no Node.js, no source code)
+  serves via nginx    → fast, lightweight web server with SPA routing
 ```
+
+Final image size: ~25MB (vs ~500MB if Node.js were included).
 
 ```bash
-# Deploy to a cluster
-kubectl apply -f k8s/
+docker build -t kubequest .
+docker run -p 8080:80 kubequest
+# → http://localhost:8080
 ```
-
-> Requires: nginx ingress controller + cert-manager installed in the cluster.
 
 ---
 
-## CI/CD & Supply Chain Security
+## Testing
 
-### Container Pipeline
-
-Every push to `main` or a version tag (`v*.*.*`) triggers the [Docker Build & Push](.github/workflows/docker.yml) workflow:
-
-```
-Build image → Trivy scan → Push to GHCR → Attach SBOM & provenance → Sign with Cosign → Verify signature
-```
-
-The workflow uses concurrency control - rapid pushes to the same ref cancel older in-progress runs. On completion, the immutable image reference (`ghcr.io/or-carmeli/kubequest@sha256:...`) is printed for use in deployments.
-
-### Image Tags
-
-| Trigger | Tag | Example |
-|---------|-----|---------|
-| Push to `main` | `latest` + `sha-<commit>` | `latest`, `sha-a1b2c3d` |
-| Git tag `v1.2.0` | Semver + `sha-<commit>` | `1.2.0`, `sha-a1b2c3d` |
-| Manual dispatch | `sha-<commit>` | `sha-a1b2c3d` |
-
-### Security Measures
-
-- **Vulnerability scanning** - [Trivy](https://trivy.dev/) scans the image before push; the workflow fails on HIGH and CRITICAL vulnerabilities (unfixed CVEs excluded)
-- **SBOM** - Software Bill of Materials attached to every published image
-- **Provenance** - build provenance attestation (`mode=max`) provides cryptographic proof of build origin
-- **Keyless signing** - [Cosign](https://docs.sigstore.dev/cosign/overview/) signs images by digest using GitHub OIDC; no secret keys to manage or rotate
-- **In-pipeline verification** - the signature is verified in CI before the workflow completes
-
-### Verify Locally
+| Framework | Coverage |
+|-----------|----------|
+| [Vitest](https://vitest.dev) | Quiz persistence, level unlocking, state corruption recovery, i18n |
 
 ```bash
-cosign verify \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  --certificate-identity-regexp "github\.com/or-carmeli/KubeQuest" \
-  ghcr.io/or-carmeli/kubequest:latest
+npm run test
 ```
 
-### Deploying by Digest
-
-Every workflow run outputs an immutable image reference by digest. Use it in Kubernetes manifests, Helm values, or ArgoCD application specs to pin the exact image that was built, scanned, and signed:
-
-```yaml
-image: ghcr.io/or-carmeli/kubequest@sha256:<digest>
-```
+Key test areas:
+- Quiz state persistence and resume across page reloads
+- Level unlock progression (easy -> medium -> hard)
+- Cross-quiz-type isolation (daily, mixed, topic, bookmarks)
+- Corrupt localStorage detection and recovery (NaN prevention)
+- Language switching behavior
+- Backward compatibility with older saved states
 
 ---
 
@@ -344,14 +429,26 @@ src/
     incidents.js       # Incident Mode scenarios
     dailyQuestions.js  # Daily Challenge question pool
   components/
-    RoadmapView.jsx
-    WeakAreaCard.jsx
+    RoadmapView.jsx    # Visual learning path
+    WeakAreaCard.jsx   # Lowest-accuracy topic card
+    ErrorBoundary.jsx  # Crash recovery wrapper
   utils/
+    storage.js         # Safe localStorage layer with corruption recovery
+    bidi.jsx           # BiDi text rendering for Hebrew/English mixed content
     quizPersistence.js # localStorage helpers for quiz resume
+public/
+  sw.js                # Service worker (offline cache, build-stamped)
+k8s/                   # Kubernetes manifests (namespace, deployment, service, ingress, HPA)
 supabase/
-  migrations/          # Database schema and RPCs
+  migrations/          # Database schema and RPCs (11 migrations)
   functions/
     health-check/      # Edge Function - real-time service health checks
+.github/
+  workflows/
+    ci.yml             # Build validation
+    docker.yml         # Container build, scan, sign, push
+    security.yml       # Weekly security scanning (npm audit, Trivy, CodeQL)
+  dependabot.yml       # Weekly dependency updates (npm, Docker, Actions)
 docs/
   monitoring.md        # Monitoring system documentation
 ```
