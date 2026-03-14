@@ -331,7 +331,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "`QoS` (Quality of Service) קובע את סדר העדיפויות של `Pods` כש-`Node` נמצא בלחץ משאבים, בעיקר לחץ זיכרון.\nKubernetes קובע את ה-`QoS` class באופן אוטומטי לפי ה-`requests` וה-`limits` שמוגדרים לקונטיינרים.\n\n`Guaranteed`: `requests` ו-`limits` מוגדרים ושווים בכל הקונטיינרים. הגנה מקסימלית מפינוי.\n`Burstable`: `requests` מוגדרים אבל `limits` גבוהים יותר. הגנה חלקית.\n`BestEffort`: אין `requests` ואין `limits`. `Pods` אלו יפונו ראשונים כש-`Node` חווה לחץ זיכרון.",
+                "`QoS` class נקבעת לפי ההגדרות של `requests` ו-`limits` לכל קונטיינר ב-Pod.\n\n`Guaranteed`: כאשר לכל הקונטיינרים מוגדרים `requests` ו-`limits`, ובכל אחד מהם requests=limits.\n\n`Burstable`: כאשר מוגדרים `requests` או `limits`, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\n`BestEffort`: כאשר לא מוגדרים כלל `requests` או `limits`.\n\nמבחינת eviction: `BestEffort` יפונה ראשון, אחריו `Burstable`, ו-`Guaranteed` הוא המוגן ביותר.",
             },
             {
               q: "מה `ephemeral container` ב-Kubernetes?",
