@@ -2158,6 +2158,7 @@ export default function K8sQuestApp() {
 
   const renderTheory = (text) => {
     let inCode = false;
+    let flowIdx = 0;
     return text.split('\n').map((line, i) => {
       if (line === 'CODE:') {
         inCode = true;
@@ -2167,6 +2168,31 @@ export default function K8sQuestApp() {
         <div key={i} style={{fontFamily:"monospace",fontSize:11,color:"#7dd3fc",lineHeight:1.8,
           whiteSpace:"pre",direction:"ltr",textAlign:"left"}}>  {line}</div>
       );
+      if (line.startsWith('CMD:')) {
+        return (
+          <div key={i} style={{fontFamily:"'Fira Code','Courier New',monospace",fontSize:12,color:"#7dd3fc",background:"rgba(125,211,252,0.06)",borderRadius:6,padding:"8px 12px",marginTop:12,direction:"ltr",textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}}>{line.slice(4)}</div>
+        );
+      }
+      if (line.startsWith('DESC:')) {
+        return (
+          <div key={i} style={{color:"#94a3b8",fontSize:12,lineHeight:1.5,padding:"4px 12px 0",direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{line.slice(5)}</div>
+        );
+      }
+      if (line.startsWith('FLOW_TITLE:')) {
+        flowIdx = 0;
+        return (
+          <div key={i} style={{color:"#e2e8f0",fontSize:14,fontWeight:700,marginTop:22,marginBottom:8,paddingTop:14,borderTop:"1px solid rgba(255,255,255,0.06)",direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{line.slice(11)}</div>
+        );
+      }
+      if (line.startsWith('FLOW:')) {
+        flowIdx++;
+        return (
+          <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+            <span style={{width:20,height:20,borderRadius:"50%",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.25)",color:"#00D4FF",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{flowIdx}</span>
+            <span style={{fontFamily:"'Fira Code','Courier New',monospace",fontSize:11,color:"#7dd3fc",direction:"ltr"}}>{line.slice(5)}</span>
+          </div>
+        );
+      }
       if (line.startsWith('🔹')) {
         const text = line.slice(2).trimStart();
         return (
