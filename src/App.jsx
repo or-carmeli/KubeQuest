@@ -291,7 +291,7 @@ const TRANSLATIONS = {
     incidentListTitle: "בחר אירוע",
     incidentDifficulty: "רמה", incidentSteps: "שלבים", incidentEstTime: "זמן משוער",
     incidentStep: "שלב", incidentScore: "ניקוד", incidentMistakes: "שגיאות", incidentTime: "זמן",
-    incidentConfirm: "✔ אשר פעולה", incidentNext: "→ שלב הבא", incidentFinish: "→ סיים אירוע",
+    incidentConfirm: "✔ אשר פעולה", incidentNext: "שלב הבא", incidentFinish: "סיים אירוע",
     incidentResolved: "האירוע נפתר! 🎉",
     incidentResolved_m: "האירוע נפתר! 🎉",
     incidentCorrect: "✅ נכון!", incidentWrong: "❌ לא נכון",
@@ -302,7 +302,7 @@ const TRANSLATIONS = {
     incidentDiscard: "נטשי", incidentDiscard_m: "נטוש",
     incidentActiveLabel: "אירוע פעיל", incidentAvailableLabel: "אירועים זמינים",
     incidentHeaderSub: "סימולציה של תקלות Kubernetes אמיתיות.",
-    incidentResumeBtn: "המשיכי חקירה ←", incidentResumeBtn_m: "המשך חקירה ←",
+    incidentResumeBtn: "המשיכי חקירה", incidentResumeBtn_m: "המשך חקירה",
     incidentUnlockIntermediate: "השלימו 2 אירועים קלים כדי לפתוח",
     incidentUnlockHard: "השלימו 2 אירועים בינוניים כדי לפתוח",
     incidentLocked: "נעול",
@@ -461,7 +461,7 @@ const TRANSLATIONS = {
     incidentListTitle: "Choose an Incident",
     incidentDifficulty: "Difficulty", incidentSteps: "steps", incidentEstTime: "Est. time",
     incidentStep: "Step", incidentScore: "Score", incidentMistakes: "Mistakes", incidentTime: "Time",
-    incidentConfirm: "✔ Confirm Action", incidentNext: "Next Step →", incidentFinish: "Resolve Incident →",
+    incidentConfirm: "✔ Confirm Action", incidentNext: "Next Step", incidentFinish: "Resolve Incident",
     incidentResolved: "🎉 Incident Resolved!",
     incidentCorrect: "✅ Correct!", incidentWrong: "❌ Wrong",
     incidentTryAnother: "Try Another Incident",
@@ -471,7 +471,7 @@ const TRANSLATIONS = {
     incidentDiscard: "Discard",
     incidentActiveLabel: "Active Incident", incidentAvailableLabel: "Available Incidents",
     incidentHeaderSub: "Simulate real Kubernetes production incidents.",
-    incidentResumeBtn: "Resume Investigation →",
+    incidentResumeBtn: "Resume Investigation",
     incidentUnlockIntermediate: "Complete 2 Easy incidents to unlock",
     incidentUnlockHard: "Complete 2 Intermediate incidents to unlock",
     incidentLocked: "Locked",
@@ -2827,29 +2827,63 @@ export default function K8sQuestApp() {
     );
   };
 
-  // Renders incident explanation as short paragraphs for readability.
-  // Uses renderBidi for proper K8s term styling + backtick handling in Hebrew mode.
+  // Renders incident explanation with clean bullet layout.
+  // Strips ✓/✗/→ markers from source data, groups into "why correct" and "why others wrong" sections.
   const renderIncidentExplanation = (text) => {
     if (!text) return null;
-    const sentences = text.split(/\.\s+(?=[A-Z\u0590-\u05FFa-z`])/).filter(s => s.trim());
-    if (sentences.length <= 1) {
-      return <div dir={lang==="he"?"rtl":"ltr"} style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.8,direction:lang==="he"?"rtl":"ltr",textAlign:lang==="he"?"right":"left"}}>{lang === "he" ? renderBidiBlock(text, lang) : renderInline(text)}</div>;
+    const textDir = lang==="he"?"rtl":"ltr";
+    const textAlign = lang==="he"?"right":"left";
+    const renderLine = (l) => lang === "he" ? renderBidiBlock(l, lang) : renderInline(l);
+    const lines = text.split("\n").filter(l => l.trim());
+    // Group lines: ✓/→/plain = correct reasoning, ✗ = why others are wrong
+    const correctLines = [];
+    const wrongLines = [];
+    for (const line of lines) {
+      const t = line.trim();
+      if (t.startsWith("\u2717")) { // ✗
+        // Split on sentence boundaries within the ✗ line to get individual bullets
+        const content = t.slice(1).trim();
+        const parts = content.split(/\.\s+/).filter(s => s.trim());
+        parts.forEach(p => wrongLines.push(p.replace(/\.+$/, "")));
+      } else if (t.startsWith("\u2713")) { // ✓
+        const content = t.slice(1).trim();
+        const parts = content.split(/\.\s+/).filter(s => s.trim());
+        parts.forEach(p => correctLines.push(p.replace(/\.+$/, "")));
+      } else if (t.startsWith("\u2192")) { // →
+        correctLines.push(t.slice(1).trim().replace(/\.+$/, ""));
+      } else {
+        // Plain continuation line - split into sentences too
+        const parts = t.split(/\.\s+/).filter(s => s.trim());
+        parts.forEach(p => correctLines.push(p.replace(/\.+$/, "")));
+      }
     }
+    const sectionTitle = lang==="he" ? "למה זו התשובה הנכונה:" : "Why this is the correct answer:";
+    const wrongTitle = lang==="he" ? "למה האחרות לא מתאימות:" : "Why the others are wrong:";
+    const bullet = (item, i) => (
+      <div key={i} dir={textDir} style={{display:"flex",alignItems:"flex-start",gap:8,direction:textDir,textAlign,marginBottom:2}}>
+        <span style={{flexShrink:0,fontSize:13,lineHeight:1.8,color:"var(--text-dim)"}}>{"•"}</span>
+        <span style={{flex:1,fontSize:13,lineHeight:1.8,color:"var(--text-secondary)"}}>{renderLine(item)}</span>
+      </div>
+    );
     return (
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {sentences.map((s, i) => {
-          const cleaned = s.replace(/\.+$/, "") + ".";
-          return (
-            <div key={i} dir={lang==="he"?"rtl":"ltr"} style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.8,textAlign:lang==="he"?"right":"left"}}>
-              {lang === "he" ? renderBidiBlock(cleaned, lang) : renderInline(cleaned)}
-            </div>
-          );
-        })}
+        {correctLines.length > 0 && (
+          <div>
+            <div dir={textDir} style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",marginBottom:6,textAlign}}>{sectionTitle}</div>
+            {correctLines.map((line, i) => bullet(line, `c${i}`))}
+          </div>
+        )}
+        {wrongLines.length > 0 && (
+          <div style={{marginTop:4}}>
+            <div dir={textDir} style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",marginBottom:6,textAlign}}>{wrongTitle}</div>
+            {wrongLines.map((line, i) => bullet(line, `w${i}`))}
+          </div>
+        )}
       </div>
     );
   };
 
-  // Renders incident step prompt: title (bold), facts (normal), terminal (monospace), question (amber).
+  // Renders incident step prompt: title (bold), facts/bullets (normal), terminal output (monospace LTR), question (amber).
   const renderIncidentPrompt = (text) => {
     if (!text) return null;
     const terminalPat = /^(kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error|Failed|rpc error|unauthorized|  [A-Za-z])/;
@@ -2858,16 +2892,52 @@ export default function K8sQuestApp() {
     const titleIdx = lines.findIndex(l => l.trim() && !(!_hasHe(l) && terminalPat.test(l)));
     let questionIdx = -1;
     for (let i = lines.length - 1; i >= 0; i--) { if (lines[i].trim().endsWith("?")) { questionIdx = i; break; } }
-    return lines.map((line, i) => {
-      if (!line.trim()) return <div key={i} style={{height:6}}/>;
-      if (!_hasHe(line) && terminalPat.test(line)) {
-        return <div key={i} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"var(--code-text)",lineHeight:1.9,direction:"ltr",textAlign:"left",whiteSpace:"pre"}}>{line}</div>;
+    // Group consecutive terminal lines into a single block
+    const elements = [];
+    let termGroup = [];
+    const flushTerm = () => {
+      if (termGroup.length === 0) return;
+      elements.push(
+        <div key={`term-${elements.length}`} style={{background:"rgba(0,0,0,0.3)",borderRadius:8,padding:"10px 12px",marginTop:6,marginBottom:6,overflowX:"auto",direction:"ltr",unicodeBidi:"isolate"}}>
+          {termGroup.map((tl, ti) => (
+            <div key={ti} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"var(--code-text)",lineHeight:1.8,whiteSpace:"pre",direction:"ltr",unicodeBidi:"isolate"}}>{tl}</div>
+          ))}
+        </div>
+      );
+      termGroup = [];
+    };
+    lines.forEach((line, i) => {
+      if (!line.trim()) {
+        flushTerm();
+        elements.push(<div key={i} style={{height:6}}/>);
+        return;
       }
+      if (!_hasHe(line) && terminalPat.test(line)) {
+        termGroup.push(line);
+        return;
+      }
+      flushTerm();
       const isTitle = i === titleIdx;
       const isQ = i === questionIdx && i !== titleIdx;
-      const style = isTitle ? {color:"var(--text-bright)",fontSize:15,fontWeight:700,lineHeight:1.6,marginBottom:2} : isQ ? {color:"#fbbf24",fontSize:14,fontWeight:600,lineHeight:1.8,marginTop:4} : {color:"var(--text-primary)",fontSize:14,lineHeight:1.8,marginBottom:4};
-      return <div key={i} dir="auto" style={style}>{lang === "he" ? renderBidiBlock(line, lang) : renderInline(line)}</div>;
+      const isBullet = line.trim().startsWith("\u2022");
+      if (isTitle) {
+        elements.push(<div key={i} dir="auto" style={{color:"var(--text-bright)",fontSize:15,fontWeight:700,lineHeight:1.6,marginBottom:4}}>{lang === "he" ? renderBidiBlock(line, lang) : renderInline(line)}</div>);
+      } else if (isQ) {
+        elements.push(<div key={i} dir="auto" style={{color:"#fbbf24",fontSize:14,fontWeight:600,lineHeight:1.8,marginTop:8}}>{lang === "he" ? renderBidiBlock(line, lang) : renderInline(line)}</div>);
+      } else if (isBullet) {
+        const bulletText = line.trim().slice(1).trim();
+        elements.push(
+          <div key={i} dir="auto" style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:4,lineHeight:1.8}}>
+            <span style={{flexShrink:0,color:"var(--text-dim)",fontSize:14,lineHeight:1.8}}>{"\u2022"}</span>
+            <span style={{flex:1,color:"var(--text-primary)",fontSize:14,lineHeight:1.8}}>{lang === "he" ? renderBidiBlock(bulletText, lang) : renderInline(bulletText)}</span>
+          </div>
+        );
+      } else {
+        elements.push(<div key={i} dir="auto" style={{color:"var(--text-primary)",fontSize:14,lineHeight:1.8,marginBottom:4}}>{lang === "he" ? renderBidiBlock(line, lang) : renderInline(line)}</div>);
+      }
     });
+    flushTerm();
+    return elements;
   };
 
 const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username || user?.email?.split("@")[0] || t("guestName"));
@@ -5047,43 +5117,43 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         return(
           <div style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
             {/* Top bar */}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8,direction:dir}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8,direction:dir}}>
               <button onClick={()=>{saveIncidentProgress(selectedIncident,incidentStepIndex,incidentScore,incidentMistakes,incidentElapsed,incidentHistory);setScreen("incidentList");}}
-                style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-muted)",padding:"7px 12px",borderRadius:7,cursor:"pointer",fontSize:13,marginLeft:dir==="rtl"?"auto":undefined}}>
-                {lang==="he"?"חזרה →":"← Return"}
+                style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-muted)",padding:"7px 12px",borderRadius:7,cursor:"pointer",fontSize:13}}>
+                {lang==="he"?"חזרה":"Return"}
               </button>
-              <div style={{display:"flex",gap:14,alignItems:"center",fontSize:13,fontWeight:700}}>
-                <span style={{color:"var(--text-secondary)"}}>{t("incidentStep")} <span style={{color:"var(--text-primary)"}}>{incidentStepIndex+1}/{totalSteps}</span></span>
-                <span style={{color:"#A855F7"}}>⭐ {incidentScore}<span style={{color:"var(--text-dim)",fontWeight:400}}>/{maxScore}</span></span>
-                <span style={{color:incidentMistakes>0?"#EF4444":"var(--text-dim)"}}>❌ {incidentMistakes}</span>
-                <span style={{color:"#F59E0B"}}>⏱ {formatIncidentTime(incidentElapsed)}</span>
+              <div style={{display:"flex",gap:12,alignItems:"center",fontSize:12,fontWeight:600,fontFamily:"'SF Mono','Fira Code',monospace"}}>
+                <span style={{color:"var(--text-secondary)"}}>{incidentStepIndex+1}/{totalSteps}</span>
+                <span style={{color:"#A855F7"}}>{incidentScore}/{maxScore}</span>
+                <span style={{color:incidentMistakes>0?"#EF4444":"var(--text-dim)"}}>{incidentMistakes} {lang==="he"?"שג.":"err"}</span>
+                <span style={{color:"#94a3b8"}}>{formatIncidentTime(incidentElapsed)}</span>
               </div>
             </div>
 
             {/* Progress bar */}
-            <div style={{height:4,background:"var(--glass-6)",borderRadius:4,marginBottom:16,direction:"ltr",transform:lang==="he"?"scaleX(-1)":undefined}}>
-              <div style={{height:"100%",borderRadius:4,width:`${progress}%`,background:"linear-gradient(90deg,#EF4444,#F59E0B)",transition:"width 0.4s ease"}}/>
+            <div style={{height:3,background:"var(--glass-6)",borderRadius:3,marginBottom:16,direction:"ltr"}}>
+              <div style={{height:"100%",borderRadius:3,width:`${progress}%`,background:"linear-gradient(90deg,#EF4444,#F59E0B)",transition:"width 0.4s ease"}}/>
             </div>
 
             {/* Incident title badge */}
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-              <span style={{fontSize:20}}>{selectedIncident.icon}</span>
+            <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:16}}>
+              <span style={{fontSize:20,marginTop:2}}>{selectedIncident.icon}</span>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:10,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-dim)",letterSpacing:0.5}}>{selectedIncident.incidentCode||""}</span>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                  <span style={{fontSize:10,fontFamily:"'SF Mono','Fira Code',monospace",color:"#94a3b8",letterSpacing:0.5}}>{selectedIncident.incidentCode||""}</span>
                   <span style={{color:INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.color||"#F59E0B",fontSize:10,fontWeight:700}}>{INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.[lang==="he"?"labelHe":"label"]}</span>
                 </div>
-                <div style={{color:"var(--text-bright)",fontWeight:800,fontSize:14,lineHeight:1.3}}>{lang==="he"?(selectedIncident.titleShortHe||selectedIncident.titleHe):(selectedIncident.titleShort||selectedIncident.title)}</div>
+                <div style={{color:"var(--text-bright)",fontWeight:800,fontSize:14,lineHeight:1.4}}>{lang==="he"?(selectedIncident.titleShortHe||selectedIncident.titleHe):(selectedIncident.titleShort||selectedIncident.title)}</div>
               </div>
             </div>
 
             {/* Prompt */}
-            <div style={{background:"rgba(15,23,42,0.8)",border:"1px solid var(--glass-10)",borderRadius:14,padding:"18px 20px",marginBottom:14,overflowX:"auto"}}>
+            <div style={{background:"rgba(15,23,42,0.7)",border:"1px solid var(--glass-10)",borderRadius:12,padding:"16px 18px",marginBottom:16,overflowX:"auto"}}>
               {renderIncidentPrompt(lang === "he" ? (step.promptHe || step.prompt) : step.prompt)}
             </div>
 
             {/* Options */}
-            <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:14}}>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
               {(lang === "he" ? (step.optionsHe || step.options) : step.options || []).map((opt,i)=>{
                 const isCorrect  = incidentAnswerResult ? i === incidentAnswerResult.correctIndex : i === step?.answer;
                 const isChosen   = i === incidentAnswer;
@@ -5093,15 +5163,30 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   if (isCorrect)       { bg="rgba(16,185,129,0.1)"; border="#10B981"; color="#10B981"; labelBg="rgba(16,185,129,0.2)"; labelColor="#10B981"; }
                   else if (isChosen)   { bg="rgba(239,68,68,0.1)";  border="#EF4444"; color="#EF4444"; labelBg="rgba(239,68,68,0.2)";  labelColor="#EF4444"; }
                 }
+                // Split option: detect kubectl/CLI command vs descriptive text
+                const cmdMatch = opt.match(/^(kubectl\s[^\n]+?)(?:\s{2,}\((.+)\))?$/);
+                const hasCmd = cmdMatch && cmdMatch[1];
+                const cmdText = hasCmd ? cmdMatch[1].trim() : null;
+                const cmdNote = hasCmd ? cmdMatch[2] : null;
+                // For non-command options or mixed content
                 const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
                 return(
                   <button key={i} className="incident-opt" onClick={()=>{ if (!incidentSubmitted) submitIncidentStep(i); }}
                     aria-pressed={!incidentSubmitted ? i===incidentAnswer : undefined}
-                    style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${border}`,borderRadius:10,color,fontSize:14,cursor:incidentSubmitted?"default":"pointer",lineHeight:1.55,display:"flex",alignItems:"flex-start",gap:10,transition:"all 0.15s",direction:optDir}}>
+                    style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${border}`,borderRadius:10,color,fontSize:14,cursor:incidentSubmitted?"default":"pointer",display:"flex",alignItems:"flex-start",gap:10,transition:"all 0.15s",direction:optDir}}>
                     <span style={{flexShrink:0,width:24,height:24,borderRadius:6,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor,marginTop:1,direction:"ltr"}}>
                       {["A","B","C","D"][i]}
                     </span>
-                    <span dir={optDir} style={{flex:1,direction:optDir,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.7,unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
+                    <span style={{flex:1,minWidth:0,direction:optDir,textAlign:optDir==="rtl"?"right":"left"}}>
+                      {hasCmd ? (
+                        <>
+                          <span style={{display:"block",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,lineHeight:1.7,direction:"ltr",unicodeBidi:"isolate",textAlign:"left",overflowWrap:"break-word",color:"inherit"}}>{cmdText}</span>
+                          {cmdNote && <span style={{display:"block",fontSize:12,color:"var(--text-dim)",lineHeight:1.5,marginTop:3}}>{cmdNote}</span>}
+                        </>
+                      ) : (
+                        <span dir={optDir} style={{lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
+                      )}
+                    </span>
                     {incidentSubmitted&&isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✓</span>}
                     {incidentSubmitted&&isChosen&&!isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✗</span>}
                   </button>
@@ -5119,14 +5204,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     : (lang === "he" ? (step.explanationHe || step.explanation) : step.explanation);
                   return (
                     <>
-                      <div style={{background:incCorrect?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${incCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
-                        <div style={{fontWeight:800,fontSize:13,marginBottom:8,color:incCorrect?"#10B981":"#EF4444"}}>
+                      <div style={{background:incCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",borderInlineStart:`3px solid ${incCorrect?"#10B981":"#EF4444"}`,borderRadius:8,padding:"16px 18px",marginBottom:14}}>
+                        <div style={{fontWeight:800,fontSize:14,marginBottom:10,color:incCorrect?"#10B981":"#EF4444",direction:dir,textAlign:dir==="rtl"?"right":"left"}}>
                           {incCorrect?t("incidentCorrect"):t("incidentWrong")}
                         </div>
                         {renderIncidentExplanation(incExplanation)}
                       </div>
                       <button onClick={nextIncidentStep}
-                        style={{width:"100%",padding:15,background:"linear-gradient(135deg,#EF4444cc,#F59E0B88)",border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer"}}>
+                        style={{width:"100%",padding:14,background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:10,color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",transition:"all 0.15s"}}
+                        onMouseEnter={e=>{e.currentTarget.style.background="rgba(239,68,68,0.18)";}}
+                        onMouseLeave={e=>{e.currentTarget.style.background="rgba(239,68,68,0.12)";}}>
                         {incidentStepIndex>=totalSteps-1?t("incidentFinish"):t("incidentNext")}
                       </button>
                     </>
