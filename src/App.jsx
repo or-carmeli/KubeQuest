@@ -4935,24 +4935,51 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {/* Active incident */}
-          {incidentResume&&(
-            <div style={{marginBottom:28}}>
-              <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"var(--text-dim)",marginBottom:10}}>{t("incidentActiveLabel")}</div>
-              <div style={{padding:18,background:"var(--glass-2)",border:"1px solid rgba(239,68,68,0.2)",borderInlineStart:"3px solid #EF4444",borderRadius:14,boxShadow:"0 0 12px rgba(239,68,68,0.06)",direction:dir}}>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                  <span style={{fontSize:22}}>{incidentResume.incident.icon}</span>
-                  <span style={{color:"var(--text-primary)",fontWeight:800,fontSize:15,lineHeight:1.4}}>{lang==="he"?incidentResume.incident.titleHe:incidentResume.incident.title}</span>
-                </div>
-                <div style={{marginBottom:14}}>
-                  <span style={{background:"var(--glass-4)",padding:"3px 10px",borderRadius:8,fontSize:11,fontWeight:600,color:"var(--text-muted)",display:"inline-flex",alignItems:"center",gap:4}}>
-                    {t("incidentStep")} {incidentResume.stepIndex+1}/{incidentResume.incident.steps.length}
-                  </span>
-                </div>
-                <button onClick={resumeIncident} style={{width:"100%",padding:"12px 20px",background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,color:"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8}}>{t("incidentResumeBtn")}</button>
-                <button onClick={()=>{clearIncidentProgress();setIncidentResume(null);}} style={{width:"100%",padding:"8px",background:"none",border:"none",color:"var(--text-dim)",fontSize:12,cursor:"pointer",borderRadius:8}}>{t("incidentDiscard")}</button>
+          {incidentResume&&(()=>{
+            const ri = incidentResume.incident;
+            const riStepNum = incidentResume.stepIndex+1;
+            const riTotalSteps = ri.steps.length;
+            const riPct = Math.round((riStepNum / riTotalSteps) * 100);
+            return(
+            <div style={{marginBottom:24,borderInlineStart:"3px solid #EF4444",paddingInlineStart:14,direction:dir}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                <span style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"var(--text-dim)"}}>{t("incidentActiveLabel")}</span>
+                <span style={{width:6,height:6,borderRadius:"50%",background:"#EF4444",animation:"pulse 2s infinite"}}/>
               </div>
+              <div style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-dim)",marginBottom:4,letterSpacing:0.5}}>{ri.incidentCode||"INC-0000"}</div>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                <span style={{fontSize:18}}>{ri.icon}</span>
+                <span style={{color:"var(--text-bright)",fontWeight:800,fontSize:15,lineHeight:1.3}}>{lang==="he"?(ri.titleShortHe||ri.titleHe):(ri.titleShort||ri.title)}</span>
+              </div>
+              <div style={{color:"var(--text-secondary)",fontSize:12,lineHeight:1.5,marginBottom:8}}>{lang==="he"?ri.descriptionHe:ri.description}</div>
+              <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:10}}>
+                {[
+                  {l:"Cluster",v:ri.cluster},
+                  {l:"Namespace",v:ri.namespace},
+                  {l:"Status",v:lang==="he"?"בבדיקה":"Investigating"},
+                ].map(m=>(
+                  <span key={m.l} style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-dim)",lineHeight:1.6}}>
+                    <span style={{color:"var(--text-muted)"}}>{m.l}:</span> {m.v}
+                  </span>
+                ))}
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                  <span style={{fontSize:11,fontWeight:600,color:"var(--text-muted)"}}>{t("incidentStep")} {riStepNum}/{riTotalSteps}</span>
+                  <span style={{fontSize:11,color:"var(--text-dim)"}}>{riPct}%</span>
+                </div>
+                <div style={{height:4,background:"var(--glass-6)",borderRadius:4,overflow:"hidden",direction:"ltr"}}>
+                  <div style={{height:"100%",borderRadius:4,width:`${riPct}%`,background:"linear-gradient(90deg,#EF4444,#F59E0B)",transition:"width 0.4s ease"}}/>
+                </div>
+              </div>
+              <button onClick={resumeIncident} style={{width:"100%",padding:"11px 20px",background:"linear-gradient(135deg,#EF4444,#DC2626)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:6,boxShadow:"0 0 16px rgba(239,68,68,0.25)",transition:"box-shadow 0.2s"}}
+                onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 0 24px rgba(239,68,68,0.4)";}}
+                onMouseLeave={e=>{e.currentTarget.style.boxShadow="0 0 16px rgba(239,68,68,0.25)";}}
+              >{t("incidentResumeBtn")}</button>
+              <button onClick={()=>{clearIncidentProgress();setIncidentResume(null);}} style={{width:"100%",padding:"6px",background:"none",border:"none",color:"var(--text-dim)",fontSize:11,cursor:"pointer",borderRadius:8}}>{t("incidentDiscard")}</button>
             </div>
-          )}
+            );
+          })()}
 
           {/* Incidents grouped by difficulty */}
           {["easy","intermediate","hard"].map(difficulty=>{
@@ -4971,24 +4998,27 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 {locked&&unlockMsg&&(
                   <div style={{fontSize:12,color:"var(--text-dim)",marginBottom:10,paddingInlineStart:4}}>{unlockMsg}</div>
                 )}
-                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {incidents.map(incident=>{
                     const completed = completedIncidentIds.includes(incident.id);
                     return(
                       <button key={incident.id} onClick={locked?undefined:()=>startIncident(incident)} disabled={locked}
-                        style={{width:"100%",padding:"16px 20px",background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,cursor:locked?"default":"pointer",display:"flex",alignItems:"center",gap:12,textAlign:dir==="rtl"?"right":"left",transition:"all 0.2s",opacity:locked?0.5:1,filter:locked?"grayscale(0.3)":"none"}}
+                        style={{width:"100%",padding:"12px 16px",background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:12,cursor:locked?"default":"pointer",display:"flex",alignItems:"flex-start",gap:12,textAlign:dir==="rtl"?"right":"left",transition:"all 0.2s",opacity:locked?0.5:1,filter:locked?"grayscale(0.3)":"none"}}
                         onMouseEnter={locked?undefined:e=>{e.currentTarget.style.background="rgba(239,68,68,0.06)";e.currentTarget.style.borderColor="rgba(239,68,68,0.3)";}}
                         onMouseLeave={locked?undefined:e=>{e.currentTarget.style.background="var(--glass-2)";e.currentTarget.style.borderColor="var(--glass-7)";}}>
-                        <span style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--glass-3)",borderRadius:10,flexShrink:0,fontSize:24}}>{incident.icon}</span>
-                        <div style={{flex:1}}>
-                          <div style={{color:"var(--text-primary)",fontWeight:800,fontSize:14,marginBottom:4,lineHeight:1.4}}>{lang==="he"?incident.titleHe:incident.title}</div>
-                          <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",color:"var(--text-muted)",fontSize:12}}>
+                        <span style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--glass-3)",borderRadius:9,flexShrink:0,fontSize:20,marginTop:2}}>{incident.icon}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:10,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-dim)",marginBottom:2,letterSpacing:0.5}}>{incident.incidentCode||""}</div>
+                          <div style={{color:"var(--text-primary)",fontWeight:800,fontSize:13,marginBottom:2,lineHeight:1.4}}>{lang==="he"?(incident.titleShortHe||incident.titleHe):(incident.titleShort||incident.title)}</div>
+                          <div style={{color:"var(--text-secondary)",fontSize:11,lineHeight:1.4,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{lang==="he"?incident.descriptionHe:incident.description}</div>
+                          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",color:"var(--text-dim)",fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace"}}>
                             <span>{incident.steps.length} {t("incidentSteps")}</span>
-                            <span style={{color:"var(--text-dim)"}}>·</span>
+                            <span style={{opacity:0.4}}>|</span>
                             <span>{incident.estimatedTime}</span>
+                            {incident.namespace&&<><span style={{opacity:0.4}}>|</span><span>{incident.namespace}</span></>}
                           </div>
                         </div>
-                        {completed&&<span style={{width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(16,185,129,0.1)",borderRadius:20,flexShrink:0,color:"#10B981",fontSize:12}}>✓</span>}
+                        {completed&&<span style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(16,185,129,0.1)",borderRadius:20,flexShrink:0,color:"#10B981",fontSize:11,marginTop:4}}>✓</span>}
                       </button>
                     );
                   })}
@@ -5029,10 +5059,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
 
             {/* Incident title badge */}
-            <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:10,padding:"8px 14px",marginBottom:14}}>
-              <span>{selectedIncident.icon}</span>
-              <span style={{color:"#EF4444",fontWeight:700,fontSize:13}}>{lang==="he"?selectedIncident.titleHe:selectedIncident.title}</span>
-              <span style={{marginLeft:"auto",color:INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.color||"#F59E0B",fontSize:11,fontWeight:700}}>{INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.[lang==="he"?"labelHe":"label"]}</span>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+              <span style={{fontSize:20}}>{selectedIncident.icon}</span>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:10,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-dim)",letterSpacing:0.5}}>{selectedIncident.incidentCode||""}</span>
+                  <span style={{color:INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.color||"#F59E0B",fontSize:10,fontWeight:700}}>{INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.[lang==="he"?"labelHe":"label"]}</span>
+                </div>
+                <div style={{color:"var(--text-bright)",fontWeight:800,fontSize:14,lineHeight:1.3}}>{lang==="he"?(selectedIncident.titleShortHe||selectedIncident.titleHe):(selectedIncident.titleShort||selectedIncident.title)}</div>
+              </div>
             </div>
 
             {/* Prompt */}

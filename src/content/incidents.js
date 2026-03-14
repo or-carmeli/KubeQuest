@@ -15,11 +15,16 @@ export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "oom-killed",
+    incidentCode: "INC-3015",
     icon: "💥",
     title: "Production API: Endless Restarts Under Load",
+    titleShort: "API Restarts Under Load",
+    titleShortHe: "API קורס תחת עומס",
     titleHe: "API בפרודקשן: ריסטארטים אינסופיים תחת עומס",
     description: "A critical API pod keeps restarting every 2 minutes under load",
     descriptionHe: "Pod של API קריטי מתאפס כל 2 דקות תחת עומס",
+    cluster: "prod-central",
+    namespace: "production",
     difficulty: "intermediate",
     estimatedTime: "5-7 min",
     steps: [
@@ -169,11 +174,16 @@ export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "crashloop-config",
+    incidentCode: "INC-2041",
     icon: "🔄",
     title: "New Release: Payment Service Refuses to Start",
+    titleShort: "Payment Service Crash",
+    titleShortHe: "קריסת שירות תשלומים",
     titleHe: "גרסה חדשה: שירות התשלומים סירב לעלות",
     description: "A payment service crashes immediately after a new deployment shipped",
     descriptionHe: "שירות תשלומים קורס מיידית אחרי דיפלוימנט חדש",
+    cluster: "prod-west",
+    namespace: "payments",
     difficulty: "easy",
     estimatedTime: "4-5 min",
     steps: [
@@ -300,11 +310,16 @@ export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "imagepull-auth",
+    incidentCode: "INC-2042",
     icon: "🖼️",
     title: "New Microservice: All Pods Stuck at Startup",
+    titleShort: "Pods Stuck at Startup",
+    titleShortHe: "פודים תקועים בהפעלה",
     titleHe: "מיקרו-שירות חדש: כל הפודים תקועים בהפעלה",
     description: "A new Deployment is stuck - pods can't pull the container image",
     descriptionHe: "דיפלוימנט חדש תקוע: פודים לא מצליחים למשוך את הקונטיינר",
+    cluster: "staging-east",
+    namespace: "microservices",
     difficulty: "easy",
     estimatedTime: "4-5 min",
     steps: [
@@ -431,11 +446,16 @@ export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "service-no-endpoints",
+    incidentCode: "INC-3016",
     icon: "🔌",
     title: "Frontend to Backend: Connection Refused",
+    titleShort: "Connection Refused",
+    titleShortHe: "חיבור נדחה",
     titleHe: "פרונטאנד לבאקאנד: חיבור נדחה",
     description: "Frontend gets 'connection refused' calling the backend - pods look healthy",
     descriptionHe: "הפרונטאנד מקבל 'connection refused' מהבאקאנד, פודים נראים תקינים",
+    cluster: "prod-central",
+    namespace: "frontend",
     difficulty: "intermediate",
     estimatedTime: "5-7 min",
     steps: [
@@ -585,11 +605,16 @@ export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "dns-coredns",
+    incidentCode: "INC-4007",
     icon: "🌐",
     title: "Cascading Failures: Services Can't Find Each Other",
+    titleShort: "DNS Resolution Failure",
+    titleShortHe: "כשל ב-DNS",
     titleHe: "כשלים מדורגים: שירותים לא מוצאים אחד את השני",
     description: "Multiple services can't resolve each other by hostname - widespread outage",
     descriptionHe: "שירותים מרובים לא מצליחים לפתור שמות, השבתה נרחבת",
+    cluster: "prod-central",
+    namespace: "kube-system",
     difficulty: "hard",
     estimatedTime: "7-9 min",
     steps: [
@@ -762,11 +787,16 @@ export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "networkpolicy-block",
+    incidentCode: "INC-4008",
     icon: "🚧",
     title: "Post-Security-Update: Silent Request Timeouts",
+    titleShort: "Silent Request Timeouts",
+    titleShortHe: "Timeout שקט על בקשות",
     titleHe: "אחרי עדכון אבטחה: Timeout שקט על כל הבקשות",
     description: "Service calls time out after the security team applied new NetworkPolicies",
     descriptionHe: "קריאות לשירות מסתיימות ב-timeout אחרי עדכון מדיניות אבטחה",
+    cluster: "prod-central",
+    namespace: "backend",
     difficulty: "hard",
     estimatedTime: "7-9 min",
     steps: [
