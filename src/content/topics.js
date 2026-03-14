@@ -46,7 +46,7 @@ export const TOPICS = [
     descriptionEn: "Pods · Deployments · StatefulSets · Scheduling · Resources",
     levels: {
       easy: {
-        theory: "Pods ו-Deployments הם ליבת Kubernetes.\n🔹 Pod: יחידת הריצה הקטנה ביותר, מכיל קונטיינר אחד או יותר\n🔹 Pods זמניים: Pod מנוהל (Deployment/ReplicaSet) שמת, נוצר חדש עם IP חדש. Pod עצמאי שמת. נשאר מת\n🔹 Deployment מנהל קבוצת Pods זהים ומבטיח שהמספר הרצוי תמיד רץ\n🔹 replicas: עותקים זהים של ה-Pod שרצים במקביל\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app",
+        theory: "Pods ו-Deployments הם ליבת Kubernetes.\n🔹 Pod:\u200E יחידת הריצה הקטנה ביותר, מכיל קונטיינר אחד או יותר\n🔹 Pods זמניים: Pod מנוהל (Deployment/ReplicaSet) שמת, נוצר חדש עם IP חדש. Pod עצמאי שמת. נשאר מת\n🔹 Deployment מנהל קבוצת Pods זהים ומבטיח שהמספר הרצוי תמיד רץ\n🔹 replicas:\u200E עותקים זהים של ה-Pod שרצים במקביל\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app",
         theoryEn: "Pods and Deployments\n🔹 Pod - the smallest runnable unit in Kubernetes, containing one or more containers.\n🔹 Ephemeral Pods - a managed Pod (Deployment/ReplicaSet) is automatically replaced when it dies. A standalone Pod is not.\n🔹 Deployment - manages a set of identical Pods and ensures the desired replica count is always running.\n🔹 Replicas - identical copies of a Pod running in parallel for availability and scaling.\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app",
         questions: [
             {
@@ -246,7 +246,7 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "Rolling Updates, Rollback, ו-StatefulSets.\n🔹 Rolling Update מעדכן Pod אחד בכל פעם. Zero downtime\n🔹 kubectl rollout undo: חוזר לגרסה קודמת\n🔹 StatefulSet כמו Deployment אבל Pods מקבלים שמות קבועים ו-storage משלהם\n🔹 מתאים ל: databases, Kafka, ZooKeeper\nCODE:\nkubectl set image deployment/my-app web=my-app:v2\nkubectl rollout undo deployment/my-app\n# StatefulSet: pod-0, pod-1, pod-2",
+        theory: "Rolling Updates, Rollback, ו-StatefulSets.\n🔹 Rolling Update מעדכן Pod אחד בכל פעם. Zero downtime\n🔹 kubectl rollout undo:\u200E חוזר לגרסה קודמת\n🔹 StatefulSet כמו Deployment אבל Pods מקבלים שמות קבועים ו-storage משלהם\n🔹 מתאים ל: databases, Kafka, ZooKeeper\nCODE:\nkubectl set image deployment/my-app web=my-app:v2\nkubectl rollout undo deployment/my-app\n# StatefulSet: pod-0, pod-1, pod-2",
         theoryEn: "Rolling Updates, Rollback, and StatefulSets\n🔹 Rolling Update - updates one Pod at a time with zero downtime.\n🔹 Rollback - kubectl rollout undo reverts a Deployment to its previous version.\n🔹 StatefulSet - like a Deployment, but each Pod gets a stable name and its own persistent storage.\n🔹 Use cases - ideal for stateful workloads such as databases, Kafka, and ZooKeeper.\nCODE:\nkubectl set image deployment/my-app web=my-app:v2\nkubectl rollout undo deployment/my-app\n# StatefulSet: pod-0, pod-1, pod-2",
         questions: [
             {
@@ -446,7 +446,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "DaemonSets, HPA, ומצבי כשל.\n🔹 DaemonSet: Pod אחד על כל Node (logging, monitoring, CNI)\n🔹 HPA: Horizontal Pod Autoscaler, מגדיל ומקטין replicas לפי CPU ו-Memory\n🔹 CrashLoopBackOff: קונטיינר קורס שוב ושוב\n🔹 OOMKilled: חרגנו ממגבלת הזיכרון\nCODE:\nkubectl autoscale deployment my-app --cpu-percent=50 --min=2 --max=10\napiVersion: apps/v1\nkind: DaemonSet",
+        theory: "DaemonSets, HPA, ומצבי כשל.\n🔹 DaemonSet:\u200E Pod אחד על כל Node (logging, monitoring, CNI)\n🔹 HPA:\u200E Horizontal Pod Autoscaler, מגדיל ומקטין replicas לפי CPU ו-Memory\n🔹 CrashLoopBackOff:\u200E קונטיינר קורס שוב ושוב\n🔹 OOMKilled:\u200E חרגנו ממגבלת הזיכרון\nCODE:\nkubectl autoscale deployment my-app --cpu-percent=50 --min=2 --max=10\napiVersion: apps/v1\nkind: DaemonSet",
         theoryEn: "DaemonSets, HPA, and Failure States\n🔹 DaemonSet - ensures exactly one Pod runs on every Node, commonly used for logging, monitoring, or CNI.\n🔹 HPA - Horizontal Pod Autoscaler scales the replica count based on CPU or memory usage.\n🔹 CrashLoopBackOff - indicates a container is crashing repeatedly and Kubernetes keeps restarting it.\n🔹 OOMKilled - indicates a container exceeded its memory limit and was terminated.\nCODE:\nkubectl autoscale deployment my-app --cpu-percent=50 --min=2 --max=10\napiVersion: apps/v1\nkind: DaemonSet",
         questions: [
             {
@@ -656,7 +656,7 @@ export const TOPICS = [
     descriptionEn: "Services · Ingress · NetworkPolicy · DNS",
     levels: {
       easy: {
-        theory: "Services מספקים כתובת IP יציבה לגישה ל-Pods.\n🔹 ClusterIP: גישה פנימית בלבד (ברירת מחדל)\n🔹 NodePort: חשיפה על port בכל Node\n🔹 LoadBalancer: IP חיצוני ב-cloud\n🔹 Service מוצא Pods לפי labels ו-selector\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n - port: 80\n    targetPort: 8080",
+        theory: "Services מספקים כתובת IP יציבה לגישה ל-Pods.\n🔹 ClusterIP:\u200E גישה פנימית בלבד (ברירת מחדל)\n🔹 NodePort:\u200E חשיפה על port בכל Node\n🔹 LoadBalancer:\u200E IP חיצוני ב-cloud\n🔹 Service מוצא Pods לפי labels ו-selector\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n - port: 80\n    targetPort: 8080",
         theoryEn: "Services\n🔹 Service - provides a stable IP for accessing Pods, selected by label matching.\n🔹 ClusterIP - internal-only access within the cluster (default type).\n🔹 NodePort - exposes the Service on a static port on every Node.\n🔹 LoadBalancer - provisions an external IP through the cloud provider.\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n - port: 80\n    targetPort: 8080",
         questions: [
             {
@@ -1056,7 +1056,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "Network Policies ו-Namespaces.\n🔹 ברירת מחדל: כל Pod יכול לדבר עם כל Pod (allow-all)\n🔹 NetworkPolicy מגביל תנועה בין Pods\n🔹 דורש CNI plugin תומך (Calico, Cilium)\n🔹 Namespaces: בידוד לוגי: dev/staging/production\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  podSelector: {}\n  policyTypes:\n - Ingress\n - Egress",
+        theory: "Network Policies ו-Namespaces.\n🔹 ברירת מחדל: כל Pod יכול לדבר עם כל Pod (allow-all)\n🔹 NetworkPolicy מגביל תנועה בין Pods\n🔹 דורש CNI plugin תומך (Calico, Cilium)\n🔹 Namespaces:\u200E בידוד לוגי: dev/staging/production\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  podSelector: {}\n  policyTypes:\n - Ingress\n - Egress",
         theoryEn: "Network Policies and Namespaces\n🔹 Default networking - by default, every Pod can communicate with every other Pod (allow-all).\n🔹 NetworkPolicy - restricts ingress and egress traffic between Pods.\n🔹 CNI requirement - requires a CNI plugin such as Calico or Cilium to enforce policies.\n🔹 Namespaces - provide logical isolation between environments such as dev, staging, and production.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  podSelector: {}\n  policyTypes:\n - Ingress\n - Egress",
         questions: [
             {
@@ -1266,7 +1266,7 @@ export const TOPICS = [
     descriptionEn: "ConfigMaps · Secrets · RBAC · ServiceAccounts",
     levels: {
       easy: {
-        theory: "ConfigMap ו-Secret מפרידים קוד מקונפיגורציה.\n🔹 ConfigMap: הגדרות רגילות (DB_URL, timeout)\n🔹 Secret: נתונים רגישים (passwords, tokens)\n🔹 Secrets מקודדים ב-base64 (לא מוצפנים לחלוטין!)\n🔹 שניהם: env variables או volume\nCODE:\napiVersion: v1\nkind: ConfigMap\ndata:\n  DB_URL: postgres://db:5432\n  MAX_CONN: \"100\"",
+        theory: "ConfigMap ו-Secret מפרידים קוד מקונפיגורציה.\n🔹 ConfigMap:\u200E הגדרות רגילות (DB_URL, timeout)\n🔹 Secret:\u200E נתונים רגישים (passwords, tokens)\n🔹 Secrets מקודדים ב-base64 (לא מוצפנים לחלוטין!)\n🔹 שניהם: env variables או volume\nCODE:\napiVersion: v1\nkind: ConfigMap\ndata:\n  DB_URL: postgres://db:5432\n  MAX_CONN: \"100\"",
         theoryEn: "ConfigMap and Secret\n🔹 ConfigMap - stores non-sensitive configuration such as database URLs and timeouts.\n🔹 Secret - stores sensitive data such as passwords and tokens.\n🔹 Encoding - Secrets are base64-encoded but not encrypted by default.\n🔹 Consumption - both can be injected as environment variables or mounted as volumes.\nCODE:\napiVersion: v1\nkind: ConfigMap\ndata:\n  DB_URL: postgres://db:5432\n  MAX_CONN: \"100\"",
         questions: [
             {
@@ -1466,7 +1466,7 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "RBAC: Role-Based Access Control.\n🔹 Role: הרשאות ב-Namespace אחד\n🔹 ClusterRole: הרשאות לכל ה-Cluster\n🔹 RoleBinding: קושר Role למשתמש או ל-ServiceAccount\n🔹 ServiceAccount: זהות ל-Pod בתוך ה-Cluster\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
+        theory: "RBAC: Role-Based Access Control.\n🔹 Role:\u200E הרשאות ב-Namespace אחד\n🔹 ClusterRole:\u200E הרשאות לכל ה-Cluster\n🔹 RoleBinding:\u200E קושר Role למשתמש או ל-ServiceAccount\n🔹 ServiceAccount:\u200E זהות ל-Pod בתוך ה-Cluster\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
         theoryEn: "RBAC - Role-Based Access Control\n🔹 Role - defines permissions scoped to a single Namespace.\n🔹 ClusterRole - defines permissions that apply across the entire cluster.\n🔹 RoleBinding - binds a Role or ClusterRole to a user or ServiceAccount.\n🔹 ServiceAccount - provides an identity for a Pod to authenticate within the cluster.\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
         questions: [
             {
@@ -1666,7 +1666,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "אבטחה מתקדמת.\n🔹 Least Privilege: רק ההרשאות הנחוצות\n🔹 External Secrets Operator: מסנכרן מ-AWS/GCP/Azure\n🔹 Sealed Secrets: מצפין secrets ב-git\n🔹 Encryption at Rest: הצפנת etcd\nCODE:\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nspec:\n  secretStoreRef:\n    name: aws-secretsmanager\n  target:\n    name: my-k8s-secret",
+        theory: "אבטחה מתקדמת.\n🔹 Least Privilege:\u200E רק ההרשאות הנחוצות\n🔹 External Secrets Operator:\u200E מסנכרן מ-AWS/GCP/Azure\n🔹 Sealed Secrets:\u200E מצפין secrets ב-git\n🔹 Encryption at Rest:\u200E הצפנת etcd\nCODE:\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nspec:\n  secretStoreRef:\n    name: aws-secretsmanager\n  target:\n    name: my-k8s-secret",
         theoryEn: "Advanced Security\n🔹 Least privilege - grant only the minimum permissions required for each workload.\n🔹 External Secrets Operator - syncs secrets from external providers such as AWS, GCP, or Azure.\n🔹 Sealed Secrets - encrypts secrets so they can be safely stored in git.\n🔹 Encryption at rest - encrypts data stored in etcd to protect sensitive values on disk.\nCODE:\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nspec:\n  secretStoreRef:\n    name: aws-secretsmanager\n  target:\n    name: my-k8s-secret",
         questions: [
             {
@@ -1876,7 +1876,7 @@ export const TOPICS = [
     descriptionEn: "PersistentVolumes · StorageClass · Helm · Operators",
     levels: {
       easy: {
-        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 PV: יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 PVC: בקשה לאחסון מ-Pod\n🔹 Helm Chart: חבילה של Kubernetes manifests עם templates\n🔹 helm install: מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
+        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 PV:\u200E יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 PVC:\u200E בקשה לאחסון מ-Pod\n🔹 Helm Chart:\u200E חבילה של Kubernetes manifests עם templates\n🔹 helm install:\u200E מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         theoryEn: "PersistentVolumes and Helm Basics\n🔹 PersistentVolume (PV) - a storage resource in the cluster, provisioned by an administrator.\n🔹 PersistentVolumeClaim (PVC) - a request by a Pod for a specific amount of storage.\n🔹 Helm Chart - a package of Kubernetes manifests with configurable templates.\n🔹 helm install - deploys a Chart to the cluster and creates a named Release.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         questions: [
             {
@@ -2076,7 +2076,7 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "StorageClass ו-Helm Values.\n🔹 StorageClass: מגדיר סוג אחסון ו-provisioner\n🔹 Dynamic Provisioning: PV נוצר אוטומטית עם PVC\n🔹 Reclaim Policy Delete: מוחק PV כש-PVC נמחק\n🔹 helm upgrade / --set: עדכון ושינוי values\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
+        theory: "StorageClass ו-Helm Values.\n🔹 StorageClass:\u200E מגדיר סוג אחסון ו-provisioner\n🔹 Dynamic Provisioning:\u200E PV נוצר אוטומטית עם PVC\n🔹 Reclaim Policy Delete:\u200E מוחק PV כש-PVC נמחק\n🔹 helm upgrade / --set:\u200E עדכון ושינוי values\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
         theoryEn: "StorageClass and Helm Values\n🔹 StorageClass - defines the type of storage and the provisioner used to create it.\n🔹 Dynamic provisioning - a PersistentVolume is created automatically when a PVC is submitted.\n🔹 Reclaim policy - the Delete policy removes the PV automatically when its PVC is deleted.\n🔹 helm upgrade - updates a Release with new values using --set or a values file.\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
         questions: [
             {
@@ -2276,7 +2276,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "אחסון ו-Helm מתקדם.\n🔹 ReadWriteMany (RWX): קריאה וכתיבה ממספר Nodes (NFS, EFS)\n🔹 CSI: Container Storage Interface, סטנדרט ל-drivers\n🔹 VolumeSnapshot: גיבוי נקודתי\n🔹 Helm Hooks: פעולות בשלבים: pre-install, post-upgrade\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
+        theory: "אחסון ו-Helm מתקדם.\n🔹 ReadWriteMany (RWX):\u200E קריאה וכתיבה ממספר Nodes (NFS, EFS)\n🔹 CSI:\u200E Container Storage Interface, סטנדרט ל-drivers\n🔹 VolumeSnapshot:\u200E גיבוי נקודתי\n🔹 Helm Hooks:\u200E פעולות בשלבים: pre-install, post-upgrade\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
         theoryEn: "Advanced Storage and Helm\n🔹 ReadWriteMany (RWX) - allows read/write access from multiple Nodes using shared storage such as NFS or EFS.\n🔹 CSI - Container Storage Interface, a standard API for integrating storage drivers.\n🔹 VolumeSnapshot - creates a point-in-time backup of a PersistentVolume.\n🔹 Helm Hooks - run actions at lifecycle stages such as pre-install or post-upgrade.\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
         questions: [
             {
@@ -2686,7 +2686,7 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "שגיאות נפוצות ב-Pods.\n🔹 CrashLoopBackOff: קונטיינר קורס שוב ושוב\n🔹 ImagePullBackOff: לא ניתן להוריד image (שם שגוי או credentials חסרים)\n🔹 OOMKilled: חרגנו ממגבלת הזיכרון\n🔹 Pending: אין Node פנוי (resources / nodeSelector)\nCODE:\nkubectl describe pod my-pod   # בדוק Events\nkubectl logs my-pod --previous  # לוגים לפני crash\nkubectl top pod                 # CPU/Memory",
+        theory: "שגיאות נפוצות ב-Pods.\n🔹 CrashLoopBackOff:\u200E קונטיינר קורס שוב ושוב\n🔹 ImagePullBackOff:\u200E לא ניתן להוריד image (שם שגוי או credentials חסרים)\n🔹 OOMKilled:\u200E חרגנו ממגבלת הזיכרון\n🔹 Pending:\u200E אין Node פנוי (resources / nodeSelector)\nCODE:\nkubectl describe pod my-pod   # בדוק Events\nkubectl logs my-pod --previous  # לוגים לפני crash\nkubectl top pod                 # CPU/Memory",
         theoryEn: "Common Pod Errors\n🔹 CrashLoopBackOff - the container crashes repeatedly and Kubernetes keeps restarting it.\n🔹 ImagePullBackOff - the container image cannot be pulled due to a wrong name or missing credentials.\n🔹 OOMKilled - the container exceeded its memory limit and was terminated by the kernel.\n🔹 Pending - no Node is available to schedule the Pod, often due to insufficient resources or a mismatched nodeSelector.\nCODE:\nkubectl describe pod my-pod   # check Events\nkubectl logs my-pod --previous  # logs before crash\nkubectl top pod                 # CPU/Memory",
         questions: [
             {
@@ -2886,7 +2886,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "Debug מתקדם.\n🔹 kubectl port-forward: מנתב port מ-Pod לlocal machine\n🔹 kubectl cp: מעתיק קבצים מ-Pod ואליו\n🔹 kubectl top: CPU/Memory usage בזמן אמת\n🔹 Pod ב-Terminating לא נמחק. בגלל finalizer\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
+        theory: "Debug מתקדם.\n🔹 kubectl port-forward:\u200E מנתב port מ-Pod לlocal machine\n🔹 kubectl cp:\u200E מעתיק קבצים מ-Pod ואליו\n🔹 kubectl top:\u200E CPU/Memory usage בזמן אמת\n🔹 Pod ב-Terminating לא נמחק. בגלל finalizer\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
         theoryEn: "Advanced Debugging\n🔹 kubectl port-forward - forwards a port from a Pod to your local machine for direct access.\n🔹 kubectl cp - copies files between a Pod and your local filesystem.\n🔹 kubectl top - displays real-time CPU and memory usage for Pods or Nodes.\n🔹 Stuck in Terminating - a Pod may hang in Terminating state if blocked by a finalizer.\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
         questions: [
             {
