@@ -23,7 +23,9 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 ## Demo
 
-![KubeQuest Demo](public/GIF-Demo-README.gif)
+<div align="center">
+  <img src="public/GIF-Demo-README.gif" alt="KubeQuest Demo" width="420">
+</div>
 
 ---
 
