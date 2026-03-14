@@ -3977,7 +3977,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
                         <div style={{display:"flex",alignItems:"flex-start",gap:6}}>
                           <span style={{color:"#10B981",fontSize:13,flexShrink:0,marginTop:1}}>✓</span>
-                          <span style={{color:"#10B981",fontSize:13,lineHeight:1.4}}>{lang==="he"?renderBidi(q.options[q.answer],lang):q.options[q.answer]}</span>
+                          <span style={{color:"#10B981",fontSize:13,lineHeight:1.4}}>{renderBidi(q.options[q.answer],lang)}</span>
                         </div>
                         <button onClick={()=>tryStartQuiz(()=>startTopic(topic,level))} style={{flexShrink:0,padding:"6px 12px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,color:"#EF4444",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                           {lang==="en"?"Retry":"נסה שוב"}
@@ -4711,7 +4711,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       dir={dir}
                       style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:isCodeOption?13:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46}}>
                       <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate",...(isCodeOption?{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",letterSpacing:-0.3}:{})}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
+                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate",...(isCodeOption?{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",letterSpacing:-0.3}:{})}}>{renderBidi(opt,lang)}</span>
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:16,height:16,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
                       {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✓</span>}
                       {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✗</span>}
@@ -4764,7 +4764,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             {isCorrect
                               ? (tryAgainActive ? t("tryAgainCorrect") : `${t("correct")}${isInHistoryMode?"":" +"+(LEVEL_CONFIG[selectedLevel]?.points??0)+" "+t("pts")}`)
                               : timedOut
-                                ? <>{t("timeUp")} {lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: <span dir={hasHebrew(q.options[correctIdx])?"rtl":"ltr"} style={{unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(q.options[correctIdx],lang):q.options[correctIdx]}</span></>
+                                ? <>{t("timeUp")} {lang==="he"?"התשובה הנכונה היא":"The correct answer is"}: <span dir={hasHebrew(q.options[correctIdx])?"rtl":"ltr"} style={{unicodeBidi:"isolate"}}>{renderBidi(q.options[correctIdx],lang)}</span></>
                                 : (tryAgainActive ? t("tryAgainWrong") : t("incorrect"))}
                           </span>
                         </div>
@@ -4806,7 +4806,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           <span style={{fontSize:12,fontWeight:800,color:"#A855F7",letterSpacing:0.5}}>{lang==="he"?"תשובה אידיאלית":"Ideal Answer"}</span>
                         </div>
                         <div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:14}}>
-                          {(()=>{const idDir=hasHebrew(q.options[iCorrectIdx])?"rtl":"ltr";return <div dir={idDir} style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:idDir,textAlign:idDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>{lang==="he"?renderBidi(q.options[iCorrectIdx],lang):q.options[iCorrectIdx]}</div>;})()}
+                          {(()=>{const idDir=hasHebrew(q.options[iCorrectIdx])?"rtl":"ltr";return <div dir={idDir} style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:idDir,textAlign:idDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>{renderBidi(q.options[iCorrectIdx],lang)}</div>;})()}
                           {iParagraphs.map((s,idx)=>{
                             const stripped = s.replace(/`([^`]+)`/g, "$1").trim();
                             const isCodeOnly = (!(/[\u0590-\u05FF]/).test(stripped) && CLI_COMMAND_RE.test(stripped))
@@ -5027,10 +5027,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         <div style={{color:"var(--text-primary)",fontSize:13,marginBottom:6}}>{renderBidiBlock(h.q,lang)}</div>
                         {timedOut?<div style={{fontSize:13,color:"#F59E0B"}}>{t("timeUp")}</div>:(
                           <div dir={hasHebrew(h.options[h.chosen])?"rtl":"ltr"} style={{fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4,direction:hasHebrew(h.options[h.chosen])?"rtl":"ltr",textAlign:hasHebrew(h.options[h.chosen])?"right":"left",unicodeBidi:"isolate"}}>
-                            {t("optionLabels")[h.chosen]}. {lang==="he"?renderBidi(h.options[h.chosen],lang):h.options[h.chosen]}
+                            {t("optionLabels")[h.chosen]}. {renderBidi(h.options[h.chosen],lang)}
                           </div>
                         )}
-                        {!wasCorrect&&<div dir={hasHebrew(h.options[h.answer])?"rtl":"ltr"} style={{fontSize:13,color:"#10B981",direction:hasHebrew(h.options[h.answer])?"rtl":"ltr",textAlign:hasHebrew(h.options[h.answer])?"right":"left",unicodeBidi:"isolate"}}><span aria-hidden="true">✓ </span>{lang==="he"?renderBidi(h.options[h.answer],lang):h.options[h.answer]}</div>}
+                        {!wasCorrect&&<div dir={hasHebrew(h.options[h.answer])?"rtl":"ltr"} style={{fontSize:13,color:"#10B981",direction:hasHebrew(h.options[h.answer])?"rtl":"ltr",textAlign:hasHebrew(h.options[h.answer])?"right":"left",unicodeBidi:"isolate"}}><span aria-hidden="true">✓ </span>{renderBidi(h.options[h.answer],lang)}</div>}
                         <div style={{fontSize:12,color:"var(--text-muted)",marginTop:4,lineHeight:1.6}}>{renderBidiBlock(h.explanation,lang)}</div>
                       </li>
                     );
@@ -5234,7 +5234,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           {cmdNote && <span dir={dir} style={{display:"block",fontSize:12,color:"var(--text-dim)",lineHeight:1.5,marginTop:3,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{cmdNote}</span>}
                         </>
                       ) : (
-                        <span dir={contentDir} style={{display:"block",lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:contentDir,unicodeBidi:"isolate",textAlign:contentDir==="rtl"?"right":"left"}}>{lang==="he"?renderBidi(opt,lang):opt}</span>
+                        <span dir={contentDir} style={{display:"block",lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:contentDir,unicodeBidi:"isolate",textAlign:contentDir==="rtl"?"right":"left"}}>{renderBidi(opt,lang)}</span>
                       )}
                     </span>
                     {incidentSubmitted&&isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✓</span>}

@@ -65,10 +65,10 @@ function isFreeMode(topicId) {
   return FREE_MODES.has(topicId);
 }
 
-const INCIDENT_COLORS = {
-  easy: "#10B981",
-  intermediate: "#F59E0B",
-  hard: "#EF4444",
+const INCIDENT_DIFFICULTY = {
+  easy:         { label: "Easy",         labelHe: "קל",     color: "#10B981" },
+  intermediate: { label: "Intermediate", labelHe: "בינוני", color: "#F59E0B" },
+  hard:         { label: "Hard",         labelHe: "קשה",    color: "#EF4444" },
 };
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -355,17 +355,15 @@ export default function StatsView({
                   minWidth: 80,
                   textAlign: "center",
                   padding: "8px 6px",
-                  background: `${INCIDENT_COLORS[diff]}08`,
-                  border: `1px solid ${INCIDENT_COLORS[diff]}22`,
+                  background: `${INCIDENT_DIFFICULTY[diff].color}08`,
+                  border: `1px solid ${INCIDENT_DIFFICULTY[diff].color}22`,
                   borderRadius: 8,
                 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: INCIDENT_COLORS[diff] }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: INCIDENT_DIFFICULTY[diff].color }}>
                     {incidentsDoneByDiff[diff]}/{incidentsByDiff[diff]}
                   </div>
                   <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>
-                    {diff === "easy" ? (lang === "en" ? "Easy" : "קל")
-                      : diff === "intermediate" ? (lang === "en" ? "Intermediate" : "בינוני")
-                      : (lang === "en" ? "Hard" : "קשה")}
+                    {getLocalizedField(INCIDENT_DIFFICULTY[diff], "label", lang)}
                   </div>
                 </div>
               ))}
