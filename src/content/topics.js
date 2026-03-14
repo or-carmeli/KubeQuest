@@ -498,7 +498,7 @@ export const TOPICS = [
                 "topologySpreadConstraints מפזר Pods באופן אחיד בין failure domains (Nodes, Zones).\nללא פיזור, כל ה-Pods עלולים לרוץ על Node אחד. אם קורס, השירות נופל.\nפיזור מבטיח שחלק מה-Pods ממשיכים לרוץ גם בכשל של Node או Zone.",
             },
             {
-              q: "Pod נשאר במצב Pending.\nהפלט של kubectl describe pod מראה את האירוע הבא:\n\n```\nEvents:\n  Warning  FailedScheduling  0/3 nodes are available:\n    3 node(s) had untolerated taint {dedicated=gpu}\n```\n\nמה הפתרון הנכון?",
+              q: "Pod נשאר במצב Pending.\n\nהרצת:\nkubectl describe pod\n\nמחזירה:\n\n```\nFailedScheduling\n0/3 nodes available\nuntolerated taint: dedicated=gpu\n```\n\nמה צריך להוסיף ל-Pod כדי שיתוזמן?",
               options: [
               "להעביר את ה-Pod ל-Namespace ייעודי לעבודות GPU",
               "להוסיף Node חדש ל-Cluster ללא taint",
@@ -522,7 +522,7 @@ export const TOPICS = [
                 "StatefulSet יוצר Pods בסדר (OrderedReady): Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר podManagementPolicy: Parallel.\n• PVC: Pod-1 לא נוצר בכלל. • Quota: גם Pod-0 לא היה עולה. • imagePullSecret: היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
             },
             {
-              q: "עדכון Rolling update נתקע.\n\nkubectl rollout status מציג:\nWaiting for rollout to finish: 3 out of 5 new replicas have been updated...\nה-YAML מגדיר maxUnavailable: 0.\n\nמה הסיבה?",
+              q: "עדכון Rolling update נתקע.\n\nהרצת:\nkubectl rollout status deployment/my-app\n\nפלט:\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n\nהגדרה נוספת:\nmaxUnavailable: 0\n\nמה הסיבה?",
               options: [
               "Pods החדשים לא עוברים readiness probe, ו-maxUnavailable:0 מונע הורדת ישנים",
               "ה-TLS certificate שגוי ב-admission webhook שבודק את ה-Pod spec",
@@ -596,7 +596,7 @@ export const TOPICS = [
                 "topologySpreadConstraints distributes Pods evenly across failure domains (Nodes, Zones).\nWithout spreading, all Pods may land on one Node. If it fails, the service is down.\nEven distribution ensures partial availability even when a Node or Zone fails.",
             },
             {
-              q: "A Pod remains in Pending state.\nThe output of kubectl describe pod shows the following event:\n\n```\nEvents:\n  Warning  FailedScheduling  0/3 nodes are available:\n    3 node(s) had untolerated taint {dedicated=gpu}\n```\n\nWhat is the correct fix?",
+              q: "A Pod remains in Pending state.\n\nRunning:\nkubectl describe pod\n\nReturns:\n\n```\nFailedScheduling\n0/3 nodes available\nuntolerated taint: dedicated=gpu\n```\n\nWhat should you add to the Pod so it gets scheduled?",
               options: [
               "Add a new Node to the cluster without any taints",
               "Add a matching toleration to the Pod spec for the taint",
