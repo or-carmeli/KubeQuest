@@ -319,7 +319,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "`taint` = הגבלה שמוצבת על Node. רק Pods עם toleration תואם יתוזמנו עליו.\n`toleration` = הרשאה שמוגדרת ב-Pod spec ומאפשרת לו לרוץ על Node עם אותו taint.\nPods ללא toleration תואם לא יתוזמנו על Node עם אותו taint.",
+                "`taint` = הגבלה שמוצבת על Node. רק Pods עם toleration תואם יתוזמנו עליו.\n`toleration` = הרשאה שמוגדרת ב-spec של ה-Pod ומאפשרת לו לרוץ על Node עם אותו taint.\nPods ללא toleration תואם לא יתוזמנו על Node עם אותו taint.",
             },
             {
               q: "`Node` חווה לחץ זיכרון. שלושה `Pods` רצים עליו: אחד `Guaranteed`, אחד `Burstable` ואחד `BestEffort`. איזה `Pod` יפונה ראשון?",
@@ -507,7 +507,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "כל 3 ה-Nodes מסומנים עם taint (dedicated=gpu) וה-Pod חסר toleration תואם.\nלהוסיף toleration ל-Pod spec שמתאים ל-taint.\n• Node חדש: עוקף, לא פותר. • CPU request: לא רלוונטי. • Namespace: לא משפיע על taints.\nTaint = \"כניסה אסורה\". Toleration = אישור כניסה ב-Pod spec.",
+                "כל 3 ה-Nodes מסומנים עם taint (dedicated=gpu) וה-Pod חסר toleration תואם.\nלהוסיף toleration ל-Pod spec שמתאים ל-taint.\n• Node חדש: עוקף, לא פותר. • CPU request: לא רלוונטי. • Namespace: לא משפיע על taints.\nTaint = \"כניסה אסורה\". Toleration = אישור כניסה ב-spec של ה-Pod.",
             },
             {
               q: "StatefulSet עם 3 replicas רץ ב-Cluster.\nPod-0 לא במצב Ready, ו-Pod-1 נשאר במצב Pending.\n\nמה הסיבה הסבירה ביותר?",
@@ -698,7 +698,7 @@ export const TOPICS = [
             {
               q: "כיצד Service מוצא את ה-Pods שלו?",
               options: [
-              "לפי labels ו-selector שמוגדרים ב-Service spec",
+              "לפי labels ו-selector שמוגדרים ב-spec של ה-Service",
               "לפי port שה-Pod מאזין עליו ו-Service מתאים",
               "לפי כתובת IP שמוגדרת ידנית ב-Endpoints object",
               "לפי שם ה-Pod שמוגדר ב-spec של ה-Service",
@@ -941,7 +941,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Local שולח traffic רק ל-Pods על אותו Node ושומר על IP הלקוח. Cluster (ברירת מחדל) שולח לכל Pod ומבצע SNAT.\nLocal = שומר client IP, אבל Nodes ללא Pods לא מקבלים traffic.\nבחר Local כשצריך לזהות IP אמיתי של לקוח (logging, rate limiting).",
+                "Local שולח traffic רק ל-Pods על אותו Node ושומר על IP הלקוח. Cluster (ברירת מחדל) שולח לכל Pod ומבצע SNAT.\nSNAT (Source Network Address Translation) - שכתוב כתובת המקור של הבקשה. ב-Cluster, ה-Pod רואה את ה-IP של ה-Node במקום ה-IP האמיתי של הלקוח. ב-Local, אין SNAT וה-Pod רואה את ה-IP האמיתי.\nLocal = שומר client IP, אבל Nodes ללא Pods לא מקבלים traffic.\nבחר Local כשצריך לזהות IP אמיתי של לקוח (logging, rate limiting).",
             },
             {
               q: "איך בודקים למה Service לא מגיע ל-Pods?",
@@ -1039,7 +1039,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Local routes traffic only to Pods on the same Node and preserves client IP. Cluster (default) routes to any Pod with SNAT.\nLocal = real client IP visible. Cluster = Node IP visible (SNAT).\nChoose Local for real client IP (logging, rate limiting). Downside: possible load imbalance.",
+                "Local routes traffic only to Pods on the same Node and preserves client IP. Cluster (default) routes to any Pod with SNAT.\nSNAT (Source Network Address Translation) rewrites the source IP of a request. With Cluster, the Pod sees the Node's IP instead of the real client IP. With Local, SNAT is skipped so the Pod sees the real client IP.\nLocal = real client IP visible. Cluster = Node IP visible (SNAT).\nChoose Local for real client IP (logging, rate limiting). Downside: possible load imbalance.",
             },
             {
               q: "How do you debug why a Service is not reaching its Pods?",
@@ -1148,7 +1148,7 @@ export const TOPICS = [
               options: [
               "ingress rule לאפשר תגובות נכנסות",
               "Service מסוג LoadBalancer ב-Namespace",
-              "הגדרת hostNetwork: true ב-Pod spec",
+              "הגדרת hostNetwork: true ב-spec של ה-Pod",
               "egress rule עם ipBlock: cidr: 0.0.0.0/0 לאפשר גישה ל-IPs חיצוניים",
 ],
               answer: 3,
@@ -1296,7 +1296,7 @@ export const TOPICS = [
             {
               q: "כיצד משתמשים ב-ConfigMap ב-Pod?",
               options: [
-              "רק כ-env variables ישירות ב-containers spec ולא בצורות אחרות",
+              "רק כ-env variables ישירות ב-spec של ה-containers ולא בצורות אחרות",
               "רק כקובץ. מוסיפים דרך volume ואין דרך אחרת לגשת לנתונים",
               "לא ניתן. Pod ניגש ל-ConfigMap רק דרך Kubernetes API call",
               "כ-env variables או כ-volume files",

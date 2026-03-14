@@ -110,7 +110,7 @@ export const INCIDENTS = [
         ],
         optionsHe: [
           "למחוק את ה-Pod. Kubernetes ייצור מחדש, הבעיה תיפתר מאליה",
-          "להגדיל את מגבלת הזיכרון ל-512Mi ולהגדיר request ל-256Mi ב-Deployment spec",
+          "להגדיל את מגבלת הזיכרון ל-512Mi ולהגדיר request ל-256Mi ב-spec של ה-Deployment",
           "להוסיף NetworkPolicy לצמצום בקשות נכנסות",
           "לאתחל את ה-kubelet ב-Node המושפע",
         ],
@@ -406,7 +406,7 @@ export const INCIDENTS = [
         optionsHe: [
           "kubectl create secret docker-registry regcred --docker-server=registry.company.com --docker-username=user --docker-password=pass -n default",
           "kubectl create configmap registry-auth --from-literal=password=mypassword",
-          "להוסיף את הסיסמה כמשתנה סביבה ב-Deployment spec",
+          "להוסיף את הסיסמה כמשתנה סביבה ב-spec של ה-Deployment",
           "להעתיק את ה-Secret מ-namespace של kube-system",
         ],
         answer: 0,
