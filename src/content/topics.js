@@ -113,13 +113,13 @@ export const TOPICS = [
               q: "מה ההבדל בין Job ל-CronJob?",
               options: [
               "Job רץ פעם אחת עד להשלמה, CronJob מתזמן Jobs לפי לוח זמנים",
-              "CronJob רץ מהר יותר כי הוא שומר containers ב-cache בין הרצות",
-              "Job ו-CronJob זהים אבל CronJob נתמך רק בגרסאות Kubernetes חדשות",
-              "Job מיועד ל-production בלבד, CronJob מיועד לסביבות פיתוח",
+              "Job מריץ משימות במקביל על כל Node, CronJob מריץ משימות רק על Node אחד",
+              "Job ו-CronJob שניהם יוצרים Pods שרצים לצמיתות, אבל CronJob תומך גם ב-scheduling",
+              "Job מתזמן Pods לפי cron schedule, CronJob מריץ משימה חד-פעמית עד להשלמה",
 ],
               answer: 0,
               explanation:
-                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion. CronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
+                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion. CronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nOption 3 מהפך את התפקידים. Option 2 שגוי כי שניהם run-to-completion ולא רצים לצמיתות. Option 1 שגוי כי Job לא רץ על כל Node.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
             },
             {
               q: "מה resource requests ב-Pod?",
@@ -210,14 +210,14 @@ export const TOPICS = [
             {
               q: "What is the difference between a Job and a CronJob?",
               options: [
-              "CronJob runs faster because it caches containers between runs",
+              "A Job schedules tasks on a cron schedule; a CronJob runs a single task to completion",
               "A Job runs once until completion; a CronJob schedules Jobs on a recurring basis",
-              "Job is for production workloads only; CronJob is intended for development environments",
-              "A Job and CronJob are identical but CronJob is only supported in newer Kubernetes versions",
+              "Both create long-running Pods, but a CronJob adds scheduling support on top",
+              "A Job runs tasks in parallel across all Nodes; a CronJob runs tasks on a single Node",
 ],
               answer: 1,
               explanation:
-                "Job runs a task once to completion; CronJob schedules Jobs on a recurring cron schedule.\nJob = run-to-completion. CronJob = recurring (backups, cleanup, reports).\nOn failure, Job retries by creating new Pods (up to backoffLimit).",
+                "Job runs a task once to completion; CronJob schedules Jobs on a recurring cron schedule.\nJob = run-to-completion. CronJob = recurring (backups, cleanup, reports).\nOption 0 reverses the roles. Option 2 is wrong because neither creates long-running Pods. Option 3 is wrong because Jobs do not run on every Node.\nOn failure, Job retries by creating new Pods (up to backoffLimit).",
             },
             {
               q: "What are resource requests in a Pod?",
@@ -255,7 +255,7 @@ export const TOPICS = [
               "מאפשר לחזור לגרסה קודמת ללא שמירת revisions",
               "מגביל את מספר ה-Pods המחוברים ל-Service בזמן עדכון",
               "מעדכן את כל ה-Pods בבת אחת לחיסכון בזמן הפריסה",
-              "Zero downtime בזמן עדכון",
+              "מחליף Pods בהדרגה כך שתמיד יש Pods זמינים, ללא downtime",
 ],
               answer: 3,
               explanation:
@@ -351,7 +351,7 @@ export const TOPICS = [
               q: "What is the advantage of a Rolling Update?",
               options: [
               "Prevents the Service from routing to unhealthy Pods during upgrade",
-              "Zero downtime during update",
+              "Replaces Pods gradually so there are always running Pods serving traffic",
               "Guarantees data consistency by pausing until all Pods write their state to etcd",
               "Updates all Pods simultaneously to minimise total deployment time",
 ],
@@ -1274,7 +1274,7 @@ export const TOPICS = [
               options: [
               "אין הבדל. שניהם מאחסנים key-value data בצורה זהה ב-etcd",
               "ConfigMap מהיר יותר לגישה כי הוא לא עובר base64 encoding",
-              "Secret מיועד לנתונים רגישים",
+              "Secret מיועד לנתונים רגישים כמו סיסמאות, tokens, ו-TLS keys",
               "Secret מיועד רק ל-passwords ולא לסוגי sensitive data אחרים",
 ],
               answer: 2,
@@ -1372,7 +1372,7 @@ export const TOPICS = [
               options: [
               "ConfigMap is faster because it skips base64 encoding",
               "Secret is only for passwords and not for other sensitive data types",
-              "Secret is intended for sensitive data",
+              "Secret is intended for sensitive data such as passwords, tokens, and TLS keys",
               "No difference. Both store key-value data identically in etcd",
 ],
               answer: 2,
@@ -1472,14 +1472,14 @@ export const TOPICS = [
             {
               q: "מה ההבדל בין Role ל-ClusterRole?",
               options: [
-              "Role מוגבל ל-Namespace, ClusterRole לכל ה-Cluster",
-              "ClusterRole חזק יותר תמיד",
-              "Role ל-users בלבד",
-              "אין הבדל",
+              "Role מוגבל ל-Namespace, ClusterRole חל על כל ה-Cluster",
+              "ClusterRole חל רק על Nodes, Role חל על כל שאר המשאבים ב-Cluster",
+              "Role מעניק הרשאות רק ל-Users, ClusterRole מעניק הרשאות רק ל-ServiceAccounts",
+              "Role ו-ClusterRole זהים בהיקף, אבל ClusterRole תומך ב-verbs נוספים כמו escalate",
 ],
               answer: 0,
               explanation:
-                "Role מוגבל ל-Namespace ספציפי. ClusterRole חל על כל ה-Cluster.\nRole ב-prod לא מעניק גישה ב-staging. ClusterRole כולל Nodes, PVs ועוד.\nניתן לקשור ClusterRole ל-Namespace בודד עם RoleBinding.",
+                "Role מוגבל ל-Namespace ספציפי. ClusterRole חל על כל ה-Cluster.\nRole ב-prod לא מעניק גישה ב-staging. ClusterRole כולל Nodes, PVs ועוד.\nOption 1 שגוי: ClusterRole חל על כל המשאבים. Option 2 שגוי: שניהם חלים על Users, Groups, ו-ServiceAccounts. Option 3 שגוי: ההבדל הוא ב-scope ולא ב-verbs.\nניתן לקשור ClusterRole ל-Namespace בודד עם RoleBinding.",
             },
             {
               q: "מה תפקיד RoleBinding?",
@@ -1570,14 +1570,14 @@ export const TOPICS = [
             {
               q: "What is the difference between Role and ClusterRole?",
               options: [
-              "No difference",
-              "Role for users only",
+              "ClusterRole applies only to Nodes; Role applies to all other resources in the cluster",
+              "Role grants permissions only to Users; ClusterRole grants permissions only to ServiceAccounts",
               "Role is Namespace-scoped, ClusterRole is cluster-wide",
-              "ClusterRole is always stronger",
+              "Role and ClusterRole have the same scope but ClusterRole supports additional verbs like escalate",
 ],
               answer: 2,
               explanation:
-                "Role is Namespace-scoped. ClusterRole applies cluster-wide.\nRole in prod grants no access in staging. ClusterRole covers Nodes, PVs, etc.\nClusterRole can be bound to a single Namespace via RoleBinding.",
+                "Role is Namespace-scoped. ClusterRole applies cluster-wide.\nRole in prod grants no access in staging. ClusterRole covers Nodes, PVs, etc.\nOption 0 is wrong: ClusterRole covers all resources. Option 1 is wrong: both apply to Users, Groups, and ServiceAccounts. Option 3 is wrong: the difference is scope, not verbs.\nClusterRole can be bound to a single Namespace via RoleBinding.",
             },
             {
               q: "What is a RoleBinding?",
@@ -1696,14 +1696,14 @@ export const TOPICS = [
             {
               q: "מה Sealed Secrets מאפשר?",
               options: [
-              "יצירת secrets אוטומטית",
-              "שיתוף בין clusters",
-              "הצפנת תעבורת רשת",
-              "שמירת secrets מוצפנים ב-git בבטחה",
+              "יצירת Kubernetes Secrets אוטומטית מ-environment variables בזמן deploy",
+              "שיתוף Secrets מוצפנים בין Clusters שונים באמצעות מפתח משותף",
+              "הצפנת תעבורת רשת בין Pods באמצעות מפתחות שנשמרים ב-etcd",
+              "שמירת Secrets מוצפנים ב-git בבטחה כ-SealedSecret resources",
 ],
               answer: 3,
               explanation:
-                "Sealed Secrets מצפין Secret ל-SealedSecret עם המפתח הציבורי של ה-Cluster.\nה-SealedSecret המוצפן בטוח לשמירה ב-git. רק ה-controller עם המפתח הפרטי מפענח.\nSealedSecret מ-Cluster A לא ניתן לפענוח ב-Cluster B.",
+                "Sealed Secrets מצפין Secret ל-SealedSecret עם המפתח הציבורי של ה-Cluster.\nה-SealedSecret המוצפן בטוח לשמירה ב-git. רק ה-controller עם המפתח הפרטי מפענח.\nOption 1 שגוי: SealedSecret מ-Cluster A לא ניתן לפענוח ב-Cluster B.\nOption 0 שגוי: Sealed Secrets לא יוצר secrets אוטומטית מ-env vars.\nOption 2 שגוי: Sealed Secrets לא מצפין תעבורת רשת.",
             },
             {
               q: "מה שלוש רמות Pod Security Standards?",
@@ -1794,14 +1794,14 @@ export const TOPICS = [
             {
               q: "What does Sealed Secrets allow?",
               options: [
-              "Sharing between clusters",
-              "Storing encrypted secrets in git safely",
-              "Auto-creating secrets",
-              "Encrypting network traffic",
+              "Sharing encrypted Secrets between different Clusters using a shared key",
+              "Storing encrypted secrets in git safely as SealedSecret resources",
+              "Auto-creating Kubernetes Secrets from environment variables at deploy time",
+              "Encrypting network traffic between Pods using keys stored in etcd",
 ],
               answer: 1,
               explanation:
-                "Sealed Secrets encrypts a Secret into a SealedSecret using the cluster's public key.\nThe SealedSecret is safe to commit to git. Only the cluster's controller can decrypt it.\nA SealedSecret from Cluster A cannot be decrypted by Cluster B.",
+                "Sealed Secrets encrypts a Secret into a SealedSecret using the cluster's public key.\nThe SealedSecret is safe to commit to git. Only the cluster's controller can decrypt it.\nOption 0 is wrong: a SealedSecret from Cluster A cannot be decrypted by Cluster B.\nOption 2 is wrong: Sealed Secrets does not auto-create secrets from env vars.\nOption 3 is wrong: Sealed Secrets does not encrypt network traffic.",
             },
             {
               q: "What are the three Pod Security Standard levels?",
@@ -1906,10 +1906,10 @@ export const TOPICS = [
             {
               q: "מה תפקיד Helm Chart?",
               options: [
-              "רשת Kubernetes",
-              "Docker image",
-              "גרסה של kubectl",
-              "חבילה של Kubernetes manifests עם templates",
+              "שכבת רשת וירטואלית שמחברת Pods ב-Cluster דרך CNI plugin",
+              "Docker image מותאם שכולל Kubernetes manifests בתוך ה-layers שלו",
+              "CLI wrapper מעל kubectl שמוסיף ניהול גרסאות ל-YAML files",
+              "חבילה של Kubernetes manifests עם templates וערכי ברירת מחדל",
 ],
               answer: 3,
               explanation:
@@ -1918,22 +1918,22 @@ export const TOPICS = [
             {
               q: "מה הפקודה להתקנת Helm Chart?",
               options: [
-              "helm apply",
-              "helm deploy",
+              "helm upgrade",
+              "helm template",
               "helm install",
-              "helm run",
+              "helm create",
 ],
               answer: 2,
               explanation:
-                "helm install מתקין Chart ויוצר Release שנשמר כ-Secret ב-Cluster.\nאפשר לעקוף ערכים עם --set key=value או -f myvalues.yaml.\nHelm עוקב אחרי כל Release לניהול upgrades ו-rollbacks.",
+                "helm install מתקין Chart ויוצר Release שנשמר כ-Secret ב-Cluster.\nhelm upgrade משנה Release קיים. helm template מרנדר YAML בלי להתקין. helm create יוצר scaffold של Chart חדש.\nאפשר לעקוף ערכים עם --set key=value או -f myvalues.yaml.",
             },
             {
               q: "מה Volume מסוג emptyDir?",
               options: [
-              "Volume קבוע",
-              "Volume ל-DB",
-              "Volume ריק שנמחק עם ה-Pod",
-              "Volume לקבצי logs",
+              "Volume קבוע שנשמר גם אחרי מחיקת ה-Pod ונגיש מכל Node",
+              "Volume שמותאם ל-databases ומספק replication בין Pods",
+              "Volume ריק שנוצר עם ה-Pod ונמחק לחלוטין כשה-Pod נמחק",
+              "Volume שמאחסן logs בלבד ומתנקה אוטומטית לפי retention policy",
 ],
               answer: 2,
               explanation:
@@ -1942,10 +1942,10 @@ export const TOPICS = [
             {
               q: "מה תפקיד StorageClass ב-Kubernetes?",
               options: [
-              "סוג Service",
-              "סוג Pod",
-              "קטגוריית log",
-              "הגדרת provisioner לדיסקים דינמיים",
+              "סוג Service שמנתב traffic לפי storage labels על Pods",
+              "סוג Pod מיוחד שמותאם לעומסי עבודה שדורשים אחסון מתמיד",
+              "מנגנון שמקטגר logs לפי רמת חומרה ב-Namespace",
+              "הגדרת provisioner שיוצר דיסקים דינמיים כשנוצר PVC",
 ],
               answer: 3,
               explanation:
@@ -1954,10 +1954,10 @@ export const TOPICS = [
             {
               q: "מה קורה לנתונים ב-emptyDir כש-Pod נמחק?",
               options: [
-              "נמחקים",
-              "נשמרים לתמיד",
-              "מועברים ל-PV",
-              "מגובים אוטומטית",
+              "נמחקים לחלוטין כשה-Pod נמחק או מועבר ל-Node אחר",
+              "נשמרים לתמיד על ה-Node גם אחרי מחיקת ה-Pod",
+              "מועברים אוטומטית ל-PersistentVolume לפני מחיקת ה-Pod",
+              "מגובים אוטומטית ל-object storage לפני שה-Pod נמחק",
 ],
               answer: 0,
               explanation:
@@ -1966,10 +1966,10 @@ export const TOPICS = [
             {
               q: "מה תפקיד values.yaml ב-Helm Chart?",
               options: [
-              "קובץ RBAC",
-              "קובץ secrets",
-              "קובץ ברירות מחדל עבור templates של Chart",
-              "קובץ logs",
+              "קובץ שמגדיר כללי RBAC עבור ה-Release שנוצר מ-Chart",
+              "קובץ שמכיל secrets מוצפנים שה-Chart משתמש בהם בזמן deploy",
+              "קובץ שמכיל ברירות מחדל לכל ה-template variables של Chart",
+              "קובץ שמתעד את היסטוריית ה-deployments של Chart ב-Cluster",
 ],
               answer: 2,
               explanation:
@@ -2004,10 +2004,10 @@ export const TOPICS = [
             {
               q: "What is a Helm Chart?",
               options: [
-              "A Docker image",
-              "A package of K8s manifests with templates",
-              "A Kubernetes network",
-              "A version of kubectl",
+              "A Docker image that bundles Kubernetes manifests inside its layers",
+              "A package of Kubernetes manifests with templates and configurable defaults",
+              "A virtual network layer that connects Pods in a Cluster via a CNI plugin",
+              "A CLI wrapper around kubectl that adds version management for YAML files",
 ],
               answer: 1,
               explanation:
@@ -2016,22 +2016,22 @@ export const TOPICS = [
             {
               q: "What command installs a Helm Chart?",
               options: [
-              "helm apply",
-              "helm deploy",
+              "helm upgrade",
+              "helm template",
               "helm install",
-              "helm run",
+              "helm create",
 ],
               answer: 2,
               explanation:
-                "helm install creates a Release stored as a Secret in the cluster.\nOverride values with --set key=value or -f myvalues.yaml.\nHelm tracks each Release for managing upgrades and rollbacks.",
+                "helm install creates a Release stored as a Secret in the cluster.\nhelm upgrade modifies an existing Release. helm template renders YAML without installing. helm create scaffolds a new Chart.\nOverride values with --set key=value or -f myvalues.yaml.",
             },
             {
               q: "What is emptyDir?",
               options: [
-              "An empty Volume deleted with the Pod",
-              "A persistent Volume",
-              "A volume for log files",
-              "A volume for databases",
+              "A temporary Volume created empty with the Pod and deleted when the Pod is removed",
+              "A persistent Volume that survives Pod deletion and is accessible from any Node",
+              "A Volume designed for log files that auto-cleans based on a retention policy",
+              "A Volume optimised for databases that provides replication between Pods",
 ],
               answer: 0,
               explanation:
@@ -2040,10 +2040,10 @@ export const TOPICS = [
             {
               q: "What is a StorageClass?",
               options: [
-              "Defines a provisioner for dynamic disk creation",
-              "A Pod type",
-              "A Service type",
-              "A log category",
+              "Defines a provisioner that creates disks dynamically when a PVC is submitted",
+              "A special Pod type optimised for workloads that require persistent storage",
+              "A Service type that routes traffic based on storage labels on Pods",
+              "A mechanism that categorises logs by severity level within a Namespace",
 ],
               answer: 0,
               explanation:
@@ -2064,10 +2064,10 @@ export const TOPICS = [
             {
               q: "What is helm values.yaml?",
               options: [
-              "An RBAC file",
-              "A log file",
-              "A secrets file",
-              "The default values file for Chart templates",
+              "A file that defines RBAC rules for the Release created by the Chart",
+              "A file that records the deployment history of the Chart in the Cluster",
+              "A file that stores encrypted secrets used by the Chart during deployment",
+              "The default values file for all template variables in the Chart",
 ],
               answer: 3,
               explanation:
@@ -2082,38 +2082,38 @@ export const TOPICS = [
             {
               q: "מה משמעות Dynamic Provisioning ב-Kubernetes?",
               options: [
-              "הקצאת CPU",
-              "שינוי גודל אוטומטי",
-              "PV נוצר אוטומטית כשנוצר PVC",
-              "migration",
+              "הקצאת CPU דינמית ל-Pods לפי עומס שמדווח מ-metrics-server",
+              "שינוי גודל אוטומטי של PVC קיים לפי צריכת הדיסק בפועל",
+              "PV ודיסק פיזי נוצרים אוטומטית כשנוצר PVC עם StorageClass",
+              "העברת Pod אוטומטית ל-Node אחר כשה-Node הנוכחי מתמלא",
 ],
               answer: 2,
               explanation:
-                "כש-PVC נוצר עם StorageClass, ה-provisioner יוצר PV ודיסק אמיתי אוטומטית.\nללא Dynamic Provisioning, admin חייב ליצור כל PV ידנית. לא סקיילבילי.\nזו הגישה הסטנדרטית בכל Cluster ענן.",
+                "כש-PVC נוצר עם StorageClass, ה-provisioner יוצר PV ודיסק אמיתי אוטומטית.\nOption 1 שגוי: Dynamic Provisioning הוא יצירה, לא שינוי גודל (זה Volume expansion). Option 0 שגוי: CPU allocation נעשית דרך requests/limits. Option 3 שגוי: Pod migration קשור ל-scheduling, לא ל-storage.\nזו הגישה הסטנדרטית בכל Cluster ענן.",
             },
             {
               q: "מה Reclaim Policy Delete?",
               options: [
-              "שומר נתונים",
-              "מעביר ל-backup",
-              "מוחק רק PVC",
-              "מוחק PV ואחסון פיזי כש-PVC נמחק",
+              "שומר את ה-PV והנתונים גם אחרי מחיקת ה-PVC לשימוש עתידי",
+              "מעביר את הנתונים ל-backup אוטומטי לפני מחיקת ה-PV",
+              "מוחק את ה-PVC בלבד ומשאיר את ה-PV והדיסק הפיזי קיימים",
+              "מוחק את ה-PV ואת הדיסק הפיזי כשה-PVC נמחק",
 ],
               answer: 3,
               explanation:
-                "כשה-PVC נמחק, גם ה-PV והדיסק הפיזי (EBS, GCP PD) נמחקים אוטומטית.\nמתאים ל-non-persistent workloads.\nRetain לעומת זאת משמר את הנתונים גם אחרי מחיקת ה-PVC.",
+                "כשה-PVC נמחק, גם ה-PV והדיסק הפיזי (EBS, GCP PD) נמחקים אוטומטית.\nOption 0 מתאר את Retain policy, לא Delete. Option 1 שגוי: אין backup אוטומטי. Option 2 שגוי: Delete מוחק הכל.\nRetain לעומת זאת משמר את הנתונים גם אחרי מחיקת ה-PVC.",
             },
             {
               q: "איך משנים Helm value מה-command line?",
               options: [
-              "helm change",
-              "helm --override",
+              "helm template --set key=value",
+              "helm rollback --set key=value",
               "helm install --set key=value",
-              "helm config",
+              "helm show values --set key=value",
 ],
               answer: 2,
               explanation:
-                "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade.\nלשינויים מרובים עדיף --values (-f) עם קובץ YAML מותאם.\nערכי --set עוקפים ערכי -f.",
+                "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade.\nhelm template רק מרנדר YAML בלי להתקין. helm rollback לא מקבל --set. helm show values מציג ערכים בלבד.\nלשינויים מרובים עדיף --values (-f) עם קובץ YAML מותאם.",
             },
             {
               q: "כיצד מרחיבים PVC?",
@@ -2142,14 +2142,14 @@ export const TOPICS = [
             {
               q: "מה עושה helm rollback?",
               options: [
-              "מוחק Release",
-              "שינוי Chart version",
-              "reset values",
-              "מחזיר Release ל-revision קודמת",
+              "מוחק את ה-Release לחלוטין ומסיר את כל המשאבים שנוצרו",
+              "מעדכן את ה-Chart לגרסה חדשה ומפעיל helm upgrade אוטומטית",
+              "מאפס את כל ה-values לברירות מחדל של ה-Chart",
+              "מחזיר Release ל-revision קודמת מתוך ההיסטוריה",
 ],
               answer: 3,
               explanation:
-                "helm rollback מחזיר Release ל-revision ספציפי מתוך ההיסטוריה.\nהרצת helm history מציגה את כל ה-revisions עם תאריכים וסטטוסים.\nrollback הוא למעשה upgrade חדש עם manifests ישנים. נוצר revision חדש.",
+                "helm rollback מחזיר Release ל-revision ספציפי מתוך ההיסטוריה.\nOption 0 מתאר helm uninstall. Option 1 מתאר helm upgrade. Option 2 שגוי: rollback לא מאפס values, אלא מחזיר ל-revision ספציפי.\nהרצת helm history מציגה את כל ה-revisions עם תאריכים וסטטוסים.\nrollback הוא למעשה upgrade חדש עם manifests ישנים. נוצר revision חדש.",
             },
             {
               q: "מה אומר PVC בסטטוס Pending?",
@@ -2166,52 +2166,52 @@ export const TOPICS = [
             {
               q: "כיצד PV ו-PVC מתחברים?",
               options: [
-              "לפי שם בלבד",
-              "לפי Node",
-              "לפי Namespace",
+              "לפי שם PVC בלבד, שחייב להיות זהה לשם ה-PV",
+              "לפי ה-Node שה-Pod מתוזמן עליו, כך שה-PV נוצר באותו Node",
+              "לפי ה-Namespace של ה-Pod, כך שכל PV שייך ל-Namespace ספציפי",
               "לפי accessMode, storage capacity, ו-storageClassName תואמים",
 ],
               answer: 3,
               explanation:
-                "K8s מחבר PVC ל-PV לפי storageClassName, accessModes, ו-capacity (PV >= PVC).\nלאחר binding הם קשורים עד שאחד נמחק.",
+                "K8s מחבר PVC ל-PV לפי storageClassName, accessModes, ו-capacity (PV >= PVC).\nOption 0 שגוי: שם לא חייב להתאים. Option 1 שגוי: PV הוא cluster-level resource. Option 2 שגוי: PV לא משויך ל-Namespace.\nלאחר binding הם קשורים עד שאחד נמחק.",
             },
         ],
         questionsEn: [
             {
               q: "What is Dynamic Provisioning?",
               options: [
-              "Migration",
-              "PV created automatically when PVC is created",
-              "CPU allocation",
-              "Auto resize",
+              "Automatic Pod migration to another Node when the current Node runs out of disk",
+              "PV and physical disk created automatically when a PVC with StorageClass is submitted",
+              "Dynamic CPU allocation to Pods based on real-time load reported by metrics-server",
+              "Automatic resizing of an existing PVC based on actual disk consumption",
 ],
               answer: 1,
               explanation:
-                "When a PVC references a StorageClass, the provisioner creates a PV and real disk automatically.\nWithout Dynamic Provisioning, an admin must create every PV manually. Doesn't scale.\nThis is the standard approach in all cloud-hosted Kubernetes clusters.",
+                "When a PVC references a StorageClass, the provisioner creates a PV and real disk automatically.\nOption 3 is wrong: Dynamic Provisioning is creation, not resizing (that is Volume expansion). Option 2 is wrong: CPU allocation uses requests/limits. Option 0 is wrong: Pod migration is a scheduling concern.\nThis is the standard approach in all cloud-hosted Kubernetes clusters.",
             },
             {
               q: "What does Reclaim Policy Delete do?",
               options: [
-              "Moves to backup",
-              "Keeps data",
-              "Deletes only PVC",
-              "Deletes PV and physical storage when PVC is deleted",
+              "Moves data to an automatic backup before deleting the PV",
+              "Retains the PV and its data even after the PVC is deleted for future reuse",
+              "Deletes only the PVC and leaves the PV and physical disk intact",
+              "Deletes the PV and the physical disk when the PVC is deleted",
 ],
               answer: 3,
               explanation:
-                "When the PVC is deleted, both the PV and the physical disk (EBS, GCP PD) are deleted automatically.\nThis is the default for dynamically provisioned volumes. Convenient but destroys all data.\nFor databases, use Retain instead to preserve data after PVC deletion.",
+                "When the PVC is deleted, both the PV and the physical disk (EBS, GCP PD) are deleted automatically.\nOption 1 describes Retain policy, not Delete. Option 0 is wrong: there is no automatic backup. Option 2 is wrong: Delete removes everything.\nFor databases, use Retain instead to preserve data after PVC deletion.",
             },
             {
               q: "How do you change a Helm value from the CLI?",
               options: [
-              "helm change",
-              "helm --override",
+              "helm template --set key=value",
+              "helm rollback --set key=value",
               "helm install --set key=value",
-              "helm config",
+              "helm show values --set key=value",
 ],
               answer: 2,
               explanation:
-                "--set key=value overrides values from values.yaml at install/upgrade time.\nFor multiple overrides, use --values (-f) with a custom YAML file.\nValues from --set take precedence over -f files.",
+                "--set key=value overrides values from values.yaml at install/upgrade time.\nhelm template only renders YAML without installing. helm rollback does not accept --set. helm show values only displays values.\nFor multiple overrides, use --values (-f) with a custom YAML file.",
             },
             {
               q: "How do you expand a PVC?",
@@ -2240,14 +2240,14 @@ export const TOPICS = [
             {
               q: "What does helm rollback do?",
               options: [
-              "Changes Chart version",
-              "Resets values",
-              "Deletes the Release",
-              "Reverts a Release to a previous revision",
+              "Updates the Chart to a new version and runs helm upgrade automatically",
+              "Resets all values to the Chart's default values.yaml configuration",
+              "Deletes the Release completely and removes all created resources",
+              "Reverts a Release to a previous revision from its history",
 ],
               answer: 3,
               explanation:
-                "helm rollback reverts a Release to a specific revision from its history.\nhelm history lists all revisions with timestamps and statuses.\nA rollback is technically a new upgrade using old manifests. It creates a new revision number.",
+                "helm rollback reverts a Release to a specific revision from its history.\nOption 2 describes helm uninstall. Option 0 describes helm upgrade. Option 1 is wrong: rollback does not reset values, it restores a specific revision.\nhelm history lists all revisions with timestamps and statuses.\nA rollback is technically a new upgrade using old manifests. It creates a new revision number.",
             },
             {
               q: "What does a PVC in Pending status mean?",
@@ -2264,14 +2264,14 @@ export const TOPICS = [
             {
               q: "How do a PV and PVC bind?",
               options: [
-              "By Node",
+              "By the Node the Pod is scheduled on, so the PV is created on the same Node",
               "By matching accessMode, storage capacity, and storageClassName",
-              "By Namespace",
-              "By name only",
+              "By the Namespace of the Pod, so each PV belongs to a specific Namespace",
+              "By name only, where the PVC name must match the PV name exactly",
 ],
               answer: 1,
               explanation:
-                "K8s binds a PVC to a PV by matching storageClassName, accessModes, and capacity (PV >= PVC).\nAfter binding they are locked together until one is deleted.",
+                "K8s binds a PVC to a PV by matching storageClassName, accessModes, and capacity (PV >= PVC).\nOption 3 is wrong: names don't need to match. Option 0 is wrong: PV is a cluster-level resource. Option 2 is wrong: PVs are not namespaced.\nAfter binding they are locked together until one is deleted.",
             },
         ],
       },
@@ -2282,10 +2282,10 @@ export const TOPICS = [
             {
               q: "מה תפקיד CSI ב-Kubernetes?",
               options: [
-              "Cluster Sync",
-              "Container Storage Interface: סטנדרט ל-drivers",
-              "Cloud Storage Integration",
-              "Container Security Interface",
+              "Cluster Sync Interface: סטנדרט לסנכרון נתונים בין Clusters",
+              "Container Storage Interface: סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers ל-K8s",
+              "Cloud Storage Integration: שכבת חיבור ל-cloud object storage כמו S3",
+              "Container Security Interface: סטנדרט לסריקת images ואכיפת מדיניות אבטחה",
 ],
               answer: 1,
               explanation:
@@ -2294,22 +2294,22 @@ export const TOPICS = [
             {
               q: "מה תפקיד Helm Hook?",
               options: [
-              "כלי debug",
-              "type של Chart",
-              "חלופה ל-Rollback",
-              "פעולה שרצה בשלב מסוים במחזור חיי Release",
+              "כלי debug שמאפשר לבדוק templates לפני התקנת Chart",
+              "סוג מיוחד של Chart שמכיל רק dependencies ולא templates",
+              "מנגנון חלופי ל-Rollback שמחזיר Release לגרסה קודמת",
+              "פעולה (Job) שרצה בשלב מסוים במחזור חיי Release",
 ],
               answer: 3,
               explanation:
-                "Hooks הם Jobs שרצים בשלבי מחזור חיים של Release: pre-install, post-upgrade, pre-delete ועוד.\nשימושים נפוצים: DB migrations לפני upgrade, או התראת Slack אחרי deploy.",
+                "Hooks הם Jobs שרצים בשלבי מחזור חיים של Release: pre-install, post-upgrade, pre-delete ועוד.\nOption 0 שגוי: debug נעשה עם helm template. Option 1 שגוי: אין סוג Chart כזה. Option 2 שגוי: rollback נעשה עם helm rollback.\nשימושים נפוצים: DB migrations לפני upgrade, או התראת Slack אחרי deploy.",
             },
             {
               q: "מה תפקיד VolumeSnapshot?",
               options: [
-              "גיבוי ה-Cluster כולו",
-              "snapshot של Pod",
-              "גיבוי ConfigMap",
-              "גיבוי נקודתי של PersistentVolume",
+              "גיבוי של כל ה-Cluster כולל etcd, Pods, ו-ConfigMaps",
+              "צילום מצב של Pod כולל ה-container filesystem וה-memory",
+              "גיבוי של ConfigMaps ו-Secrets ב-Namespace לשחזור עתידי",
+              "גיבוי נקודתי של PersistentVolume שממנו ניתן לשחזר PVC חדש",
 ],
               answer: 3,
               explanation:
@@ -2318,10 +2318,10 @@ export const TOPICS = [
             {
               q: "כיצד StatefulSet מנהל storage?",
               options: [
-              "כל Pod מקבל PVC משלו דרך volumeClaimTemplates",
-              "אין storage ב-StatefulSet",
-              "Pods חולקים PVC אחד",
-              "רק emptyDir",
+              "כל Pod מקבל PVC ייחודי משלו דרך volumeClaimTemplates",
+              "StatefulSet לא תומך ב-storage ומשתמש רק ב-ConfigMaps לשמירת state",
+              "כל ה-Pods ב-StatefulSet חולקים PVC אחד משותף לשמירת נתונים",
+              "StatefulSet משתמש רק ב-emptyDir שנמחק כשה-Pod נמחק",
 ],
               answer: 0,
               explanation:
@@ -2380,10 +2380,10 @@ export const TOPICS = [
             {
               q: "What is CSI?",
               options: [
-              "Container Storage Interface: standard for drivers",
-              "Container Security Interface",
-              "Cluster Sync",
-              "Cloud Storage Integration",
+              "Container Storage Interface: an open standard for writing storage drivers for Kubernetes",
+              "Container Security Interface: a standard for scanning images and enforcing security policies",
+              "Cluster Sync Interface: a standard for syncing data between Clusters",
+              "Cloud Storage Integration: a layer for connecting to cloud object storage like S3",
 ],
               answer: 0,
               explanation:
@@ -2392,22 +2392,22 @@ export const TOPICS = [
             {
               q: "What is a Helm Hook?",
               options: [
-              "Alternative to Rollback",
-              "An action at a specific lifecycle point",
-              "A Chart type",
-              "A debug tool",
+              "An alternative rollback mechanism that restores a Release to a previous version",
+              "A Job that runs at a specific lifecycle point of a Release (pre-install, post-upgrade)",
+              "A special Chart type that contains only dependencies and no templates",
+              "A debugging tool that validates templates before installing a Chart",
 ],
               answer: 1,
               explanation:
-                "Hooks are Jobs that run at specific Release lifecycle points: pre-install, post-upgrade, pre-delete, etc.\nCommon uses: DB migrations before upgrade, or Slack notifications after deploy.",
+                "Hooks are Jobs that run at specific Release lifecycle points: pre-install, post-upgrade, pre-delete, etc.\nOption 0 is wrong: rollback is done with helm rollback. Option 2 is wrong: there is no such Chart type. Option 3 is wrong: debugging is done with helm template.\nCommon uses: DB migrations before upgrade, or Slack notifications after deploy.",
             },
             {
               q: "What is a VolumeSnapshot?",
               options: [
-              "ConfigMap backup",
-              "Point-in-time backup of a PersistentVolume",
-              "Backup of the whole Cluster",
-              "Pod snapshot",
+              "A backup of ConfigMaps and Secrets in a Namespace for future restore",
+              "A point-in-time backup of a PersistentVolume from which a new PVC can be restored",
+              "A full backup of the Cluster including etcd, Pods, and ConfigMaps",
+              "A snapshot of a Pod's container filesystem and memory state",
 ],
               answer: 1,
               explanation:
@@ -2416,10 +2416,10 @@ export const TOPICS = [
             {
               q: "How does a StatefulSet manage storage?",
               options: [
-              "All Pods share one PVC",
-              "Each Pod gets its own PVC via volumeClaimTemplates",
-              "Only emptyDir",
-              "No storage in StatefulSet",
+              "All Pods in the StatefulSet share a single PVC for storing data",
+              "Each Pod gets its own unique PVC via volumeClaimTemplates",
+              "StatefulSet only uses emptyDir volumes that are deleted with the Pod",
+              "StatefulSet does not support storage and relies on ConfigMaps for state",
 ],
               answer: 1,
               explanation:
@@ -2528,10 +2528,10 @@ export const TOPICS = [
             {
               q: "מה ההבדל בין Running ל-Ready?",
               options: [
-              "Running: קונטיינר פועל. Ready: Pod עבר readiness probe ומוכן לקבל traffic",
-              "Running: לפני deploy",
-              "Ready: רק ב-production",
-              "אין הבדל",
+              "Running: הקונטיינר פועל. Ready: ה-Pod עבר readiness probe ומוכן לקבל traffic",
+              "Running: ה-Pod ממתין ל-image pull. Ready: ה-image הורד והקונטיינר עלה",
+              "Ready: ה-Pod מחובר ל-Service. Running: ה-Pod פועל אך לא מחובר ל-Service",
+              "Running ו-Ready זהים. שניהם מציינים שה-Pod פועל ומקבל traffic",
 ],
               answer: 0,
               explanation:
@@ -2553,9 +2553,9 @@ export const TOPICS = [
               q: "מה kubectl top nodes מציג?",
               options: [
               "שימוש ב-CPU/Memory של כל Node בזמן אמת (דורש metrics-server)",
-              "רשימת Nodes",
-              "Nodes logs",
-              "Nodes עם בעיות",
+              "רשימת כל ה-Nodes ב-Cluster כולל Status ו-Roles",
+              "לוגים של kubelet מכל Node ב-Cluster",
+              "רשימת Nodes עם Conditions חריגות כמו DiskPressure או MemoryPressure",
 ],
               answer: 0,
               explanation:
@@ -2576,10 +2576,10 @@ export const TOPICS = [
             {
               q: "מה kubectl config get-contexts עושה?",
               options: [
-              "מציג כל ה-kubeconfig contexts: אשכולות ומשתמשים מוגדרים",
-              "מציג contexts של Docker",
-              "מציג Namespaces",
-              "מציג Node contexts",
+              "מציג את כל ה-kubeconfig contexts: cluster, user, ו-namespace מוגדרים",
+              "מציג את כל ה-Docker contexts שמוגדרים ב-daemon המקומי",
+              "מציג את כל ה-Namespaces ב-Cluster הנוכחי",
+              "מציג את ה-context של כל Node כולל ה-kubelet configuration",
 ],
               answer: 0,
               explanation:
@@ -2626,10 +2626,10 @@ export const TOPICS = [
             {
               q: "What is the difference between Running and Ready?",
               options: [
-              "Ready: production only",
-              "Running: before deploy",
+              "Ready: the Pod is connected to a Service. Running: the Pod is active but not connected to a Service",
+              "Running: the Pod is waiting for image pull. Ready: the image was pulled and the container started",
               "Running: container is active. Ready: Pod passed readiness probe and can receive traffic",
-              "No difference",
+              "Running and Ready are the same. Both indicate the Pod is active and receiving traffic",
 ],
               answer: 2,
               explanation:
@@ -2650,9 +2650,9 @@ export const TOPICS = [
             {
               q: "What does kubectl top nodes show?",
               options: [
-              "Node logs",
-              "List of Nodes",
-              "Nodes with issues",
+              "Kubelet logs from every Node in the Cluster",
+              "A list of all Nodes in the Cluster with their Status and Roles",
+              "Nodes with abnormal Conditions such as DiskPressure or MemoryPressure",
               "Real-time CPU/Memory usage for each Node (requires metrics-server)",
 ],
               answer: 3,
@@ -2674,10 +2674,10 @@ export const TOPICS = [
             {
               q: "What does kubectl config get-contexts do?",
               options: [
-              "Shows Docker contexts",
-              "Shows Namespaces",
-              "Shows Node contexts",
-              "Lists all kubeconfig contexts: configured clusters and users",
+              "Lists all Docker contexts configured on the local daemon",
+              "Lists all Namespaces in the current Cluster",
+              "Shows the context of each Node including kubelet configuration",
+              "Lists all kubeconfig contexts: configured clusters, users, and namespaces",
 ],
               answer: 3,
               explanation:
@@ -2764,10 +2764,10 @@ export const TOPICS = [
             {
               q: "ה-Pod במצב Terminating ולא נמחק.\n\nהרצת:\n\n```\nkubectl delete pod my-pod\n  --grace-period=0 --force\n```\n\nה-Pod עדיין לא נמחק.\n\nמה הסיבה?",
               options: [
-              "Node נפל",
-              "RBAC חוסם",
-              "Pod יש finalizer שלא נוקה. יש לבדוק ולהסיר ידנית",
-              "Namespace נעול",
+              "ה-Node שה-Pod רץ עליו נפל ואין תקשורת עם ה-Control Plane",
+              "הרשאות RBAC חוסמות את הפעולה ולא מאפשרות מחיקת ה-Pod",
+              "ל-Pod יש finalizer שלא נוקה ע\"י controller חיצוני. יש להסיר ידנית",
+              "ה-Namespace נמצא במצב Terminating ולא מאפשר שינויים בפנים",
 ],
               answer: 2,
               explanation:
@@ -2776,10 +2776,10 @@ export const TOPICS = [
             {
               q: "ה-Node ב-DiskPressure.\n\nהרצת:\n\n```\nkubectl describe node\n```\n\nפלט:\n\n```\nConditions:\n  DiskPressure True\n```\n\nמה הסיבות הנפוצות?",
               options: [
-              "RAM מלא",
-              "Network congestion",
-              "logs שצברו מקום, images ישנים, או disk של Node מלא",
-              "CPU גבוה",
+              "RAM של ה-Node מלא וה-kubelet מגדיר MemoryPressure condition",
+              "עומס רשת גבוה שגורם ל-kubelet לדווח על בעיית connectivity",
+              "logs שהצטברו, images ישנים, או disk של ה-Node מגיע לסף מלאות",
+              "שימוש גבוה ב-CPU שגורם ל-kubelet לא להגיב ל-heartbeats",
 ],
               answer: 2,
               explanation:
@@ -2862,10 +2862,10 @@ export const TOPICS = [
             {
               q: "A Pod is stuck in Terminating.\n\nCommand:\n\n```\nkubectl delete pod my-pod\n  --grace-period=0 --force\n```\n\nThe Pod is still not deleted.\n\nWhat is the cause?",
               options: [
-              "Node is down",
-              "Namespace is locked",
-              "The Pod has a finalizer that was not cleared. Must be removed manually",
-              "RBAC is blocking",
+              "The Node the Pod was running on is down and lost contact with the Control Plane",
+              "The Namespace is in Terminating state and is blocking modifications to resources inside it",
+              "The Pod has a finalizer that was not cleared by its controller. Must be removed manually",
+              "RBAC permissions are blocking the delete operation on this Pod",
 ],
               answer: 2,
               explanation:
@@ -2874,10 +2874,10 @@ export const TOPICS = [
             {
               q: "A Node shows DiskPressure.\n\nCommand:\n\n```\nkubectl describe node\n```\n\nOutput:\n\n```\nConditions:\n  DiskPressure True\n```\n\nWhat are the common causes?",
               options: [
-              "Accumulated logs, old images, or a full Node disk",
-              "High CPU",
-              "Network congestion",
-              "RAM is full",
+              "Accumulated logs, stale images, or Node disk approaching the fullness threshold",
+              "High CPU usage causing kubelet to stop responding to heartbeats",
+              "High network load causing kubelet to report a connectivity problem",
+              "Full RAM on the Node causing kubelet to set MemoryPressure condition",
 ],
               answer: 0,
               explanation:
@@ -2916,10 +2916,10 @@ export const TOPICS = [
             {
               q: "מה kubectl drain עושה ומתי משתמשים בו?",
               options: [
-              "מפנה Pods מ-Node בצורה graceful לפני maintenance (node upgrade, reboot)",
-              "מנתק Node מ-Network",
-              "Scale down",
-              "מוחק Node",
+              "מפנה Pods מ-Node בצורה graceful ומסמן אותו כ-unschedulable לפני maintenance",
+              "מנתק את ה-Node מהרשת כך ש-Pods לא מקבלים traffic נכנס",
+              "מקטין את מספר ה-replicas של כל Deployment שרץ על ה-Node",
+              "מוחק את ה-Node מה-Cluster ומפנה את כל ה-Pods לאשפה",
 ],
               answer: 0,
               explanation:
@@ -2964,10 +2964,10 @@ export const TOPICS = [
             {
               q: "הרצת:\n\n```\nkubectl logs my-pod\n```\n\nפלט:\n\n```\nError from server (BadRequest):\ncontainer 'my-container' in pod\n'my-pod' is not running\n```\n\nמה עושים?",
               options: [
-              "הוסף sidecar",
-              "Pod Running בטח",
-              "Pod לא Running. בדוק kubectl get pod my-pod לראות סטטוס, ואז kubectl describe pod my-pod ל-Events",
-              "מחק Pod",
+              "הוסף sidecar container שיאסוף את ה-logs מה-container הראשי",
+              "ה-Pod רץ בוודאות. הבעיה היא ב-RBAC שחוסם גישה ל-logs",
+              "ה-Pod לא רץ. בדוק סטטוס עם kubectl get pod ואז Events עם kubectl describe pod",
+              "מחק את ה-Pod ותן ל-Deployment ליצור אחד חדש שאפשר לקרוא לו logs",
 ],
               answer: 2,
               explanation:
@@ -3014,10 +3014,10 @@ export const TOPICS = [
             {
               q: "What does kubectl drain do and when is it used?",
               options: [
-              "Deletes a Node",
-              "Disconnects Node from network",
-              "Gracefully evicts Pods from a Node before maintenance (upgrade, reboot)",
-              "Scale down",
+              "Removes the Node from the Cluster entirely and sends all its Pods to garbage collection",
+              "Disconnects the Node from the network so Pods stop receiving inbound traffic",
+              "Gracefully evicts Pods from a Node and marks it unschedulable before maintenance",
+              "Reduces the replica count of every Deployment running on the Node",
 ],
               answer: 2,
               explanation:
@@ -3062,10 +3062,10 @@ export const TOPICS = [
             {
               q: "Command:\n\n```\nkubectl logs my-pod\n```\n\nOutput:\n\n```\nError from server (BadRequest):\ncontainer 'my-container' in pod\n'my-pod' is not running\n```\n\nWhat do you do?",
               options: [
-              "Pod is not Running. Check kubectl get pod my-pod for status, then kubectl describe pod my-pod for Events",
-              "Delete the Pod",
-              "Add a sidecar",
-              "The Pod is definitely Running",
+              "The Pod is not Running. Check status with kubectl get pod, then Events with kubectl describe pod",
+              "Delete the Pod and let the Deployment create a new one whose logs you can read",
+              "Add a sidecar container that collects logs from the main container",
+              "The Pod is definitely Running. The issue is RBAC blocking access to read logs",
 ],
               answer: 0,
               explanation:
