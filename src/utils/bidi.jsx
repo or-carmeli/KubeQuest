@@ -100,7 +100,7 @@ export function renderBidiInner(text, lang, keyPrefix) {
     if (/^[A-Za-z]/.test(part) || /^--?[A-Za-z]/.test(part) || /^\/[A-Za-z]/.test(part)) {
       const kind = getTermKind(part);
       const termStyle = kind === "code" ? CODE_SPAN_STYLE : kind === "concept" ? CONCEPT_TAG_STYLE : undefined;
-      return [idx === 0 && startsWithLatin ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",margin:"0 2px",...termStyle}}>{"\u2066"}{part}{"\u2069"}</span>];
+      return [idx === 0 && startsWithLatin && lang === "he" ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",margin:"0 2px",...termStyle}}>{"\u2066"}{part}{"\u2069"}</span>];
     }
     // Left-arrow - wrap in LTR isolation to prevent bidi reordering
     if (/^[←]$/.test(part)) {
@@ -112,6 +112,7 @@ export function renderBidiInner(text, lang, keyPrefix) {
     // Prepend RTL mark (U+200F) to punctuation-only segments following an LTR span
     // so neutral chars like "." don't get visually absorbed by the preceding LTR run.
     if (!part) return null;
+    if (lang !== "he") return part;
     const needsAnchor = idx > 0 && /^[\s]*[.,;:!?)}\]>]/.test(part);
     return <span key={k} dir="rtl" style={{unicodeBidi:"isolate"}}>{needsAnchor ? "\u200F" : ""}{part}</span>;
   });
