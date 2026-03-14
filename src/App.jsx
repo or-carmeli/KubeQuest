@@ -724,6 +724,10 @@ function isBlockCodeLine(line) {
 function renderQuestion(qText, lang) {
   if (!qText) return null;
   warnIfHebrew(qText, lang, "quiz.question");
+  // Explicit direction: dir="auto" fails when renderBidi wraps all text in
+  // <span dir="ltr/rtl"> - the auto algorithm skips children with dir attrs
+  // and can't find qualifying text, falling back to LTR.
+  const qDir = lang === "he" ? "rtl" : "ltr";
   // Normalize: ensure fenced code blocks (```...```) are separated from
   // surrounding text by blank lines so the \n\n split detects them as
   // separate paragraphs and routes them to YamlBlock/TerminalBlock.
@@ -766,7 +770,7 @@ function renderQuestion(qText, lang) {
     // If only one segment (no embedded commands/errors), render as before
     if (segments.length <= 1) {
       return (
-        <div dir="auto" style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",unicodeBidi:"isolate"}}>
+        <div dir={qDir} style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",direction:qDir,textAlign:qDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>
           {lang==="he"?renderBidi(qText,lang):renderBidiInner(qText,lang,"q")}
         </div>
       );
@@ -789,14 +793,14 @@ function renderQuestion(qText, lang) {
           }
           if (seg.type === "question") {
             return (
-              <div key={idx} dir="auto" style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",unicodeBidi:"isolate"}}>
+              <div key={idx} dir={qDir} style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",direction:qDir,textAlign:qDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>
                 {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`q${idx}`)}
               </div>
             );
           }
           // Regular text (description)
           return (
-            <div key={idx} dir="auto" style={{color:"var(--text-secondary)",fontSize:13.5,fontWeight:400,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",unicodeBidi:"isolate"}}>
+            <div key={idx} dir={qDir} style={{color:"var(--text-secondary)",fontSize:13.5,fontWeight:400,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",direction:qDir,textAlign:qDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>
               {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`t${idx}`)}
             </div>
           );
@@ -916,7 +920,7 @@ function renderQuestion(qText, lang) {
         const isFirst = idx === firstTextIdx;
         const isLast = idx === lastTextIdx;
         return (
-          <div key={idx} dir="auto" style={{color:isFirst||isLast?"var(--text-primary)":"var(--text-secondary)",fontSize:isFirst?16:(isLast?15:13.5),fontWeight:isFirst?700:(isLast?600:400),lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",unicodeBidi:"isolate"}}>
+          <div key={idx} dir={qDir} style={{color:isFirst||isLast?"var(--text-primary)":"var(--text-secondary)",fontSize:isFirst?16:(isLast?15:13.5),fontWeight:isFirst?700:(isLast?600:400),lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",direction:qDir,textAlign:qDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>
             {lang==="he"?renderBidi(para,lang):renderBidiInner(para,lang,`p${idx}`)}
           </div>
         );
