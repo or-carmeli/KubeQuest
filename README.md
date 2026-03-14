@@ -12,6 +12,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat-square&logo=docker)](https://github.com/or-carmeli/KubeQuest/pkgs/container/kubequest)
+[![Status](https://img.shields.io/badge/Status-status.kubequest.online-10B981?style=flat-square&logo=statuspage)](https://status.kubequest.online)
 
 ---
 
@@ -190,7 +191,7 @@ flowchart LR
 - **Data retention** - append-only `system_status_history` table for uptime tracking
 - **Frontend** - live status page with real-time polling
 
-Full documentation: [docs/monitoring.md](docs/monitoring.md)
+Full documentation: [docs/monitoring.md](docs/monitoring.md) | Live status: [status.kubequest.online](https://status.kubequest.online)
 
 ---
 
