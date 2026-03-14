@@ -212,9 +212,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "Pod Stuck in Crash Loop\n\n• Status: CrashLoopBackOff\n• Restart count: 9\n\nNAME                         STATUS             RESTARTS\npayment-service-7d4b9-abc12  CrashLoopBackOff   9\n\nWhat command reveals the application error?",
+          "Pod Stuck in Crash Loop\n\n• Status: CrashLoopBackOff\n• Restart count: 9\n\n$ kubectl get pods -n staging\nNAME                         STATUS             RESTARTS\npayment-service-7d4b9-abc12  CrashLoopBackOff   9\n\nWhat command reveals the application error?",
         promptHe:
-          "Pod תקוע בלולאת קריסה\n\n• סטטוס: CrashLoopBackOff\n• מספר אתחולים: 9\n\nNAME                         STATUS             RESTARTS\npayment-service-7d4b9-abc12  CrashLoopBackOff   9\n\nאיזו פקודה חושפת את שגיאת האפליקציה?",
+          "Pod תקוע בלולאת קריסה\n\n• סטטוס: CrashLoopBackOff\n• מספר אתחולים: 9\n\n$ kubectl get pods -n staging\nNAME                         STATUS             RESTARTS\npayment-service-7d4b9-abc12  CrashLoopBackOff   9\n\nאיזו פקודה חושפת את שגיאת האפליקציה?",
         options: [
           "kubectl describe pod payment-service-7d4b9-abc12 -n staging",
           "kubectl logs payment-service-7d4b9-abc12 -n staging --previous",
