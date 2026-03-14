@@ -1,3 +1,5 @@
+import { getLocalizedField } from "../utils/i18n";
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const LVL_ORDER = ["easy", "medium", "hard"];
@@ -63,10 +65,10 @@ function isFreeMode(topicId) {
   return FREE_MODES.has(topicId);
 }
 
-const INCIDENT_COLORS = {
-  easy: "#10B981",
-  intermediate: "#F59E0B",
-  hard: "#EF4444",
+const INCIDENT_DIFFICULTY = {
+  easy:         { label: "Easy",         labelHe: "קל",     color: "#10B981" },
+  intermediate: { label: "Intermediate", labelHe: "בינוני", color: "#F59E0B" },
+  hard:         { label: "Hard",         labelHe: "קשה",    color: "#EF4444" },
 };
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -285,7 +287,7 @@ export default function StatsView({
                       fontWeight: done ? 700 : 400,
                       display: "flex", alignItems: "center", gap: 3,
                     }}>
-                      {done ? "✓" : cfg.icon} {lang === "en" ? cfg.labelEn : cfg.label}
+                      {done ? "✓" : cfg.icon} {getLocalizedField(cfg, "label", lang)}
                       {attempted && r.total > 0 && (
                         <span style={{ fontSize: 9, opacity: 0.6 }}>{r.correct}/{r.total}</span>
                       )}
@@ -321,7 +323,7 @@ export default function StatsView({
                 fontSize: 12, fontWeight: unlocked ? 600 : 400,
                 color: unlocked ? "var(--text-primary)" : "var(--text-dim)",
               }}>
-                {lang === "en" ? ach.nameEn : ach.name}
+                {getLocalizedField(ach, "name", lang)}
               </span>
               {unlocked
                 ? <span style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>✓</span>
@@ -376,9 +378,7 @@ export default function StatsView({
                     {incidentsDoneByDiff[diff]}/{incidentsByDiff[diff]}
                   </div>
                   <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>
-                    {diff === "easy" ? (lang === "en" ? "Easy" : "קל")
-                      : diff === "intermediate" ? (lang === "en" ? "Intermediate" : "בינוני")
-                      : (lang === "en" ? "Hard" : "קשה")}
+                    {getLocalizedField(INCIDENT_DIFFICULTY[diff], "label", lang)}
                   </div>
                 </div>
               ))}
