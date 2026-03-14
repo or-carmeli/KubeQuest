@@ -20,11 +20,20 @@ self.addEventListener("install", e => {
   self.skipWaiting();
 });
 
-// Activate - delete all old caches, then take control of all clients
+// Activate - keep current + previous cache, delete the rest, then claim clients
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => {
+        const keep = new Set([CACHE]);
+        // Retain the most recent previous app cache as offline fallback
+        const prev = keys
+          .filter(k => k !== CACHE && k.startsWith("k8s-quest-"))
+          .sort()
+          .pop();
+        if (prev) keep.add(prev);
+        return Promise.all(keys.filter(k => !keep.has(k)).map(k => caches.delete(k)));
+      })
       .then(() => self.clients.claim())
   );
 });
