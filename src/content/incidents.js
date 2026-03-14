@@ -1,17 +1,17 @@
 // ── Kubernetes Incident Mode Scenarios ───────────────────────────────────────
 // Each incident simulates a real production troubleshooting workflow.
 // Steps are linear (v1). Each step has:
-//   prompt     – what you observe (may include terminal output)
-//   promptHe   – Hebrew version of prompt
-//   options[4] – possible actions (English)
-//   optionsHe  – Hebrew version of options
-//   answer     – index of the correct option (0-3)
-//   explanation– why the correct answer is right (English)
-//   explanationHe – Hebrew explanation
+//   prompt     - what you observe (may include terminal output)
+//   promptHe   - Hebrew version of prompt
+//   options[4] - possible actions (English)
+//   optionsHe  - Hebrew version of options
+//   answer     - index of the correct option (0-3)
+//   explanation - why the correct answer is right (English)
+//   explanationHe - Hebrew explanation
 
 export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
-  // 1. OOMKilled – memory limits too low
+  // 1. OOMKilled - memory limits too low
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "oom-killed",
@@ -94,9 +94,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl top pod shows:\n`api-server-xyz` — ~240Mi at idle, spikes to 320Mi under load.\nCurrent memory limit: 256Mi.\n\nWhat is the correct fix?",
+          "kubectl top pod shows:\n`api-server-xyz` - ~240Mi at idle, spikes to 320Mi under load.\nCurrent memory limit: 256Mi.\n\nWhat is the correct fix?",
         promptHe:
-          "kubectl top pod מציג:\n`api-server-xyz` — כ-240Mi במנוחה, עולה ל-320Mi תחת עומס.\nמגבלת זיכרון נוכחית: 256Mi.\n\nמה התיקון הנכון?",
+          "kubectl top pod מציג:\n`api-server-xyz` - כ-240Mi במנוחה, עולה ל-320Mi תחת עומס.\nמגבלת זיכרון נוכחית: 256Mi.\n\nמה התיקון הנכון?",
         options: [
           "Delete the pod - Kubernetes will recreate it and somehow the memory issue will go away",
           "Increase the memory limit to 512Mi and set request to 256Mi in the Deployment spec",
@@ -165,7 +165,7 @@ export const INCIDENTS = [
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 2. CrashLoopBackOff – missing ConfigMap / env var
+  // 2. CrashLoopBackOff - missing ConfigMap / env var
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "crashloop-config",
@@ -296,7 +296,7 @@ export const INCIDENTS = [
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 3. ImagePullBackOff – private registry auth
+  // 3. ImagePullBackOff - private registry auth
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "imagepull-auth",
@@ -312,7 +312,7 @@ export const INCIDENTS = [
         prompt:
           "🚨 A newly deployed microservice has all pods in `ImagePullBackOff`.\nOther services on the same cluster are healthy.\n\nWhat is your first diagnostic step?",
         promptHe:
-          "🚨 מיקרו-שירות חדש שהוצב — כל ה-Pods במצב `ImagePullBackOff`.\nשירותים אחרים באותו cluster תקינים.\n\nמה הצעד האבחוני הראשון?",
+          "🚨 מיקרו-שירות חדש שהוצב - כל ה-Pods במצב `ImagePullBackOff`.\nשירותים אחרים באותו cluster תקינים.\n\nמה הצעד האבחוני הראשון?",
         options: [
           "kubectl describe pod <pod-name> -n default",
           "kubectl delete deployment myapp  (tear it down and redeploy)",
@@ -427,7 +427,7 @@ export const INCIDENTS = [
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 4. Service unreachable – wrong selector / port mismatch
+  // 4. Service unreachable - wrong selector / port mismatch
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "service-no-endpoints",
@@ -443,7 +443,7 @@ export const INCIDENTS = [
         prompt:
           "🚨 Users report 'connection refused' when the frontend calls the backend API.\nPod status for both frontend and backend: Running/Ready.\n\nWhere do you start?",
         promptHe:
-          "🚨 משתמשים מדווחים על 'connection refused' כשהפרונטאנד קורא ל-API הבאקאנד.\nסטטוס Pods — frontend ו-backend: Running/Ready.\n\nמאיפה מתחילים?",
+          "🚨 משתמשים מדווחים על 'connection refused' כשהפרונטאנד קורא ל-API הבאקאנד.\nסטטוס Pods - frontend ו-backend: Running/Ready.\n\nמאיפה מתחילים?",
         options: [
           "kubectl get svc backend-svc -n production  (inspect the Service)",
           "kubectl restart pod backend -n production",
@@ -487,9 +487,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "kubectl get endpoints backend-svc -n production:\n\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      3d\n\nEndpoints: `<none>` — the Service has no matching pods.\n\nWhat do you do next?",
+          "kubectl get endpoints backend-svc -n production:\n\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      3d\n\nEndpoints: `<none>` - the Service has no matching pods.\n\nWhat do you do next?",
         promptHe:
-          "kubectl get endpoints backend-svc -n production:\n\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      3d\n\nEndpoints: `<none>` — ל-Service אין Pods תואמים.\n\nמה הצעד הבא?",
+          "kubectl get endpoints backend-svc -n production:\n\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      3d\n\nEndpoints: `<none>` - ל-Service אין Pods תואמים.\n\nמה הצעד הבא?",
         options: [
           "kubectl get pods -n production --show-labels  (see actual pod labels)",
           "kubectl describe svc backend-svc -n production  (see the selector the Service uses)",
@@ -581,7 +581,7 @@ export const INCIDENTS = [
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 5. DNS resolution failures – CoreDNS OOMKilled
+  // 5. DNS resolution failures - CoreDNS OOMKilled
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "dns-coredns",
@@ -910,9 +910,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "The security team asks:\nHow do you validate a new NetworkPolicy enforces exactly what's intended — without causing outages?",
+          "The security team asks:\nHow do you validate a new NetworkPolicy enforces exactly what's intended - without causing outages?",
         promptHe:
-          "צוות האבטחה שואל:\nכיצד מאמתים ש-NetworkPolicy חדשה אוכפת בדיוק את המיועד — ללא גרימת השבתות?",
+          "צוות האבטחה שואל:\nכיצד מאמתים ש-NetworkPolicy חדשה אוכפת בדיוק את המיועד - ללא גרימת השבתות?",
         options: [
           "Apply in production and monitor; roll back if issues appear",
           "Read the YAML carefully and trust it is correct",
