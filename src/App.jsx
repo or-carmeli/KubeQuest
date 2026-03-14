@@ -4470,7 +4470,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <div>
               <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,padding:"14px 16px",marginBottom:10,overflowWrap:"break-word"}}>
                 <div style={{fontSize:11,color:selectedTopic.color,fontWeight:800,marginBottom:16,letterSpacing:1}}>{t("theory")}</div>
-                <div style={{background:"var(--code-bg-light)",borderRadius:10,padding:"16px 20px"}}>{renderTheory(theoryContent || currentLevelData?.theory)}</div>
+                <div dir={dir} style={{background:"var(--code-bg-light)",borderRadius:10,padding:"16px 20px",direction:dir,unicodeBidi:"isolate"}}>{renderTheory(theoryContent || currentLevelData?.theory)}</div>
               </div>
               <div style={{display:"flex",gap:8,marginBottom:0}}>
                 <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));}} style={{flex:1,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`,lineHeight:1.4}}>
