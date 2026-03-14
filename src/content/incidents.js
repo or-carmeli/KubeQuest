@@ -434,9 +434,9 @@ export const INCIDENTS = [
         ],
         answer: 1,
         explanation:
-          "✓ K8s does NOT auto-use pull Secrets. You must add `imagePullSecrets: [{name: regcred}]` to the pod spec.\n→ Without this reference, the pod ignores the Secret entirely.\n✗ `create secret docker-registry` already handles base64. Secrets are namespace-scoped, not node-scoped.",
+          "✓ K8s does NOT auto-use pull Secrets. You must add `imagePullSecrets: [{name: regcred}]` to the Pod spec.\n→ Without this reference, the pod ignores the Secret entirely.\n✗ `create secret docker-registry` already handles base64. Secrets are namespace-scoped, not node-scoped.",
         explanationHe:
-          "✓ K8s לא משתמש אוטומטית ב-pull Secrets. חובה להוסיף `imagePullSecrets: [{name: regcred}]` ל-pod spec.\nבלי הפניה זו, ה-Pod מתעלם מה-Secret לחלוטין.\n✗ `create secret docker-registry` כבר מטפל ב-base64. Secrets מוגדרים לפי namespace, לא per-node.",
+          "✓ K8s לא משתמש אוטומטית ב-pull Secrets. חובה להוסיף `imagePullSecrets: [{name: regcred}]` ל-spec של ה-Pod.\nבלי הפניה זו, ה-Pod מתעלם מה-Secret לחלוטין.\n✗ `create secret docker-registry` כבר מטפל ב-base64. Secrets מוגדרים לפי namespace, לא per-node.",
       },
     ],
   },

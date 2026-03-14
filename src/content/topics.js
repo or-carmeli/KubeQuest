@@ -502,12 +502,12 @@ export const TOPICS = [
               options: [
               "להעביר את ה-Pod ל-Namespace ייעודי לעבודות GPU",
               "להוסיף Node חדש ל-Cluster ללא taint",
-              "להוסיף toleration מתאים ל-Pod spec שיתאים ל-taint",
+              "להוסיף toleration מתאים ל-spec של ה-Pod שיתאים ל-taint",
               "להקטין את ה-CPU request כדי שה-Pod יתאים ל-Node קטן יותר",
 ],
               answer: 2,
               explanation:
-                "כל 3 ה-Nodes מסומנים עם taint (dedicated=gpu) וה-Pod חסר toleration תואם.\nלהוסיף toleration ל-Pod spec שמתאים ל-taint.\n• Node חדש: עוקף, לא פותר. • CPU request: לא רלוונטי. • Namespace: לא משפיע על taints.\nTaint = \"כניסה אסורה\". Toleration = אישור כניסה ב-spec של ה-Pod.",
+                "כל 3 ה-Nodes מסומנים עם taint (dedicated=gpu) וה-Pod חסר toleration תואם.\nלהוסיף toleration ל-spec של ה-Pod שמתאים ל-taint.\n• Node חדש: עוקף, לא פותר. • CPU request: לא רלוונטי. • Namespace: לא משפיע על taints.\nTaint = \"כניסה אסורה\". Toleration = אישור כניסה ב-spec של ה-Pod.",
             },
             {
               q: "StatefulSet עם 3 replicas רץ ב-Cluster.\nPod-0 לא במצב Ready, ו-Pod-1 נשאר במצב Pending.\n\nמה הסיבה הסבירה ביותר?",
@@ -893,7 +893,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "מגדירים Secret מסוג kubernetes.io/tls עם tls.crt ו-tls.key.\nמפנים ל-Secret ב-Ingress spec.tls עם שמות ה-hosts.\nה-Ingress Controller מבצע TLS termination אוטומטית.",
+                "מגדירים Secret מסוג kubernetes.io/tls עם tls.crt ו-tls.key.\nמפנים ל-Secret ב-spec.tls של ה-Ingress עם שמות ה-hosts.\nה-Ingress Controller מבצע TLS termination אוטומטית.",
             },
             {
               q: "מה path-based routing ב-Ingress?",
@@ -1754,7 +1754,7 @@ export const TOPICS = [
                 "Kyverno admission webhook חוסם images שלא מ-gcr.io/. policy-as-code.\nלשנות את ה-image למקור מ-gcr.io/ או לעדכן את ה-policy.\n• API crash = לא הייתה הודעת שגיאה • RBAC = \"forbidden\" לא \"webhook denied\" • Namespace missing = שגיאה אחרת.\nAdmission webhook רץ לפני שמירה ב-etcd ויכול לחסום כל create/update.",
             },
             {
-              q: "ה-PSA מוגדר עם enforce=restricted. Deployment נדחה:\n\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n\nמה מוסיפים ל-container spec?",
+              q: "ה-PSA מוגדר עם enforce=restricted. Deployment נדחה:\n\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n\nמה מוסיפים ל-spec של ה-container?",
               options: [
               "securityContext: {privileged: true, runAsUser: 0, capabilities: {add: [NET_ADMIN]}}",
               "securityContext: {allowPrivilegeEscalation: false, runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}",
