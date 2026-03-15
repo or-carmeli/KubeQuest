@@ -256,14 +256,14 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
       {/* -- Standalone status header (status.kubequest.online only) -- */}
       {isStatusDomain && (
         <header style={{borderBottom:"1px solid var(--glass-5)",padding:"12px 24px"}}>
-          <div style={{maxWidth:720,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{maxWidth:1080,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{fontSize:14,fontWeight:600,color:"var(--text-primary)",letterSpacing:-0.2}}>KubeQuest Status</div>
             <a href="https://kubequest.online" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"var(--text-muted)",textDecoration:"none"}}>kubequest.online ↗</a>
           </div>
         </header>
       )}
 
-      <div className="page-pad" dir="ltr" style={{maxWidth:720,margin:"0 auto",padding:isStatusDomain?"28px 16px 48px":"20px 16px 48px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
+      <div className="page-pad" dir="ltr" style={{maxWidth:1080,margin:"0 auto",padding:isStatusDomain?"28px 16px 48px":"20px 16px 48px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
 
         {/* Back (hidden on standalone status subdomain) */}
         {!isStatusDomain && (
@@ -400,40 +400,44 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
           {metricCard("Incidents", String(activeIncidents.length), activeIncidents.length===0?"none active":"active", activeIncidents.length===0?"#94a3b8":"#EF4444")}
         </div>
 
-        {/* -- 8. SECURITY STATUS -- */}
-        {sectionTitle("Security")}
-        <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"2px 16px"}}>
-          {infoRow("TLS Certificate", isSecure ? "Valid - Let's Encrypt" : "Not active", isSecure?"#94a3b8":"#EF4444")}
-          {infoRow("Connection",      isSecure ? "HTTPS - Encrypted" : "HTTP - Unencrypted",   isSecure?"#94a3b8":"#F59E0B")}
-          {infoRow("HSTS",            "Enabled",  "#94a3b8")}
-          {infoRow("Security Headers", "Active",  "#94a3b8")}
-          {infoRow("CSP",             "Configured", "#94a3b8")}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",position:"relative"}} title="Grade A security headers assessment, Mar 2026">
-            <span style={{fontSize:12,color:"var(--text-muted)",fontWeight:500}}>Last Security Audit</span>
-            <span style={{fontSize:12,color:"#94a3b8",fontWeight:500}}>Grade A - Mar 2026</span>
+        {/* -- 8 & 9. SECURITY + DEPLOYMENT (side by side on desktop) -- */}
+        <div className="status-bottom-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:32}}>
+          <div>
+            <div style={{fontSize:11,color:"var(--text-muted)",fontWeight:600,letterSpacing:0.5,textTransform:"uppercase",marginBottom:10}}>Security</div>
+            <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"2px 16px"}}>
+              {infoRow("TLS Certificate", isSecure ? "Valid - Let's Encrypt" : "Not active", isSecure?"#94a3b8":"#EF4444")}
+              {infoRow("Connection",      isSecure ? "HTTPS - Encrypted" : "HTTP - Unencrypted",   isSecure?"#94a3b8":"#F59E0B")}
+              {infoRow("HSTS",            "Enabled",  "#94a3b8")}
+              {infoRow("Security Headers", "Active",  "#94a3b8")}
+              {infoRow("CSP",             "Configured", "#94a3b8")}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",position:"relative"}} title="Grade A security headers assessment, Mar 2026">
+                <span style={{fontSize:12,color:"var(--text-muted)",fontWeight:500}}>Last Security Audit</span>
+                <span style={{fontSize:12,color:"#94a3b8",fontWeight:500}}>Grade A - Mar 2026</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style={{fontSize:11,color:"var(--text-muted)",fontWeight:600,letterSpacing:0.5,textTransform:"uppercase",marginBottom:10}}>Deployment</div>
+            <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"2px 16px"}}>
+              {infoRow("Version", `v${APP_VERSION}`, "#cbd5e1", true)}
+              {infoRow("Environment", env, isProd?"#94a3b8":"#F59E0B")}
+              {infoRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "-", "#64748b", true)}
+              <div style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",fontSize:11,color:"var(--text-dim)",flexWrap:"wrap"}}>
+                <span style={{fontFamily:"'Fira Code','Courier New',monospace"}}>main</span>
+                <span style={{display:"flex",alignItems:"center",gap:4}}>
+                  <span style={{width:5,height:5,borderRadius:"50%",background:"#10B981",display:"inline-block"}} />
+                  CI Passing
+                </span>
+                <a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer"
+                  style={{color:"var(--text-dim)",textDecoration:"none",fontFamily:"'Fira Code','Courier New',monospace"}}>
+                  or-carmeli/KubeQuest
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* -- 9. DEPLOYMENT (compact) -- */}
-        {sectionTitle("Deployment")}
-        <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"2px 16px"}}>
-          {infoRow("Version", `v${APP_VERSION}`, "#cbd5e1", true)}
-          {infoRow("Environment", env, isProd?"#94a3b8":"#F59E0B")}
-          {infoRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "-", "#64748b", true)}
-          <div style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",fontSize:11,color:"var(--text-dim)",flexWrap:"wrap"}}>
-            <span style={{fontFamily:"'Fira Code','Courier New',monospace"}}>main</span>
-            <span style={{display:"flex",alignItems:"center",gap:4}}>
-              <span style={{width:5,height:5,borderRadius:"50%",background:"#10B981",display:"inline-block"}} />
-              CI Passing
-            </span>
-            <a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer"
-              style={{color:"var(--text-dim)",textDecoration:"none",fontFamily:"'Fira Code','Courier New',monospace"}}>
-              or-carmeli/KubeQuest
-            </a>
-          </div>
-        </div>
-
-        <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}.svc-row:hover{background:rgba(0,255,170,0.04)!important}`}</style>
+        <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}.svc-row:hover{background:rgba(0,255,170,0.04)!important}@media(max-width:768px){.status-bottom-grid{grid-template-columns:1fr!important}}`}</style>
       </div>
     </>
   );
