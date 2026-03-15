@@ -3793,7 +3793,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 8px 4px",marginBottom:2}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:56,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"7px 8px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:8,marginBottom:4,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:56,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:15,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 8px 4px",marginBottom:2}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:56,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"10px 10px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:10,marginBottom:8,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:56,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:15,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
@@ -5138,52 +5138,45 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"50vh",textAlign:"center",padding:"0 20px"}}>
-            <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:20,padding:"48px 36px",maxWidth:420,width:"100%",position:"relative"}}>
-              <div style={{fontSize:56,marginBottom:24}}>🚧</div>
-              <h2 style={{margin:"0 0 24px",color:"var(--text-bright)",fontSize:26,fontWeight:900}}>חדר מצב</h2>
-              <p style={{margin:"0 0 24px",color:"var(--text-secondary)",fontSize:14,lineHeight:1.7}}>{lang==="en"?"Real Kubernetes incident scenarios":"תרחישי Incident אמיתיים ב-Kubernetes"}</p>
-              <div style={{display:"inline-block",background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:12,fontWeight:700,padding:"4px 14px",borderRadius:20,letterSpacing:0.5,marginBottom:24}}>Coming Soon</div>
-              <div>
-                <button
-                  disabled={warRoomInterestRegistered}
-                  onClick={()=>{
-                    window.va?.track("war_room_interest_clicked", {
-                      user_id: user?.id || null,
-                      timestamp: new Date().toISOString(),
-                      environment: import.meta.env.PROD ? "prod" : "dev",
-                    });
-                    if (!isGuest && user) {
-                      // Logged-in user - register directly
-                      if (supabase) {
-                        supabase.rpc("register_war_room_interest", { user_email: null }).then(({ error }) => {
-                          if (!error) {
-                            setWarRoomInterestRegistered(true);
-                            setWarRoomNotifyToast(true);
-                            setTimeout(() => setWarRoomNotifyToast(false), 3000);
-                            supabase.rpc("get_war_room_interest_count").then(({ data }) => {
-                              if (data?.count != null) setWarRoomInterestCount(data.count);
-                            });
-                          }
-                        });
+            <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:20,padding:"56px 36px",maxWidth:420,width:"100%",position:"relative"}}>
+              <div style={{fontSize:48,marginBottom:32,opacity:0.9}}>🚧</div>
+              <h2 style={{margin:"0 0 16px",color:"var(--text-bright)",fontSize:28,fontWeight:900,letterSpacing:-0.5}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
+              <div style={{display:"inline-block",background:"rgba(234,179,8,0.10)",color:"#EAB308",fontSize:11,fontWeight:700,padding:"5px 16px",borderRadius:20,letterSpacing:1,textTransform:"uppercase",marginBottom:28}}>Coming Soon</div>
+              <p style={{margin:"0 0 32px",color:"var(--text-dim)",fontSize:13,lineHeight:1.6}}>{lang==="en"?"Kubernetes incident scenarios":"תרחישי Incident ב-Kubernetes"}</p>
+              <button
+                disabled={warRoomInterestRegistered||warRoomEmailSending}
+                onClick={()=>{
+                  if(warRoomInterestRegistered)return;
+                  window.va?.track("war_room_interest_clicked",{user_id:user?.id||null,timestamp:new Date().toISOString(),environment:import.meta.env.PROD?"prod":"dev"});
+                  if(!isGuest&&user&&supabase){
+                    setWarRoomEmailSending(true);
+                    supabase.rpc("register_war_room_interest",{user_email:null}).then(({error})=>{
+                      setWarRoomEmailSending(false);
+                      if(!error){
+                        setWarRoomInterestRegistered(true);
+                        setWarRoomNotifyToast(true);
+                        setTimeout(()=>setWarRoomNotifyToast(false),3000);
+                        supabase.rpc("get_war_room_interest_count").then(({data})=>{if(data?.count!=null)setWarRoomInterestCount(data.count);});
                       }
-                    } else {
-                      // Guest - show email modal
-                      setWarRoomEmailModal(true);
-                    }
-                  }}
-                  style={{padding:"10px 22px",background:warRoomInterestRegistered?"var(--glass-2)":"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:10,color:warRoomInterestRegistered?"var(--text-dim)":"var(--text-secondary)",fontSize:13,fontWeight:600,cursor:warRoomInterestRegistered?"default":"pointer",transition:"all 0.2s",opacity:warRoomInterestRegistered?0.7:1}}
-                  onMouseEnter={warRoomInterestRegistered?undefined:e=>{e.currentTarget.style.background="var(--glass-6)";e.currentTarget.style.borderColor="var(--glass-12)";}}
-                  onMouseLeave={warRoomInterestRegistered?undefined:e=>{e.currentTarget.style.background="var(--glass-4)";e.currentTarget.style.borderColor="var(--glass-9)";}}
-                >{warRoomInterestRegistered?(lang==="en"?"Subscribed":"נרשמת בהצלחה"):(lang==="en"?"Notify me when ready":"הירשם לעדכון")}</button>
-              </div>
+                    }).catch(()=>{setWarRoomEmailSending(false);});
+                  }else{
+                    setWarRoomEmailModal(true);
+                  }
+                }}
+                style={{padding:"10px 24px",background:warRoomInterestRegistered?"var(--glass-2)":"var(--glass-5)",border:"1px solid var(--glass-9)",borderRadius:10,color:warRoomInterestRegistered?"var(--text-dim)":"var(--text-secondary)",fontSize:13,fontWeight:600,cursor:warRoomInterestRegistered||warRoomEmailSending?"default":"pointer",transition:"all 0.2s",opacity:warRoomInterestRegistered?0.6:warRoomEmailSending?0.5:1}}
+                onMouseEnter={warRoomInterestRegistered||warRoomEmailSending?undefined:e=>{e.currentTarget.style.background="var(--glass-7)";e.currentTarget.style.borderColor="var(--glass-12)";}}
+                onMouseLeave={warRoomInterestRegistered||warRoomEmailSending?undefined:e=>{e.currentTarget.style.background="var(--glass-5)";e.currentTarget.style.borderColor="var(--glass-9)";}}
+              >{warRoomEmailSending?(lang==="en"?"...":"...")
+                :warRoomInterestRegistered?(lang==="en"?"Subscribed":"נרשמת")
+                :(lang==="en"?"Notify me":"הירשם לעדכון")}</button>
               {warRoomInterestCount!=null&&warRoomInterestCount>0&&(
-                <p style={{margin:"24px 0 0",color:"var(--text-dim)",fontSize:12,fontWeight:500}}>
-                  {lang==="en"?`${warRoomInterestCount} engineers already waiting`:`${warRoomInterestCount} אנשים כבר מחכים לפיצ'ר הזה`}
+                <p style={{margin:"28px 0 0",color:"var(--text-dim)",fontSize:11,opacity:0.6}}>
+                  {lang==="en"?`${warRoomInterestCount} waiting`:`${warRoomInterestCount} ממתינים`}
                 </p>
               )}
               {warRoomNotifyToast&&(
-                <div style={{position:"absolute",bottom:-60,left:"50%",transform:"translateX(-50%)",background:"var(--bg-card)",border:"1px solid var(--glass-9)",borderRadius:10,padding:"10px 18px",fontSize:13,color:"var(--text-secondary)",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(0,0,0,0.3)",animation:"fadeIn 0.3s ease"}}>
-                  {(!isGuest && user) ? "נרשמת לעדכון על הפיצ'ר" : "תודה! נעדכן אותך כשהפיצ'ר יהיה זמין"}
+                <div style={{position:"absolute",bottom:-56,left:"50%",transform:"translateX(-50%)",background:"var(--bg-card)",border:"1px solid var(--glass-9)",borderRadius:10,padding:"8px 16px",fontSize:12,color:"var(--text-secondary)",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(0,0,0,0.3)",animation:"fadeIn 0.3s ease"}}>
+                  {lang==="en"?"Subscribed":"נרשמת לעדכון"}
                 </div>
               )}
             </div>
@@ -5193,45 +5186,42 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:20,animation:"fadeIn 0.2s ease"}}
               onClick={e=>{if(e.target===e.currentTarget){setWarRoomEmailModal(false);setWarRoomEmail("");}}}
             >
-              <div style={{background:"var(--bg-card)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"32px 28px",maxWidth:360,width:"100%",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}} dir={dir}>
-                <h3 style={{margin:"0 0 20px",color:"var(--text-bright)",fontSize:18,fontWeight:800}}>
-                  {lang==="en"?"Get notified when it launches":"קבל עדכון כשהפיצ'ר ייפתח"}
+              <div style={{background:"var(--bg-card)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"28px 24px",maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}} dir={dir}>
+                <h3 style={{margin:"0 0 20px",color:"var(--text-bright)",fontSize:16,fontWeight:800}}>
+                  {lang==="en"?"Get notified":"קבלו עדכון כשהפיצ'ר ייפתח"}
                 </h3>
                 <form onSubmit={e=>{
                   e.preventDefault();
-                  const email = warRoomEmail.trim();
-                  if (!email || !email.includes("@")) return;
+                  const email=warRoomEmail.trim();
+                  if(!email||!email.includes("@")||!email.includes("."))return;
+                  if(!supabase)return;
                   setWarRoomEmailSending(true);
-                  if (supabase) {
-                    supabase.rpc("register_war_room_interest", { user_email: email }).then(({ error }) => {
-                      setWarRoomEmailSending(false);
-                      if (!error) {
-                        setWarRoomEmailModal(false);
-                        setWarRoomEmail("");
-                        setWarRoomInterestRegistered(true);
-                        setWarRoomNotifyToast(true);
-                        setTimeout(() => setWarRoomNotifyToast(false), 3000);
-                        supabase.rpc("get_war_room_interest_count").then(({ data }) => {
-                          if (data?.count != null) setWarRoomInterestCount(data.count);
-                        });
-                      }
-                    }).catch(() => setWarRoomEmailSending(false));
-                  }
+                  supabase.rpc("register_war_room_interest",{user_email:email}).then(({error})=>{
+                    setWarRoomEmailSending(false);
+                    if(!error){
+                      setWarRoomEmailModal(false);
+                      setWarRoomEmail("");
+                      setWarRoomInterestRegistered(true);
+                      setWarRoomNotifyToast(true);
+                      setTimeout(()=>setWarRoomNotifyToast(false),3000);
+                      supabase.rpc("get_war_room_interest_count").then(({data})=>{if(data?.count!=null)setWarRoomInterestCount(data.count);});
+                    }
+                  }).catch(()=>{setWarRoomEmailSending(false);});
                 }}>
                   <input
                     type="email" required autoFocus
-                    placeholder={lang==="en"?"Email address":"כתובת אימייל"}
+                    placeholder={lang==="en"?"Email":"אימייל"}
                     value={warRoomEmail}
                     onChange={e=>setWarRoomEmail(e.target.value)}
-                    style={{width:"100%",padding:"12px 14px",background:"var(--glass-3)",border:"1px solid var(--glass-9)",borderRadius:10,color:"var(--text-primary)",fontSize:14,outline:"none",boxSizing:"border-box",marginBottom:14,direction:"ltr",textAlign:"left"}}
+                    style={{width:"100%",padding:"10px 12px",background:"var(--glass-3)",border:"1px solid var(--glass-9)",borderRadius:8,color:"var(--text-primary)",fontSize:13,outline:"none",boxSizing:"border-box",marginBottom:12,direction:"ltr",textAlign:"left"}}
                     onFocus={e=>{e.currentTarget.style.borderColor="rgba(0,212,255,0.4)";}}
                     onBlur={e=>{e.currentTarget.style.borderColor="var(--glass-9)";}}
                   />
                   <button type="submit" disabled={warRoomEmailSending}
-                    style={{width:"100%",padding:"12px",background:"var(--glass-6)",border:"1px solid var(--glass-9)",borderRadius:10,color:"var(--text-primary)",fontSize:14,fontWeight:700,cursor:warRoomEmailSending?"wait":"pointer",transition:"all 0.2s",opacity:warRoomEmailSending?0.6:1}}
+                    style={{width:"100%",padding:"10px",background:"var(--glass-6)",border:"1px solid var(--glass-9)",borderRadius:8,color:"var(--text-primary)",fontSize:13,fontWeight:700,cursor:warRoomEmailSending?"wait":"pointer",transition:"all 0.2s",opacity:warRoomEmailSending?0.5:1}}
                     onMouseEnter={e=>{if(!warRoomEmailSending){e.currentTarget.style.background="var(--glass-8)";e.currentTarget.style.borderColor="var(--glass-12)";}}}
                     onMouseLeave={e=>{e.currentTarget.style.background="var(--glass-6)";e.currentTarget.style.borderColor="var(--glass-9)";}}
-                  >{warRoomEmailSending?(lang==="en"?"Submitting...":"שולח..."):(lang==="en"?"Subscribe":"הרשם לעדכון")}</button>
+                  >{warRoomEmailSending?"...":(lang==="en"?"Subscribe":"הרשמה")}</button>
                 </form>
               </div>
             </div>
