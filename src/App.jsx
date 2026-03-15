@@ -182,7 +182,7 @@ const TRANSLATIONS = {
     guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow: "הירשמי", loginNow: "התחברי", alreadyHaveAccount: "יש לך חשבון?",
     score: "XP", accuracy: "דיוק", streak: "Combo", completed: "הושלמו",
-    rank: "דירוג", rankGuestSub: "התחבר כדי לראות דירוג", xpToNextRank: "לדירוג הבא",
+    rank: "דירוג", rankGuestSub: "הרשם כדי לראות דירוג", xpToNextRank: "לדירוג הבא",
     rankTier_master: "Kubernetes Master", rankTier_platinum: "פלטינום", rankTier_gold: "זהב", rankTier_silver: "כסף", rankTier_bronze: "ארד",
     scoreSub: "XP מכל החידונים", accuracySub: "אחוז תשובות נכונות", streakSub: "תשובות נכונות ברצף", completedSub: "רמות שהושלמו",
     leaderboardRankedBy: "מדורג לפי סך הנקודות שנצברו", leaderboardScoreCol: "סה״כ נק׳",
@@ -1203,9 +1203,9 @@ export default function K8sQuestApp() {
   const incidentCheckingRef = useRef(false);
   const [warRoomToast, setWarRoomToast] = useState(false);
   const warRoomToastShownRef = useRef(false); // prevents showing more than once per session
-  const [warRoomNotifyToast, setWarRoomNotifyToast] = useState(false);
+  const [warRoomNotifyToast, setWarRoomNotifyToast] = useState(null); // null | {msg, isError}
   const [warRoomInterestCount, setWarRoomInterestCount] = useState(null);
-  const [warRoomInterestRegistered, setWarRoomInterestRegistered] = useState(false);
+  const [warRoomInterestRegistered, setWarRoomInterestRegistered] = useState(()=>{try{return localStorage.getItem("warroom_interest_v1")==="1";}catch{return false;}});
   const [warRoomEmailModal, setWarRoomEmailModal] = useState(false);
   const [warRoomEmail, setWarRoomEmail] = useState("");
   const [warRoomEmailSending, setWarRoomEmailSending] = useState(false);
@@ -5138,29 +5138,38 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"50vh",textAlign:"center",padding:"0 20px"}}>
-            <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:20,padding:"56px 36px",maxWidth:420,width:"100%",position:"relative"}}>
-              <div style={{fontSize:48,marginBottom:32,opacity:0.9}}>🚧</div>
-              <h2 style={{margin:"0 0 16px",color:"var(--text-bright)",fontSize:28,fontWeight:900,letterSpacing:-0.5}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
-              <div style={{display:"inline-block",background:"rgba(234,179,8,0.10)",color:"#EAB308",fontSize:11,fontWeight:700,padding:"5px 16px",borderRadius:20,letterSpacing:1,textTransform:"uppercase",marginBottom:28}}>Coming Soon</div>
-              <p style={{margin:"0 0 32px",color:"var(--text-dim)",fontSize:13,lineHeight:1.6}}>{lang==="en"?"Kubernetes incident scenarios":"תרחישי Incident ב-Kubernetes"}</p>
+            <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:20,padding:"48px 36px",maxWidth:420,width:"100%",position:"relative"}}>
+              <div style={{fontSize:56,marginBottom:16}}>🚧</div>
+              <h2 style={{margin:"0 0 8px",color:"var(--text-bright)",fontSize:26,fontWeight:900}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
+              <div style={{display:"inline-block",background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:12,fontWeight:700,padding:"4px 14px",borderRadius:20,letterSpacing:0.5,marginBottom:16}}>Coming Soon</div>
+              <p style={{margin:"0 0 12px",color:"var(--text-secondary)",fontSize:14,lineHeight:1.7}}>{lang==="en"?"This feature is under development and will be available soon.":"הפיצ'ר נמצא בפיתוח ויהיה זמין בקרוב."}</p>
+              <p style={{margin:"0 0 20px",color:"var(--text-dim)",fontSize:12}}>{lang==="en"?"We'll notify you when it's ready.":"נשמח לעדכן בקרוב."}</p>
               <button
                 disabled={warRoomInterestRegistered||warRoomEmailSending}
                 onClick={()=>{
                   if(warRoomInterestRegistered)return;
                   window.va?.track("war_room_interest_clicked",{user_id:user?.id||null,timestamp:new Date().toISOString(),environment:import.meta.env.PROD?"prod":"dev"});
+                  const onSuccess=()=>{
+                    setWarRoomInterestRegistered(true);
+                    try{localStorage.setItem("warroom_interest_v1","1");}catch{}
+                    setWarRoomNotifyToast({msg:lang==="en"?"Subscribed":"נרשמת לעדכון",isError:false});
+                    setTimeout(()=>setWarRoomNotifyToast(null),3000);
+                  };
+                  const onError=(err)=>{
+                    console.error("[KubeQuest] War Room interest registration failed:",err);
+                    setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
+                    setTimeout(()=>setWarRoomNotifyToast(null),4000);
+                  };
                   if(!isGuest&&user&&supabase){
                     setWarRoomEmailSending(true);
                     supabase.rpc("register_war_room_interest",{user_email:null}).then(({error})=>{
                       setWarRoomEmailSending(false);
-                      if(!error){
-                        setWarRoomInterestRegistered(true);
-                        setWarRoomNotifyToast(true);
-                        setTimeout(()=>setWarRoomNotifyToast(false),3000);
-                        supabase.rpc("get_war_room_interest_count").then(({data})=>{if(data?.count!=null)setWarRoomInterestCount(data.count);});
-                      }
-                    }).catch(()=>{setWarRoomEmailSending(false);});
-                  }else{
+                      if(!error){onSuccess();}else{onError(error);}
+                    }).catch(e=>{setWarRoomEmailSending(false);onError(e);});
+                  }else if(supabase){
                     setWarRoomEmailModal(true);
+                  }else{
+                    onError("Supabase not available");
                   }
                 }}
                 style={{padding:"10px 24px",background:warRoomInterestRegistered?"var(--glass-2)":"var(--glass-5)",border:"1px solid var(--glass-9)",borderRadius:10,color:warRoomInterestRegistered?"var(--text-dim)":"var(--text-secondary)",fontSize:13,fontWeight:600,cursor:warRoomInterestRegistered||warRoomEmailSending?"default":"pointer",transition:"all 0.2s",opacity:warRoomInterestRegistered?0.6:warRoomEmailSending?0.5:1}}
@@ -5169,14 +5178,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               >{warRoomEmailSending?(lang==="en"?"...":"...")
                 :warRoomInterestRegistered?(lang==="en"?"Subscribed":"נרשמת")
                 :(lang==="en"?"Notify me":"הירשם לעדכון")}</button>
-              {warRoomInterestCount!=null&&warRoomInterestCount>0&&(
-                <p style={{margin:"28px 0 0",color:"var(--text-dim)",fontSize:11,opacity:0.6}}>
-                  {lang==="en"?`${warRoomInterestCount} waiting`:`${warRoomInterestCount} ממתינים`}
-                </p>
-              )}
               {warRoomNotifyToast&&(
-                <div style={{position:"absolute",bottom:-56,left:"50%",transform:"translateX(-50%)",background:"var(--bg-card)",border:"1px solid var(--glass-9)",borderRadius:10,padding:"8px 16px",fontSize:12,color:"var(--text-secondary)",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(0,0,0,0.3)",animation:"fadeIn 0.3s ease"}}>
-                  {lang==="en"?"Subscribed":"נרשמת לעדכון"}
+                <div style={{position:"absolute",bottom:-56,left:"50%",transform:"translateX(-50%)",background:warRoomNotifyToast.isError?"rgba(239,68,68,0.15)":"var(--bg-card)",border:`1px solid ${warRoomNotifyToast.isError?"rgba(239,68,68,0.3)":"var(--glass-9)"}`,borderRadius:10,padding:"8px 16px",fontSize:12,color:warRoomNotifyToast.isError?"#EF4444":"var(--text-secondary)",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(0,0,0,0.3)",animation:"fadeIn 0.3s ease"}}>
+                  {warRoomNotifyToast.msg}
                 </div>
               )}
             </div>
@@ -5202,11 +5206,20 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       setWarRoomEmailModal(false);
                       setWarRoomEmail("");
                       setWarRoomInterestRegistered(true);
-                      setWarRoomNotifyToast(true);
-                      setTimeout(()=>setWarRoomNotifyToast(false),3000);
-                      supabase.rpc("get_war_room_interest_count").then(({data})=>{if(data?.count!=null)setWarRoomInterestCount(data.count);});
+                      try{localStorage.setItem("warroom_interest_v1","1");}catch{}
+                      setWarRoomNotifyToast({msg:lang==="en"?"Subscribed":"נרשמת לעדכון",isError:false});
+                      setTimeout(()=>setWarRoomNotifyToast(null),3000);
+                    }else{
+                      console.error("[KubeQuest] War Room email registration failed:",error);
+                      setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
+                      setTimeout(()=>setWarRoomNotifyToast(null),4000);
                     }
-                  }).catch(()=>{setWarRoomEmailSending(false);});
+                  }).catch(err=>{
+                    setWarRoomEmailSending(false);
+                    console.error("[KubeQuest] War Room email registration error:",err);
+                    setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
+                    setTimeout(()=>setWarRoomNotifyToast(null),4000);
+                  });
                 }}>
                   <input
                     type="email" required autoFocus
