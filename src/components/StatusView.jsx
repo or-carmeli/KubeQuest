@@ -461,7 +461,7 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
           </div>
         </div>
 
-        <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}.svc-row:hover{background:rgba(0,255,170,0.04)!important}@media(min-width:640px){.perf-grid{grid-template-columns:repeat(4,1fr)!important}}@media(min-width:768px){.metric-card{padding:22px 24px!important}.metric-value{font-size:28px!important}}@media(max-width:768px){.status-bottom-grid{grid-template-columns:1fr!important}}@media(max-width:480px){.security-grid{grid-template-columns:1fr!important}}`}</style>
+        <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}.svc-row:hover{background:rgba(0,255,170,0.04)!important}@media(min-width:640px){.perf-grid{grid-template-columns:repeat(4,1fr)!important}}@media(min-width:768px){.metric-card{padding:22px 24px!important}.metric-value{font-size:28px!important}}@media(max-width:768px){.status-bottom-grid{grid-template-columns:1fr!important}}`}</style>
       </div>
     </>
   );
