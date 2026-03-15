@@ -463,4 +463,48 @@ describe("leading keyword bidi isolation", () => {
 
     expect(ltrs).toContain("LimitRange:");
   });
+
+  it("multi-word keyword: Helm Chart: is isolated", () => {
+    const input = "Helm Chart: חבילה של Kubernetes manifests";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs).toContain("Helm Chart:");
+  });
+
+  it("multi-word keyword: External Secrets Operator: is isolated", () => {
+    const input = "External Secrets Operator: מסנכרן מ-AWS";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs).toContain("External Secrets Operator:");
+  });
+});
+
+// ─── REGRESSION: U+200E stripping in renderBidiBlock ─────────────────────────
+
+describe("U+200E LTR mark stripping", () => {
+  it("strips U+200E so keyword regex matches", () => {
+    const input = "CrashLoopBackOff:\u200E קונטיינר קורס שוב ושוב";
+    const result = renderBidiBlock(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs).toContain("CrashLoopBackOff:");
+  });
+
+  it("strips U+200E for multi-word terms", () => {
+    const input = "Helm Chart:\u200E חבילה של Kubernetes manifests";
+    const result = renderBidiBlock(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs).toContain("Helm Chart:");
+  });
+
+  it("does not strip U+200E in English mode", () => {
+    const input = "Term:\u200E some text";
+    const result = renderBidiBlock(input, "en");
+    const text = flattenText(result);
+
+    expect(text).toContain("Term:");
+  });
 });

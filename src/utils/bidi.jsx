@@ -174,12 +174,14 @@ export function renderBidi(text, lang) {
   }
 
   // Handle "Keyword: explanation" pattern in mixed Hebrew/English text.
-  // Isolates the leading English keyword (e.g. "Always:", "ClusterIP:") as its own
-  // LTR span so it stays visually at the RTL line start, while the rest of the text
-  // (which mixes Hebrew and English like "Kubernetes") flows naturally in RTL.
+  // Isolates the leading English keyword (e.g. "Always:", "ClusterIP:",
+  // "Helm Chart:", "External Secrets Operator:") as its own LTR span so it stays
+  // visually at the RTL line start, while the rest of the text flows naturally in RTL.
   // Without this, renderBidiInner groups "Always: Kubernetes" as one LTR run,
   // which breaks the visual order in RTL paragraphs.
-  const kwMatch = text.match(/^([A-Za-z][\w]*:)\s+([\s\S]+)$/);
+  // Supports multi-word English terms - matches any leading Latin text up to the
+  // first colon, as long as no Hebrew appears before it.
+  const kwMatch = text.match(/^([A-Za-z][^:\u0590-\u05EA]*:)\s+([\s\S]+)$/);
   if (kwMatch && hasHebrew(kwMatch[2])) {
     const rest = kwMatch[2];
     const prefixed = renderHebrewPrefixTerms(rest, lang, "kwr");
@@ -262,6 +264,9 @@ export function splitCliParts(text, lang, keyPrefix) {
 // or returns text unchanged for non-Hebrew text without CLI commands.
 export function renderBidiBlock(text, lang) {
   if (!text) return text;
+  // Strip LTR marks (U+200E) - the span-based bidi isolation is more robust
+  // and these marks interfere with the keyword regex in renderBidi.
+  if (lang === "he") text = text.replace(/\u200E/g, "");
   // Quick check: does the text contain a CLI command outside backticks?
   const bare = text.replace(/`[^`]+`/g, "");
   const hasCli = CLI_COMMAND_RE.test(bare);
