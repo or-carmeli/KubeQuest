@@ -97,11 +97,11 @@ const LEVEL_CONFIG = {
 
 const LEVEL_ORDER = ["easy", "medium", "hard"];
 
-// Incident mode difficulty colours (intentionally separate from LEVEL_CONFIG)
+// War Room difficulty config (intentionally separate from LEVEL_CONFIG)
 const INCIDENT_DIFFICULTY_CONFIG = {
-  easy:         { label: "Easy",         labelHe: "קל",     color: "#10B981" },
-  intermediate: { label: "Intermediate", labelHe: "בינוני", color: "#F59E0B" },
-  hard:         { label: "Hard",         labelHe: "קשה",    color: "#EF4444" },
+  easy:   { label: "Easy",   labelHe: "קל",     color: "#10B981", icon: "\uD83D\uDFE2" },
+  medium: { label: "Medium", labelHe: "בינוני", color: "#F59E0B", icon: "\uD83D\uDFE1" },
+  hard:   { label: "Hard",   labelHe: "קשה",    color: "#EF4444", icon: "\uD83D\uDD34" },
 };
 
 const INCIDENT_SAVE_KEY = "incident_progress_v1";
@@ -182,6 +182,8 @@ const TRANSLATIONS = {
     guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow: "הירשמי", loginNow: "התחברי", alreadyHaveAccount: "יש לך חשבון?",
     score: "XP", accuracy: "דיוק", streak: "Combo", completed: "הושלמו",
+    rank: "דירוג", rankGuestSub: "התחבר כדי לראות דירוג", xpToNextRank: "לדירוג הבא",
+    rankTier_master: "Kubernetes Master", rankTier_platinum: "פלטינום", rankTier_gold: "זהב", rankTier_silver: "כסף", rankTier_bronze: "ארד",
     scoreSub: "XP מכל החידונים", accuracySub: "אחוז תשובות נכונות", streakSub: "תשובות נכונות ברצף", completedSub: "רמות שהושלמו",
     leaderboardRankedBy: "מדורג לפי סך הנקודות שנצברו", leaderboardScoreCol: "סה״כ נק׳",
     completionNoImprovement: "התוצאה הטובה שלך בנושא הזה כבר גבוהה יותר", completionAdded: "נוספו לסך שלך",
@@ -214,6 +216,8 @@ const TRANSLATIONS = {
     interviewMode: "🎯 מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה",
     dailyChallengeTitle: "אתגר יומי", dailyChallengeNew: "חדש היום",
     dailyChallengeDesc: "5 שאלות מכל הנושאים · מתחלף כל יום",
+    heroStage: "שלב", heroStageOf: "מתוך", heroStartTrack: "התחל את המסלול", heroContinueTrack: "המשך למשימה הבאה", heroAllDone: "כל הנושאים הושלמו!",
+    trackProgressTitle: "התקדמות במסלול", trackCompleted: "הושלם", rankUnlockHint: "התחבר כדי להצטרף לדירוג",
     roadmapTitle: "ההתקדמות במסלול",
     roadmapAllDone: "🎉 השלמת את כל השלבים!",
     roadmapStage: "את בשלב", roadmapStageOf: "מתוך",
@@ -288,27 +292,42 @@ const TRANSLATIONS = {
     tryAgainCorrect: "✅ נכון! כל הכבוד",
     tryAgainWrong: "❌ לא נכון",
     exitTryAgain: "חזרי לסקירה", exitTryAgain_m: "חזור לסקירה",
-    incidentModeBtn: "🔍 מצב אירוע", incidentModeDesc: "הדמיית אירועי Kubernetes אמיתיים",
-    incidentModeBtn_m: "🔍 מצב אירוע",
+    incidentModeBtn: "🚨 חדר מצב", incidentModeDesc: "הדמיית אירועי Kubernetes אמיתיים",
+    incidentModeBtn_m: "🚨 חדר מצב",
     incidentListTitle: "בחר אירוע",
     incidentDifficulty: "רמה", incidentSteps: "שלבים", incidentEstTime: "זמן משוער",
     incidentStep: "שלב", incidentScore: "ניקוד", incidentMistakes: "שגיאות", incidentTime: "זמן",
-    incidentConfirm: "✔ אשר פעולה", incidentNext: "שלב הבא", incidentFinish: "סיים אירוע",
-    incidentResolved: "האירוע נפתר! 🎉",
-    incidentResolved_m: "האירוע נפתר! 🎉",
-    incidentCorrect: "✅ נכון!", incidentWrong: "❌ לא נכון",
+    incidentConfirm: "אשר תשובה", incidentNext: "שלב הבא", incidentFinish: "סיים אירוע",
+    incidentResolved: "האירוע נפתר!",
+    incidentResolved_m: "האירוע נפתר!",
+    incidentResolvedSub: "הבעיה זוהתה ונפתרה בהצלחה.",
+    incidentFailed: "האירוע לא נפתר",
+    incidentFailedSub: "התקלה עדיין קיימת. נסי שוב כדי למצוא את שורש הבעיה.",
+    incidentFailedSub_m: "התקלה עדיין קיימת. נסה שוב כדי למצוא את שורש הבעיה.",
+    incidentRetry: "נסי שוב את האירוע", incidentRetry_m: "נסה שוב את האירוע",
+    incidentCorrect: "צעד נכון בחקירה", incidentWrong: "צעד לא נכון",
+    incidentWhyCorrect: "למה זו התשובה הנכונה",
+    incidentWrongSub: "זה לא הצעד הנכון לחקירת התקלה. נסי גישה אחרת.",
+    incidentWrongSub_m: "זה לא הצעד הנכון לחקירת התקלה. נסה גישה אחרת.",
+    incidentIssueDetected: "זוהתה תקלה ב-Cluster",
+    incidentNextUnlocked: "האירוע נפתר. האירוע הבא נפתח.",
+    incidentNextUnlocked_m: "האירוע נפתר. האירוע הבא נפתח.",
+    wrCluster: "Cluster", wrNamespace: "Namespace", wrService: "Service affected",
     incidentTryAnother: "נסי אירוע אחר", incidentTryAnother_m: "נסה אירוע אחר",
     incidentShareBtn: "🔗 שתפי תוצאה", incidentShareBtn_m: "🔗 שתף תוצאה",
     incidentShareCopied: "✓ הועתק! הדבק ב-LinkedIn",
+    incidentRootCause: "שורש התקלה",
+    incidentCorrectApproach: "מה היה צריך לעשות",
+    incidentHintPrefix: "רמז",
     incidentResumeBanner: "המשיכי את האירוע", incidentResumeBanner_m: "המשך את האירוע",
     incidentDiscard: "נטשי", incidentDiscard_m: "נטוש",
     incidentActiveLabel: "אירוע פעיל", incidentAvailableLabel: "אירועים זמינים",
-    incidentHeaderSub: "סימולציה של תקלות Kubernetes אמיתיות.",
+    incidentHeaderSub: "סימולציה של תקלות Kubernetes אמיתיות בזמן אמת.",
     incidentResumeBtn: "המשיכי חקירה", incidentResumeBtn_m: "המשך חקירה",
-    incidentUnlockIntermediate: "השלימו 2 אירועים קלים כדי לפתוח",
-    incidentUnlockHard: "השלימו 2 אירועים בינוניים כדי לפתוח",
     incidentLocked: "נעול",
     incidentCompleted: "הושלם",
+    incidentProgress: "{done} מתוך {total} תרחישים הושלמו",
+    warRoomNotification: "🚨 תקלה חדשה זמינה בחדר מצב",
     reportBtn: "⚑ דווחי על שגיאה", reportBtn_m: "⚑ דווח על שגיאה",
     reportTitle: "דיווח על שגיאה בשאלה",
     reportType1: "התשובה הנכונה שגויה", reportType2: "השאלה לא ברורה",
@@ -341,7 +360,7 @@ const TRANSLATIONS = {
     statsInProgress: "בתהליך",
     statsCompleted: "הושלם",
     statsAnswered: "תשובות",
-    statsIncidents: "אירועים",
+    statsIncidents: "חדר מצב",
     statsAchievements: "הישגים",
     statsEmptyTitle: "אין נתונים עדיין",
     statsEmptyBody: "התחילו לענות על שאלות כדי לראות סטטיסטיקות",
@@ -395,6 +414,8 @@ const TRANSLATIONS = {
     guestBanner: "💡 Sign up to save progress and appear on the leaderboard",
     signupNow: "Sign Up", loginNow: "Log In", alreadyHaveAccount: "Have an account?",
     score: "XP", accuracy: "Accuracy", streak: "Combo", completed: "Completed",
+    rank: "Rank", rankGuestSub: "Log in to see rank", xpToNextRank: "to next rank",
+    rankTier_master: "Kubernetes Master", rankTier_platinum: "Platinum", rankTier_gold: "Gold", rankTier_silver: "Silver", rankTier_bronze: "Bronze",
     scoreSub: "XP from all quizzes", accuracySub: "Overall correct rate", streakSub: "Correct answers in a row", completedSub: "Topic-levels passed",
     leaderboardRankedBy: "Ranked by total accumulated points", leaderboardScoreCol: "Total Pts",
     completionNoImprovement: "Your best result for this topic was already higher", completionAdded: "added to your total",
@@ -423,6 +444,8 @@ const TRANSLATIONS = {
     resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
     resetTopic: "Reset Topic", resetTopicConfirm: "Reset progress for this topic?",
     mixedQuizBtn: "🎲 Mixed Quiz", mixedQuizDesc: "10 random questions from all topics",
+    heroStage: "Stage", heroStageOf: "of", heroStartTrack: "Start the Track", heroContinueTrack: "Continue to Next Task", heroAllDone: "All topics completed!",
+    trackProgressTitle: "Track Progress", trackCompleted: "completed", rankUnlockHint: "Log in to join ranking",
     roadmapTitle: "Roadmap Progress",
     roadmapAllDone: "🎉 You completed all stages!",
     roadmapStage: "You're on stage", roadmapStageOf: "of",
@@ -462,25 +485,37 @@ const TRANSLATIONS = {
     tryAgainCorrect: "✅ Correct! Well done",
     tryAgainWrong: "❌ Incorrect",
     exitTryAgain: "Back to Review",
-    incidentModeBtn: "🔍 Incident Mode", incidentModeDesc: "Simulate real K8s production incidents",
+    incidentModeBtn: "🚨 War Room", incidentModeDesc: "Simulate real K8s production incidents",
     incidentListTitle: "Choose an Incident",
     incidentDifficulty: "Difficulty", incidentSteps: "steps", incidentEstTime: "Est. time",
     incidentStep: "Step", incidentScore: "Score", incidentMistakes: "Mistakes", incidentTime: "Time",
-    incidentConfirm: "✔ Confirm Action", incidentNext: "Next Step", incidentFinish: "Resolve Incident",
-    incidentResolved: "🎉 Incident Resolved!",
-    incidentCorrect: "✅ Correct!", incidentWrong: "❌ Wrong",
+    incidentConfirm: "Confirm Answer", incidentNext: "Next Step", incidentFinish: "Resolve Incident",
+    incidentResolved: "Incident Resolved!",
+    incidentResolvedSub: "The issue was identified and resolved successfully.",
+    incidentFailed: "Incident Not Resolved",
+    incidentFailedSub: "The issue still persists. Try again to find the root cause.",
+    incidentRetry: "Retry This Incident",
+    incidentCorrect: "Correct investigation step", incidentWrong: "Incorrect step",
+    incidentWhyCorrect: "Why this is the correct answer",
+    incidentWrongSub: "This is not the right step for investigating this issue. Try a different approach.",
+    incidentIssueDetected: "Cluster issue detected",
+    incidentNextUnlocked: "Incident resolved. Next incident unlocked.",
+    wrCluster: "Cluster", wrNamespace: "Namespace", wrService: "Service affected",
     incidentTryAnother: "Try Another Incident",
     incidentShareBtn: "🔗 Share Result",
     incidentShareCopied: "✓ Copied! Paste in LinkedIn",
+    incidentRootCause: "Root Cause",
+    incidentCorrectApproach: "What Should Have Been Done",
+    incidentHintPrefix: "Hint",
     incidentResumeBanner: "Continue Incident",
     incidentDiscard: "Discard",
     incidentActiveLabel: "Active Incident", incidentAvailableLabel: "Available Incidents",
-    incidentHeaderSub: "Simulate real Kubernetes production incidents.",
+    incidentHeaderSub: "Simulate real Kubernetes production incidents in real time.",
     incidentResumeBtn: "Resume Investigation",
-    incidentUnlockIntermediate: "Complete 2 Easy incidents to unlock",
-    incidentUnlockHard: "Complete 2 Intermediate incidents to unlock",
     incidentLocked: "Locked",
     incidentCompleted: "Completed",
+    incidentProgress: "{done} of {total} scenarios completed",
+    warRoomNotification: "🚨 New incident available in the War Room",
     reportBtn: "⚑ Report an error",
     reportTitle: "Report a question error",
     reportType1: "Wrong answer marked correct", reportType2: "Question is unclear",
@@ -511,7 +546,7 @@ const TRANSLATIONS = {
     statsInProgress: "In Progress",
     statsCompleted: "Completed",
     statsAnswered: "answered",
-    statsIncidents: "Incidents",
+    statsIncidents: "War Room",
     statsAchievements: "Achievements",
     statsEmptyTitle: "No data yet",
     statsEmptyBody: "Start answering questions to see your statistics",
@@ -1044,6 +1079,7 @@ export default function K8sQuestApp() {
   const lastSessionScoreRef = useRef(0);
   const bestImprovedRef = useRef(true); // Whether this session improved the topic's best result
   const submittingRef = useRef(false);
+  const initialAccuracyRef = useRef(null); // Accuracy at session start for trend indicator
 
   // Refs for browser back-button handler and keyboard shortcuts (avoids stale closures)
   const screenRef = useRef(screen);
@@ -1148,7 +1184,7 @@ export default function K8sQuestApp() {
   const sessionStartRef = useRef(Date.now());
   const quizzesPlayedRef = useRef(0);
 
-  // ── Incident Mode state ───────────────────────────────────────────────────
+  // ── War Room (Incident) state ─────────────────────────────────────────────
   const [selectedIncident,   setSelectedIncident]   = useState(null);
   const [incidentStepIndex,  setIncidentStepIndex]  = useState(0);
   const [incidentScore,      setIncidentScore]      = useState(0);
@@ -1159,11 +1195,14 @@ export default function K8sQuestApp() {
   const [incidentHistory,    setIncidentHistory]    = useState([]);
   const [incidentResume,     setIncidentResume]     = useState(null); // saved state for resume banner
   const [incidentShareCopied,setIncidentShareCopied]= useState(false);
+  const [incidentPassed,     setIncidentPassed]     = useState(false); // authoritative pass/fail - set once in nextIncidentStep
   const [completedIncidentIds, setCompletedIncidentIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem("incident_completed_v1")) || []; } catch { return []; }
   });
   const incidentTimerRef = useRef(null);
   const incidentCheckingRef = useRef(false);
+  const [warRoomToast, setWarRoomToast] = useState(false);
+  const warRoomToastShownRef = useRef(false); // prevents showing more than once per session
   const [reportDialog,  setReportDialog]  = useState(null); // {qText, qIndex} | null
   const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
   const [reportType,    setReportType]    = useState("");
@@ -1239,14 +1278,23 @@ export default function K8sQuestApp() {
   const dispShowExplanation = tryAgainActive ? (tryAgainSelected !== null) : (isInHistoryMode ? true : showExplanation);
   const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
 
-  // ── Incident difficulty progression ─────────────────────────────────────────
-  const incidentProgress = {
-    easyCompleted: INCIDENTS.filter(i => i.difficulty === "easy" && completedIncidentIds.includes(i.id)).length,
-    intermediateCompleted: INCIDENTS.filter(i => i.difficulty === "intermediate" && completedIncidentIds.includes(i.id)).length,
-    hardCompleted: INCIDENTS.filter(i => i.difficulty === "hard" && completedIncidentIds.includes(i.id)).length,
+  const getRankTier = (percentile) => {
+    if (percentile >= 99) return { key: "master", color: "#FF4500", icon: "\u{1F451}" };
+    if (percentile >= 95) return { key: "platinum", color: "#E5E4E2", icon: "\u{1F48E}" };
+    if (percentile >= 85) return { key: "gold", color: "#F59E0B", icon: "\u{1F947}" };
+    if (percentile >= 65) return { key: "silver", color: "#94A3B8", icon: "\u{1F948}" };
+    return { key: "bronze", color: "#CD7F32", icon: "\u{1F949}" };
   };
-  const intermediateUnlocked = incidentProgress.easyCompleted >= 2;
-  const hardUnlocked = incidentProgress.intermediateCompleted >= 2;
+
+  // ── War Room: sequential unlock - find last consecutively completed index ──
+  const lastCompletedSeqIdx = (() => {
+    let idx = -1;
+    for (let i = 0; i < INCIDENTS.length; i++) {
+      if (completedIncidentIds.includes(INCIDENTS[i].id)) idx = i;
+      else break;
+    }
+    return idx;
+  })();
 
   const FONT_SCALES = { normal: 1, large: 1, xl: 1 }; // no zoom - original A mode is now the default
   const fs = FONT_SCALES[a11y.fontSize] || 1;
@@ -1481,7 +1529,12 @@ export default function K8sQuestApp() {
       console.info("[KubeQuest] Restoring guest progress from localStorage");
       const { stats: s, completedTopics: c, unlockedAchievements: u } = guestData;
       if (c) setCompletedTopics(c);
-      if (s) setStats(s);
+      if (s) {
+        setStats(s);
+        if (initialAccuracyRef.current === null && s.total_answered > 0) {
+          initialAccuracyRef.current = Math.round(s.total_correct / s.total_answered * 100);
+        }
+      }
       if (u) setUnlockedAchievements(u);
     }
     guestLoadedRef.current = true;
@@ -1769,6 +1822,9 @@ export default function K8sQuestApp() {
       };
 
       setStats(mergedStats);
+      if (initialAccuracyRef.current === null && mergedStats.total_answered > 0) {
+        initialAccuracyRef.current = Math.round(mergedStats.total_correct / mergedStats.total_answered * 100);
+      }
       setCompletedTopics(mergedCompleted);
       setUnlockedAchievements(mergedAch);
 
@@ -1816,6 +1872,12 @@ export default function K8sQuestApp() {
     if (savedQuiz && savedQuiz.userId === userId) setResumeData(savedQuiz);
   };
 
+  // Load rank data for the Rank stat card on initial data load
+  useEffect(() => {
+    if (user && !isGuest && dataLoaded && supabase) loadUserRank();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isGuest, dataLoaded]);
+
   // Persist stats to Supabase via server RPC. The RPC does NOT accept
   // total_score - it is managed exclusively by the answer-check RPCs
   // (server-authoritative scoring). best_score is recomputed by the caller
@@ -1854,13 +1916,19 @@ export default function K8sQuestApp() {
     if (!isGuest && user?.id && user.id !== "guest") {
       try {
         const rankData = await fetchUserRank(supabase, user.id);
-        if (rankData) {
-          setUserRank(rankData.rank > 10 ? { rank: rankData.rank, score: rankData.score } : null);
-        }
+        if (rankData) setUserRank(rankData);
       } catch { setUserRank(null); }
     } else {
       setUserRank(null);
     }
+  };
+
+  const loadUserRank = async () => {
+    if (!supabase || isGuest || !user?.id || user.id === "guest") return;
+    try {
+      const rankData = await fetchUserRank(supabase, user.id);
+      if (rankData) setUserRank(rankData);
+    } catch {}
   };
 
   const getFormValues = () => {
@@ -1960,8 +2028,12 @@ export default function K8sQuestApp() {
     setCompletedTopics({});
     setUnlockedAchievements([]);
     setTopicStats({});
+    setCompletedIncidentIds([]);
+    clearIncidentProgress();
+    setIncidentResume(null);
     try { localStorage.removeItem("topicStats_v1"); } catch {}
     try { localStorage.removeItem("scoredFreeKeys_v1"); } catch {}
+    try { localStorage.removeItem("incident_completed_v1"); } catch {}
     if (isGuest) {
       try { localStorage.removeItem("k8s_quest_guest"); } catch {}
     } else if (user) {
@@ -2367,6 +2439,7 @@ export default function K8sQuestApp() {
             const newCompleted = { ...completedTopics, [key]: { ...prevResult, correct: prevResult.total, retryComplete: true, wrongIndices: [], wrongQuestions: [] } };
             setCompletedTopics(newCompleted);
             try { if (!isFreeMode(selectedTopic.id)) await saveUserData(stats, newCompleted, unlockedAchievements); } catch (e) { console.error("[FINISH_DEBUG] saveUserData error (retry):", e.message); }
+            loadUserRank();
           }
           setAllowNextLevel(true);
         } else {
@@ -2403,6 +2476,7 @@ export default function K8sQuestApp() {
       setCompletedTopics(newCompleted); setStats(newStats); setUnlockedAchievements(newAch);
       if (!isFreeMode(selectedTopic.id)) {
         try { await saveUserData(newStats, newCompleted, newAch); } catch (e) { console.error("[FINISH_DEBUG] saveUserData error:", e.message); }
+        loadUserRank();
         const allPerfect = LEVEL_ORDER.every(lvl => {
           const r = newCompleted[`${selectedTopic.id}_${lvl}`];
           return r && r.correct === r.total;
@@ -2684,6 +2758,7 @@ export default function K8sQuestApp() {
     setIncidentElapsed(0);
     setIncidentAnswer(null);
     setIncidentSubmitted(false);
+    setIncidentPassed(false);
     incidentCheckingRef.current = false;
     setIncidentHistory([]);
     setScreen("incident");
@@ -2748,7 +2823,10 @@ export default function K8sQuestApp() {
     const isLast = incidentStepIndex >= totalSteps - 1;
     if (isLast) {
       clearIncidentProgress();
-      setCompletedIncidentIds(prev => prev.includes(selectedIncident.id) ? prev : [...prev, selectedIncident.id]);
+      const maxS = totalSteps * 10;
+      const passed = maxS > 0 && (incidentScore / maxS) >= 0.7;
+      setIncidentPassed(passed);
+      if (passed) setCompletedIncidentIds(prev => prev.includes(selectedIncident.id) ? prev : [...prev, selectedIncident.id]);
       setScreen("incidentComplete");
     } else {
       const nextIdx = incidentStepIndex + 1;
@@ -2771,6 +2849,7 @@ export default function K8sQuestApp() {
     setIncidentElapsed(elapsed);
     setIncidentAnswer(null);
     setIncidentSubmitted(false);
+    setIncidentPassed(false);
     setIncidentHistory(history || []);
     setIncidentResume(null);
     setScreen("incident");
@@ -2879,6 +2958,24 @@ export default function K8sQuestApp() {
     incidentTimerRef.current = setInterval(() => setIncidentElapsed(p => p + 1), 1000);
     return () => clearInterval(incidentTimerRef.current);
   }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── War Room: periodic notification when user is on safe screens ──────────
+  useEffect(() => {
+    if (import.meta.env.PROD) return; // War Room disabled in production
+    if (warRoomToastShownRef.current) return;
+    // Only trigger on home or incidentList screens (safe, not during quiz/incident)
+    if (screen !== "home" && screen !== "incidentList") return;
+    // Random delay between 30-90 seconds after arriving at a safe screen
+    const delay = 30000 + Math.random() * 60000;
+    const timer = setTimeout(() => {
+      if (warRoomToastShownRef.current) return;
+      warRoomToastShownRef.current = true;
+      setWarRoomToast(true);
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => setWarRoomToast(false), 5000);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [screen]);
 
   // ── YAML code block renderer (VS Code style) ──────────────────────────────
   const highlightYaml = (code) => {
@@ -3118,11 +3215,27 @@ export default function K8sQuestApp() {
     let termGroup = [];
     const flushTerm = () => {
       if (termGroup.length === 0) return;
+      // Detect block type for header
+      const joined = termGroup.join("\n");
+      const isCmd = /^(\$\s|kubectl\s)/.test(termGroup[0]?.trim());
+      const isYaml = /^(apiVersion|kind|metadata|spec|status)\s*:/.test(termGroup[0]?.trim());
+      const isError = /^(FATAL|Error|Failed|rpc error|unauthorized|CrashLoopBackOff|OOMKilled|ImagePullBackOff|ErrImagePull)/i.test(termGroup[0]?.trim());
+      let headerLabel = "\u2318 Output";
+      let headerIcon = "\u2318";
+      if (isCmd)   { headerLabel = "Terminal"; headerIcon = ">_"; }
+      if (isYaml)  { headerLabel = "YAML";    headerIcon = "{}"; }
+      if (isError) { headerLabel = "Error";   headerIcon = "!"; }
       elements.push(
-        <div key={`term-${elements.length}`} style={{background:"rgba(0,0,0,0.3)",borderRadius:8,padding:"10px 12px",marginTop:6,marginBottom:6,overflowX:"auto",direction:"ltr",unicodeBidi:"isolate"}}>
-          {termGroup.map((tl, ti) => (
-            <div key={ti} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"var(--code-text)",lineHeight:1.8,whiteSpace:"pre-wrap",wordBreak:"keep-all",overflowWrap:"break-word",direction:"ltr",unicodeBidi:"isolate"}}>{tl}</div>
-          ))}
+        <div key={`term-${elements.length}`} style={{borderRadius:8,marginTop:6,marginBottom:6,overflow:"hidden",border:"1px solid var(--glass-6)",direction:"ltr",unicodeBidi:"isolate"}}>
+          <div style={{display:"flex",alignItems:"center",gap:6,padding:"5px 12px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid var(--glass-4)"}}>
+            <span style={{fontFamily:"'SF Mono','Fira Code',monospace",fontSize:10,fontWeight:700,color:isError?"#f87171":"var(--text-dim)",letterSpacing:0.5}}>{headerIcon}</span>
+            <span style={{fontSize:10,fontWeight:600,color:isError?"#f87171":"var(--text-dim)",letterSpacing:0.5,textTransform:"uppercase"}}>{headerLabel}</span>
+          </div>
+          <div style={{background:"rgba(0,0,0,0.35)",padding:"10px 12px",overflowX:"auto"}}>
+            {termGroup.map((tl, ti) => (
+              <div key={ti} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:isError?"#fca5a5":"var(--code-text)",lineHeight:1.8,whiteSpace:"pre-wrap",wordBreak:"keep-all",overflowWrap:"break-word",direction:"ltr",unicodeBidi:"isolate"}}>{tl}</div>
+            ))}
+          </div>
         </div>
       );
       termGroup = [];
@@ -3388,6 +3501,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   return (
     <div data-kq-rendered="app" dir={isStatusDomain?"ltr":undefined} style={{minHeight:"100vh",background:"var(--gradient-body)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:isStatusDomain?"ltr":dir,position:"relative",overflowX:"hidden"}}>
+      {/* War Room toast notification */}
+      {!import.meta.env.PROD && warRoomToast && (
+        <button onClick={() => { setWarRoomToast(false); setScreen("incidentList"); }}
+          aria-label={t("warRoomNotification")}
+          style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:10000,background:"linear-gradient(135deg,rgba(239,68,68,0.95),rgba(185,28,28,0.95))",color:"#fff",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,padding:"10px 20px",fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:8,boxShadow:"0 8px 32px rgba(239,68,68,0.35),0 2px 8px rgba(0,0,0,0.3)",backdropFilter:"blur(12px)",animation:"warRoomToastIn 0.35s ease",direction:dir,maxWidth:"90vw",whiteSpace:"nowrap"}}>
+          {t("warRoomNotification")}
+        </button>
+      )}
       {/* Skip-to-content - invisible until focused by keyboard */}
       {!isStatusDomain && <a href="#main-content"
         style={{position:"fixed",top:-100,left:8,zIndex:9999,padding:"8px 16px",background:"#00D4FF",color:"var(--text-bright)",borderRadius:8,fontWeight:700,fontSize:14,textDecoration:"none",transition:"top 0.15s",direction:"ltr"}}
@@ -3395,7 +3516,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
       </a>}
-      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar-right{gap:8px!important}
@@ -3430,8 +3551,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .action-emoji{font-size:22px!important;flex-shrink:0}
 .action-text{min-width:0}
 .topic-card-section{padding:13px 14px!important}
-.stats-grid{gap:7px!important}
-.stats-cell{padding:11px 6px!important}
+.stats-grid{gap:10px!important}
+.stats-cell{padding:10px 8px!important}
+.hero-card{padding:20px 16px 16px!important}
 .opt-btn{padding:9px 10px!important;font-size:13px!important;gap:7px!important;border-radius:9px!important;min-height:44px!important}
 }
 @media(max-width:390px){
@@ -3439,7 +3561,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .home-screen{padding:10px 10px!important}
 .page-pad{padding:10px 12px!important}
 .topic-card-section{padding:11px 12px!important}
-.stats-cell{padding:10px 4px!important;font-size:11px}
+.stats-cell{padding:9px 6px!important;font-size:11px}
+.hero-card{padding:18px 14px 14px!important;margin-bottom:20px!important}
 .stats-icon{font-size:15px!important}
 .stats-value{font-size:17px!important}
 .action-card{padding:12px 12px!important}
@@ -3453,12 +3576,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .home-screen{padding:8px 8px!important}
 .page-pad{padding:8px 10px!important}
 .topic-card-section{padding:10px 10px!important}
-.stats-grid{gap:5px!important}
-.stats-cell{padding:9px 3px!important}
+.stats-grid{gap:8px!important}
+.stats-cell{padding:8px 4px!important}
+.hero-card{padding:16px 12px 12px!important;margin-bottom:16px!important}
 .action-card{padding:11px 10px!important}
-}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .stats-grid{margin-bottom:18px!important}.home-screen .action-card{margin-bottom:8px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.04)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284c7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.12)}[data-theme="light"] .topic-next{border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.08)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E5E7EB;box-shadow:0 1px 2px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#E5E7EB!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#E5E7EB!important}`}</style>
+}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .hero-card{margin-bottom:28px!important}.home-screen .stats-grid{margin-bottom:24px!important;gap:14px!important}.home-screen .action-card{margin-bottom:10px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.04)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284c7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.12)}[data-theme="light"] .topic-next{border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.08)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E5E7EB;box-shadow:0 1px 2px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#E5E7EB!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#E5E7EB!important}[data-theme="light"] .opt-cmd-scroll{background:rgba(0,0,0,0.06)!important}[data-theme="light"] .opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15)}[data-theme="light"] .opt-cmd-scroll{scrollbar-color:rgba(0,0,0,0.15) transparent}`}</style>
       {!isStatusDomain && <>
       <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)",backgroundSize:"48px 48px"}}/>
+      {theme==="dark"&&<><div style={{position:"fixed",top:0,left:0,right:0,height:"55vh",pointerEvents:"none",background:"radial-gradient(ellipse 90% 55% at 50% 0%,rgba(0,212,255,0.05) 0%,transparent 70%)"}}/>
+      <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
       {showConfetti&&!a11y.reduceMotion&&<Confetti/>}
       {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span aria-hidden="true" style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"var(--text-primary)",fontSize:14,fontWeight:700}}>{getLocalizedField(newAchievement, "name", lang)}</div></div></div>}
@@ -3653,7 +3779,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"0 10px 4px",marginBottom:4}}><span style={{width:28,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 10px",background:i===0?"rgba(245,158,11,0.1)":"var(--glass-3)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"var(--glass-6)"}`}}><span style={{fontSize:18,width:28,flexShrink:0,textAlign:"center"}}>{["🥇","🥈","🥉"][i]||`${i+1}.`}</span><div style={{flex:1,minWidth:0}}><div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{entry.username ? (entry.username.includes("@") ? entry.username.split("@")[0] : entry.username) : t("anonymous")}</div><div style={{color:"var(--text-dim)",fontSize:11}}>🔥 {entry.max_streak}</div></div><div style={{color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0}}>{entry.total_score}</div></div>)}</div>}{userRank&&<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600,flexShrink:0}}><span>{lang==="en"?"Your Rank":"הדירוג שלך"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div>}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"0 10px 4px",marginBottom:4}}><span style={{width:28,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const eAcc=entry.total_answered>0?Math.round(entry.total_correct/entry.total_answered*100):0;const eTotalUsers=entry.total_users||1;const ePercentile=eTotalUsers>0?((eTotalUsers-(i+1))/eTotalUsers)*100:0;const eTier=getRankTier(ePercentile);return<div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 10px",background:i===0?"rgba(245,158,11,0.1)":"var(--glass-3)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"var(--glass-6)"}`}}><span style={{fontSize:18,width:28,flexShrink:0,textAlign:"center"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}.`}</span><div style={{flex:1,minWidth:0}}><div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous")}</div><div style={{color:"var(--text-dim)",fontSize:11}}>{"\uD83C\uDFAF"} {eAcc}% {"\u00B7"} {"\uD83D\uDD25"} {entry.max_streak}</div></div><div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",flexShrink:0}}><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div><div style={{fontSize:9,color:eTier.color,fontWeight:600}}>{eTier.icon} {t(`rankTier_${eTier.key}`)}</div></div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
@@ -3704,8 +3830,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{padding:"10px 16px 4px"}}>
             <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"PRACTICE":"תרגול"}</span>
           </div>
-          <button onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
-            🚨 {lang==="en"?"Incident Mode":"מצב אירוע"}
+          <button onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:import.meta.env.PROD?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            🚨 {lang==="en"?"War Room":"חדר מצב"}
+            {import.meta.env.PROD&&<span style={{background:"rgba(120,140,255,0.15)",color:"#9fb3ff",fontSize:11,fontWeight:600,padding:"2px 8px",borderRadius:999,marginInlineStart:8,flexShrink:0,lineHeight:1.4}}>Coming Soon</span>}
           </button>
           <button onClick={()=>{tryStartQuiz(startMixedQuiz,"mixed");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("mixedQuizBtn")}
@@ -3891,98 +4018,162 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
               );
             })()}
-            {/* Separator */}
-            <div style={{width:"100%",borderBottom:"1px solid var(--glass-6)",margin:"12px 0 10px"}}/>
-            {/* Greeting block - compact */}
-            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
-              {/* Row 1: שלום / Hello + username + optional guest label - all inline */}
-              <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"nowrap",justifyContent:"center",maxWidth:"100%",overflow:"hidden"}}>
-                <span style={{color:"var(--text-muted)",fontSize:13,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
-                <span style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
-              </div>
-              {/* Row 2: mode hint */}
-              <p style={{color:"var(--text-muted)",fontSize:11,margin:0,lineHeight:1.3,textAlign:"center",direction:dir}}>
-                {isInterviewMode?t("interviewModeHint"):(lang==="en"
-                  ?`Timer ${timerEnabled?"on":"off"}`
-                  :`טיימר ${timerEnabled?"פעיל":"כבוי"}`)}
-              </p>
-              {/* Row 3: streak */}
-              {dailyStreak.streak > 0 && (
-                <div style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:14,padding:"4px 12px",fontSize:12,color:"#F59E0B",fontWeight:700,marginTop:2}}>
-                  🔥 {dailyStreak.streak} {t("dailyStreak")}
-                </div>
-              )}
+            {/* Compact greeting row */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:10,flexWrap:"nowrap",maxWidth:"100%",overflow:"hidden"}}>
+              <span style={{color:"var(--text-muted)",fontSize:13,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
+              <span style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
+              {dailyStreak.streak > 0 && <span style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"2px 8px",fontSize:11,color:"#F59E0B",fontWeight:700,flexShrink:0}}>🔥 {dailyStreak.streak}</span>}
             </div>
           </div>
-          {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:12,padding:"14px 16px",marginBottom:8,display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track("signup_clicked",{source:"quiz_game"})}catch{}}} style={{width:"100%",padding:"8px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:8,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button><span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track("login_clicked",{source:"quiz_game"})}catch{}}} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span></div>}
-          <div style={{display:"flex",gap:6,marginBottom:16,background:"var(--glass-3)",borderRadius:10,padding:3,direction:"ltr"}}>
+
+          {/* ── 1. HERO SECTION - Main action card ── */}
+          {(()=>{
+            const completedCount = TOPICS.reduce((sum, tp) => sum + LEVEL_ORDER.filter(lvl => completedTopics[`${tp.id}_${lvl}`]).length, 0);
+            const totalLevels = TOPICS.length * LEVEL_ORDER.length;
+            const overallPct = totalLevels > 0 ? Math.round((completedCount / totalLevels) * 100) : 0;
+            const nextTopic = TOPICS.find(tp => computeTopicProgress(tp.id) < 100);
+            const currentStageIdx = nextTopic ? TOPICS.indexOf(nextTopic) + 1 : TOPICS.length;
+            const allDone = !nextTopic;
+            const nextLevel = nextTopic ? LEVEL_ORDER.find(lvl => !completedTopics[`${nextTopic.id}_${lvl}`]) || "easy" : "easy";
+            return (
+            <div className="hero-card" style={{background:"linear-gradient(135deg,rgba(0,212,255,0.10),rgba(168,85,247,0.07),rgba(255,107,53,0.04))",border:"1px solid rgba(0,212,255,0.18)",borderRadius:18,padding:"24px 20px 20px",marginBottom:28,boxShadow:"0 0 30px rgba(0,212,255,0.08),0 2px 12px rgba(0,0,0,0.15)",position:"relative",overflow:"hidden"}}>
+              {/* Subtle background glow */}
+              <div style={{position:"absolute",top:"-50%",right:"-20%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(0,212,255,0.06),transparent 70%)",pointerEvents:"none"}}/>
+              <div style={{position:"relative"}}>
+                <div style={{fontSize:13,color:"var(--text-muted)",fontWeight:700,letterSpacing:0.5,marginBottom:8,direction:dir}}>
+                  {allDone ? t("heroAllDone") : `${t("heroStage")} ${currentStageIdx} ${t("heroStageOf")} ${TOPICS.length}`}
+                </div>
+                {nextTopic && <div style={{fontSize:17,fontWeight:800,color:"var(--text-primary)",marginBottom:6,direction:dir}}>{nextTopic.icon} {nextTopic.name}</div>}
+                {/* Progress bar */}
+                <div style={{marginTop:12,marginBottom:18}}>
+                  <div style={{height:8,borderRadius:8,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
+                    <div style={{height:"100%",borderRadius:8,width:`${overallPct}%`,background:"linear-gradient(90deg,#00D4FF,#A855F7)",transition:"width 0.5s ease",boxShadow:"0 0 8px rgba(0,212,255,0.3)"}}/>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
+                    <span style={{fontSize:11,color:"var(--text-dim)"}}>{completedCount}/{totalLevels} {t("trackCompleted")}</span>
+                    <span style={{fontSize:11,color:"#00D4FF",fontWeight:700}}>{overallPct}%</span>
+                  </div>
+                </div>
+                {/* CTA button */}
+                {!allDone ? (
+                  <button onClick={()=>tryStartQuiz(()=>startTopic(nextTopic,nextLevel),"topic")} style={{width:"100%",height:52,padding:"0 20px",background:"linear-gradient(135deg,#00D4FF,#A855F7)",border:"none",borderRadius:14,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",letterSpacing:0.3,boxShadow:"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)",transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 28px rgba(0,212,255,0.4),0 0 50px rgba(0,212,255,0.15)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)";}}>
+                    {completedCount > 0 ? t("heroContinueTrack") : t("heroStartTrack")}
+                  </button>
+                ) : (
+                  <div style={{textAlign:"center",padding:"8px 0",color:"#10B981",fontWeight:700,fontSize:14}}>🎉 {t("heroAllDone")}</div>
+                )}
+              </div>
+            </div>
+            );
+          })()}
+
+          {/* ── 2. STATS GRID - Lighter 2x2 cards ── */}
+          <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:28}}>
+            {(()=>{
+              const rankPercentile=userRank?(userRank.percentile||0):0;
+              const rankTopPct=Math.max(1,Math.round(100-rankPercentile));
+              const rankTier=userRank?getRankTier(rankPercentile):null;
+              const xpToNext=userRank?userRank.xp_to_next:0;
+              const rankProgress=(!isGuest&&userRank&&xpToNext>0)?Math.round((userRank.score/(userRank.score+xpToNext))*100):(!isGuest&&userRank?100:0);
+              const initAcc=initialAccuracyRef.current;
+              const accDiff=(initAcc!==null&&initAcc!==accuracy)?(accuracy-initAcc):0;
+              const accTrendColor=accDiff>0?"#10B981":accDiff<0?"#EF4444":"rgba(255,255,255,0.35)";
+              const accTrendArrow=accDiff>0?"\u2191":accDiff<0?"\u2193":"";
+              const accTrendText=accDiff!==0?`${accTrendArrow} ${Math.abs(accDiff)}%`:null;
+              return[
+              {label:t("score"),value:stats.total_score,icon:"\u2B50",color:"#F59E0B",glow:"rgba(250,204,21,0.25)"},
+              {label:t("accuracy"),value:`${accuracy}%`,icon:"\uD83C\uDFAF",color:"#10B981",glow:"rgba(34,197,94,0.25)",accTrend:accTrendText,accTrendColor},
+              {label:t("rank"),value:isGuest?"\uD83D\uDD12":(userRank?`#${userRank.rank}`:"-"),icon:"\uD83C\uDFC6",color:"#A855F7",glow:"rgba(168,85,247,0.25)",sub:isGuest?t("rankUnlockHint"):(userRank?`Top ${rankTopPct}%`:""),isRank:true,locked:isGuest,rankBar:{progress:rankProgress,xpToNext,locked:isGuest},rankTier},
+              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"\uD83D\uDD25",color:"#FF6B35",glow:"rgba(249,115,22,0.25)"},
+            ];})().map((s,i)=>(
+              <div key={i} className="stats-cell" onClick={s.isRank?()=>{if(isGuest){try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);}else{loadLeaderboard();setShowLeaderboard(true);}}:undefined} style={{background:`linear-gradient(135deg,${s.color}08,transparent)`,border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"12px 10px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,cursor:s.isRank?"pointer":"default",opacity:s.locked?0.6:1,transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 4px 20px ${s.glow}`;}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
+                {s.isRank?(s.locked?(<>
+                  <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:5,marginTop:6}}>
+                    <span style={{fontSize:15}}>{"\uD83D\uDD12"}</span>
+                    <span style={{fontSize:10,color:"rgba(255,255,255,0.4)",lineHeight:1.3,textAlign:"center"}}>{s.sub}</span>
+                  </div>
+                </>):(<>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>
+                    <span style={{fontSize:14,lineHeight:1}}>{"\uD83C\uDFC6"}</span>
+                    <span style={{fontSize:24,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:`0 0 10px ${s.glow}`}}>{s.value}</span>
+                  </div>
+                  {s.sub&&<div style={{fontSize:10,color:"rgba(255,255,255,0.45)",lineHeight:1,marginTop:2}}>{s.sub}</div>}
+                  {s.rankTier&&<div style={{display:"inline-flex",alignItems:"center",gap:3,marginTop:3,padding:"2px 7px",borderRadius:6,background:`${s.rankTier.color}18`}}>
+                    <span style={{fontSize:10,lineHeight:1}}>{s.rankTier.icon}</span>
+                    <span style={{fontSize:9,fontWeight:700,color:s.rankTier.color,letterSpacing:0.3}}>{t(`rankTier_${s.rankTier.key}`)}</span>
+                  </div>}
+                  <div style={{width:"85%",marginTop:4}}>
+                    <div style={{height:6,borderRadius:6,background:"rgba(255,255,255,0.08)",overflow:"hidden"}}>
+                      <div style={{height:"100%",borderRadius:6,width:`${s.rankBar.progress}%`,background:"linear-gradient(90deg,#A855F7,#7C3AED)",transition:"width 200ms ease",boxShadow:"0 0 6px rgba(168,85,247,0.35)"}}/>
+                    </div>
+                    {s.rankBar.xpToNext>0&&<div style={{fontSize:8,color:"rgba(255,255,255,0.35)",textAlign:"center",marginTop:2,lineHeight:1}}>{s.rankBar.xpToNext} XP {t("xpToNextRank")}</div>}
+                  </div>
+                </>)):(<>
+                  <div style={{fontSize:15,lineHeight:1}}>{s.icon}</div>
+                  <div style={{fontSize:26,fontWeight:800,color:s.locked?"var(--text-dim)":s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:s.locked?"none":`0 0 8px ${s.glow}`}}>{s.displayValue||s.value}</div>
+                  <div style={{fontSize:10,fontWeight:600,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
+                  {s.accTrend&&<div style={{fontSize:9,color:s.accTrendColor,lineHeight:1,fontWeight:600,marginTop:1}}>{s.accTrend}</div>}
+                  {s.sub&&<div style={{fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1,textAlign:"center",marginTop:1}}>{s.sub}</div>}
+                </>)}
+              </div>
+            ))}
+          </div>
+
+          {/* ── Tab selector ── */}
+          <div style={{display:"flex",gap:6,marginBottom:28,background:"var(--glass-3)",borderRadius:10,padding:3,direction:"ltr"}}>
             {[{key:"categories",label:t("tabTopics")},{key:"roadmap",label:t("tabRoadmap")}].map(tab=>(
               <button key={tab.key} onClick={()=>setHomeTab(tab.key)} style={{flex:1,padding:"8px",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700,background:homeTab===tab.key?"rgba(0,212,255,0.12)":"transparent",color:homeTab===tab.key?"#00D4FF":"var(--text-dim)",transition:"all 0.2s"}}>{tab.label}</button>
             ))}
           </div>
-          {/* Dashboard Stats - total_score is the accumulated permanent score (leaderboard-ranked).
-               best_score (canonical topic-best via computeScore()) is separate and not shown here.
-               Subtitles clarify each metric's meaning for users. */}
-          <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
-            {[
-              {label:t("score"),value:stats.total_score,icon:"⭐",color:"#F59E0B",glow:"rgba(250,204,21,0.35)",sub:t("scoreSub"),premium:true},
-              {label:t("accuracy"),value:`${accuracy}%`,icon:"🎯",color:"#10B981",glow:"rgba(34,197,94,0.35)",sub:t("accuracySub")},
-              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"🔥",color:"#FF6B35",glow:"rgba(249,115,22,0.35)",sub:t("streakSub"),premium:true},
-              {label:t("completed"),value:Object.keys(completedTopics).filter(k=>!isFreeMode(k.split("_")[0])).length,icon:"📚",color:"#00D4FF",glow:"rgba(56,189,248,0.35)",sub:t("completedSub")},
-            ].map((s,i)=>(
-              <div key={i} className="stats-cell" style={{background:s.premium?`${s.color}08`:"var(--glass-3)",border:`1px solid ${s.premium?`${s.color}30`:"var(--glass-7)"}`,borderRadius:12,padding:"12px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,boxShadow:s.premium?`0 0 10px ${s.color}15`:"none"}}>
-                <div style={{fontSize:17,lineHeight:1}}>{s.icon}</div>
-                <div style={{fontSize:22,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:`0 0 8px ${s.glow}`}}>{s.displayValue||s.value}</div>
-                <div style={{fontSize:11,fontWeight:700,color:s.color,opacity:0.65,lineHeight:1,letterSpacing:0.5,direction:"ltr"}}>{s.label}</div>
-                {s.sub&&<div style={{fontSize:9,color:"rgba(255,255,255,0.55)",lineHeight:1.2,textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%",paddingInline:2}}>{s.sub}</div>}
-              </div>
-            ))}
-          </div>
+
+          {/* ── 4. ACTION CARDS + TOPICS ── */}
           {homeTab==="categories"&&(<>
           <WeakAreaCard topicStats={topicStats} completedTopics={completedTopics} t={t} dir={dir} onGoToTopic={(id) => {
             const el = document.getElementById(`topic-card-${id}`);
             if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); setHighlightTopic(id); setTimeout(() => setHighlightTopic(null), 1500); }
           }}/>
-          <button onClick={()=>tryStartQuiz(startDailyChallenge,"daily")} className="action-card" style={{width:"100%",marginBottom:12,padding:"16px 20px",background:"linear-gradient(135deg,rgba(245,158,11,0.14),rgba(239,68,68,0.08))",border:"1px solid rgba(245,158,11,0.4)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s",boxShadow:"0 0 16px rgba(245,158,11,0.12)"}}
-            onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+          <button onClick={()=>tryStartQuiz(startDailyChallenge,"daily")} className="action-card" style={{width:"100%",marginBottom:12,padding:"14px 18px",background:"linear-gradient(135deg,rgba(245,158,11,0.10),rgba(239,68,68,0.05))",border:"1px solid rgba(245,158,11,0.3)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s,box-shadow 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 16px rgba(245,158,11,0.12)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
             <div className="action-card-inner" style={{display:"flex",alignItems:"center",gap:12,minWidth:0,flex:1}}>
-              <span className="action-emoji" style={{fontSize:28,flexShrink:0}}>🔥</span>
+              <span className="action-emoji" style={{fontSize:24,flexShrink:0}}>🔥</span>
               <div className="action-text" style={{textAlign:"start",minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                  <span style={{color:"#F59E0B",fontWeight:800,fontSize:15}}>{t("dailyChallengeTitle")}</span>
-                  <span style={{background:"rgba(245,158,11,0.2)",color:"#F59E0B",fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>{t("dailyChallengeNew")}</span>
+                  <span style={{color:"#F59E0B",fontWeight:800,fontSize:14}}>{t("dailyChallengeTitle")}</span>
+                  <span style={{background:"rgba(245,158,11,0.15)",color:"#F59E0B",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>{t("dailyChallengeNew")}</span>
                 </div>
-                <div style={{color:"var(--text-muted)",fontSize:12,marginTop:3}}>{t("dailyChallengeDesc")}</div>
-                <div style={{color:"#F59E0B",fontSize:10,fontWeight:700,marginTop:2,opacity:0.7,letterSpacing:0.3}}>+15 XP · {t("freeModeTag")}</div>
+                <div style={{color:"var(--text-muted)",fontSize:11,marginTop:2}}>{t("dailyChallengeDesc")}</div>
               </div>
             </div>
-            <span dir="ltr" style={{color:"#F59E0B",fontSize:18,flexShrink:0,opacity:0.7,unicodeBidi:"isolate"}}>{dir==="rtl"?"‹":"›"}</span>
+            <span dir="ltr" style={{color:"#F59E0B",fontSize:16,flexShrink:0,opacity:0.5,unicodeBidi:"isolate"}}>{dir==="rtl"?"\u2039":"\u203A"}</span>
           </button>
-          <button onClick={()=>tryStartQuiz(startMixedQuiz,"mixed")} className="action-card" style={{width:"100%",marginBottom:12,padding:"16px 20px",background:"linear-gradient(135deg,#A855F722,#7C3AED22)",border:"1px solid #A855F755",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s"}}
-            onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+          <button onClick={()=>tryStartQuiz(startMixedQuiz,"mixed")} className="action-card" style={{width:"100%",marginBottom:12,padding:"14px 18px",background:"linear-gradient(135deg,rgba(168,85,247,0.08),rgba(124,58,237,0.04))",border:"1px solid rgba(168,85,247,0.25)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s,box-shadow 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 16px rgba(168,85,247,0.12)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
             <div className="action-card-inner" style={{display:"flex",alignItems:"center",gap:12,minWidth:0,flex:1}}>
               <div className="action-text" style={{textAlign:"start",minWidth:0}}>
-                <div style={{color:"#A855F7",fontWeight:800,fontSize:15}}>{t("mixedQuizBtn")}</div>
-                <div style={{color:"var(--text-muted)",fontSize:12,marginTop:2}}>{t("mixedQuizDesc")} · <span style={{opacity:0.6}}>{t("freeModeTag")}</span></div>
+                <div style={{color:"#A855F7",fontWeight:800,fontSize:14}}>{t("mixedQuizBtn")}</div>
+                <div style={{color:"var(--text-muted)",fontSize:11,marginTop:2}}>{t("mixedQuizDesc")} · <span style={{opacity:0.5}}>{t("freeModeTag")}</span></div>
               </div>
             </div>
-            <span dir="ltr" style={{color:"#A855F7",fontSize:18,flexShrink:0,opacity:0.7,unicodeBidi:"isolate"}}>{dir==="rtl"?"‹":"›"}</span>
+            <span dir="ltr" style={{color:"#A855F7",fontSize:16,flexShrink:0,opacity:0.5,unicodeBidi:"isolate"}}>{dir==="rtl"?"\u2039":"\u203A"}</span>
           </button>
 
-          {/* Incident Mode entry */}
+          {/* War Room entry */}
           <button onClick={()=>setScreen("incidentList")} className="action-card"
-            style={{width:"100%",marginBottom:20,padding:"16px 20px",background:"linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.05))",border:"1px solid rgba(239,68,68,0.35)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s"}}
-            onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+            style={{width:"100%",marginBottom:20,padding:"14px 18px",background:"linear-gradient(135deg,rgba(239,68,68,0.07),rgba(239,68,68,0.03))",border:"1px solid rgba(239,68,68,0.25)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s,box-shadow 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 16px rgba(239,68,68,0.12)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
             <div className="action-card-inner" style={{display:"flex",alignItems:"center",gap:12,minWidth:0,flex:1}}>
               <div className="action-text" style={{textAlign:"start",minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                  <span style={{color:"#EF4444",fontWeight:800,fontSize:15}}>{t("incidentModeBtn")}</span>
-                  <span style={{background:"rgba(239,68,68,0.15)",color:"#EF4444",fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>NEW</span>
+                  <span style={{color:import.meta.env.PROD?"var(--text-dim)":"#EF4444",fontWeight:800,fontSize:14}}>{t("incidentModeBtn")}</span>
+                  {import.meta.env.PROD
+                    ?<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>Coming Soon</span>
+                    :<span style={{background:"rgba(239,68,68,0.12)",color:"#EF4444",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>NEW</span>}
                 </div>
-                <div style={{color:"var(--text-muted)",fontSize:12,marginTop:2}}>{t("incidentModeDesc")}</div>
+                <div style={{color:"var(--text-muted)",fontSize:11,marginTop:2}}>{t("incidentModeDesc")}</div>
               </div>
             </div>
-            <span dir="ltr" style={{color:"#EF4444",fontSize:18,flexShrink:0,opacity:0.7,unicodeBidi:"isolate"}}>{dir==="rtl"?"‹":"›"}</span>
+            <span dir="ltr" style={{color:"#EF4444",fontSize:16,flexShrink:0,opacity:0.5,unicodeBidi:"isolate"}}>{dir==="rtl"?"\u2039":"\u203A"}</span>
           </button>
           {(()=>{const nextTopicId=TOPICS.find(t=>computeTopicProgress(t.id)<100)?.id;return(
           <div className="topic-list" style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -4028,6 +4219,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </section>
             ))}
           </div>);})()}
+          {/* ── Guest signup card (after topics) ── */}
+          {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track("signup_clicked",{source:"quiz_game"})}catch{}}} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button><span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track("login_clicked",{source:"quiz_game"})}catch{}}} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span></div>}
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><span>{a.icon}</span>{getLocalizedField(a, "name", lang)}</div>)}</div></div>}
           </>)}
           {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir}/>}
@@ -4360,7 +4553,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
           {[
             {icon:"📚",title:lang==="en"?"What is this?":"מה זה?",body:lang==="en"?<>KubeQuest is an interactive app for practicing Kubernetes through questions and real troubleshooting scenarios.<br/><br/>The goal is not just memorizing commands, but understanding how to diagnose real cluster issues.<br/><br/>Topics include:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>:<>KubeQuest היא אפליקציה לתרגול Kubernetes דרך שאלות ותרחישי תקלות.<br/><br/>המטרה היא לא רק לזכור פקודות, אלא להבין איך לאבחן בעיות אמיתיות בקלאסטר Kubernetes.<br/><br/>נושאים לדוגמה:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>},
-            {icon:"⚙️",title:lang==="en"?"How it works":"איך זה עובד",body:lang==="en"?<>The app includes several practice modes:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>Practice questions by topic.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>Daily challenge with random questions.<br/><br/><span style={{fontWeight:600}}>Incident Mode</span><br/>Troubleshooting scenarios that simulate real Kubernetes cluster issues.</>:<>האפליקציה כוללת כמה מצבי תרגול:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>תרגול שאלות לפי נושאים שונים.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>אתגר יומי עם שאלות אקראיות.<br/><br/><span style={{fontWeight:600}}>Incident Mode</span><br/>תרחישי תקלות המדמים בעיות אמיתיות בקלאסטר.</>},
+            {icon:"⚙️",title:lang==="en"?"How it works":"איך זה עובד",body:lang==="en"?<>The app includes several practice modes:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>Practice questions by topic.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>Daily challenge with random questions.<br/><br/><span style={{fontWeight:600}}>War Room</span><br/>Troubleshooting scenarios that simulate real Kubernetes cluster issues.</>:<>האפליקציה כוללת כמה מצבי תרגול:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>תרגול שאלות לפי נושאים שונים.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>אתגר יומי עם שאלות אקראיות.<br/><br/><span style={{fontWeight:600}}>חדר מצב</span><br/>תרחישי תקלות המדמים בעיות אמיתיות בקלאסטר.</>},
             {icon:"🎯",title:lang==="en"?"Who is it for":"למי זה מיועד",body:lang==="en"?<>• DevOps Engineers<br/>• SRE Engineers<br/>• Developers working with Kubernetes<br/>• Anyone preparing for CKA or CKAD certifications</>:<>האפליקציה מיועדת ל:<br/><br/>• DevOps Engineers<br/>• SRE Engineers<br/>• מפתחים שעובדים עם Kubernetes<br/>• אנשים שמתכוננים להסמכות CKA או CKAD</>},
             {icon:"👨‍💻",title:lang==="en"?"Built by":"פותח על ידי",body:<span>Or Carmeli<br/><span style={{color:"var(--text-dim)",fontSize:12}}>DevOps Engineer</span><br/><br/><a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>LinkedIn</a>{" · "}<a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer" style={{color:"var(--text-primary)",textDecoration:"none",fontWeight:600}}>GitHub</a></span>},
           ].map(({icon,title,body},i)=>(
@@ -4391,6 +4584,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           topics={TOPICS} achievements={ACHIEVEMENTS} unlockedAchievements={unlockedAchievements}
           completedIncidentIds={completedIncidentIds} incidents={INCIDENTS}
           dailyStreak={dailyStreak} levelOrder={LEVEL_ORDER} levelConfig={LEVEL_CONFIG}
+          userRank={userRank} isGuest={isGuest} getRankTier={getRankTier}
           lang={lang} dir={dir} t={t} onBack={()=>setScreen("home")}
         />
       )}
@@ -4551,9 +4745,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
                       dir={dir}
-                      style={{width:"100%",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:isCodeOption?13:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46}}>
+                      style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:isCodeOption?13:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46,overflow:"hidden"}}>
                       <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate",...(isCodeOption?{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",letterSpacing:-0.3}:{})}}>{renderBidi(opt,lang)}</span>
+                      {isCodeOption
+                        ? <span dir="ltr" style={{flex:1,minWidth:0,lineHeight:1.55,unicodeBidi:"isolate"}}>
+                            <span className="opt-cmd-scroll" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"rgba(0,0,0,0.18)",borderRadius:6,padding:"5px 10px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"inherit"}}>{renderBidi(opt,lang)}</span>
+                          </span>
+                        : <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang)}</span>
+                      }
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:16,height:16,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
                       {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✓</span>}
                       {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✗</span>}
@@ -4919,14 +5118,37 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       })()}
       {/* ── INCIDENT LIST ─────────────────────────────────────────────────── */}
       {screen==="incidentList"&&(
-        <div style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
-          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:28}}>
-            <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
-            </button>
-            <div>
-              <h2 style={{margin:0,color:"var(--text-primary)",fontSize:20,fontWeight:900}}>{t("incidentModeBtn")}</h2>
-              <p style={{margin:"4px 0 0",color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,whiteSpace:"pre-line"}}>{t("incidentHeaderSub")}</p>
+        import.meta.env.PROD ? (
+        <div style={{maxWidth:780,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
+          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
+            <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
+          </button>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"50vh",textAlign:"center",padding:"0 20px"}}>
+            <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:20,padding:"48px 36px",maxWidth:420,width:"100%"}}>
+              <div style={{fontSize:56,marginBottom:16}}>🚧</div>
+              <h2 style={{margin:"0 0 8px",color:"var(--text-bright)",fontSize:26,fontWeight:900}}>חדר מצב</h2>
+              <div style={{display:"inline-block",background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:12,fontWeight:700,padding:"4px 14px",borderRadius:20,letterSpacing:0.5,marginBottom:16}}>Coming Soon</div>
+              <p style={{margin:"0 0 12px",color:"var(--text-secondary)",fontSize:14,lineHeight:1.7}}>הפיצ'ר נמצא בפיתוח ויהיה זמין בקרוב.</p>
+              <p style={{margin:0,color:"var(--text-dim)",fontSize:12}}>נשמח לעדכן בקרוב.</p>
+            </div>
+          </div>
+        </div>
+        ) : (
+        <div style={{maxWidth:780,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
+          {/* Back button */}
+          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
+            <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
+          </button>
+          {/* Header */}
+          <div style={{marginBottom:32}}>
+            <h2 style={{margin:0,color:"var(--text-bright)",fontSize:28,fontWeight:900,lineHeight:1.3}}>{t("incidentModeBtn")}</h2>
+            <p style={{margin:"6px 0 0",color:"var(--text-secondary)",fontSize:14,lineHeight:1.6}}>{t("incidentHeaderSub")}</p>
+            {/* Progress */}
+            <div style={{marginTop:16}}>
+              <div style={{height:4,background:"var(--glass-6)",borderRadius:4,overflow:"hidden",marginBottom:8,direction:"ltr"}}>
+                <div style={{height:"100%",borderRadius:4,width:`${INCIDENTS.length>0?Math.round((completedIncidentIds.length/INCIDENTS.length)*100):0}%`,background:"linear-gradient(90deg,#10B981,#34D399)",transition:"width 0.4s ease"}}/>
+              </div>
+              <span style={{fontSize:12,color:"var(--text-muted)",fontWeight:500}}>{t("incidentProgress").replace("{done}",completedIncidentIds.length).replace("{total}",INCIDENTS.length)}</span>
             </div>
           </div>
 
@@ -4937,109 +5159,112 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             const riTotalSteps = ri.steps.length;
             const riPct = Math.round((riStepNum / riTotalSteps) * 100);
             return(
-            <div style={{marginBottom:24,borderInlineStart:"3px solid #EF4444",paddingInlineStart:14,direction:dir}}>
+            <div style={{marginBottom:28,background:"var(--bg-card)",border:"1px solid rgba(239,68,68,0.2)",borderInlineStart:"3px solid #EF4444",borderRadius:14,padding:"18px 20px",direction:dir,boxShadow:"0 2px 12px rgba(0,0,0,0.2)"}}>
               {/* Header row */}
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-                <span style={{width:7,height:7,borderRadius:"50%",background:"#EF4444",boxShadow:"0 0 6px rgba(239,68,68,0.5)",animation:"pulse 2s infinite"}}/>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:"#EF4444",boxShadow:"0 0 8px rgba(239,68,68,0.5)",animation:"pulse 2s infinite"}}/>
                 <span style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.2,color:"var(--text-muted)"}}>{t("incidentActiveLabel")}</span>
+                <span style={{marginInlineStart:"auto",fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-muted)",letterSpacing:0.5,direction:"ltr",unicodeBidi:"isolate"}}>{ri.incidentCode||"INC-0000"}</span>
               </div>
-              {/* Incident code */}
-              <div style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-secondary)",marginBottom:6,letterSpacing:0.5,direction:"ltr",unicodeBidi:"isolate",textAlign:"left"}}>{ri.incidentCode||"INC-0000"}</div>
               {/* Title */}
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
                 <span style={{fontSize:18}}>{ri.icon}</span>
-                <span style={{color:"var(--text-bright)",fontWeight:800,fontSize:15,lineHeight:1.3}}>{getLocalizedField(ri, "titleShort", lang) || getLocalizedField(ri, "title", lang)}</span>
+                <span style={{color:"var(--text-bright)",fontWeight:800,fontSize:16,lineHeight:1.3}}>{getLocalizedField(ri, "titleShort", lang) || getLocalizedField(ri, "title", lang)}</span>
               </div>
               {/* Description */}
-              <div style={{color:"#cbd5e1",fontSize:12,lineHeight:1.5,marginBottom:8}}>{getLocalizedField(ri, "description", lang)}</div>
+              <div style={{color:"var(--text-secondary)",fontSize:12,lineHeight:1.5,marginBottom:10}}>{getLocalizedField(ri, "description", lang)}</div>
               {/* Metadata - stacked */}
-              <div style={{display:"flex",flexDirection:"column",gap:2,marginBottom:10}}>
+              <div style={{display:"flex",flexDirection:"column",gap:2,marginBottom:12}}>
                 {[
                   {l:"Namespace",v:ri.namespace},
                   {l:"Cluster",v:ri.cluster},
                   {l:"Status",v:lang==="he"?"בבדיקה":"Investigating"},
                 ].map(m=>(
-                  <div key={m.l} style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"#94a3b8",lineHeight:1.7,direction:"ltr",unicodeBidi:"isolate",textAlign:"left"}}>
-                    <span style={{color:"#64748b"}}>{m.l}:</span> {m.v}
+                  <div key={m.l} style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-secondary)",lineHeight:1.7,direction:"ltr",unicodeBidi:"isolate",textAlign:"left"}}>
+                    <span style={{color:"var(--text-dim)"}}>{m.l}:</span> {m.v}
                   </div>
                 ))}
               </div>
               {/* Progress */}
-              <div style={{marginBottom:12}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                  <span style={{fontSize:11,fontWeight:600,color:"#94a3b8"}}>{t("incidentStep")} {riStepNum} / {riTotalSteps}</span>
-                  <span style={{fontSize:11,color:"#64748b"}}>{riPct}%</span>
+              <div style={{marginBottom:14}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                  <span style={{fontSize:11,fontWeight:600,color:"var(--text-secondary)"}}>{t("incidentStep")} {riStepNum} / {riTotalSteps}</span>
+                  <span style={{fontSize:11,color:"var(--text-dim)"}}>{riPct}%</span>
                 </div>
                 <div style={{height:4,background:"var(--glass-6)",borderRadius:4,overflow:"hidden",direction:"ltr"}}>
                   <div style={{height:"100%",borderRadius:4,width:`${riPct}%`,background:"linear-gradient(90deg,#EF4444,#F59E0B)",transition:"width 0.4s ease"}}/>
                 </div>
               </div>
               {/* CTA */}
-              <button onClick={resumeIncident} style={{width:"100%",padding:"11px 20px",background:"linear-gradient(135deg,#EF4444,#DC2626)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:6,boxShadow:"0 0 16px rgba(239,68,68,0.25)",transition:"box-shadow 0.2s"}}
-                onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 0 24px rgba(239,68,68,0.4)";}}
-                onMouseLeave={e=>{e.currentTarget.style.boxShadow="0 0 16px rgba(239,68,68,0.25)";}}
+              <button onClick={resumeIncident} style={{width:"100%",padding:"12px 20px",background:"linear-gradient(135deg,#EF4444,#DC2626)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8,boxShadow:"0 0 16px rgba(239,68,68,0.25)",transition:"all 0.2s"}}
+                onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 0 24px rgba(239,68,68,0.4)";e.currentTarget.style.transform="translateY(-1px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.boxShadow="0 0 16px rgba(239,68,68,0.25)";e.currentTarget.style.transform="translateY(0)";}}
               >{t("incidentResumeBtn")}</button>
               <button onClick={()=>{clearIncidentProgress();setIncidentResume(null);}} style={{width:"100%",padding:"6px",background:"none",border:"none",color:"var(--text-dim)",fontSize:11,cursor:"pointer",borderRadius:8}}>{t("incidentDiscard")}</button>
             </div>
             );
           })()}
 
-          {/* Incidents grouped by difficulty */}
-          {["easy","intermediate","hard"].map(difficulty=>{
-            const incidents = INCIDENTS.filter(i=>i.difficulty===difficulty);
-            const config = INCIDENT_DIFFICULTY_CONFIG[difficulty];
-            const locked = (difficulty==="intermediate"&&!intermediateUnlocked)||(difficulty==="hard"&&!hardUnlocked);
-            const unlockMsg = difficulty==="intermediate"?t("incidentUnlockIntermediate"):difficulty==="hard"?t("incidentUnlockHard"):null;
-            return(
-              <div key={difficulty} style={{marginBottom:28}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                  <span style={{background:`${config.color}12`,padding:"3px 10px",borderRadius:8,fontSize:11,fontWeight:700,letterSpacing:0.5,color:config.color,display:"inline-flex",alignItems:"center",gap:5}}>
-                    {getLocalizedField(config, "label", lang)}
-                    {locked&&<span style={{fontSize:11}}>🔒</span>}
-                  </span>
+          {/* Incidents - sequential unlock, grouped by difficulty */}
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {INCIDENTS.map((incident,idx)=>{
+              const completed = completedIncidentIds.includes(incident.id);
+              const locked = idx > lastCompletedSeqIdx + 1;
+              const diffConfig = INCIDENT_DIFFICULTY_CONFIG[incident.difficulty];
+              const prevDiff = idx > 0 ? INCIDENTS[idx-1].difficulty : null;
+              const showHeader = incident.difficulty !== prevDiff;
+              return(
+                <div key={incident.id}>
+                  {showHeader&&diffConfig&&(
+                    <div style={{display:"flex",alignItems:"center",gap:10,margin:idx===0?"0 0 12px":"28px 0 12px",direction:dir}}>
+                      <span style={{width:8,height:8,borderRadius:"50%",background:diffConfig.color,flexShrink:0}}/>
+                      <span style={{fontSize:13,fontWeight:700,color:diffConfig.color,letterSpacing:0.8}}>{getLocalizedField(diffConfig,"label",lang)}</span>
+                      <div style={{flex:1,height:1,background:"var(--glass-4)"}}/>
+                    </div>
+                  )}
+                  <button onClick={locked?undefined:()=>startIncident(incident)} disabled={locked}
+                    style={{width:"100%",padding:"16px 20px",background:locked?"var(--glass-2)":"var(--bg-card)",border:`1px solid ${completed?"rgba(16,185,129,0.25)":"var(--glass-8)"}`,borderInlineStart:completed?"3px solid #10B981":`1px solid ${completed?"rgba(16,185,129,0.25)":"var(--glass-8)"}`,borderRadius:14,cursor:locked?"default":"pointer",textAlign:dir==="rtl"?"right":"left",transition:"all 0.2s ease",opacity:locked?0.55:1,filter:locked?"grayscale(0.3)":"none",boxShadow:locked?"none":"0 2px 8px rgba(0,0,0,0.2)"}}
+                    onMouseEnter={locked?undefined:e=>{e.currentTarget.style.background="var(--glass-4)";e.currentTarget.style.borderColor="var(--glass-12)";e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.3)";}}
+                    onMouseLeave={locked?undefined:e=>{e.currentTarget.style.background="var(--bg-card)";e.currentTarget.style.borderColor=completed?"rgba(16,185,129,0.25)":"var(--glass-8)";e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.2)";}}>
+                    {/* Top row: badge + code + state */}
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                      {diffConfig&&<span style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:8,background:`${diffConfig.color}18`,color:diffConfig.color,letterSpacing:0.3}}>{getLocalizedField(diffConfig,"label",lang)}</span>}
+                      <span style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-muted)",letterSpacing:0.5,direction:"ltr",unicodeBidi:"isolate"}}>{incident.incidentCode||""}</span>
+                      <span style={{marginInlineStart:"auto",flexShrink:0}}>
+                        {completed&&<span style={{width:24,height:24,display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(16,185,129,0.12)",borderRadius:20,color:"#10B981",fontSize:12,fontWeight:700}}>✓</span>}
+                        {locked&&<span style={{fontSize:16,opacity:0.6}}>🔒</span>}
+                        {!completed&&!locked&&<span style={{fontSize:16,opacity:0.5}}>{incident.icon}</span>}
+                      </span>
+                    </div>
+                    {/* Title */}
+                    <div style={{color:locked?"var(--text-dim)":"var(--text-bright)",fontWeight:800,fontSize:15,lineHeight:1.4,marginBottom:4}}>{getLocalizedField(incident, "titleShort", lang) || getLocalizedField(incident, "title", lang)}</div>
+                    {/* Description */}
+                    <div style={{color:locked?"var(--text-disabled)":"var(--text-secondary)",fontSize:12,lineHeight:1.5,marginBottom:10,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{getLocalizedField(incident, "description", lang)}</div>
+                    {/* Metadata row */}
+                    <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",color:"var(--text-dim)",fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",direction:"ltr",unicodeBidi:"isolate",borderTop:"1px solid var(--glass-4)",paddingTop:10}}>
+                      <span>{incident.steps.length} {t("incidentSteps")}</span>
+                      <span style={{opacity:0.3}}>|</span>
+                      <span>{incident.estimatedTime}</span>
+                      {incident.namespace&&<><span style={{opacity:0.3}}>|</span><span>{incident.namespace}</span></>}
+                    </div>
+                  </button>
                 </div>
-                {locked&&unlockMsg&&(
-                  <div style={{fontSize:12,color:"var(--text-dim)",marginBottom:10,paddingInlineStart:4}}>{unlockMsg}</div>
-                )}
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {incidents.map(incident=>{
-                    const completed = completedIncidentIds.includes(incident.id);
-                    return(
-                      <button key={incident.id} onClick={locked?undefined:()=>startIncident(incident)} disabled={locked}
-                        style={{width:"100%",padding:"12px 16px",background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:12,cursor:locked?"default":"pointer",display:"flex",alignItems:"flex-start",gap:12,textAlign:dir==="rtl"?"right":"left",transition:"all 0.2s",opacity:locked?0.5:1,filter:locked?"grayscale(0.3)":"none"}}
-                        onMouseEnter={locked?undefined:e=>{e.currentTarget.style.background="rgba(239,68,68,0.06)";e.currentTarget.style.borderColor="rgba(239,68,68,0.3)";}}
-                        onMouseLeave={locked?undefined:e=>{e.currentTarget.style.background="var(--glass-2)";e.currentTarget.style.borderColor="var(--glass-7)";}}>
-                        <span style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--glass-3)",borderRadius:9,flexShrink:0,fontSize:20,marginTop:2}}>{incident.icon}</span>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:10,fontFamily:"'SF Mono','Fira Code',monospace",color:"#94a3b8",marginBottom:2,letterSpacing:0.5}}>{incident.incidentCode||""}</div>
-                          <div style={{color:"var(--text-primary)",fontWeight:800,fontSize:13,marginBottom:2,lineHeight:1.4}}>{getLocalizedField(incident, "titleShort", lang) || getLocalizedField(incident, "title", lang)}</div>
-                          <div style={{color:"#cbd5e1",fontSize:11,lineHeight:1.4,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{getLocalizedField(incident, "description", lang)}</div>
-                          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",color:"#94a3b8",fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",direction:"ltr",unicodeBidi:"isolate"}}>
-                            <span>{incident.steps.length} {t("incidentSteps")}</span>
-                            <span style={{opacity:0.4}}>|</span>
-                            <span>{incident.estimatedTime}</span>
-                            {incident.namespace&&<><span style={{opacity:0.4}}>|</span><span>{incident.namespace}</span></>}
-                          </div>
-                        </div>
-                        {completed&&<span style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(16,185,129,0.1)",borderRadius:20,flexShrink:0,color:"#10B981",fontSize:11,marginTop:4}}>✓</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
           <Footer lang={lang} onPrivacy={()=>setScreen("privacy")} onTerms={()=>setScreen("terms")}/>
         </div>
+        )
       )}
 
       {/* ── INCIDENT PLAYING ──────────────────────────────────────────────── */}
-      {screen==="incident"&&selectedIncident&&(()=>{
+      {!import.meta.env.PROD&&screen==="incident"&&selectedIncident&&(()=>{
         const step = getIncidentStep(incidentStepIndex);
         if (!step) { return <div style={{textAlign:"center",padding:"40px 20px"}}><p style={{color:"var(--text-secondary)",fontSize:14}}>{lang==="en"?"Incident step not found. Returning...":"שלב לא נמצא. חוזר..."}</p><button onClick={()=>setScreen("incidentList")} style={{marginTop:12,padding:"10px 22px",background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:10,color:"var(--text-secondary)",fontSize:14,cursor:"pointer"}}>{lang==="en"?"Back":"חזרה"}</button></div>; }
         const totalSteps = incidentSteps ? incidentSteps.length : (selectedIncident.steps?.length || 0);
         const maxScore = totalSteps * 10;
         const progress = totalSteps > 0 ? ((incidentStepIndex + (incidentSubmitted ? 1 : 0)) / totalSteps) * 100 : 0;
+        const incidentNum = INCIDENTS.findIndex(inc => inc.id === selectedIncident.id) + 1;
         return(
           <div style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
             {/* Top bar */}
@@ -5061,15 +5286,42 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <div style={{height:"100%",borderRadius:3,width:`${progress}%`,background:"linear-gradient(90deg,#EF4444,#F59E0B)",transition:"width 0.4s ease"}}/>
             </div>
 
-            {/* Incident title badge */}
-            <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:16}}>
-              <span style={{fontSize:20,marginTop:2}}>{selectedIncident.icon}</span>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
-                  <span style={{fontSize:10,fontFamily:"'SF Mono','Fira Code',monospace",color:"#94a3b8",letterSpacing:0.5,direction:"ltr",unicodeBidi:"isolate"}}>{selectedIncident.incidentCode||""}</span>
-                  <span style={{color:INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.color||"#F59E0B",fontSize:10,fontWeight:700}}>{getLocalizedField(INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty], "label", lang)}</span>
+            {/* War Room: Incident Header Card */}
+            <div style={{background:"rgba(239,68,68,0.04)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:14,padding:"16px 20px",marginBottom:14,animation:"warRoomGlow 3s ease-in-out infinite"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:18}}>🚨</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                    <span style={{color:"#f87171",fontSize:16,fontWeight:900,letterSpacing:0.3}}>
+                      {lang==="he"?"אירוע":"Incident"} #{incidentNum}
+                    </span>
+                    <span style={{fontSize:10,fontFamily:"'SF Mono','Fira Code',monospace",color:"#94a3b8",letterSpacing:0.5,direction:"ltr",unicodeBidi:"isolate",padding:"2px 8px",background:"var(--glass-4)",borderRadius:6}}>{selectedIncident.incidentCode||""}</span>
+                    <span style={{color:INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.color||"#F59E0B",fontSize:10,fontWeight:700}}>{INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty]?.icon} {getLocalizedField(INCIDENT_DIFFICULTY_CONFIG[selectedIncident.difficulty], "label", lang)}</span>
+                  </div>
+                  <div style={{color:"var(--text-muted)",fontSize:12,marginTop:2}}>{t("incidentIssueDetected")}</div>
                 </div>
-                <div style={{color:"var(--text-bright)",fontWeight:800,fontSize:14,lineHeight:1.4}}>{getLocalizedField(selectedIncident, "titleShort", lang) || getLocalizedField(selectedIncident, "title", lang)}</div>
+              </div>
+              <div style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,paddingInlineStart:28,borderInlineStart:"2px solid rgba(239,68,68,0.15)",marginInlineStart:9}}>
+                {getLocalizedField(selectedIncident, "description", lang)}
+              </div>
+            </div>
+
+            {/* War Room: Context Block (monitoring panel) */}
+            <div style={{background:"rgba(0,0,0,0.35)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"10px 14px",marginBottom:14,direction:"ltr"}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                <span style={{width:6,height:6,borderRadius:"50%",background:"#EF4444",boxShadow:"0 0 6px rgba(239,68,68,0.5)",animation:"termBlink 2s infinite"}}/>
+                <span style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,color:"var(--text-dim)"}}>live context</span>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                {[
+                  {label:t("wrCluster"), value:selectedIncident.cluster},
+                  {label:t("wrNamespace"), value:selectedIncident.namespace},
+                  {label:t("wrService"), value:selectedIncident.service||"-"},
+                ].map(m=>(
+                  <div key={m.label} style={{fontFamily:"'SF Mono','Fira Code',monospace",fontSize:11,lineHeight:1.7,color:"var(--text-secondary)"}}>
+                    <span style={{color:"var(--text-dim)"}}>{m.label}:</span> <span style={{color:"#94e2d5"}}>{m.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -5084,7 +5336,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 const isCorrect  = incidentAnswerResult ? i === incidentAnswerResult.correctIndex : i === step?.answer;
                 const isChosen   = i === incidentAnswer;
                 let bg = "var(--glass-2)", border = "var(--glass-9)", color = "var(--text-light)", labelBg = "var(--glass-7)", labelColor = "var(--text-secondary)";
-                if (!incidentSubmitted && isChosen) { bg="rgba(239,68,68,0.08)"; border="#EF444466"; color="#fca5a5"; labelBg="rgba(239,68,68,0.2)"; labelColor="#EF4444"; }
+                if (!incidentSubmitted && isChosen) { bg="rgba(0,212,255,0.06)"; border="#00D4FF66"; color="var(--code-text)"; labelBg="rgba(0,212,255,0.15)"; labelColor="#00D4FF"; }
                 if (incidentSubmitted) {
                   if (isCorrect)       { bg="rgba(16,185,129,0.1)"; border="#10B981"; color="#10B981"; labelBg="rgba(16,185,129,0.2)"; labelColor="#10B981"; }
                   else if (isChosen)   { bg="rgba(239,68,68,0.1)";  border="#EF4444"; color="#EF4444"; labelBg="rgba(239,68,68,0.2)";  labelColor="#EF4444"; }
@@ -5097,7 +5349,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 // Content direction: LTR for pure commands, otherwise follows page dir
                 const contentDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
                 return(
-                  <button key={i} className="incident-opt" onClick={()=>{ if (!incidentSubmitted) submitIncidentStep(i); }}
+                  <button key={i} className="incident-opt" onClick={()=>{ if (!incidentSubmitted) setIncidentAnswer(i); }}
                     aria-pressed={!incidentSubmitted ? i===incidentAnswer : undefined}
                     style={{width:"100%",textAlign:dir==="rtl"?"right":"left",padding:"13px 14px",background:bg,border:`1px solid ${border}`,borderRadius:10,color,fontSize:14,cursor:incidentSubmitted?"default":"pointer",display:"flex",alignItems:"flex-start",gap:10,transition:"all 0.15s",direction:dir}}>
                     <span style={{flexShrink:0,width:24,height:24,borderRadius:6,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor,marginTop:1}}>
@@ -5120,6 +5372,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               })}
             </div>
 
+            {/* Confirm answer button */}
+            {!incidentSubmitted&&incidentAnswer!==null&&(
+              <button onClick={()=>submitIncidentStep()}
+                style={{width:"100%",padding:14,background:"rgba(0,212,255,0.10)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:10,color:"#67e8f9",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:10,transition:"all 0.15s",animation:"fadeIn 0.2s ease"}}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,212,255,0.18)";e.currentTarget.style.boxShadow="0 0 16px rgba(0,212,255,0.15)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,212,255,0.10)";e.currentTarget.style.boxShadow="none";}}>
+                {t("incidentConfirm")}
+              </button>
+            )}
+
             {/* Result + explanation */}
             {incidentSubmitted&&(
               <div style={{animation:"fadeIn 0.3s ease"}}>
@@ -5130,16 +5392,19 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   );
                   return (
                     <>
-                      <div style={{background:incCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",borderInlineStart:`3px solid ${incCorrect?"#10B981":"#EF4444"}`,borderRadius:8,padding:"16px 18px",marginBottom:14}}>
-                        <div style={{fontWeight:800,fontSize:14,marginBottom:10,color:incCorrect?"#10B981":"#EF4444",direction:dir,textAlign:dir==="rtl"?"right":"left"}}>
-                          {incCorrect?t("incidentCorrect"):t("incidentWrong")}
+                      <div style={{background:incCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",borderInlineStart:`3px solid ${incCorrect?"#10B981":"#EF4444"}`,borderRadius:10,padding:"16px 18px",marginBottom:14}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:incCorrect?4:10,direction:dir}}>
+                          <span style={{width:22,height:22,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,background:incCorrect?"rgba(16,185,129,0.15)":"rgba(239,68,68,0.15)",color:incCorrect?"#10B981":"#EF4444"}}>{incCorrect?"\u2713":"\u2717"}</span>
+                          <span style={{fontWeight:800,fontSize:14,color:incCorrect?"#10B981":"#EF4444"}}>{incCorrect?t("incidentCorrect"):t("incidentWrong")}</span>
                         </div>
+                        {!incCorrect&&<p style={{fontSize:12,color:"var(--text-muted)",margin:"0 0 10px",lineHeight:1.5}}>{t("incidentWrongSub")}</p>}
+                        {incCorrect&&<div style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",margin:"6px 0 8px"}}>{t("incidentWhyCorrect")}</div>}
                         {renderIncidentExplanation(incExplanation)}
                       </div>
                       <button onClick={nextIncidentStep}
-                        style={{width:"100%",padding:14,background:"rgba(239,68,68,0.12)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:10,color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",transition:"all 0.15s"}}
-                        onMouseEnter={e=>{e.currentTarget.style.background="rgba(239,68,68,0.18)";}}
-                        onMouseLeave={e=>{e.currentTarget.style.background="rgba(239,68,68,0.12)";}}>
+                        style={{width:"100%",padding:14,background:"rgba(0,212,255,0.10)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:10,color:"#67e8f9",fontSize:14,fontWeight:700,cursor:"pointer",transition:"all 0.15s"}}
+                        onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,212,255,0.18)";}}
+                        onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,212,255,0.10)";}}>
                         {incidentStepIndex>=totalSteps-1?t("incidentFinish"):t("incidentNext")}
                       </button>
                     </>
@@ -5152,21 +5417,29 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       })()}
 
       {/* ── INCIDENT COMPLETE ─────────────────────────────────────────────── */}
-      {screen==="incidentComplete"&&selectedIncident&&(()=>{
+      {!import.meta.env.PROD&&screen==="incidentComplete"&&selectedIncident&&(()=>{
         const maxScore = (incidentSteps ? incidentSteps.length : (selectedIncident.steps?.length || 0)) * 10;
-        const perfect  = incidentScore === maxScore;
-        const goodRun  = incidentMistakes <= 1;
+        const passed   = incidentPassed; // single source of truth - set in nextIncidentStep
+        const accentColor = passed ? "#22C55E" : "#EF4444";
+        const accentRgb   = passed ? "34,197,94" : "239,68,68";
         return(
           <div style={{maxWidth:480,margin:"20px auto",padding:"0 18px",textAlign:"center",animation:"fadeIn 0.5s ease",direction:dir}}>
-            <h2 style={{fontSize:22,fontWeight:900,margin:"0 0 6px",color:"#22C55E"}}>{t("incidentResolved")}</h2>
-            <p style={{color:"var(--text-muted)",fontSize:13,margin:"0 0 20px"}}>{getLocalizedField(selectedIncident, "title", lang)}</p>
+            {/* Result header */}
+            <div style={{animation:"resolvedPulse 2s ease-in-out",marginBottom:8}}>
+              <div style={{width:56,height:56,borderRadius:"50%",background:`rgba(${accentRgb},0.12)`,border:`2px solid rgba(${accentRgb},0.3)`,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:12,boxShadow:`0 0 24px rgba(${accentRgb},0.15)`,color:accentColor}}>
+                {passed?"\u2713":"\u2717"}
+              </div>
+              <h2 style={{fontSize:22,fontWeight:900,margin:"0 0 4px",color:accentColor}}>{passed?t("incidentResolved"):t("incidentFailed")}</h2>
+              <p style={{color:"var(--text-muted)",fontSize:13,margin:"0 0 6px"}}>{getLocalizedField(selectedIncident, "title", lang)}</p>
+              <p style={{color:"var(--text-dim)",fontSize:12,margin:"0 0 20px",fontStyle:"italic"}}>{passed?t("incidentNextUnlocked"):t("incidentFailedSub")}</p>
+            </div>
 
             {/* Stats grid */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:24}}>
               {[
-                {label:t("incidentScore"),  value:`${incidentScore}/${maxScore}`, icon:"⭐", color:"#A855F7"},
-                {label:t("incidentTime"),   value:formatIncidentTime(incidentElapsed), icon:"⏱", color:"#F59E0B"},
-                {label:t("incidentMistakes"),value:incidentMistakes,               icon:"❌", color:incidentMistakes===0?"#10B981":"#EF4444"},
+                {label:t("incidentScore"),  value:`${incidentScore}/${maxScore}`, icon:"\u2B50", color:"#A855F7"},
+                {label:t("incidentTime"),   value:formatIncidentTime(incidentElapsed), icon:"\u23F1", color:"#F59E0B"},
+                {label:t("incidentMistakes"),value:incidentMistakes,               icon:"\u274C", color:incidentMistakes===0?"#10B981":"#EF4444"},
               ].map((s,i)=>(
                 <div key={i} style={{background:"var(--glass-3)",border:"1px solid var(--glass-7)",borderRadius:12,padding:"14px 8px"}}>
                   <div style={{fontSize:20}}>{s.icon}</div>
@@ -5176,9 +5449,44 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               ))}
             </div>
 
+            {/* ── Root Cause Reveal ── */}
+            <div style={{
+              background:"var(--glass-3)",
+              border:"1px solid var(--glass-7)",
+              ...(passed ? {[dir==="rtl"?"borderRight":"borderLeft"]:"3px solid #10B981"} : {}),
+              borderRadius:14,
+              padding:"16px 18px",
+              marginBottom:24,
+              textAlign:"start",
+            }}>
+              <div style={{fontSize:15,fontWeight:800,color:passed?"#10B981":"var(--text-primary)",marginBottom:10}}>
+                {t("incidentRootCause")}
+              </div>
+              <p style={{fontSize:13,lineHeight:1.7,color:"var(--text-secondary)",margin:"0 0 14px"}}>
+                {getLocalizedField(selectedIncident,"rootCause",lang)}
+              </p>
+              <div style={{fontSize:13,fontWeight:700,color:"var(--text-muted)",marginBottom:8}}>
+                {t("incidentCorrectApproach")}
+              </div>
+              <p style={{fontSize:13,lineHeight:1.7,color:"var(--text-secondary)",margin:"0 0 12px"}}>
+                {getLocalizedField(selectedIncident,"correctApproach",lang)}
+              </p>
+              {selectedIncident.command&&(
+                <div style={{marginBottom:!passed?12:0}}>
+                  <TerminalBlock>{selectedIncident.command}</TerminalBlock>
+                </div>
+              )}
+              {!passed&&(
+                <div style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"10px 14px",marginTop:selectedIncident.command?0:4}}>
+                  <span style={{fontSize:12,fontWeight:700,color:"#F59E0B"}}>{t("incidentHintPrefix")}: </span>
+                  <span style={{fontSize:12,color:"#fbbf24",lineHeight:1.6}}>{getLocalizedField(selectedIncident,"hint",lang)}</span>
+                </div>
+              )}
+            </div>
+
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {/* LinkedIn share */}
-              <div style={{background:"rgba(10,102,194,0.06)",border:"1px solid rgba(10,102,194,0.2)",borderRadius:12,padding:"12px 14px"}}>
+              {/* LinkedIn share - only on success */}
+              {passed&&<div style={{background:"rgba(10,102,194,0.06)",border:"1px solid rgba(10,102,194,0.2)",borderRadius:12,padding:"12px 14px"}}>
                 <div style={{fontSize:11,color:"var(--text-dim)",marginBottom:8,textAlign:"left"}}>
                   {lang==="en"?"1. Copy this text  2. Open LinkedIn  3. Paste":"1. העתק את הטקסט  2. פתח LinkedIn  3. הדבק"}
                 </div>
@@ -5202,9 +5510,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     in {lang==="en"?"Open LinkedIn":"פתח LinkedIn"}
                   </a>
                 </div>
-              </div>
+              </div>}
+              <button onClick={()=>startIncident(selectedIncident)}
+                style={{padding:13,background:passed?"rgba(99,102,241,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${passed?"rgba(99,102,241,0.3)":"rgba(239,68,68,0.3)"}`,borderRadius:12,color:passed?"#6366F1":"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                {t("incidentRetry")}
+              </button>
               <button onClick={()=>setScreen("incidentList")}
-                style={{padding:13,background:"rgba(99,102,241,0.08)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:12,color:"#6366F1",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                style={{padding:13,background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:12,color:"var(--text-secondary)",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                 {t("incidentTryAnother")}
               </button>
               <button onClick={()=>setScreen("home")}

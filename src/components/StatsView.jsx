@@ -30,27 +30,33 @@ function getTopicStatus(topicId, completedTopics) {
 }
 
 function getTopicAccuracy(topicId, topicStats, completedTopics) {
-  if (topicStats[topicId] && topicStats[topicId].answered > 0) {
-    return Math.round(topicStats[topicId].correct / topicStats[topicId].answered * 100);
-  }
+  // Always derive from completedTopics to match level pill display
   let answered = 0, correct = 0;
   LVL_ORDER.forEach(lvl => {
     const r = completedTopics[`${topicId}_${lvl}`];
     if (r) { answered += (r.total || 0); correct += (r.correct || 0); }
   });
-  return answered > 0 ? Math.round(correct / answered * 100) : 0;
+  if (answered > 0) return Math.round(correct / answered * 100);
+  // Fall back to topicStats only if no completedTopics data
+  if (topicStats[topicId] && topicStats[topicId].answered > 0) {
+    return Math.round(topicStats[topicId].correct / topicStats[topicId].answered * 100);
+  }
+  return 0;
 }
 
 function getTopicAnswered(topicId, topicStats, completedTopics) {
-  if (topicStats[topicId] && topicStats[topicId].answered > 0) {
-    return topicStats[topicId].answered;
-  }
+  // Always derive from completedTopics to match level pill display
   let answered = 0;
   LVL_ORDER.forEach(lvl => {
     const r = completedTopics[`${topicId}_${lvl}`];
     if (r) answered += (r.total || 0);
   });
-  return answered;
+  if (answered > 0) return answered;
+  // Fall back to topicStats only if no completedTopics data
+  if (topicStats[topicId] && topicStats[topicId].answered > 0) {
+    return topicStats[topicId].answered;
+  }
+  return 0;
 }
 
 function accuracyColor(pct) {
@@ -66,9 +72,9 @@ function isFreeMode(topicId) {
 }
 
 const INCIDENT_DIFFICULTY = {
-  easy:         { label: "Easy",         labelHe: "קל",     color: "#10B981" },
-  intermediate: { label: "Intermediate", labelHe: "בינוני", color: "#F59E0B" },
-  hard:         { label: "Hard",         labelHe: "קשה",    color: "#EF4444" },
+  easy:   { label: "Easy",   labelHe: "קל",     color: "#10B981" },
+  medium: { label: "Medium", labelHe: "בינוני", color: "#F59E0B" },
+  hard:   { label: "Hard",   labelHe: "קשה",    color: "#EF4444" },
 };
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -77,6 +83,7 @@ export default function StatsView({
   stats, completedTopics, topicStats, topics, achievements,
   unlockedAchievements, completedIncidentIds, incidents,
   dailyStreak, levelOrder, levelConfig,
+  userRank, isGuest, getRankTier,
   lang, dir, t, onBack,
 }) {
   const accuracy = stats.total_answered > 0
@@ -113,13 +120,25 @@ export default function StatsView({
     );
   }
 
+  // ── Rank tier ────────────────────────────────────────────────────────────
+  const rankPercentile = userRank ? (userRank.percentile || 0) : 0;
+  const rankTopPct = Math.max(1, Math.round(100 - rankPercentile));
+  const rankTier = userRank && getRankTier ? getRankTier(rankPercentile) : null;
+
   // ── Primary stats (hero cards) ────────────────────────────────────────────
+  const rankCard = (!isGuest && userRank)
+    ? { label: t("rank"), value: `#${userRank.rank}`, color: "#DAA520",
+        sub: `${rankTier ? rankTier.icon : "\uD83C\uDFC6"} ${rankTier ? t(`rankTier_${rankTier.key}`) : ""} - Top ${rankTopPct}%` }
+    : { label: t("rank"), value: "\uD83D\uDD12", color: "#6B7280",
+        sub: t("rankGuestSub") };
+
   const primaryStats = [
     { label: t("statsAccuracy"), value: `${accuracy}%`, color: accuracyColor(accuracy) },
     { label: t("score"),         value: stats.total_score, color: "#F59E0B" },
+    rankCard,
     { label: t("streak"),        value: `x${stats.current_streak}`, color: "#FF6B35",
       sub: `${t("statsBestStreak")}: ${stats.max_streak}` },
-  ];
+  ].filter(Boolean);
 
   // ── Secondary stats (compact row) ─────────────────────────────────────────
   const secondaryStats = [
@@ -129,8 +148,8 @@ export default function StatsView({
   ];
 
   // ── Incident progress ─────────────────────────────────────────────────────
-  const incidentsByDiff = { easy: 0, intermediate: 0, hard: 0 };
-  const incidentsDoneByDiff = { easy: 0, intermediate: 0, hard: 0 };
+  const incidentsByDiff = { easy: 0, medium: 0, hard: 0 };
+  const incidentsDoneByDiff = { easy: 0, medium: 0, hard: 0 };
   (incidents || []).forEach(inc => {
     if (incidentsByDiff[inc.difficulty] !== undefined) incidentsByDiff[inc.difficulty]++;
     if (completedIncidentIds.includes(inc.id) && incidentsDoneByDiff[inc.difficulty] !== undefined)
@@ -155,7 +174,7 @@ export default function StatsView({
       </h2>
 
       {/* ── Primary stats (hero row) ──────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${primaryStats.length > 3 ? 2 : 3}, 1fr)`, gap: 10, marginBottom: 12 }}>
         {primaryStats.map((s, i) => (
           <div key={i} style={{
             background: "var(--glass-2)",
@@ -366,7 +385,7 @@ export default function StatsView({
 
             {/* Per-difficulty breakdown */}
             <div style={{ display: "flex", gap: 6 }}>
-              {["easy", "intermediate", "hard"].map(diff => (
+              {["easy", "medium", "hard"].map(diff => (
                 <div key={diff} style={{
                   flex: 1,
                   textAlign: "center",

@@ -141,7 +141,7 @@ export async function checkIncidentAnswer(supabase, stepId, selectedIndex) {
 
 /**
  * Fetch leaderboard (top N players).
- * Returns: [{ username, total_score, max_streak }]
+ * Returns: [{ username, total_score, max_streak, total_answered, total_correct, total_users }]
  */
 export async function fetchLeaderboard(supabase, limit = 10) {
   const { data, error } = await supabase.rpc("get_leaderboard", {
@@ -152,8 +152,8 @@ export async function fetchLeaderboard(supabase, limit = 10) {
 }
 
 /**
- * Fetch the current user's rank.
- * Returns: { rank: number, score: number }
+ * Fetch the current user's rank, percentile, and XP to next rank.
+ * Returns: { rank: number, score: number, percentile: number, total_users: number, xp_to_next: number }
  */
 export async function fetchUserRank(supabase, userId) {
   const { data, error } = await supabase.rpc("get_user_rank", {

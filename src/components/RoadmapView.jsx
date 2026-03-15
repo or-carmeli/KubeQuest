@@ -45,7 +45,7 @@ function nextRecommendedLevel(topicId, completedTopics, isLevelLocked) {
 
 export default function RoadmapView({
   topics, levelConfig, completedTopics, isLevelLocked,
-  startTopic, startMixedQuiz, lang, t, dir,
+  startTopic, lang, t, dir,
 }) {
   const [expandedStage, setExpandedStage] = useState(null);
   const rowDir = dir === "rtl" ? "row-reverse" : "row";
@@ -73,14 +73,6 @@ export default function RoadmapView({
     return Math.min(100, Math.round((done / totalUnits) * 100));
   })();
 
-  const handleGlobalContinue = () => {
-    const idx   = allDone ? 0 : currentStageIdx;
-    const topic = topics[idx];
-    const lvl   = nextRecommendedLevel(topic.id, completedTopics, isLevelLocked);
-    if (lvl) startTopic(topic, lvl);
-    else     startMixedQuiz();
-  };
-
   return (
     <div style={{animation:"fadeIn 0.4s ease",direction:"ltr"}}>
 
@@ -97,16 +89,6 @@ export default function RoadmapView({
         </div>
         <div style={{fontSize:12,color:"var(--text-secondary)",textAlign:"center"}}>{overallProgress}% {t("roadmapCompletedPct")}</div>
       </div>
-
-      {/* ── Global start (only shown before user begins) ── */}
-      {!allDone && overallProgress === 0 && (
-        <button onClick={handleGlobalContinue}
-          style={{width:"100%",marginBottom:20,padding:"14px 20px",background:"linear-gradient(135deg,rgba(0,212,255,0.18),rgba(168,85,247,0.18))",border:"2px solid rgba(0,212,255,0.45)",borderRadius:14,cursor:"pointer",color:"#00D4FF",fontWeight:800,fontSize:16,direction:dir,transition:"transform 0.2s",boxShadow:"0 4px 20px rgba(0,212,255,0.2)"}}
-          onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
-          onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-          {t("roadmapStart")}
-        </button>
-      )}
 
       {/* ── Roadmap path ── */}
       <div style={{display:"flex",flexDirection:"column"}}>
@@ -226,7 +208,7 @@ export default function RoadmapView({
                   <button disabled style={{width:"100%",padding:"8px",background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.18)",borderRadius:10,color:"#10B981",fontSize:13,fontWeight:700,cursor:"default",opacity:0.8,direction:dir}}>
                     {t("roadmapDone")}
                   </button>
-                ) : recLvl && !(overallProgress === 0 && isCurrent) ? (
+                ) : recLvl ? (
                   <button onClick={()=>startTopic(topic,recLvl)}
                     style={{width:"100%",padding:"8px",background:`linear-gradient(135deg,${topic.color}20,${topic.color}10)`,border:`1px solid ${topic.color}40`,borderRadius:10,color:topic.color,fontSize:13,fontWeight:700,cursor:"pointer",transition:"transform 0.15s",direction:dir,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}
                     onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
