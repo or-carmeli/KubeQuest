@@ -59,25 +59,24 @@ if (!supabase) console.warn("[KubeQuest] Supabase not configured. VITE_SUPABASE_
 console.info("[KubeQuest:boot] App.jsx module executing");
 checkDataVersion();
 
-// Proactively check Supabase auth token: if the stored session has an expired refresh token,
-// clear it now to prevent createClient/getSession from hanging on a doomed refresh attempt.
+// Stale token cleanup REMOVED (Bug 1 fix).
+// The previous code deleted the entire Supabase auth blob (access + refresh token) when the
+// access token expired >24h ago. But Supabase refresh tokens live 30-90 days, so this
+// destroyed valid sessions for users who hadn't visited recently.
+// The custom supabaseLock() above already prevents the Web Locks deadlock this was meant to fix.
+
+// Detect if we arrived via a password-recovery redirect (?code= in URL).
+// With PKCE flow, PASSWORD_RECOVERY event may not fire - we use sessionStorage
+// so the recovery state survives the code exchange and any micro-redirects.
 try {
-  const sbUrl = SUPABASE_URL || "";
-  const projRef = sbUrl.replace("https://","").split(".")[0];
-  if (projRef) {
-    const sbKey = `sb-${projRef}-auth-token`;
-    const raw = localStorage.getItem(sbKey);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const expiresAt = parsed?.expires_at; // Unix timestamp (seconds)
-      if (expiresAt && expiresAt < Date.now() / 1000 - 86400) {
-        // Token expired >24h ago. The refresh token is almost certainly dead too
-        console.warn("[KubeQuest:boot] Clearing stale Supabase auth token (expired", Math.round((Date.now()/1000 - expiresAt)/3600), "h ago)");
-        localStorage.removeItem(sbKey);
-      }
-    }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has("code")) {
+    // We can't know yet if this code is for recovery or signup confirmation.
+    // Mark it as "pending" - the onAuthStateChange handler will confirm via
+    // session.user.recovery_sent_at before activating the password reset UI.
+    sessionStorage.setItem("kq_recovery_pending", "1");
   }
-} catch { /* ignore. Token check is best-effort */ }
+} catch { /* ignore */ }
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -212,6 +211,7 @@ const TRANSLATIONS = {
     reviewBtn: "צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
     saveErrorText: "⚠️ הנתונים לא נשמרו - בדקי חיבור לאינטרנט",
+    loadDataError: "⚠️ טעינת הנתונים נכשלה - משתמשת בנתונים מקומיים",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
     optionLabels: ["א","ב","ג","ד"], guestName: "אורחת",
     resetProgress: "אפסי התקדמות", resetConfirm: "האם את בטוחה? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
@@ -273,6 +273,7 @@ const TRANSLATIONS = {
     timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
     reviewBtn_m: "צפה בסקירה", hideReview_m: "הסתר סקירה",
     saveErrorText_m: "⚠️ הנתונים לא נשמרו - בדוק חיבור לאינטרנט",
+    loadDataError_m: "⚠️ טעינת הנתונים נכשלה - משתמש בנתונים מקומיים",
     guestName_m: "אורח",
     resetProgress_m: "אפס התקדמות", resetConfirm_m: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
     resetTopic_m: "אפס נושא",
@@ -450,6 +451,7 @@ const TRANSLATIONS = {
     reviewBtn: "View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
     loadingText: "Loading...",
     saveErrorText: "⚠️ Data not saved - check your internet connection",
+    loadDataError: "⚠️ Failed to load your data - using cached progress",
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
     optionLabels: ["A","B","C","D"], guestName: "Guest",
     resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
@@ -1060,12 +1062,18 @@ export default function K8sQuestApp() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail]       = useState("");
   const [resetStatus, setResetStatus]     = useState("");
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  // Restore recovery state from sessionStorage so a page refresh during
+  // password reset doesn't lose the screen (the ?code= was already consumed).
+  const [showPasswordReset, setShowPasswordReset] = useState(() => {
+    try { return sessionStorage.getItem("kq_show_password_reset") === "1"; } catch { return false; }
+  });
   const [newPassword, setNewPassword]     = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const [passwordResetError, setPasswordResetError] = useState("");
-  const passwordRecoveryRef               = useRef(false);
+  const passwordRecoveryRef               = useRef((() => {
+    try { return sessionStorage.getItem("kq_show_password_reset") === "1"; } catch { return false; }
+  })());
 
   const [screen, setScreen]               = useState(()=>{
     if (window.location.pathname==="/status" || window.location.hostname==="status.kubequest.online") return "status";
@@ -1445,6 +1453,28 @@ export default function K8sQuestApp() {
     // In Supabase v2, it fires INITIAL_SESSION exactly once when the stored
     // session is resolved. Using getSession() in parallel creates a race
     // where loadUserData() is called twice with independent timeouts.
+
+    // Helper: detect recovery session via recovery_sent_at timestamp.
+    // With PKCE flow, PASSWORD_RECOVERY event may not fire separately -
+    // the recovery session can arrive via INITIAL_SESSION or SIGNED_IN instead.
+    const isRecoverySession = (s) => {
+      if (!s?.user?.recovery_sent_at) return false;
+      const pending = sessionStorage.getItem("kq_recovery_pending");
+      if (!pending) return false;
+      const elapsed = Date.now() - new Date(s.user.recovery_sent_at).getTime();
+      return elapsed < 600_000; // recovery initiated within 10 min
+    };
+
+    const activateRecovery = (s) => {
+      sessionStorage.removeItem("kq_recovery_pending");
+      try { sessionStorage.setItem("kq_show_password_reset", "1"); } catch {}
+      passwordRecoveryRef.current = true;
+      setUser(s.user);
+      setShowPasswordReset(true);
+      setAuthChecked(true);
+      setDataLoaded(true);
+    };
+
     console.info("[KubeQuest:boot] subscribing to onAuthStateChange");
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.info("[KubeQuest:boot] auth event:", event, "session:", !!session);
@@ -1452,6 +1482,19 @@ export default function K8sQuestApp() {
       if (event === "INITIAL_SESSION") {
         clearTimeout(hardTimeout);
         if (session) {
+          // PKCE fix: recovery session may arrive via INITIAL_SESSION
+          if (isRecoverySession(session)) {
+            activateRecovery(session);
+            return;
+          }
+          // Page refresh during password reset: passwordRecoveryRef was
+          // restored from sessionStorage - keep showing the reset screen.
+          if (passwordRecoveryRef.current) {
+            setUser(session.user);
+            setAuthChecked(true);
+            setDataLoaded(true);
+            return;
+          }
           setUser(session.user);
           loadUserData(session.user.id, session.user);
         } else {
@@ -1461,13 +1504,15 @@ export default function K8sQuestApp() {
         }
         setAuthChecked(true);
       } else if (event === "PASSWORD_RECOVERY") {
-        passwordRecoveryRef.current = true;
-        setUser(session.user);
-        setShowPasswordReset(true);
-        setAuthChecked(true);
-        setDataLoaded(true);
+        // Supabase versions that fire this event correctly
+        activateRecovery(session);
       } else if (event === "SIGNED_IN") {
         if (passwordRecoveryRef.current) return;
+        // PKCE fix: recovery session may arrive via SIGNED_IN
+        if (isRecoverySession(session)) {
+          activateRecovery(session);
+          return;
+        }
         setUser(session.user);
         loadUserData(session.user.id, session.user);
         setAuthChecked(true);
@@ -1891,12 +1936,14 @@ export default function K8sQuestApp() {
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
       setDataLoaded(true);
-    } catch {
-      // Network error or unexpected failure - unblock the UI
+    } catch (err) {
+      // Network error or unexpected failure - unblock the UI and surface the error
+      console.error("[KubeQuest:boot] loadUserData failed:", err);
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
       achievementsLoaded.current = true;
       setDataLoaded(true);
+      setSaveError(t("loadDataError") || "Failed to load your data. Using cached progress.");
     }
 
     // Check for a saved in-progress quiz belonging to this user
@@ -1990,9 +2037,14 @@ export default function K8sQuestApp() {
         else
           setAuthError(error.message);
       } else if (!data.user?.identities?.length) {
-        // Supabase returns fake success (empty identities) when email already exists
+        // Supabase returns fake success (empty identities) when email already exists (confirmed)
         setAuthError(t("emailAlreadyExists"));
         setAuthScreen("login");
+      } else if (data.user?.created_at &&
+                 (Date.now() - new Date(data.user.created_at).getTime() > 30_000)) {
+        // User was created more than 30s ago - re-signup of an unconfirmed account.
+        // Supabase re-sent the confirmation email but the account already existed.
+        setAuthError(t("emailAlreadySent"));
       } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
     } catch (err) {
       console.error("[KubeQuest] signUp error:", err);
@@ -2067,6 +2119,8 @@ export default function K8sQuestApp() {
       if (error) { setPasswordResetLoading(false); setPasswordResetError(error.message); return; }
       passwordRecoveryRef.current = false;
       setShowPasswordReset(false);
+      try { sessionStorage.removeItem("kq_show_password_reset"); } catch {}
+      try { sessionStorage.removeItem("kq_recovery_pending"); } catch {}
       setNewPassword("");
       setConfirmPassword("");
       await supabase.auth.signOut();
