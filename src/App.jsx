@@ -3648,27 +3648,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {t("warRoomNotification")}
         </button>
       )}
-      {/* Password recovery: full-screen overlay shown when arriving via reset email link */}
-      {showPasswordReset && (
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"var(--overlay)",display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
-          <div role="dialog" aria-modal="true" style={{background:"var(--bg-card)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:18,padding:"28px 24px",width:"min(400px,100%)",animation:"fadeIn 0.3s ease",direction:dir}}>
-            <h2 style={{margin:"0 0 6px",fontSize:20,fontWeight:800,color:"var(--text-primary)",textAlign:"center"}}>{t("setNewPasswordTitle")}</h2>
-            <p style={{margin:"0 0 20px",fontSize:13,color:"var(--text-dim)",textAlign:"center"}}>{user?.email}</p>
-            <label style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("newPasswordLabel")}</label>
-            <input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password" autoFocus
-              style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:12}}/>
-            <label style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("confirmPasswordLabel")}</label>
-            <input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password"
-              onKeyDown={e=>{if(e.key==="Enter"&&newPassword&&confirmPassword)handlePasswordUpdate()}}
-              style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:16}}/>
-            {passwordResetError&&<div role="alert" style={{marginBottom:14,fontSize:12,padding:"8px 12px",borderRadius:8,color:"#EF4444",background:"rgba(239,68,68,0.08)"}}>{passwordResetError}</div>}
-            <button onClick={handlePasswordUpdate} disabled={passwordResetLoading||!newPassword||!confirmPassword}
-              style={{width:"100%",padding:"14px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",opacity:(passwordResetLoading||!newPassword||!confirmPassword)?0.5:1}}>
-              {passwordResetLoading?t("loading"):t("saveNewPassword")}
-            </button>
-          </div>
-        </div>
-      )}
       {/* Skip-to-content - invisible until focused by keyboard */}
       {!isStatusDomain && <a href="#main-content"
         style={{position:"fixed",top:-100,left:8,zIndex:9999,padding:"8px 16px",background:"#00D4FF",color:"var(--text-bright)",borderRadius:8,fontWeight:700,fontSize:14,textDecoration:"none",transition:"top 0.15s",direction:"ltr"}}
