@@ -177,6 +177,9 @@ const TRANSLATIONS = {
     resetEmailError: "❌ שגיאה בשליחת קישור איפוס. נסי שוב.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
+    newPasswordLabel: "סיסמה חדשה", confirmPasswordLabel: "אימות סיסמה",
+    saveNewPassword: "שמרי סיסמה חדשה", passwordUpdatedSuccess: "הסיסמה עודכנה בהצלחה",
+    passwordMismatch: "הסיסמאות אינן תואמות", passwordTooShort: "הסיסמה חייבת להכיל לפחות 6 תווים",
     greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
     leaderboardBtn: "🏆 דירוג", logout: "יציאה",
     guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
@@ -253,6 +256,7 @@ const TRANSLATIONS = {
     sendResetLink_m: "שלח קישור איפוס",
     resetEmailSent_m: "✅ נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "❌ שגיאה בשליחת קישור איפוס. נסה שוב.",
+    saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow_m: "הרשם", loginNow_m: "התחבר", alreadyHaveAccount_m: "יש לך חשבון?",
@@ -409,6 +413,9 @@ const TRANSLATIONS = {
     resetEmailError: "❌ Failed to send reset link. Please try again.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
+    newPasswordLabel: "New Password", confirmPasswordLabel: "Confirm Password",
+    saveNewPassword: "Save New Password", passwordUpdatedSuccess: "Password updated successfully",
+    passwordMismatch: "Passwords do not match", passwordTooShort: "Password must be at least 6 characters",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
     leaderboardBtn: "🏆 Leaderboard", logout: "Logout",
     guestBanner: "💡 Sign up to save progress and appear on the leaderboard",
@@ -1049,6 +1056,12 @@ export default function K8sQuestApp() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail]       = useState("");
   const [resetStatus, setResetStatus]     = useState("");
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword]     = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [passwordResetError, setPasswordResetError] = useState("");
+  const passwordRecoveryRef               = useRef(false);
 
   const [screen, setScreen]               = useState(()=>{
     if (window.location.pathname==="/status" || window.location.hostname==="status.kubequest.online") return "status";
@@ -1442,7 +1455,14 @@ export default function K8sQuestApp() {
           setDataLoaded(true);
         }
         setAuthChecked(true);
+      } else if (event === "PASSWORD_RECOVERY") {
+        passwordRecoveryRef.current = true;
+        setUser(session.user);
+        setShowPasswordReset(true);
+        setAuthChecked(true);
+        setDataLoaded(true);
       } else if (event === "SIGNED_IN") {
+        if (passwordRecoveryRef.current) return;
         setUser(session.user);
         loadUserData(session.user.id, session.user);
         setAuthChecked(true);
@@ -2007,6 +2027,24 @@ export default function K8sQuestApp() {
     });
     setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
     setResetLoading(false);
+  };
+
+  const handlePasswordUpdate = async () => {
+    setPasswordResetError("");
+    if (newPassword.length < 6) { setPasswordResetError(t("passwordTooShort")); return; }
+    if (newPassword !== confirmPassword) { setPasswordResetError(t("passwordMismatch")); return; }
+    setPasswordResetLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPasswordResetLoading(false);
+    if (error) { setPasswordResetError(error.message); return; }
+    passwordRecoveryRef.current = false;
+    setShowPasswordReset(false);
+    setNewPassword("");
+    setConfirmPassword("");
+    await supabase.auth.signOut();
+    setUser(null);
+    setAuthError("\u2705 " + t("passwordUpdatedSuccess"));
+    setAuthScreen("login");
   };
 
   const handleLogout = async () => {
@@ -2965,13 +3003,21 @@ export default function K8sQuestApp() {
     return () => clearInterval(incidentTimerRef.current);
   }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── War Room: fetch interest count when entering incidentList screen ──────
+  // ── War Room: fetch interest count + check registration on incidentList screen ──
   useEffect(() => {
     if (screen !== "incidentList" || !supabase) return;
     supabase.rpc("get_war_room_interest_count").then(({ data }) => {
       if (data?.count != null) setWarRoomInterestCount(data.count);
     }).catch(() => {});
-  }, [screen]);
+    if (!isGuest && user?.id && user.id !== "guest") {
+      supabase.rpc("check_war_room_interest").then(({ data }) => {
+        if (data?.registered) {
+          setWarRoomInterestRegistered(true);
+          try { localStorage.setItem("warroom_interest_v1", "1"); } catch {}
+        }
+      }).catch(() => {});
+    }
+  }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── War Room: periodic notification when user is on safe screens ──────────
   useEffect(() => {
@@ -3391,6 +3437,48 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
     </div>
   );
   }
+
+  if (showPasswordReset) return (
+    <div data-kq-rendered="password-reset" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}button,input{font-family:inherit}button:focus-visible,input:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}`}</style>
+      <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
+        <div style={{textAlign:"center",marginBottom:34}}>
+          <svg width="64" height="64" viewBox="0 0 100 100" style={{marginBottom:10,filter:"drop-shadow(0 0 18px rgba(0,212,255,0.45))"}} xmlns="http://www.w3.org/2000/svg">
+            <defs><radialGradient id="ibg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="igr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
+            <circle cx="50" cy="50" r="50" fill="url(#ibg)"/>
+            <circle cx="50" cy="50" r="44" fill="none" stroke="url(#igr)" strokeWidth="4" opacity="0.9"/>
+            <g transform="translate(50,50)" stroke="url(#igr)" strokeWidth="2.8" strokeLinecap="round">
+              {[0,51.4,102.8,154.2,205.7,257.1,308.5].map((deg,i)=><line key={i} x1="0" y1="-18" x2="0" y2="-34" transform={`rotate(${deg})`}/>)}
+            </g>
+            <circle cx="50" cy="50" r="10" fill="none" stroke="url(#igr)" strokeWidth="3"/>
+            <circle cx="50" cy="50" r="5" fill="#00D4FF"/>
+            {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
+          </svg>
+          <h1 style={{fontSize:33,fontWeight:900,margin:"0 0 6px",background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))"}}>KubeQuest</h1>
+        </div>
+        <div style={{background:"var(--glass-5)",border:"1px solid var(--glass-12)",borderRadius:14,padding:"24px 20px"}}>
+          <h3 style={{margin:"0 0 20px",fontSize:16,fontWeight:700,color:"var(--text-primary)",textAlign:"center"}}>{t("resetPasswordTitle")}</h3>
+          <form onSubmit={e=>{e.preventDefault();handlePasswordUpdate();}}>
+            <div style={{marginBottom:12}}>
+              <label htmlFor="new-password" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("newPasswordLabel")}</label>
+              <input id="new-password" type="password" autoComplete="new-password" autoFocus value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="••••••••"
+                style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
+            </div>
+            <div style={{marginBottom:16}}>
+              <label htmlFor="confirm-password" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("confirmPasswordLabel")}</label>
+              <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••"
+                style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
+            </div>
+            {passwordResetError&&<div role="alert" aria-live="assertive" style={{marginBottom:12,color:"#EF4444",fontSize:12,padding:"8px 12px",background:"rgba(239,68,68,0.08)",borderRadius:8}}>{passwordResetError}</div>}
+            <button type="submit" disabled={passwordResetLoading||!newPassword||!confirmPassword}
+              style={{width:"100%",padding:"14px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",opacity:(passwordResetLoading||!newPassword||!confirmPassword)?0.5:1,transition:"opacity 0.2s"}}>
+              {passwordResetLoading?t("loading"):t("saveNewPassword")}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
 
   if (!user && !isStatusDomain) return (
     <div data-kq-rendered="auth" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
