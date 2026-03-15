@@ -38,6 +38,7 @@ const KQ_STORAGE_KEYS = [
   "k8s_guest_session",
   "scoredFreeKeys_v1",
   "incident_progress_v1",
+  "incident_completed_v1",
   "k8s_quiz_inprogress_v1",
   "resumeDismissedAt",
 ];

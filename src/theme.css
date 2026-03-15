@@ -8,7 +8,7 @@
   color-scheme: dark;
 
   /* Backgrounds */
-  --bg-body: #020817;
+  --bg-body: #050b18;
   --bg-card: #0f172a;
   --bg-elevated: #1e293b;
 
@@ -59,11 +59,11 @@
   --shadow-heavy: 0 8px 32px rgba(0,0,0,0.5);
 
   /* Gradients */
-  --gradient-body: linear-gradient(160deg, #020817 0%, #0f172a 60%, #020817 100%);
-  --gradient-body-simple: linear-gradient(160deg, #020817, #0f172a);
+  --gradient-body: linear-gradient(168deg, #050b18 0%, #0b132b 55%, #050b18 100%);
+  --gradient-body-simple: linear-gradient(168deg, #050b18, #0b132b);
 
   /* Grid overlay */
-  --grid-line: rgba(0,212,255,0.02);
+  --grid-line: rgba(0,212,255,0.03);
 }
 
 /* ── Light theme ─────────────────────────────────────────────────── */

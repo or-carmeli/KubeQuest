@@ -11,166 +11,7 @@
 
 export const INCIDENTS = [
   // ─────────────────────────────────────────────────────────────────────────
-  // 1. OOMKilled - memory limits too low
-  // ─────────────────────────────────────────────────────────────────────────
-  {
-    id: "oom-killed",
-    incidentCode: "INC-3015",
-    icon: "💥",
-    title: "Production API: Endless Restarts Under Load",
-    titleShort: "API Restarts Under Load",
-    titleShortHe: "API קורס תחת עומס",
-    titleHe: "API בפרודקשן: ריסטארטים אינסופיים תחת עומס",
-    description: "A critical API pod keeps restarting every 2 minutes under load",
-    descriptionHe: "Pod של API קריטי מתאפס כל 2 דקות תחת עומס",
-    cluster: "prod-central",
-    namespace: "production",
-    difficulty: "intermediate",
-    estimatedTime: "5-7 min",
-    steps: [
-      {
-        prompt:
-          "Restarting Pod: 503 Errors in Production\n\n• `api-server` pod in namespace `production` restarts every 2 minutes\n• Users are reporting intermittent 503 errors\n\nWhat is your first action?",
-        promptHe:
-          "Pod מתאפס: שגיאות 503 בפרודקשן\n\n• ה-Pod `api-server` ב-namespace `production` מתאפס כל 2 דקות\n• משתמשים מדווחים על שגיאות 503\n\nמה הצעד הראשון שלך?",
-        options: [
-          "kubectl get pods -n production",
-          "kubectl delete pod api-server -n production",
-          "kubectl scale deployment api-server --replicas=0 -n production",
-          "Immediately reboot the node hosting the pod",
-        ],
-        optionsHe: [
-          "kubectl get pods -n production",
-          "kubectl delete pod api-server -n production",
-          "kubectl scale deployment api-server --replicas=0 -n production",
-          "לאתחל מיידית את ה-Node שמריץ את ה-Pod",
-        ],
-        answer: 0,
-        explanation:
-          "✓ `kubectl get pods` shows current state without causing disruption.\n✗ Deleting the pod or scaling to 0 worsens the outage. Rebooting a node is too drastic before knowing the cause.",
-        explanationHe:
-          "✓ `kubectl get pods` מציג את המצב הנוכחי מבלי לגרום להפרעה.\n✗ מחיקת Pod או הקטנה ל-0 מחמירה את הנפילה. אתחול Node קיצוני מדי לפני שמבינים את הסיבה.",
-      },
-      {
-        prompt:
-          "OOMKilled Status Detected\n\n• Pod `api-server-xyz` shows status `OOMKilled`\n• Restart count: 14\n• Pod age: 2 hours\n\nNAME            READY   STATUS      RESTARTS   AGE\napi-server-xyz  0/1     OOMKilled   14         2h\n\nWhat does OOMKilled mean, and which command gives the most detail?",
-        promptHe:
-          "זוהה סטטוס OOMKilled\n\n• Pod `api-server-xyz` מציג סטטוס `OOMKilled`\n• מספר אתחולים: 14\n• גיל Pod: שעתיים\n\nNAME            READY   STATUS      RESTARTS   AGE\napi-server-xyz  0/1     OOMKilled   14         2h\n\nמה המשמעות של OOMKilled, ואיזו פקודה תיתן את המידע המפורט ביותר?",
-        options: [
-          "OOMKilled is a liveness probe failure - check probe config with kubectl edit deployment",
-          "OOMKilled means the container exceeded its memory limit - run kubectl describe pod api-server-xyz -n production",
-          "OOMKilled means a network timeout - check NetworkPolicy rules",
-          "OOMKilled is caused by a bad Docker image - re-pull the image",
-        ],
-        optionsHe: [
-          "OOMKilled = כשל liveness probe, בדוק probe עם kubectl edit deployment",
-          "OOMKilled = קונטיינר עבר מגבלת זיכרון, kubectl describe pod api-server-xyz -n production",
-          "OOMKilled = timeout ברשת, בדוק NetworkPolicy",
-          "OOMKilled = image פגום, משוך מחדש",
-        ],
-        answer: 1,
-        explanation:
-          "✓ OOMKilled = Out Of Memory Killed. The Linux kernel terminates the container for exceeding its memory limit.\n→ `kubectl describe pod` shows the exact memory limit, termination reason, and recent events.\n✗ Not a probe failure, network issue, or bad image.",
-        explanationHe:
-          "✓ OOMKilled = Out Of Memory Killed. ליבת לינוקס ממיתה את הקונטיינר על חריגת מגבלת זיכרון.\n`kubectl describe pod` מציג מגבלת זיכרון, סיבת סיום ואירועים אחרונים.\n✗ לא כשל probe, לא בעיית רשת, לא image פגום.",
-      },
-      {
-        prompt:
-          "Memory Limit Too Low\n\n• Container memory limit: 256Mi\n• Exit code: 137 (OOMKilled)\n• Pod keeps crashing under load\n\nHow do you determine the right memory limit?",
-        promptHe:
-          "מגבלת זיכרון נמוכה מדי\n\n• מגבלת זיכרון קונטיינר: 256Mi\n• קוד יציאה: 137 (OOMKilled)\n• ה-Pod ממשיך לקרוס תחת עומס\n\nכיצד קובעים את מגבלת הזיכרון הנכונה?",
-        options: [
-          "kubectl top pod api-server-xyz -n production  (see actual memory usage)",
-          "kubectl logs api-server-xyz -n production --previous  (scan logs for errors)",
-          "kubectl get node  (check node total memory)",
-          "kubectl get hpa -n production  (check autoscaler settings)",
-        ],
-        optionsHe: [
-          "kubectl top pod api-server-xyz -n production  (צפה בשימוש זיכרון בפועל)",
-          "kubectl logs api-server-xyz -n production --previous  (סרוק לוגים לשגיאות)",
-          "kubectl get node  (בדוק כמות זיכרון כוללת ב-Node)",
-          "kubectl get hpa -n production  (בדוק הגדרות auto-scaler)",
-        ],
-        answer: 0,
-        explanation:
-          "✓ `kubectl top pod` shows real-time memory consumption. Compare actual usage vs the 256Mi limit.\n→ This tells you exactly how much headroom the pod needs.\n✗ Logs help find leaks, not current usage. Node memory ≠ per-pod usage. HPA controls replica count, not memory.",
-        explanationHe:
-          "✓ `kubectl top pod` מציג צריכת זיכרון בזמן אמת. השווה שימוש בפועל מול מגבלת 256Mi.\nזה מראה בדיוק כמה מרווח ה-Pod צריך.\n✗ לוגים עוזרים לזהות דליפות, לא שימוש נוכחי. זיכרון Node ≠ שימוש per-pod. HPA שולט ברפליקות, לא בזיכרון.",
-      },
-      {
-        prompt:
-          "Choosing the Right Memory Limit\n\n• Idle memory usage: ~240Mi\n• Under load: spikes to 320Mi\n• Current limit: 256Mi. Too low for spikes\n\nWhat is the correct fix?",
-        promptHe:
-          "בחירת מגבלת הזיכרון הנכונה\n\n• שימוש זיכרון במנוחה: ~240Mi\n• תחת עומס: עולה ל-320Mi\n• מגבלה נוכחית: 256Mi. נמוכה מדי לקפיצות\n\nמה התיקון הנכון?",
-        options: [
-          "Delete the pod - Kubernetes will recreate it and somehow the memory issue will go away",
-          "Increase the memory limit to 512Mi and set request to 256Mi in the Deployment spec",
-          "Add a NetworkPolicy to throttle incoming requests",
-          "Restart the kubelet on the affected node",
-        ],
-        optionsHe: [
-          "למחוק את ה-Pod. Kubernetes ייצור מחדש, הבעיה תיפתר מאליה",
-          "להגדיל את מגבלת הזיכרון ל-512Mi ולהגדיר request ל-256Mi ב-spec של ה-Deployment",
-          "להוסיף NetworkPolicy לצמצום בקשות נכנסות",
-          "לאתחל את ה-kubelet ב-Node המושפע",
-        ],
-        answer: 1,
-        explanation:
-          "✓ Set limit=512Mi (ceiling), request=256Mi (guaranteed). Gives headroom for traffic spikes.\n→ Follows K8s best practice: limit ≥ request, Burstable QoS class.\n✗ Deleting pod or restarting kubelet doesn't change limits. NetworkPolicy controls traffic, not memory.",
-        explanationHe:
-          "✓ הגדר limit=512Mi (תקרה), request=256Mi (מובטח). מאפשר מרווח לקפיצות.\nעומד בנוהלי K8s: limit ≥ request, QoS class Burstable.\n✗ מחיקת Pod או אתחול kubelet לא משנים מגבלות. NetworkPolicy שולטת בתעבורה, לא בזיכרון.",
-      },
-      {
-        prompt:
-          "Verifying the Rolling Update\n\n• Deployment patched with new memory limits\n• New limit: 512Mi, request: 256Mi\n• Rolling update in progress\n\nHow do you verify the update succeeded?",
-        promptHe:
-          "אימות ה-Rolling Update\n\n• ה-Deployment עודכן עם מגבלות זיכרון חדשות\n• מגבלה חדשה: 512Mi, request: 256Mi\n• Rolling update בתהליך\n\nכיצד מוודאים שהעדכון הצליח?",
-        options: [
-          "kubectl rollout status deployment/api-server -n production",
-          "kubectl get pods -n production -w  (watch pod restarts)",
-          "kubectl get events -n production --sort-by=.metadata.creationTimestamp",
-          "All of the above - rollout status + watching pods + events together",
-        ],
-        optionsHe: [
-          "kubectl rollout status deployment/api-server -n production",
-          "kubectl get pods -n production -w  (עקוב אחר אתחולי Pod)",
-          "kubectl get events -n production --sort-by=.metadata.creationTimestamp",
-          "כל האמור לעיל: סטטוס rollout + מעקב Pods + Events יחד",
-        ],
-        answer: 3,
-        explanation:
-          "✓ All three together give full confidence:\n→ `rollout status` confirms completion. Watch pods confirms Ready. Events reveals scheduling issues.\n✗ Any single command alone misses potential failure modes.",
-        explanationHe:
-          "✓ כל שלושתם יחד נותנים ביטחון מלא:\n`rollout status` מאשר סיום. מעקב Pods מאשר Ready. Events חושף בעיות תזמון.\n✗ כל פקודה בודדת לבדה מפספסת אופני כשל אפשריים.",
-      },
-      {
-        prompt:
-          "Post-Incident: Preventing Recurrence\n\n• Fix applied: memory limit increased to 512Mi\n• Pod stable for 15 minutes, no more OOMKills\n• Incident resolved\n\nWhat should you do before closing the incident?",
-        promptHe:
-          "לאחר האירוע: מניעת הישנות\n\n• תיקון הוחל: מגבלת זיכרון הוגדלה ל-512Mi\n• Pod יציב 15 דקות, אין עוד OOMKills\n• האירוע נפתר\n\nמה עליך לעשות לפני סגירת האירוע?",
-        options: [
-          "Increase all node sizes immediately as a precaution",
-          "Add a Prometheus alert on memory usage > 80% of limit, and audit resource limits on all other Deployments",
-          "Set memory limit to unlimited so it never OOMKills again",
-          "No action needed - the incident is resolved",
-        ],
-        optionsHe: [
-          "להגדיל את גודל כל ה-Nodes מיידית כאמצעי זהירות",
-          "להוסיף התראת Prometheus על שימוש בזיכרון > 80% מהמגבלה, ולבדוק מגבלות משאבים בכל ה-Deployments האחרים",
-          "להגדיר מגבלת זיכרון ללא הגבלה כדי שלא יהיה יותר OOMKill",
-          "אין צורך בפעולה: האירוע נפתר",
-        ],
-        answer: 1,
-        explanation:
-          "✓ Add memory-usage alert (>80%) + audit all workloads → catches future OOM pressure before outage.\n✗ Unlimited limits removes safety, risks starving other pods. Closing without action guarantees recurrence.",
-        explanationHe:
-          "✓ הוסף התראת זיכרון (>80%) + בדוק כל עומסי העבודה. כך מאתרים לחץ OOM עתידי לפני השבתה.\n✗ מגבלות ללא הגבלה מסירות רשת ביטחון, מסכנות Pods אחרים. סגירה ללא פעולה מבטיחה הישנות.",
-      },
-    ],
-  },
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 2. CrashLoopBackOff - missing ConfigMap / env var
+  // 1. CrashLoopBackOff - missing ConfigMap / env var
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "crashloop-config",
@@ -182,8 +23,9 @@ export const INCIDENTS = [
     titleHe: "גרסה חדשה: שירות התשלומים סירב לעלות",
     description: "A payment service crashes immediately after a new deployment shipped",
     descriptionHe: "שירות תשלומים קורס מיידית אחרי דיפלוימנט חדש",
-    cluster: "prod-west",
-    namespace: "payments",
+    cluster: "staging-west",
+    namespace: "staging",
+    service: "payment-service",
     difficulty: "easy",
     estimatedTime: "4-5 min",
     steps: [
@@ -303,10 +145,17 @@ export const INCIDENTS = [
           "✓ ייצוא מ-production, החלפת namespace, והחלה ב-staging. נקי ובטוח.\nנותן ל-staging עותק משלו בלי להשפיע על production.\n✗ `kubectl cp` לקבצים בתוך Pods, לא לאובייקטי K8s. Pods לא יכולים להפנות ל-ConfigMaps מ-namespace אחר. אתחול לא משנה דבר.",
       },
     ],
+    rootCause: "The payment service failed to start because a ConfigMap was missing in the staging namespace. The Deployment referenced a config file that didn't exist, causing the container to crash on startup.",
+    rootCauseHe: "שירות התשלומים לא עלה בגלל ConfigMap שהיה חסר ב-namespace של staging. ה-Deployment הפנה לקובץ config שלא היה קיים, מה שגרם לקונטיינר לקרוס בהפעלה.",
+    correctApproach: "Check the pod logs with --previous flag to see the startup error, then compare the expected volume mounts against the existing ConfigMaps in the namespace.",
+    correctApproachHe: "לבדוק את הלוגים של ה-Pod עם --previous כדי לראות את שגיאת ההפעלה, ואז להשוות את ה-volume mounts המצופים מול ה-ConfigMaps הקיימים ב-namespace.",
+    command: "kubectl logs payment-service-7d4b9-abc12 -n staging --previous",
+    hint: "Check the pod logs first - they reveal what the app printed right before crashing.",
+    hintHe: "בדוק קודם את הלוגים של ה-Pod - הם חושפים מה האפליקציה הדפיסה לפני הקריסה.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 3. ImagePullBackOff - private registry auth
+  // 2. ImagePullBackOff - private registry auth
   // ─────────────────────────────────────────────────────────────────────────
   {
     id: "imagepull-auth",
@@ -319,7 +168,8 @@ export const INCIDENTS = [
     description: "A new Deployment is stuck - pods can't pull the container image",
     descriptionHe: "דיפלוימנט חדש תקוע: פודים לא מצליחים למשוך את הקונטיינר",
     cluster: "staging-east",
-    namespace: "microservices",
+    namespace: "default",
+    service: "myapp",
     difficulty: "easy",
     estimatedTime: "4-5 min",
     steps: [
@@ -332,19 +182,19 @@ export const INCIDENTS = [
           "kubectl describe pod <pod-name> -n default",
           "kubectl delete deployment myapp  (tear it down and redeploy)",
           "kubectl get nodes  (check if a node is down)",
-          "Rebuild the Docker image locally and push again",
+          "kubectl logs <pod-name> -n default  (check startup errors)",
         ],
         optionsHe: [
           "kubectl describe pod <pod-name> -n default",
           "kubectl delete deployment myapp  (פירוק ופריסה מחדש)",
           "kubectl get nodes  (בדוק אם Node כלשהו ירד)",
-          "לבנות מחדש את ה-Docker image מקומית ולדחוף שוב",
+          "kubectl logs <pod-name> -n default  (בדוק שגיאות הפעלה)",
         ],
         answer: 0,
         explanation:
-          "✓ `kubectl describe pod` shows the Events section with the exact pull failure message.\n→ Tells you if it's a missing tag, auth failure, or unreachable registry.\n✗ Only one deployment affected, so nodes are fine. Rebuilding wastes time without knowing the cause.",
+          "✓ `kubectl describe pod` shows the Events section with the exact pull failure message.\n→ Tells you if it's a missing tag, auth failure, or unreachable registry.\n✗ Only one deployment affected, so nodes are fine. Logs won't show anything - the container never started (ImagePullBackOff happens before the container runs).",
         explanationHe:
-          "✓ `kubectl describe pod` מציג את חלק ה-Events עם הודעת כשל המשיכה המדויקת.\nמראה אם זה tag חסר, כשל אימות, או registry לא נגיש.\n✗ רק Deployment אחד מושפע, Nodes תקינים. בנייה מחדש מבזבזת זמן ללא ידיעת הסיבה.",
+          "✓ `kubectl describe pod` מציג את חלק ה-Events עם הודעת כשל המשיכה המדויקת.\nמראה אם זה tag חסר, כשל אימות, או registry לא נגיש.\n✗ רק Deployment אחד מושפע, Nodes תקינים. לוגים לא יציגו דבר - הקונטיינר מעולם לא עלה (ImagePullBackOff קורה לפני שהקונטיינר רץ).",
       },
       {
         prompt:
@@ -439,6 +289,180 @@ export const INCIDENTS = [
           "✓ K8s לא משתמש אוטומטית ב-pull Secrets. חובה להוסיף `imagePullSecrets: [{name: regcred}]` ל-spec של ה-Pod.\nבלי הפניה זו, ה-Pod מתעלם מה-Secret לחלוטין.\n✗ `create secret docker-registry` כבר מטפל ב-base64. Secrets מוגדרים לפי namespace, לא per-node.",
       },
     ],
+    rootCause: "The pods couldn't start because the container image was hosted in a private registry, but no ImagePullSecret was configured in the namespace. Kubernetes couldn't authenticate to pull the image.",
+    rootCauseHe: "הפודים לא הצליחו לעלות כי ה-image היה ב-registry פרטי, אבל לא הוגדר ImagePullSecret ב-namespace. Kubernetes לא הצליח להזדהות כדי למשוך את ה-image.",
+    correctApproach: "Use kubectl describe pod to see the ImagePullBackOff event, then create a docker-registry Secret and reference it in the Deployment's imagePullSecrets field.",
+    correctApproachHe: "להשתמש ב-kubectl describe pod כדי לראות את אירוע ה-ImagePullBackOff, ליצור Secret מסוג docker-registry ולהפנות אליו ב-imagePullSecrets של ה-Deployment.",
+    command: "kubectl describe pod myapp-deployment-abc12 -n default",
+    hint: "Look at the pod events - they tell you exactly why the image pull failed.",
+    hintHe: "בדוק את ה-Events של ה-Pod - הם מספרים בדיוק למה משיכת ה-image נכשלה.",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 3. OOMKilled - memory limits too low
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "oom-killed",
+    incidentCode: "INC-3015",
+    icon: "💥",
+    title: "Production API: Endless Restarts Under Load",
+    titleShort: "API Restarts Under Load",
+    titleShortHe: "API קורס תחת עומס",
+    titleHe: "API בפרודקשן: ריסטארטים אינסופיים תחת עומס",
+    description: "A critical API pod keeps restarting every 2 minutes under load",
+    descriptionHe: "Pod של API קריטי מתאפס כל 2 דקות תחת עומס",
+    cluster: "prod-central",
+    namespace: "production",
+    service: "api-gateway",
+    difficulty: "medium",
+    estimatedTime: "5-7 min",
+    steps: [
+      {
+        prompt:
+          "Restarting Pod: 503 Errors in Production\n\n• `api-server` pod in namespace `production` restarts every 2 minutes\n• Users are reporting intermittent 503 errors\n\nWhat is your first action?",
+        promptHe:
+          "Pod מתאפס: שגיאות 503 בפרודקשן\n\n• ה-Pod `api-server` ב-namespace `production` מתאפס כל 2 דקות\n• משתמשים מדווחים על שגיאות 503\n\nמה הצעד הראשון שלך?",
+        options: [
+          "kubectl get pods -n production",
+          "kubectl delete pod api-server -n production",
+          "kubectl scale deployment api-server --replicas=0 -n production",
+          "kubectl logs api-server -n production --tail=50  (check recent errors)",
+        ],
+        optionsHe: [
+          "kubectl get pods -n production",
+          "kubectl delete pod api-server -n production",
+          "kubectl scale deployment api-server --replicas=0 -n production",
+          "kubectl logs api-server -n production --tail=50  (בדוק שגיאות אחרונות)",
+        ],
+        answer: 0,
+        explanation:
+          "✓ `kubectl get pods` shows current state (status, restarts, age) without causing disruption.\n✗ Deleting the pod or scaling to 0 worsens the outage. Logs are useful but first confirm the pod state to choose the right next command.",
+        explanationHe:
+          "✓ `kubectl get pods` מציג את המצב הנוכחי (סטטוס, אתחולים, גיל) מבלי לגרום להפרעה.\n✗ מחיקת Pod או הקטנה ל-0 מחמירה את הנפילה. לוגים שימושיים אך קודם יש לאשר את מצב ה-Pod כדי לבחור את הפקודה הבאה.",
+      },
+      {
+        prompt:
+          "OOMKilled Status Detected\n\n• Pod `api-server-xyz` shows status `OOMKilled`\n• Restart count: 14\n• Pod age: 2 hours\n\nNAME            READY   STATUS      RESTARTS   AGE\napi-server-xyz  0/1     OOMKilled   14         2h\n\nWhat does OOMKilled mean, and which command gives the most detail?",
+        promptHe:
+          "זוהה סטטוס OOMKilled\n\n• Pod `api-server-xyz` מציג סטטוס `OOMKilled`\n• מספר אתחולים: 14\n• גיל Pod: שעתיים\n\nNAME            READY   STATUS      RESTARTS   AGE\napi-server-xyz  0/1     OOMKilled   14         2h\n\nמה המשמעות של OOMKilled, ואיזו פקודה תיתן את המידע המפורט ביותר?",
+        options: [
+          "OOMKilled is a liveness probe failure - check probe config with kubectl edit deployment",
+          "OOMKilled means the container exceeded its memory limit - run kubectl describe pod api-server-xyz -n production",
+          "OOMKilled means a network timeout - check NetworkPolicy rules",
+          "OOMKilled is caused by a bad Docker image - re-pull the image",
+        ],
+        optionsHe: [
+          "OOMKilled = כשל liveness probe, בדוק probe עם kubectl edit deployment",
+          "OOMKilled = קונטיינר עבר מגבלת זיכרון, kubectl describe pod api-server-xyz -n production",
+          "OOMKilled = timeout ברשת, בדוק NetworkPolicy",
+          "OOMKilled = image פגום, משוך מחדש",
+        ],
+        answer: 1,
+        explanation:
+          "✓ OOMKilled = Out Of Memory Killed. The Linux kernel terminates the container for exceeding its memory limit.\n→ `kubectl describe pod` shows the exact memory limit, termination reason, and recent events.\n✗ Not a probe failure, network issue, or bad image.",
+        explanationHe:
+          "✓ OOMKilled = Out Of Memory Killed. ליבת לינוקס ממיתה את הקונטיינר על חריגת מגבלת זיכרון.\n`kubectl describe pod` מציג מגבלת זיכרון, סיבת סיום ואירועים אחרונים.\n✗ לא כשל probe, לא בעיית רשת, לא image פגום.",
+      },
+      {
+        prompt:
+          "Memory Limit Too Low\n\n• Container memory limit: 256Mi\n• Exit code: 137 (OOMKilled)\n• Pod keeps crashing under load\n\nHow do you determine the right memory limit?",
+        promptHe:
+          "מגבלת זיכרון נמוכה מדי\n\n• מגבלת זיכרון קונטיינר: 256Mi\n• קוד יציאה: 137 (OOMKilled)\n• ה-Pod ממשיך לקרוס תחת עומס\n\nכיצד קובעים את מגבלת הזיכרון הנכונה?",
+        options: [
+          "kubectl top pod api-server-xyz -n production  (see actual memory usage)",
+          "kubectl logs api-server-xyz -n production --previous  (scan logs for errors)",
+          "kubectl get node  (check node total memory)",
+          "kubectl get hpa -n production  (check autoscaler settings)",
+        ],
+        optionsHe: [
+          "kubectl top pod api-server-xyz -n production  (צפה בשימוש זיכרון בפועל)",
+          "kubectl logs api-server-xyz -n production --previous  (סרוק לוגים לשגיאות)",
+          "kubectl get node  (בדוק כמות זיכרון כוללת ב-Node)",
+          "kubectl get hpa -n production  (בדוק הגדרות auto-scaler)",
+        ],
+        answer: 0,
+        explanation:
+          "✓ `kubectl top pod` shows real-time memory consumption. Compare actual usage vs the 256Mi limit.\n→ This tells you exactly how much headroom the pod needs.\n✗ Logs help find leaks, not current usage. Node memory ≠ per-pod usage. HPA controls replica count, not memory.",
+        explanationHe:
+          "✓ `kubectl top pod` מציג צריכת זיכרון בזמן אמת. השווה שימוש בפועל מול מגבלת 256Mi.\nזה מראה בדיוק כמה מרווח ה-Pod צריך.\n✗ לוגים עוזרים לזהות דליפות, לא שימוש נוכחי. זיכרון Node ≠ שימוש per-pod. HPA שולט ברפליקות, לא בזיכרון.",
+      },
+      {
+        prompt:
+          "Choosing the Right Memory Limit\n\n• Idle memory usage: ~240Mi\n• Under load: spikes to 320Mi\n• Current limit: 256Mi. Too low for spikes\n\nWhat is the correct fix?",
+        promptHe:
+          "בחירת מגבלת הזיכרון הנכונה\n\n• שימוש זיכרון במנוחה: ~240Mi\n• תחת עומס: עולה ל-320Mi\n• מגבלה נוכחית: 256Mi. נמוכה מדי לקפיצות\n\nמה התיקון הנכון?",
+        options: [
+          "Add an HPA with memory-based autoscaling to handle the spikes automatically",
+          "Increase the memory limit to 512Mi and set request to 256Mi in the Deployment spec",
+          "Add a NetworkPolicy to throttle incoming requests",
+          "Set memory request and limit both to 320Mi to match peak usage exactly",
+        ],
+        optionsHe: [
+          "להוסיף HPA עם autoscaling מבוסס זיכרון לטיפול אוטומטי בקפיצות",
+          "להגדיל את מגבלת הזיכרון ל-512Mi ולהגדיר request ל-256Mi ב-spec של ה-Deployment",
+          "להוסיף NetworkPolicy לצמצום בקשות נכנסות",
+          "להגדיר request ו-limit ל-320Mi בדיוק כמו שיא השימוש",
+        ],
+        answer: 1,
+        explanation:
+          "✓ Set limit=512Mi (ceiling), request=256Mi (guaranteed). Gives headroom for traffic spikes.\n→ Follows K8s best practice: limit ≥ request, Burstable QoS class.\n✗ HPA scales replicas, not per-pod memory. Setting limit=320Mi leaves zero headroom - any spike above peak OOMKills again. NetworkPolicy controls traffic, not memory.",
+        explanationHe:
+          "✓ הגדר limit=512Mi (תקרה), request=256Mi (מובטח). מאפשר מרווח לקפיצות.\nעומד בנוהלי K8s: limit ≥ request, QoS class Burstable.\n✗ HPA משנה רפליקות, לא זיכרון per-pod. הגדרת limit=320Mi לא משאירה מרווח - כל קפיצה מעבר לשיא תגרום ל-OOMKill. NetworkPolicy שולטת בתעבורה, לא בזיכרון.",
+      },
+      {
+        prompt:
+          "Verifying the Rolling Update\n\n• Deployment patched with new memory limits\n• New limit: 512Mi, request: 256Mi\n• Rolling update in progress\n\nHow do you verify the update succeeded?",
+        promptHe:
+          "אימות ה-Rolling Update\n\n• ה-Deployment עודכן עם מגבלות זיכרון חדשות\n• מגבלה חדשה: 512Mi, request: 256Mi\n• Rolling update בתהליך\n\nכיצד מוודאים שהעדכון הצליח?",
+        options: [
+          "kubectl rollout status deployment/api-server -n production",
+          "kubectl get pods -n production -w  (watch pod restarts)",
+          "kubectl get events -n production --sort-by=.metadata.creationTimestamp",
+          "All of the above - rollout status + watching pods + events together",
+        ],
+        optionsHe: [
+          "kubectl rollout status deployment/api-server -n production",
+          "kubectl get pods -n production -w  (עקוב אחר אתחולי Pod)",
+          "kubectl get events -n production --sort-by=.metadata.creationTimestamp",
+          "כל האמור לעיל: סטטוס rollout + מעקב Pods + Events יחד",
+        ],
+        answer: 3,
+        explanation:
+          "✓ All three together give full confidence:\n→ `rollout status` confirms completion. Watch pods confirms Ready. Events reveals scheduling issues.\n✗ Any single command alone misses potential failure modes.",
+        explanationHe:
+          "✓ כל שלושתם יחד נותנים ביטחון מלא:\n`rollout status` מאשר סיום. מעקב Pods מאשר Ready. Events חושף בעיות תזמון.\n✗ כל פקודה בודדת לבדה מפספסת אופני כשל אפשריים.",
+      },
+      {
+        prompt:
+          "Post-Incident: Preventing Recurrence\n\n• Fix applied: memory limit increased to 512Mi\n• Pod stable for 15 minutes, no more OOMKills\n• Incident resolved\n\nWhat should you do before closing the incident?",
+        promptHe:
+          "לאחר האירוע: מניעת הישנות\n\n• תיקון הוחל: מגבלת זיכרון הוגדלה ל-512Mi\n• Pod יציב 15 דקות, אין עוד OOMKills\n• האירוע נפתר\n\nמה עליך לעשות לפני סגירת האירוע?",
+        options: [
+          "Increase all node sizes immediately as a precaution",
+          "Add a Prometheus alert on memory usage > 80% of limit, and audit resource limits on all other Deployments",
+          "Set memory limit to unlimited so it never OOMKills again",
+          "No action needed - the incident is resolved",
+        ],
+        optionsHe: [
+          "להגדיל את גודל כל ה-Nodes מיידית כאמצעי זהירות",
+          "להוסיף התראת Prometheus על שימוש בזיכרון > 80% מהמגבלה, ולבדוק מגבלות משאבים בכל ה-Deployments האחרים",
+          "להגדיר מגבלת זיכרון ללא הגבלה כדי שלא יהיה יותר OOMKill",
+          "אין צורך בפעולה: האירוע נפתר",
+        ],
+        answer: 1,
+        explanation:
+          "✓ Add memory-usage alert (>80%) + audit all workloads → catches future OOM pressure before outage.\n✗ Unlimited limits removes safety, risks starving other pods. Closing without action guarantees recurrence.",
+        explanationHe:
+          "✓ הוסף התראת זיכרון (>80%) + בדוק כל עומסי העבודה. כך מאתרים לחץ OOM עתידי לפני השבתה.\n✗ מגבלות ללא הגבלה מסירות רשת ביטחון, מסכנות Pods אחרים. סגירה ללא פעולה מבטיחה הישנות.",
+      },
+    ],
+    rootCause: "The API pods kept restarting because their memory limits were set too low for peak traffic. Under load, the process exceeded the limit and the kernel OOMKilled the container.",
+    rootCauseHe: "פודי ה-API המשיכו להתאתחל כי מגבלות הזיכרון שלהם היו נמוכות מדי לתנועת שיא. תחת עומס, התהליך חרג מהמגבלה והקרנל ביצע OOMKill לקונטיינר.",
+    correctApproach: "Check kubectl describe pod for the OOMKilled termination reason, review current memory limits versus actual usage with kubectl top, then raise the memory limit to match real-world consumption.",
+    correctApproachHe: "לבדוק ב-kubectl describe pod את סיבת הסיום OOMKilled, לבדוק את מגבלות הזיכרון מול הצריכה בפועל עם kubectl top, ולהעלות את מגבלת הזיכרון בהתאם.",
+    command: "kubectl top pods -n production --sort-by=memory",
+    hint: "Look at the pod's termination reason - it tells you the kernel killed the process for exceeding memory.",
+    hintHe: "בדוק את סיבת הסיום של ה-Pod - היא מספרת שהקרנל הרג את התהליך בגלל חריגה מהזיכרון.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -455,8 +479,9 @@ export const INCIDENTS = [
     description: "Frontend gets 'connection refused' calling the backend - pods look healthy",
     descriptionHe: "הפרונטאנד מקבל 'connection refused' מהבאקאנד, פודים נראים תקינים",
     cluster: "prod-central",
-    namespace: "frontend",
-    difficulty: "intermediate",
+    namespace: "production",
+    service: "backend-api",
+    difficulty: "medium",
     estimatedTime: "5-7 min",
     steps: [
       {
@@ -466,21 +491,21 @@ export const INCIDENTS = [
           "חיבור נדחה: Backend לא נגיש\n\n• הפרונטאנד לא מצליח להגיע ל-API הבאקאנד: 'connection refused'\n• Pods של frontend ו-backend: Running/Ready\n• השגיאה התחילה אחרי דיפלוימנט אחרון\n\nמאיפה מתחילים?",
         options: [
           "kubectl get svc backend-svc -n production  (inspect the Service)",
-          "kubectl restart pod backend -n production",
+          "kubectl rollout restart deployment/backend -n production",
           "kubectl delete svc backend-svc -n production  (recreate it)",
           "kubectl get nodes  (check node health)",
         ],
         optionsHe: [
           "kubectl get svc backend-svc -n production  (בדוק את ה-Service)",
-          "kubectl restart pod backend -n production",
+          "kubectl rollout restart deployment/backend -n production",
           "kubectl delete svc backend-svc -n production  (צור מחדש)",
           "kubectl get nodes  (בדוק תקינות Node)",
         ],
         answer: 0,
         explanation:
-          "✓ Pods healthy + Service unreachable → issue is in Service config (selector, port, targetPort).\n→ Inspect the Service first, before any destructive action.\n✗ Restarting or deleting won't fix a misconfigured Service. Nodes are irrelevant if pods are Running.",
+          "✓ Pods healthy + Service unreachable → issue is in Service config (selector, port, targetPort).\n→ Inspect the Service first, before any destructive action.\n✗ Rolling restart won't fix a misconfigured Service. Deleting/recreating risks downtime. Nodes are irrelevant if pods are Running.",
         explanationHe:
-          "✓ Pods תקינים + Service לא נגיש: הבעיה בהגדרת Service (selector, port, targetPort).\nבדוק את ה-Service קודם, לפני כל פעולה הרסנית.\n✗ אתחול או מחיקה לא יתקנו Service שגוי. Nodes לא רלוונטיים אם Pods רצים.",
+          "✓ Pods תקינים + Service לא נגיש: הבעיה בהגדרת Service (selector, port, targetPort).\nבדוק את ה-Service קודם, לפני כל פעולה הרסנית.\n✗ rolling restart לא יתקן Service שגוי. מחיקה/יצירה מסכנת בהשבתה. Nodes לא רלוונטיים אם Pods רצים.",
       },
       {
         prompt:
@@ -598,6 +623,13 @@ export const INCIDENTS = [
           "✓ Helm/Kustomize שומר labels ו-selectors מסונכרנים (מקור אמת אחד). התראת endpoint-ready מאתרת בעיות מיידית.\n✗ בדיקות ידניות והערות נוטות לשגיאה. NodePort לא פותר התאמת selector.",
       },
     ],
+    rootCause: "The frontend couldn't reach the backend because the Service selector labels didn't match the pod labels. The Service had zero endpoints, so all requests got 'Connection Refused'.",
+    rootCauseHe: "הפרונטאנד לא הצליח להגיע לבאקאנד כי ה-labels של ה-Service selector לא תאמו את ה-labels של הפודים. ל-Service היו אפס endpoints, ולכן כל הבקשות קיבלו 'Connection Refused'.",
+    correctApproach: "Compare the Service selector with the actual pod labels using kubectl get endpoints and kubectl describe service to find the mismatch, then fix the selector or pod labels.",
+    correctApproachHe: "להשוות את ה-selector של ה-Service מול ה-labels בפועל של הפודים באמצעות kubectl get endpoints ו-kubectl describe service כדי לזהות את אי-ההתאמה, ולתקן את ה-selector או את ה-labels.",
+    command: "kubectl get endpoints backend-api-svc -n production",
+    hint: "Check the Service endpoints - if the list is empty, the selector doesn't match any pods.",
+    hintHe: "בדוק את ה-endpoints של ה-Service - אם הרשימה ריקה, ה-selector לא תואם אף Pod.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -615,6 +647,7 @@ export const INCIDENTS = [
     descriptionHe: "שירותים מרובים לא מצליחים לפתור שמות, השבתה נרחבת",
     cluster: "prod-central",
     namespace: "kube-system",
+    service: "coredns",
     difficulty: "hard",
     estimatedTime: "7-9 min",
     steps: [
@@ -780,6 +813,13 @@ export const INCIDENTS = [
           "✓ כל שלושת האותות יחד: זיכרון מתקרב למגבלה, אתחולי Pod ועיכוב שאילתא.\nניטור אות אחד בלבד משאיר עיוור לאופני כשל אחרים.\n✗ אירוע זה הדגים שזיכרון יכול להתדרדר בשקט בלי אתחולים בהתחלה.",
       },
     ],
+    rootCause: "CoreDNS pods in kube-system were OOMKilled due to insufficient memory limits. Without functioning DNS, services couldn't resolve each other's names, causing cascading failures across the cluster.",
+    rootCauseHe: "פודי CoreDNS ב-kube-system עברו OOMKill בגלל מגבלות זיכרון לא מספיקות. בלי DNS תקין, שירותים לא הצליחו לפענח שמות של שירותים אחרים, מה שגרם לכשלים מדורגים בכל ה-cluster.",
+    correctApproach: "Test DNS resolution from inside a pod with nslookup, check CoreDNS pod status in kube-system, identify the OOMKilled state, and raise CoreDNS memory limits.",
+    correctApproachHe: "לבדוק פענוח DNS מתוך Pod עם nslookup, לבדוק את סטטוס פודי CoreDNS ב-kube-system, לזהות את מצב ה-OOMKilled, ולהעלות את מגבלות הזיכרון של CoreDNS.",
+    command: "kubectl logs -n kube-system -l k8s-app=kube-dns --previous",
+    hint: "When nothing can resolve DNS - check the DNS provider itself. CoreDNS runs as pods in kube-system.",
+    hintHe: "כשאף שירות לא מצליח לפענח DNS - בדוק את ספק ה-DNS עצמו. CoreDNS רץ כפודים ב-kube-system.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -796,7 +836,8 @@ export const INCIDENTS = [
     description: "Service calls time out after the security team applied new NetworkPolicies",
     descriptionHe: "קריאות לשירות מסתיימות ב-timeout אחרי עדכון מדיניות אבטחה",
     cluster: "prod-central",
-    namespace: "backend",
+    namespace: "production",
+    service: "checkout-service",
     difficulty: "hard",
     estimatedTime: "7-9 min",
     steps: [
@@ -808,20 +849,20 @@ export const INCIDENTS = [
         options: [
           "kubectl get networkpolicy -n production  (list all policies in the namespace)",
           "kubectl rollout undo deployment/backend -n production  (roll back backend)",
-          "kubectl delete networkpolicy --all -n production  (remove all policies)",
+          "kubectl get endpoints backend-svc -n production  (check if Service routes traffic)",
           "kubectl get pods -n production  (verify pod health again)",
         ],
         optionsHe: [
           "kubectl get networkpolicy -n production  (רשום את כל המדיניות ב-namespace)",
           "kubectl rollout undo deployment/backend -n production  (rollback לבאקאנד)",
-          "kubectl delete networkpolicy --all -n production  (הסר את כל המדיניות)",
+          "kubectl get endpoints backend-svc -n production  (בדוק אם ה-Service מנתב תעבורה)",
           "kubectl get pods -n production  (אמת שוב תקינות Pods)",
         ],
         answer: 0,
         explanation:
-          "✓ Incident correlates with a NetworkPolicy change - inspect the policies first.\n✗ Removing all policies (`--all`) eliminates security posture. Rolling back backend won't fix a network-layer issue. Pod health already confirmed.",
+          "✓ Incident correlates with a NetworkPolicy change - inspect the policies first.\n✗ Rolling back backend won't fix a network-layer issue. Endpoints show Service-to-Pod routing, not policy enforcement. Pod health already confirmed.",
         explanationHe:
-          "✓ האירוע מתואם לשינוי NetworkPolicy, בדוק את המדיניות קודם.\n✗ הסרת כל המדיניות (`--all`) מסירה את עמדת האבטחה. Rollback לבאקאנד לא יתקן בעיית שכבת רשת. תקינות Pods כבר אושרה.",
+          "✓ האירוע מתואם לשינוי NetworkPolicy, בדוק את המדיניות קודם.\n✗ Rollback לבאקאנד לא יתקן בעיית שכבת רשת. Endpoints מראים ניתוב Service-to-Pod, לא אכיפת policy. תקינות Pods כבר אושרה.",
       },
       {
         prompt:
@@ -876,7 +917,7 @@ export const INCIDENTS = [
           "אי-התאמת Labels אושרה\n\n• Policy מצפה ל: `role=frontend`\n• Labels בפועל: `app=frontend`\n• תעבורת frontend חסומה על ידי deny-all\n\nמה התיקון הנכון?",
         options: [
           "kubectl label pod <each-frontend-pod> role=frontend  (relabel individual pods)",
-          "kubectl patch networkpolicy allow-frontend -n production -p to update the from-selector to `app=frontend`",
+          "kubectl patch networkpolicy allow-frontend -n production  (change from-selector to match `app=frontend`)",
           "kubectl delete networkpolicy deny-all-ingress  (remove the default-deny)",
           "Add `role=frontend` to the frontend Deployment's pod template labels",
         ],
@@ -936,7 +977,7 @@ export const INCIDENTS = [
         explanation:
           "✓ GitOps = version-controlled + auditable. CI linter catches mismatches before merge. Staging validates runtime.\n→ Automated checks eliminate human error.\n✗ Manual checks and comments are error-prone. Disabling NetworkPolicy removes security entirely.",
         explanationHe:
-          "✓ GitOps = ניהול גרסאות + ביקורתיות. Linter ב-CI מאתר אי-התאמות לפני מיזוג. Staging מאמת runtime.\nבדיקות אוטומטיות מבטלות טעויות אנוש.\n✗ בדיקות ידניות נוטות לשגיאה. השבתת NetworkPolicy מסירה אבטחה לחלוטין.",
+          "✓ GitOps = ניהול גרסאות + בר-ביקורת. Linter ב-CI מאתר אי-התאמות לפני מיזוג. Staging מאמת runtime.\nבדיקות אוטומטיות מבטלות טעויות אנוש.\n✗ בדיקות ידניות נוטות לשגיאה. השבתת NetworkPolicy מסירה אבטחה לחלוטין.",
       },
       {
         prompt:
@@ -962,5 +1003,12 @@ export const INCIDENTS = [
           "✓ בדיקת zero-trust ב-staging: התחל עם deny-all, הוסף כל allow, ובדוק שרק התעבורה המצופה עוברת.\nמוכיח אכיפה, לא רק תחביר.\n✗ `dry-run` בודק תקפות API בלבד. Production-first מסכן משתמשים. קריאת YAML לא מוכיחה אכיפה.",
       },
     ],
+    rootCause: "A security-team NetworkPolicy update used incorrect pod selector labels. The policy blocked all ingress traffic to the API pods because the label in the 'allow' rule didn't match the actual pod labels.",
+    rootCauseHe: "עדכון NetworkPolicy של צוות האבטחה השתמש ב-labels שגויים ב-pod selector. המדיניות חסמה את כל תעבורת ה-ingress לפודי ה-API כי ה-label בכלל ה-allow לא תאם את ה-labels בפועל של הפודים.",
+    correctApproach: "Compare the NetworkPolicy's ingress allow rules against the actual pod labels, identify the label mismatch, and fix the policy selector to match the correct pod labels.",
+    correctApproachHe: "להשוות את כללי ה-ingress allow של ה-NetworkPolicy מול ה-labels בפועל של הפודים, לזהות את אי-ההתאמה ב-labels, ולתקן את ה-selector של המדיניות כך שיתאים ל-labels הנכונים.",
+    command: "kubectl describe networkpolicy api-netpol -n production",
+    hint: "Compare the NetworkPolicy selector labels with the actual pod labels - look for the mismatch.",
+    hintHe: "השווה את ה-labels של ה-NetworkPolicy selector מול ה-labels בפועל של הפודים - חפש את אי-ההתאמה.",
   },
 ];
