@@ -1310,9 +1310,9 @@ export default function K8sQuestApp() {
   const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
 
   const getRankTier = (percentile) => {
-    if (percentile >= 99) return { key: "master", color: "#FF4500", icon: "\u{1F451}" };
-    if (percentile >= 95) return { key: "platinum", color: "#E5E4E2", icon: "\u{1F48E}" };
-    if (percentile >= 85) return { key: "gold", color: "#F59E0B", icon: "\u{1F947}" };
+    if (percentile >= 99) return { key: "master", color: "#F59E0B", icon: "\u{1F451}" };
+    if (percentile >= 95) return { key: "platinum", color: "#A78BFA", icon: "\u{1F48E}" };
+    if (percentile >= 85) return { key: "gold", color: "#FBBF24", icon: "\u{1F947}" };
     if (percentile >= 65) return { key: "silver", color: "#94A3B8", icon: "\u{1F948}" };
     return { key: "bronze", color: "#CD7F32", icon: "\u{1F949}" };
   };
