@@ -4570,11 +4570,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         {/* Explanation body */}
                         {!isInterviewMode&&<div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:12}}>
                           {paragraphs.map((s,idx)=>{
-                            // Standalone CLI command or backtick-wrapped code block → render as code block
+                            // Standalone CLI command or backtick-wrapped code block -> render as code block
                             const stripped = s.replace(/`([^`]+)`/g, "$1").trim();
-                            const isCodeOnly = (!(/[\u0590-\u05FF]/).test(stripped) && CLI_COMMAND_RE.test(stripped))
+                            // Short CLI references ending with punctuation (e.g. "kubectl logs.") are
+                            // inline text, not standalone code blocks.
+                            const looksLikeRef = /^(kubectl|helm|docker)\s+\w+[.,;:!?]?$/.test(stripped);
+                            const isCodeOnly = !looksLikeRef && (
+                              (!(/[\u0590-\u05FF]/).test(stripped) && CLI_COMMAND_RE.test(stripped))
                               || (s.startsWith("```") && s.endsWith("```"))
-                              || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s));
+                              || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s))
+                            );
                             if (isCodeOnly) {
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
                               if (s.startsWith("```")) return <YamlBlock key={idx} keyProp={`exp-code-${idx}`} code={code} />;
@@ -4623,9 +4628,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           {(()=>{const idDir=hasHebrew(q.options[iCorrectIdx])?"rtl":"ltr";return <div dir={idDir} style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:idDir,textAlign:idDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>{renderBidi(q.options[iCorrectIdx],lang)}</div>;})()}
                           {iParagraphs.map((s,idx)=>{
                             const stripped = s.replace(/`([^`]+)`/g, "$1").trim();
-                            const isCodeOnly = (!(/[\u0590-\u05FF]/).test(stripped) && CLI_COMMAND_RE.test(stripped))
+                            const looksLikeRef = /^(kubectl|helm|docker)\s+\w+[.,;:!?]?$/.test(stripped);
+                            const isCodeOnly = !looksLikeRef && (
+                              (!(/[\u0590-\u05FF]/).test(stripped) && CLI_COMMAND_RE.test(stripped))
                               || (s.startsWith("```") && s.endsWith("```"))
-                              || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s));
+                              || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s))
+                            );
                             if (isCodeOnly) {
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
                               if (s.startsWith("```")) return <YamlBlock key={idx} keyProp={`iexp-code-${idx}`} code={code} />;
