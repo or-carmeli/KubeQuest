@@ -180,6 +180,8 @@ const TRANSLATIONS = {
     newPasswordLabel: "סיסמה חדשה", confirmPasswordLabel: "אימות סיסמה",
     saveNewPassword: "שמרי סיסמה חדשה", passwordUpdatedSuccess: "הסיסמה עודכנה בהצלחה",
     passwordMismatch: "הסיסמאות אינן תואמות", passwordTooShort: "הסיסמה חייבת להכיל לפחות 6 תווים",
+    emailAlreadyExists: "כבר קיים חשבון עם אימייל זה. נסי להתחבר.",
+    setNewPasswordTitle: "הגדרת סיסמה חדשה",
     greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
     leaderboardBtn: "🏆 דירוג", logout: "יציאה",
     guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
@@ -416,6 +418,8 @@ const TRANSLATIONS = {
     newPasswordLabel: "New Password", confirmPasswordLabel: "Confirm Password",
     saveNewPassword: "Save New Password", passwordUpdatedSuccess: "Password updated successfully",
     passwordMismatch: "Passwords do not match", passwordTooShort: "Password must be at least 6 characters",
+    emailAlreadyExists: "An account with this email already exists. Try logging in.",
+    setNewPasswordTitle: "Set New Password",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
     leaderboardBtn: "🏆 Leaderboard", logout: "Logout",
     guestBanner: "💡 Sign up to save progress and appear on the leaderboard",
@@ -1361,13 +1365,14 @@ export default function K8sQuestApp() {
     return () => clearInterval(iv);
   }, [authChecked, minLoadElapsed, user, isGuest, dataLoaded]);
 
-  // Hard safety net: after 5 s on the loading gate, force everything open.
-  // If user was set but dataLoaded didn't resolve, clear user to bypass the gate.
+  // Hard safety net: after 8 s on the loading gate, force everything open.
+  // Must be longer than loadUserData's internal 5 s timeout to avoid a race
+  // where the gate clears the user before data loading finishes.
   useEffect(() => {
     const gateActive = !authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded);
     if (!gateActive) return;
     const t = setTimeout(() => {
-      console.error("[KubeQuest:boot] Loading gate still active after 5 s - force-unblocking");
+      console.error("[KubeQuest:boot] Loading gate still active after 8 s - force-unblocking");
       console.error("[KubeQuest:boot] State: authChecked:", authChecked, "dataLoaded:", dataLoaded, "user:", !!user, "isGuest:", isGuest);
       setAuthChecked(true);
       setMinLoadElapsed(true);
@@ -1379,7 +1384,7 @@ export default function K8sQuestApp() {
         setUser(null);
         loadingDataRef.current = false;
       }
-    }, 5000);
+    }, 8000);
     return () => clearTimeout(t);
   }, [authChecked, minLoadElapsed, user, isGuest, dataLoaded]);
 
@@ -1467,6 +1472,7 @@ export default function K8sQuestApp() {
         loadUserData(session.user.id, session.user);
         setAuthChecked(true);
       } else if (event === "SIGNED_OUT") {
+        setUser(null);
         setAuthChecked(true);
       } else if (event === "TOKEN_REFRESHED") {
         if (session) setUser(session.user);
@@ -1970,20 +1976,28 @@ export default function K8sQuestApp() {
     if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); return; }
     setAuthLoading(true); setAuthError("");
     const { emailVal, passwordVal, usernameVal } = getFormValues();
-    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthLoading(false); return; }
-    const { error } = await supabase.auth.signUp({
-      email: emailVal, password: passwordVal, options: {
-        data: { username: usernameVal || emailVal.split("@")[0] },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
-        setAuthError(t("emailAlreadySent"));
-      else
-        setAuthError(error.message);
-    } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: emailVal, password: passwordVal, options: {
+          data: { username: usernameVal || emailVal.split("@")[0] },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
+          setAuthError(t("emailAlreadySent"));
+        else
+          setAuthError(error.message);
+      } else if (!data.user?.identities?.length) {
+        // Supabase returns fake success (empty identities) when email already exists
+        setAuthError(t("emailAlreadyExists"));
+        setAuthScreen("login");
+      } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
+    } catch (err) {
+      console.error("[KubeQuest] signUp error:", err);
+      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
+    }
     setAuthLoading(false);
   };
 
@@ -1991,15 +2005,19 @@ export default function K8sQuestApp() {
     if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); return; }
     setAuthLoading(true); setAuthError("");
     const { emailVal, passwordVal } = getFormValues();
-    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthLoading(false); return; }
-    const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
-    if (error) {
-      setAuthError(t("wrongCredentials"));
-    } else if (window.PasswordCredential) {
-      try {
-        const cred = new window.PasswordCredential({ id: emailVal, password: passwordVal });
-        await navigator.credentials.store(cred);
-      } catch {}
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
+      if (error) {
+        setAuthError(t("wrongCredentials"));
+      } else if (window.PasswordCredential) {
+        try {
+          const cred = new window.PasswordCredential({ id: emailVal, password: passwordVal });
+          await navigator.credentials.store(cred);
+        } catch {}
+      }
+    } catch (err) {
+      console.error("[KubeQuest] login error:", err);
+      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
     }
     setAuthLoading(false);
   };
@@ -2008,12 +2026,17 @@ export default function K8sQuestApp() {
     setAuthLoading(true);
     const { emailVal } = getFormValues();
     if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthLoading(false); return; }
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: emailVal,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    setAuthError(error ? t("resendError") : t("resendSuccess"));
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: emailVal,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      setAuthError(error ? t("resendError") : t("resendSuccess"));
+    } catch (err) {
+      console.error("[KubeQuest] resend error:", err);
+      setAuthError(t("resendError"));
+    }
     setAuthLoading(false);
   };
 
@@ -2022,10 +2045,15 @@ export default function K8sQuestApp() {
     if (!supabase || !resetEmail || resetLoading) return;
     setResetStatus("");
     setResetLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: window.location.origin,
-    });
-    setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: window.location.origin,
+      });
+      setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
+    } catch (err) {
+      console.error("[KubeQuest] resetPassword error:", err);
+      setResetStatus(t("resetEmailError"));
+    }
     setResetLoading(false);
   };
 
@@ -2034,17 +2062,22 @@ export default function K8sQuestApp() {
     if (newPassword.length < 6) { setPasswordResetError(t("passwordTooShort")); return; }
     if (newPassword !== confirmPassword) { setPasswordResetError(t("passwordMismatch")); return; }
     setPasswordResetLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) { setPasswordResetLoading(false); setPasswordResetError(error.message); return; }
+      passwordRecoveryRef.current = false;
+      setShowPasswordReset(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      await supabase.auth.signOut();
+      setUser(null);
+      setAuthError("\u2705 " + t("passwordUpdatedSuccess"));
+      setAuthScreen("login");
+    } catch (err) {
+      console.error("[KubeQuest] updatePassword error:", err);
+      setPasswordResetError(t("serviceUnavailable") || "Service temporarily unavailable");
+    }
     setPasswordResetLoading(false);
-    if (error) { setPasswordResetError(error.message); return; }
-    passwordRecoveryRef.current = false;
-    setShowPasswordReset(false);
-    setNewPassword("");
-    setConfirmPassword("");
-    await supabase.auth.signOut();
-    setUser(null);
-    setAuthError("\u2705 " + t("passwordUpdatedSuccess"));
-    setAuthScreen("login");
   };
 
   const handleLogout = async () => {
@@ -2058,7 +2091,11 @@ export default function K8sQuestApp() {
       setDataLoaded(true);
       return;
     }
-    if (supabase) await supabase.auth.signOut();
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch (err) {
+      console.error("[KubeQuest] signOut error:", err);
+    }
     setUser(null);
     achievementsLoaded.current = false;
     loadingDataRef.current = false;
@@ -3611,6 +3648,27 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {t("warRoomNotification")}
         </button>
       )}
+      {/* Password recovery: full-screen overlay shown when arriving via reset email link */}
+      {showPasswordReset && (
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"var(--overlay)",display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
+          <div role="dialog" aria-modal="true" style={{background:"var(--bg-card)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:18,padding:"28px 24px",width:"min(400px,100%)",animation:"fadeIn 0.3s ease",direction:dir}}>
+            <h2 style={{margin:"0 0 6px",fontSize:20,fontWeight:800,color:"var(--text-primary)",textAlign:"center"}}>{t("setNewPasswordTitle")}</h2>
+            <p style={{margin:"0 0 20px",fontSize:13,color:"var(--text-dim)",textAlign:"center"}}>{user?.email}</p>
+            <label style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("newPasswordLabel")}</label>
+            <input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password" autoFocus
+              style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:12}}/>
+            <label style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("confirmPasswordLabel")}</label>
+            <input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password"
+              onKeyDown={e=>{if(e.key==="Enter"&&newPassword&&confirmPassword)handlePasswordUpdate()}}
+              style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:16}}/>
+            {passwordResetError&&<div role="alert" style={{marginBottom:14,fontSize:12,padding:"8px 12px",borderRadius:8,color:"#EF4444",background:"rgba(239,68,68,0.08)"}}>{passwordResetError}</div>}
+            <button onClick={handlePasswordUpdate} disabled={passwordResetLoading||!newPassword||!confirmPassword}
+              style={{width:"100%",padding:"14px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",opacity:(passwordResetLoading||!newPassword||!confirmPassword)?0.5:1}}>
+              {passwordResetLoading?t("loading"):t("saveNewPassword")}
+            </button>
+          </div>
+        </div>
+      )}
       {/* Skip-to-content - invisible until focused by keyboard */}
       {!isStatusDomain && <a href="#main-content"
         style={{position:"fixed",top:-100,left:8,zIndex:9999,padding:"8px 16px",background:"#00D4FF",color:"var(--text-bright)",borderRadius:8,fontWeight:700,fontSize:14,textDecoration:"none",transition:"top 0.15s",direction:"ltr"}}
@@ -3881,7 +3939,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
