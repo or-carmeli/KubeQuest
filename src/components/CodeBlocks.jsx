@@ -2,16 +2,6 @@ import React from "react";
 
 const MONO_FONT = "'JetBrains Mono','Fira Code','Cascadia Code',monospace";
 
-const LABEL_STYLE = {
-  fontSize: 10,
-  fontWeight: 600,
-  letterSpacing: 0.3,
-  marginBottom: 6,
-  display: "block",
-  userSelect: "none",
-  unicodeBidi: "isolate",
-};
-
 const HEADER_STYLE = {
   display: "flex",
   alignItems: "center",
@@ -34,7 +24,7 @@ const HEADER_STYLE = {
  *
  * Each block includes a type header (>_ Terminal, ⌘ Output) for clarity.
  */
-export function TerminalBlock({ children, label, variant }) {
+export function TerminalBlock({ children, variant }) {
   const isOutput = variant === "output";
   const isError = variant === "error";
   const lines = (children || "").split("\n");
@@ -63,7 +53,6 @@ export function TerminalBlock({ children, label, variant }) {
 
   const bg = isError ? "rgba(239,68,68,0.03)" : "var(--code-bg, rgba(0,0,0,0.45))";
   const borderColor = isError ? "rgba(239,68,68,0.15)" : "rgba(0,212,255,0.13)";
-  const labelColor = isError ? "rgba(239,68,68,0.4)" : "rgba(0,212,255,0.35)";
 
   return (
     <div
@@ -90,11 +79,6 @@ export function TerminalBlock({ children, label, variant }) {
         {headerText && <span>{headerText}</span>}
       </div>
       <div style={{ padding: "10px 14px" }}>
-        {label && (
-          <span dir="auto" style={{ ...LABEL_STYLE, color: labelColor }}>
-            {label}
-          </span>
-        )}
         <pre
           style={{
             margin: 0,
@@ -155,7 +139,7 @@ export function TerminalBlock({ children, label, variant }) {
  *
  * Includes a "YAML" type header for visual identification.
  */
-export function YamlBlock({ children, label }) {
+export function YamlBlock({ children }) {
   const lines = (children || "").split("\n");
 
   return (
@@ -183,11 +167,6 @@ export function YamlBlock({ children, label }) {
         <span>YAML</span>
       </div>
       <div style={{ padding: "10px 14px" }}>
-        {label && (
-          <span dir="auto" style={{ ...LABEL_STYLE, color: "rgba(139,92,246,0.45)" }}>
-            {label}
-          </span>
-        )}
         <pre
           style={{
             margin: 0,

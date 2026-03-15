@@ -836,14 +836,13 @@ function renderQuestion(qText, lang) {
 
   // Pre-process: detect label paragraphs (short text ending with ':') before code blocks
   // and absorb them as labels for the following code block.
-  const labelMap = new Set(); // indices of label paragraphs absorbed into code blocks
-  const blockLabels = {};     // idx of code block -> label text
+  // Detect label paragraphs (short text ending with ':' like "הרצת:") before code blocks
+  // and absorb them so they don't render as standalone text paragraphs.
+  const labelMap = new Set();
   for (let i = 0; i < merged.length - 1; i++) {
     const p = merged[i];
     const next = merged[i + 1];
-    // Skip if this is itself a code block
     if (p.trimStart().startsWith("```")) continue;
-    // Check if this is a short label paragraph (ends with ':' and < 60 chars)
     const trimmed = p.trim();
     if (trimmed.length < 60 && trimmed.endsWith(":") && (next.trimStart().startsWith("```") || (() => {
       const ls = next.split("\n").filter(l => l.trim());
@@ -852,7 +851,6 @@ function renderQuestion(qText, lang) {
       return noHe && ls.length >= 1 && mc >= Math.ceil(ls.length * 0.5);
     })())) {
       labelMap.add(i);
-      blockLabels[i + 1] = trimmed;
     }
   }
 
@@ -864,7 +862,6 @@ function renderQuestion(qText, lang) {
       {merged.map((para, idx) => {
         // Skip label paragraphs absorbed into code blocks
         if (labelMap.has(idx)) return null;
-        const label = blockLabels[idx] || undefined;
 
         // Fenced code block (```...```) - route to TerminalBlock or YamlBlock
         if (para.trimStart().startsWith("```")) {
@@ -874,24 +871,24 @@ function renderQuestion(qText, lang) {
 
           // YAML block
           if (codeLang === "yaml" || codeLang === "yml" || (!codeLang && /^\s*[\w.\-/]+:\s/m.test(code) && /\n\s+\w/.test(code))) {
-            return <YamlBlock key={idx} label={label}>{code}</YamlBlock>;
+            return <YamlBlock key={idx}>{code}</YamlBlock>;
           }
 
           // Terminal command block
           const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/m.test(code);
           if (isCommand) {
-            return <TerminalBlock key={idx} label={label}>{code}</TerminalBlock>;
+            return <TerminalBlock key={idx}>{code}</TerminalBlock>;
           }
 
           // Error output block
           const firstCodeLine = code.split("\n")[0]?.trim() || "";
           const isFencedError = /^(error|Error|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:|denied)/i.test(firstCodeLine);
           if (isFencedError) {
-            return <TerminalBlock key={idx} label={label} variant="error">{code}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="error">{code}</TerminalBlock>;
           }
 
           // Generic output block
-          return <TerminalBlock key={idx} label={label} variant="output">{code}</TerminalBlock>;
+          return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
         }
 
         // Auto-detected code block (non-fenced terminal output)
@@ -907,15 +904,15 @@ function renderQuestion(qText, lang) {
           const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/.test(firstLine);
           // YAML-like content
           if (/^\s*[\w.\-/]+:\s/m.test(cleaned) && /\n\s+\w/.test(cleaned)) {
-            return <YamlBlock key={idx} label={label}>{cleaned}</YamlBlock>;
+            return <YamlBlock key={idx}>{cleaned}</YamlBlock>;
           }
           if (isError) {
-            return <TerminalBlock key={idx} label={label} variant="error">{cleaned}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="error">{cleaned}</TerminalBlock>;
           }
           if (isCommand) {
-            return <TerminalBlock key={idx} label={label}>{cleaned}</TerminalBlock>;
+            return <TerminalBlock key={idx}>{cleaned}</TerminalBlock>;
           }
-          return <TerminalBlock key={idx} label={label} variant="output">{cleaned}</TerminalBlock>;
+          return <TerminalBlock key={idx} variant="output">{cleaned}</TerminalBlock>;
         }
 
         // Regular text paragraph
@@ -2832,7 +2829,7 @@ export default function K8sQuestApp() {
       const indent = line.match(/^(\s*)/)[1].length;
       const guides = [];
       for (let g = 2; g <= indent; g += 2) {
-        guides.push(<span key={`g${g}`} style={{position:"absolute",left:g * 7.7 - 2,top:0,bottom:0,width:1,background:"rgba(255,255,255,0.06)"}}/>);
+        guides.push(<span key={`g${g}`} style={{position:"absolute",left:g * 7.7 - 2,top:0,bottom:0,width:1,background:"rgba(255,255,255,0.08)"}}/>);
       }
       // Syntax highlight: key: value
       const trimmed = line.trimStart();
@@ -2870,11 +2867,46 @@ export default function K8sQuestApp() {
       <div style={{padding:"6px 14px",background:"rgba(255,255,255,0.04)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",gap:6}}>
         <span style={{fontSize:9,fontWeight:700,color:"#888",letterSpacing:1.5,textTransform:"uppercase"}}>YAML</span>
       </div>
-      <div style={{padding:"14px 16px",fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro','SF Mono',monospace",fontSize:12,lineHeight:1.65,overflowX:"auto",direction:"ltr",textAlign:"left"}}>
+      <div style={{padding:"16px 18px",fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro','SF Mono',monospace",fontSize:12.5,lineHeight:1.75,overflowX:"auto",direction:"ltr",textAlign:"left"}}>
         {highlightYaml(code)}
       </div>
     </div>
   );
+
+  // Splits a code block into Terminal vs YAML sub-blocks and pushes them.
+  const cmdPat = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make)\s/;
+  const flushCodeBlock = (elements, lines, keyBase) => {
+    if (!lines.length) return;
+    // Group consecutive lines by type: "cmd" or "yaml"
+    const groups = [];
+    for (const line of lines) {
+      const type = cmdPat.test(line.trim()) ? "cmd" : "yaml";
+      if (groups.length && groups[groups.length - 1].type === type) {
+        groups[groups.length - 1].lines.push(line);
+      } else {
+        groups.push({ type, lines: [line] });
+      }
+    }
+    // If only one group, render directly
+    if (groups.length === 1) {
+      const g = groups[0];
+      if (g.type === "cmd") {
+        elements.push(<TerminalBlock key={`cmd-${keyBase}`}>{g.lines.join("\n")}</TerminalBlock>);
+      } else {
+        elements.push(<YamlBlock key={`code-${keyBase}`} keyProp={`code-${keyBase}`} code={g.lines.join("\n")} />);
+      }
+      return;
+    }
+    // Multiple groups: render each separately
+    for (let gi = 0; gi < groups.length; gi++) {
+      const g = groups[gi];
+      if (g.type === "cmd") {
+        elements.push(<TerminalBlock key={`cmd-${keyBase}-${gi}`}>{g.lines.join("\n")}</TerminalBlock>);
+      } else {
+        elements.push(<YamlBlock key={`code-${keyBase}-${gi}`} keyProp={`code-${keyBase}-${gi}`} code={g.lines.join("\n")} />);
+      }
+    }
+  };
 
   const renderTheory = (text) => {
     const lines = text.split('\n');
@@ -2889,7 +2921,7 @@ export default function K8sQuestApp() {
         continue;
       }
       if (inCode && line.startsWith('```')) {
-        elements.push(<YamlBlock key={`code-${i}`} keyProp={`code-${i}`} code={codeLines.join("\n")} />);
+        flushCodeBlock(elements, codeLines, i);
         codeLines = [];
         inCode = false;
         continue;
@@ -2941,7 +2973,7 @@ export default function K8sQuestApp() {
       elements.push(<div key={i} style={{color:"var(--text-primary)",fontSize:15,fontWeight:700,marginBottom:8}}>{line}</div>);
     }
     if (codeLines.length > 0) {
-      elements.push(<YamlBlock key="code-block" keyProp="code-block" code={codeLines.join("\n")} />);
+      flushCodeBlock(elements, codeLines, "tail");
     }
     return elements;
   };
