@@ -59,25 +59,24 @@ if (!supabase) console.warn("[KubeQuest] Supabase not configured. VITE_SUPABASE_
 console.info("[KubeQuest:boot] App.jsx module executing");
 checkDataVersion();
 
-// Proactively check Supabase auth token: if the stored session has an expired refresh token,
-// clear it now to prevent createClient/getSession from hanging on a doomed refresh attempt.
+// Stale token cleanup REMOVED (Bug 1 fix).
+// The previous code deleted the entire Supabase auth blob (access + refresh token) when the
+// access token expired >24h ago. But Supabase refresh tokens live 30-90 days, so this
+// destroyed valid sessions for users who hadn't visited recently.
+// The custom supabaseLock() above already prevents the Web Locks deadlock this was meant to fix.
+
+// Detect if we arrived via a password-recovery redirect (?code= in URL).
+// With PKCE flow, PASSWORD_RECOVERY event may not fire - we use sessionStorage
+// so the recovery state survives the code exchange and any micro-redirects.
 try {
-  const sbUrl = SUPABASE_URL || "";
-  const projRef = sbUrl.replace("https://","").split(".")[0];
-  if (projRef) {
-    const sbKey = `sb-${projRef}-auth-token`;
-    const raw = localStorage.getItem(sbKey);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const expiresAt = parsed?.expires_at; // Unix timestamp (seconds)
-      if (expiresAt && expiresAt < Date.now() / 1000 - 86400) {
-        // Token expired >24h ago. The refresh token is almost certainly dead too
-        console.warn("[KubeQuest:boot] Clearing stale Supabase auth token (expired", Math.round((Date.now()/1000 - expiresAt)/3600), "h ago)");
-        localStorage.removeItem(sbKey);
-      }
-    }
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has("code")) {
+    // We can't know yet if this code is for recovery or signup confirmation.
+    // Mark it as "pending" - the onAuthStateChange handler will confirm via
+    // session.user.recovery_sent_at before activating the password reset UI.
+    sessionStorage.setItem("kq_recovery_pending", "1");
   }
-} catch { /* ignore. Token check is best-effort */ }
+} catch { /* ignore */ }
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -177,6 +176,11 @@ const TRANSLATIONS = {
     resetEmailError: "❌ שגיאה בשליחת קישור איפוס. נסי שוב.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
+    newPasswordLabel: "סיסמה חדשה", confirmPasswordLabel: "אימות סיסמה",
+    saveNewPassword: "שמרי סיסמה חדשה", passwordUpdatedSuccess: "הסיסמה עודכנה בהצלחה",
+    passwordMismatch: "הסיסמאות אינן תואמות", passwordTooShort: "הסיסמה חייבת להכיל לפחות 6 תווים",
+    emailAlreadyExists: "כבר קיים חשבון עם אימייל זה. נסי להתחבר.",
+    setNewPasswordTitle: "הגדרת סיסמה חדשה",
     greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
     leaderboardBtn: "🏆 דירוג", logout: "יציאה",
     guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
@@ -207,6 +211,7 @@ const TRANSLATIONS = {
     reviewBtn: "צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
     saveErrorText: "⚠️ הנתונים לא נשמרו - בדקי חיבור לאינטרנט",
+    loadDataError: "⚠️ טעינת הנתונים נכשלה - משתמשת בנתונים מקומיים",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
     optionLabels: ["א","ב","ג","ד"], guestName: "אורחת",
     resetProgress: "אפסי התקדמות", resetConfirm: "האם את בטוחה? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
@@ -253,6 +258,7 @@ const TRANSLATIONS = {
     sendResetLink_m: "שלח קישור איפוס",
     resetEmailSent_m: "✅ נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "❌ שגיאה בשליחת קישור איפוס. נסה שוב.",
+    saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow_m: "הרשם", loginNow_m: "התחבר", alreadyHaveAccount_m: "יש לך חשבון?",
@@ -267,6 +273,7 @@ const TRANSLATIONS = {
     timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
     reviewBtn_m: "צפה בסקירה", hideReview_m: "הסתר סקירה",
     saveErrorText_m: "⚠️ הנתונים לא נשמרו - בדוק חיבור לאינטרנט",
+    loadDataError_m: "⚠️ טעינת הנתונים נכשלה - משתמש בנתונים מקומיים",
     guestName_m: "אורח",
     resetProgress_m: "אפס התקדמות", resetConfirm_m: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
     resetTopic_m: "אפס נושא",
@@ -409,6 +416,11 @@ const TRANSLATIONS = {
     resetEmailError: "❌ Failed to send reset link. Please try again.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
+    newPasswordLabel: "New Password", confirmPasswordLabel: "Confirm Password",
+    saveNewPassword: "Save New Password", passwordUpdatedSuccess: "Password updated successfully",
+    passwordMismatch: "Passwords do not match", passwordTooShort: "Password must be at least 6 characters",
+    emailAlreadyExists: "An account with this email already exists. Try logging in.",
+    setNewPasswordTitle: "Set New Password",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
     leaderboardBtn: "🏆 Leaderboard", logout: "Logout",
     guestBanner: "💡 Sign up to save progress and appear on the leaderboard",
@@ -439,6 +451,7 @@ const TRANSLATIONS = {
     reviewBtn: "View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
     loadingText: "Loading...",
     saveErrorText: "⚠️ Data not saved - check your internet connection",
+    loadDataError: "⚠️ Failed to load your data - using cached progress",
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
     optionLabels: ["A","B","C","D"], guestName: "Guest",
     resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
@@ -1049,6 +1062,18 @@ export default function K8sQuestApp() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail]       = useState("");
   const [resetStatus, setResetStatus]     = useState("");
+  // Restore recovery state from sessionStorage so a page refresh during
+  // password reset doesn't lose the screen (the ?code= was already consumed).
+  const [showPasswordReset, setShowPasswordReset] = useState(() => {
+    try { return sessionStorage.getItem("kq_show_password_reset") === "1"; } catch { return false; }
+  });
+  const [newPassword, setNewPassword]     = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [passwordResetError, setPasswordResetError] = useState("");
+  const passwordRecoveryRef               = useRef((() => {
+    try { return sessionStorage.getItem("kq_show_password_reset") === "1"; } catch { return false; }
+  })());
 
   const [screen, setScreen]               = useState(()=>{
     if (window.location.pathname==="/status" || window.location.hostname==="status.kubequest.online") return "status";
@@ -1348,13 +1373,14 @@ export default function K8sQuestApp() {
     return () => clearInterval(iv);
   }, [authChecked, minLoadElapsed, user, isGuest, dataLoaded]);
 
-  // Hard safety net: after 5 s on the loading gate, force everything open.
-  // If user was set but dataLoaded didn't resolve, clear user to bypass the gate.
+  // Hard safety net: after 8 s on the loading gate, force everything open.
+  // Must be longer than loadUserData's internal 5 s timeout to avoid a race
+  // where the gate clears the user before data loading finishes.
   useEffect(() => {
     const gateActive = !authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded);
     if (!gateActive) return;
     const t = setTimeout(() => {
-      console.error("[KubeQuest:boot] Loading gate still active after 5 s - force-unblocking");
+      console.error("[KubeQuest:boot] Loading gate still active after 8 s - force-unblocking");
       console.error("[KubeQuest:boot] State: authChecked:", authChecked, "dataLoaded:", dataLoaded, "user:", !!user, "isGuest:", isGuest);
       setAuthChecked(true);
       setMinLoadElapsed(true);
@@ -1366,7 +1392,7 @@ export default function K8sQuestApp() {
         setUser(null);
         loadingDataRef.current = false;
       }
-    }, 5000);
+    }, 8000);
     return () => clearTimeout(t);
   }, [authChecked, minLoadElapsed, user, isGuest, dataLoaded]);
 
@@ -1427,6 +1453,28 @@ export default function K8sQuestApp() {
     // In Supabase v2, it fires INITIAL_SESSION exactly once when the stored
     // session is resolved. Using getSession() in parallel creates a race
     // where loadUserData() is called twice with independent timeouts.
+
+    // Helper: detect recovery session via recovery_sent_at timestamp.
+    // With PKCE flow, PASSWORD_RECOVERY event may not fire separately -
+    // the recovery session can arrive via INITIAL_SESSION or SIGNED_IN instead.
+    const isRecoverySession = (s) => {
+      if (!s?.user?.recovery_sent_at) return false;
+      const pending = sessionStorage.getItem("kq_recovery_pending");
+      if (!pending) return false;
+      const elapsed = Date.now() - new Date(s.user.recovery_sent_at).getTime();
+      return elapsed < 600_000; // recovery initiated within 10 min
+    };
+
+    const activateRecovery = (s) => {
+      sessionStorage.removeItem("kq_recovery_pending");
+      try { sessionStorage.setItem("kq_show_password_reset", "1"); } catch {}
+      passwordRecoveryRef.current = true;
+      setUser(s.user);
+      setShowPasswordReset(true);
+      setAuthChecked(true);
+      setDataLoaded(true);
+    };
+
     console.info("[KubeQuest:boot] subscribing to onAuthStateChange");
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.info("[KubeQuest:boot] auth event:", event, "session:", !!session);
@@ -1434,6 +1482,19 @@ export default function K8sQuestApp() {
       if (event === "INITIAL_SESSION") {
         clearTimeout(hardTimeout);
         if (session) {
+          // PKCE fix: recovery session may arrive via INITIAL_SESSION
+          if (isRecoverySession(session)) {
+            activateRecovery(session);
+            return;
+          }
+          // Page refresh during password reset: passwordRecoveryRef was
+          // restored from sessionStorage - keep showing the reset screen.
+          if (passwordRecoveryRef.current) {
+            setUser(session.user);
+            setAuthChecked(true);
+            setDataLoaded(true);
+            return;
+          }
           setUser(session.user);
           loadUserData(session.user.id, session.user);
         } else {
@@ -1442,11 +1503,21 @@ export default function K8sQuestApp() {
           setDataLoaded(true);
         }
         setAuthChecked(true);
+      } else if (event === "PASSWORD_RECOVERY") {
+        // Supabase versions that fire this event correctly
+        activateRecovery(session);
       } else if (event === "SIGNED_IN") {
+        if (passwordRecoveryRef.current) return;
+        // PKCE fix: recovery session may arrive via SIGNED_IN
+        if (isRecoverySession(session)) {
+          activateRecovery(session);
+          return;
+        }
         setUser(session.user);
         loadUserData(session.user.id, session.user);
         setAuthChecked(true);
       } else if (event === "SIGNED_OUT") {
+        setUser(null);
         setAuthChecked(true);
       } else if (event === "TOKEN_REFRESHED") {
         if (session) setUser(session.user);
@@ -1865,12 +1936,14 @@ export default function K8sQuestApp() {
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
       setDataLoaded(true);
-    } catch {
-      // Network error or unexpected failure - unblock the UI
+    } catch (err) {
+      // Network error or unexpected failure - unblock the UI and surface the error
+      console.error("[KubeQuest:boot] loadUserData failed:", err);
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
       achievementsLoaded.current = true;
       setDataLoaded(true);
+      setSaveError(t("loadDataError") || "Failed to load your data. Using cached progress.");
     }
 
     // Check for a saved in-progress quiz belonging to this user
@@ -1950,20 +2023,33 @@ export default function K8sQuestApp() {
     if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); return; }
     setAuthLoading(true); setAuthError("");
     const { emailVal, passwordVal, usernameVal } = getFormValues();
-    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthLoading(false); return; }
-    const { error } = await supabase.auth.signUp({
-      email: emailVal, password: passwordVal, options: {
-        data: { username: usernameVal || emailVal.split("@")[0] },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: emailVal, password: passwordVal, options: {
+          data: { username: usernameVal || emailVal.split("@")[0] },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
+          setAuthError(t("emailAlreadySent"));
+        else
+          setAuthError(error.message);
+      } else if (!data.user?.identities?.length) {
+        // Supabase returns fake success (empty identities) when email already exists (confirmed)
+        setAuthError(t("emailAlreadyExists"));
+        setAuthScreen("login");
+      } else if (data.user?.created_at &&
+                 (Date.now() - new Date(data.user.created_at).getTime() > 30_000)) {
+        // User was created more than 30s ago - re-signup of an unconfirmed account.
+        // Supabase re-sent the confirmation email but the account already existed.
         setAuthError(t("emailAlreadySent"));
-      else
-        setAuthError(error.message);
-    } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
+      } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
+    } catch (err) {
+      console.error("[KubeQuest] signUp error:", err);
+      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
+    }
     setAuthLoading(false);
   };
 
@@ -1971,15 +2057,19 @@ export default function K8sQuestApp() {
     if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); return; }
     setAuthLoading(true); setAuthError("");
     const { emailVal, passwordVal } = getFormValues();
-    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthLoading(false); return; }
-    const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
-    if (error) {
-      setAuthError(t("wrongCredentials"));
-    } else if (window.PasswordCredential) {
-      try {
-        const cred = new window.PasswordCredential({ id: emailVal, password: passwordVal });
-        await navigator.credentials.store(cred);
-      } catch {}
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
+      if (error) {
+        setAuthError(t("wrongCredentials"));
+      } else if (window.PasswordCredential) {
+        try {
+          const cred = new window.PasswordCredential({ id: emailVal, password: passwordVal });
+          await navigator.credentials.store(cred);
+        } catch {}
+      }
+    } catch (err) {
+      console.error("[KubeQuest] login error:", err);
+      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
     }
     setAuthLoading(false);
   };
@@ -1988,12 +2078,17 @@ export default function K8sQuestApp() {
     setAuthLoading(true);
     const { emailVal } = getFormValues();
     if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthLoading(false); return; }
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: emailVal,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    setAuthError(error ? t("resendError") : t("resendSuccess"));
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: emailVal,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      setAuthError(error ? t("resendError") : t("resendSuccess"));
+    } catch (err) {
+      console.error("[KubeQuest] resend error:", err);
+      setAuthError(t("resendError"));
+    }
     setAuthLoading(false);
   };
 
@@ -2002,11 +2097,41 @@ export default function K8sQuestApp() {
     if (!supabase || !resetEmail || resetLoading) return;
     setResetStatus("");
     setResetLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: window.location.origin,
-    });
-    setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: window.location.origin,
+      });
+      setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
+    } catch (err) {
+      console.error("[KubeQuest] resetPassword error:", err);
+      setResetStatus(t("resetEmailError"));
+    }
     setResetLoading(false);
+  };
+
+  const handlePasswordUpdate = async () => {
+    setPasswordResetError("");
+    if (newPassword.length < 6) { setPasswordResetError(t("passwordTooShort")); return; }
+    if (newPassword !== confirmPassword) { setPasswordResetError(t("passwordMismatch")); return; }
+    setPasswordResetLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) { setPasswordResetLoading(false); setPasswordResetError(error.message); return; }
+      passwordRecoveryRef.current = false;
+      setShowPasswordReset(false);
+      try { sessionStorage.removeItem("kq_show_password_reset"); } catch {}
+      try { sessionStorage.removeItem("kq_recovery_pending"); } catch {}
+      setNewPassword("");
+      setConfirmPassword("");
+      await supabase.auth.signOut();
+      setUser(null);
+      setAuthError("\u2705 " + t("passwordUpdatedSuccess"));
+      setAuthScreen("login");
+    } catch (err) {
+      console.error("[KubeQuest] updatePassword error:", err);
+      setPasswordResetError(t("serviceUnavailable") || "Service temporarily unavailable");
+    }
+    setPasswordResetLoading(false);
   };
 
   const handleLogout = async () => {
@@ -2020,7 +2145,11 @@ export default function K8sQuestApp() {
       setDataLoaded(true);
       return;
     }
-    if (supabase) await supabase.auth.signOut();
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch (err) {
+      console.error("[KubeQuest] signOut error:", err);
+    }
     setUser(null);
     achievementsLoaded.current = false;
     loadingDataRef.current = false;
@@ -2965,13 +3094,21 @@ export default function K8sQuestApp() {
     return () => clearInterval(incidentTimerRef.current);
   }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── War Room: fetch interest count when entering incidentList screen ──────
+  // ── War Room: fetch interest count + check registration on incidentList screen ──
   useEffect(() => {
     if (screen !== "incidentList" || !supabase) return;
     supabase.rpc("get_war_room_interest_count").then(({ data }) => {
       if (data?.count != null) setWarRoomInterestCount(data.count);
     }).catch(() => {});
-  }, [screen]);
+    if (!isGuest && user?.id && user.id !== "guest") {
+      supabase.rpc("check_war_room_interest").then(({ data }) => {
+        if (data?.registered) {
+          setWarRoomInterestRegistered(true);
+          try { localStorage.setItem("warroom_interest_v1", "1"); } catch {}
+        }
+      }).catch(() => {});
+    }
+  }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── War Room: periodic notification when user is on safe screens ──────────
   useEffect(() => {
@@ -3392,6 +3529,48 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   );
   }
 
+  if (showPasswordReset) return (
+    <div data-kq-rendered="password-reset" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}button,input{font-family:inherit}button:focus-visible,input:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}`}</style>
+      <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
+        <div style={{textAlign:"center",marginBottom:34}}>
+          <svg width="64" height="64" viewBox="0 0 100 100" style={{marginBottom:10,filter:"drop-shadow(0 0 18px rgba(0,212,255,0.45))"}} xmlns="http://www.w3.org/2000/svg">
+            <defs><radialGradient id="ibg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="igr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
+            <circle cx="50" cy="50" r="50" fill="url(#ibg)"/>
+            <circle cx="50" cy="50" r="44" fill="none" stroke="url(#igr)" strokeWidth="4" opacity="0.9"/>
+            <g transform="translate(50,50)" stroke="url(#igr)" strokeWidth="2.8" strokeLinecap="round">
+              {[0,51.4,102.8,154.2,205.7,257.1,308.5].map((deg,i)=><line key={i} x1="0" y1="-18" x2="0" y2="-34" transform={`rotate(${deg})`}/>)}
+            </g>
+            <circle cx="50" cy="50" r="10" fill="none" stroke="url(#igr)" strokeWidth="3"/>
+            <circle cx="50" cy="50" r="5" fill="#00D4FF"/>
+            {[["#00D4FF",0],["#7B9FF7",51.4],["#A855F7",102.8],["#CC60CC",154.2],["#FF6B35",205.7],["#FF8C35",257.1],["#44AAEE",308.5]].map(([c,deg],i)=><circle key={i} cx="50" cy="16" r="3.5" fill={c} transform={deg?`rotate(${deg},50,50)`:""}/>)}
+          </svg>
+          <h1 style={{fontSize:33,fontWeight:900,margin:"0 0 6px",background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",filter:"drop-shadow(0 0 18px rgba(0,212,255,0.35))"}}>KubeQuest</h1>
+        </div>
+        <div style={{background:"var(--glass-5)",border:"1px solid var(--glass-12)",borderRadius:14,padding:"24px 20px"}}>
+          <h3 style={{margin:"0 0 20px",fontSize:16,fontWeight:700,color:"var(--text-primary)",textAlign:"center"}}>{t("resetPasswordTitle")}</h3>
+          <form onSubmit={e=>{e.preventDefault();handlePasswordUpdate();}}>
+            <div style={{marginBottom:12}}>
+              <label htmlFor="new-password" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("newPasswordLabel")}</label>
+              <input id="new-password" type="password" autoComplete="new-password" autoFocus value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="••••••••"
+                style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
+            </div>
+            <div style={{marginBottom:16}}>
+              <label htmlFor="confirm-password" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("confirmPasswordLabel")}</label>
+              <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••"
+                style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
+            </div>
+            {passwordResetError&&<div role="alert" aria-live="assertive" style={{marginBottom:12,color:"#EF4444",fontSize:12,padding:"8px 12px",background:"rgba(239,68,68,0.08)",borderRadius:8}}>{passwordResetError}</div>}
+            <button type="submit" disabled={passwordResetLoading||!newPassword||!confirmPassword}
+              style={{width:"100%",padding:"14px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",opacity:(passwordResetLoading||!newPassword||!confirmPassword)?0.5:1,transition:"opacity 0.2s"}}>
+              {passwordResetLoading?t("loading"):t("saveNewPassword")}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
   if (!user && !isStatusDomain) return (
     <div data-kq-rendered="auth" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
@@ -3793,7 +3972,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
