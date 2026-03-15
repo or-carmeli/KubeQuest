@@ -173,6 +173,19 @@ export function renderBidi(text, lang) {
     return <span dir="ltr" style={{unicodeBidi:"isolate",...CODE_SPAN_STYLE}}>{text}</span>;
   }
 
+  // Handle "Keyword: explanation" pattern in mixed Hebrew/English text.
+  // Isolates the leading English keyword (e.g. "Always:", "ClusterIP:") as its own
+  // LTR span so it stays visually at the RTL line start, while the rest of the text
+  // (which mixes Hebrew and English like "Kubernetes") flows naturally in RTL.
+  // Without this, renderBidiInner groups "Always: Kubernetes" as one LTR run,
+  // which breaks the visual order in RTL paragraphs.
+  const kwMatch = text.match(/^([A-Za-z][\w]*:)\s+([\s\S]+)$/);
+  if (kwMatch && hasHebrew(kwMatch[2])) {
+    const rest = kwMatch[2];
+    const prefixed = renderHebrewPrefixTerms(rest, lang, "kwr");
+    return <><span dir="ltr" style={{unicodeBidi:"isolate"}}>{kwMatch[1]}</span>{" "}{prefixed || renderBidiInner(rest, lang, "kwr")}</>;
+  }
+
   // Handle inline backtick code spans first: `term` → <span dir="ltr" style={code}>term</span>
   if (text.includes("`")) {
     const btParts = text.split(/`([^`]+)`/);

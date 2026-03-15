@@ -410,3 +410,57 @@ describe("CLI colon-separator regression", () => {
     expect(ltrs.some((t) => t.includes("8080:80"))).toBe(true);
   });
 });
+
+// ─── REGRESSION: Leading keyword bidi isolation ──────────────────────────────
+
+describe("leading keyword bidi isolation", () => {
+  it("Always: keyword is isolated from Kubernetes in LTR span", () => {
+    const input = "Always: Kubernetes תמיד מפעיל מחדש קונטיינר שנפסק";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    // "Always:" should be its own isolated LTR span
+    expect(ltrs).toContain("Always:");
+    // "Kubernetes" should be a separate LTR span (not grouped with Always:)
+    expect(ltrs.some((t) => t === "Always: Kubernetes")).toBe(false);
+  });
+
+  it("OnFailure: keyword is isolated", () => {
+    const input = "OnFailure: Kubernetes מפעיל מחדש רק אם exit code שגוי";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs).toContain("OnFailure:");
+    expect(ltrs.some((t) => t === "OnFailure: Kubernetes")).toBe(false);
+  });
+
+  it("ClusterIP: keyword is isolated in service type options", () => {
+    const input = "ClusterIP: מספק IP פנימי שנגיש מכל Node ב-Cluster";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs).toContain("ClusterIP:");
+    // Hebrew text should still be present
+    const text = flattenText(result);
+    expect(text).toContain("מספק");
+    expect(text).toContain("IP");
+  });
+
+  it("does not activate for pure English text (no Hebrew in rest)", () => {
+    const input = "Always: Kubernetes always restarts a stopped container";
+    // lang=he but no Hebrew in the rest - should not use keyword isolation
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    // The whole text is Latin, so it should be rendered as one LTR unit
+    expect(ltrs.some((t) => t === "Always:")).toBe(false);
+  });
+
+  it("LimitRange: keyword is isolated in mixed text", () => {
+    const input = "LimitRange: ברירות מחדל per-container. ResourceQuota: מגבלות לכל ה-Namespace";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs).toContain("LimitRange:");
+  });
+});
