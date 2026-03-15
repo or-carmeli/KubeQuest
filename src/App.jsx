@@ -1506,9 +1506,9 @@ export default function K8sQuestApp() {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (screenRef.current === "topic" && topicScreenRef.current === "quiz" && liveIndexRef.current > 0) {
-        window.va?.track("quiz_abandoned", { topic: selectedTopic?.name || selectedTopic?.id, lastQuestion: liveIndexRef.current + 1 });
+        window.va?.track?.("quiz_abandoned", { topic: selectedTopic?.name || selectedTopic?.id, lastQuestion: liveIndexRef.current + 1 });
       }
-      window.va?.track("session_ended", { durationSeconds: Math.round((Date.now() - sessionStartRef.current) / 1000), quizzesPlayed: quizzesPlayedRef.current });
+      window.va?.track?.("session_ended", { durationSeconds: Math.round((Date.now() - sessionStartRef.current) / 1000), quizzesPlayed: quizzesPlayedRef.current });
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -1963,7 +1963,7 @@ export default function K8sQuestApp() {
         setAuthError(t("emailAlreadySent"));
       else
         setAuthError(error.message);
-    } else { setAuthError(t("emailSent")); window.va?.track("signup_completed", { source: "quiz_game" }); }
+    } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
     setAuthLoading(false);
   };
 
@@ -2417,9 +2417,9 @@ export default function K8sQuestApp() {
       }
     }
     // ── Analytics ──
-    window.va?.track("question_answered", { questionNumber: questionIndex + 1, correct, topic: selectedTopic?.name || selectedTopic?.id });
-    if (!correct) window.va?.track("question_failed", { questionNumber: questionIndex + 1, topic: selectedTopic?.name || selectedTopic?.id });
-    if (correct && stats.current_streak === 0) window.va?.track("streak_started", { topic: selectedTopic?.name || selectedTopic?.id });
+    window.va?.track?.("question_answered", { questionNumber: questionIndex + 1, correct, topic: selectedTopic?.name || selectedTopic?.id });
+    if (!correct) window.va?.track?.("question_failed", { questionNumber: questionIndex + 1, topic: selectedTopic?.name || selectedTopic?.id });
+    if (correct && stats.current_streak === 0) window.va?.track?.("streak_started", { topic: selectedTopic?.name || selectedTopic?.id });
     } catch (err) {
       console.error("handleSubmit error:", err);
       submittingRef.current = false;
@@ -2490,8 +2490,8 @@ export default function K8sQuestApp() {
         if (allPerfect) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 4000); }
       }
       updateDailyStreak();
-      window.va?.track("quiz_completed", { score: finalCorrect, totalQuestions: currentQuestions.length, topic: selectedTopic?.name || selectedTopic?.id });
-      if (finalCorrect < currentQuestions.length) window.va?.track("quiz_failed", { score: finalCorrect, topic: selectedTopic?.name || selectedTopic?.id });
+      window.va?.track?.("quiz_completed", { score: finalCorrect, totalQuestions: currentQuestions.length, topic: selectedTopic?.name || selectedTopic?.id });
+      if (finalCorrect < currentQuestions.length) window.va?.track?.("quiz_failed", { score: finalCorrect, topic: selectedTopic?.name || selectedTopic?.id });
       } catch (err) {
         console.error("[FINISH_DEBUG] nextQuestion error:", err.message);
         submittingRef.current = false;
@@ -2557,9 +2557,9 @@ export default function K8sQuestApp() {
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[level] || 25) : (TIMER_DURATIONS[level] || 30));
     setScreen("topic");
     if (isGuest) achievementsLoaded.current = true;
-    window.va?.track("quiz_started", { topic: topic.name || topic.id, difficulty: level, mode: getGameMode(topic, level) });
+    window.va?.track?.("quiz_started", { topic: topic.name || topic.id, difficulty: level, mode: getGameMode(topic, level) });
     quizzesPlayedRef.current += 1;
-    if (isGuest) window.va?.track("guest_play_started", { topic: topic.name || topic.id });
+    if (isGuest) window.va?.track?.("guest_play_started", { topic: topic.name || topic.id });
   };
 
   const startMixedQuiz = async () => {
@@ -2611,9 +2611,9 @@ export default function K8sQuestApp() {
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? INTERVIEW_DURATIONS.mixed : TIMER_DURATIONS.mixed);
     setScreen("topic");
-    window.va?.track("quiz_started", { topic: "Mixed Quiz", difficulty: "mixed", mode: "mixed" });
+    window.va?.track?.("quiz_started", { topic: "Mixed Quiz", difficulty: "mixed", mode: "mixed" });
     quizzesPlayedRef.current += 1;
-    if (isGuest) window.va?.track("guest_play_started", { topic: "Mixed Quiz" });
+    if (isGuest) window.va?.track?.("guest_play_started", { topic: "Mixed Quiz" });
   };
 
   const startDailyChallenge = async () => {
@@ -2657,9 +2657,9 @@ export default function K8sQuestApp() {
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? INTERVIEW_DURATIONS.daily : TIMER_DURATIONS.daily);
     setScreen("topic");
-    window.va?.track("quiz_started", { topic: "Daily Challenge", difficulty: "daily", mode: "daily" });
+    window.va?.track?.("quiz_started", { topic: "Daily Challenge", difficulty: "daily", mode: "daily" });
     quizzesPlayedRef.current += 1;
-    if (isGuest) window.va?.track("guest_play_started", { topic: "Daily Challenge" });
+    if (isGuest) window.va?.track?.("guest_play_started", { topic: "Daily Challenge" });
   };
 
   // Reset per-question ephemeral state when navigating to a different question
@@ -2733,9 +2733,9 @@ export default function K8sQuestApp() {
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? INTERVIEW_DURATIONS.mixed : TIMER_DURATIONS.mixed);
     setScreen("topic");
     setShowBookmarks(false);
-    window.va?.track("quiz_started", { topic: "Saved Questions", difficulty: "mixed", mode: "bookmarks" });
+    window.va?.track?.("quiz_started", { topic: "Saved Questions", difficulty: "mixed", mode: "bookmarks" });
     quizzesPlayedRef.current += 1;
-    if (isGuest) window.va?.track("guest_play_started", { topic: "Saved Questions" });
+    if (isGuest) window.va?.track?.("guest_play_started", { topic: "Saved Questions" });
   };
 
   // ── Incident Mode: persistence helpers ───────────────────────────────────
@@ -3793,7 +3793,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 8px 4px",marginBottom:2}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:56,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"10px 10px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:10,marginBottom:8,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:56,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:15,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"0 10px 4px",marginBottom:4}}><span style={{width:28,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const eAcc=entry.total_answered>0?Math.round(entry.total_correct/entry.total_answered*100):0;const eTotalUsers=entry.total_users||1;const ePercentile=eTotalUsers>0?((eTotalUsers-(i+1))/eTotalUsers)*100:0;const eTier=getRankTier(ePercentile);return<div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 10px",background:i===0?"rgba(245,158,11,0.1)":"var(--glass-3)",borderRadius:10,marginBottom:8,border:`1px solid ${i===0?"#F59E0B44":"var(--glass-6)"}`}}><span style={{fontSize:18,width:28,flexShrink:0,textAlign:"center"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}.`}</span><div style={{flex:1,minWidth:0}}><div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous")}</div><div style={{color:"var(--text-dim)",fontSize:11}}>{"\uD83C\uDFAF"} {eAcc}% {"\u00B7"} {"\uD83D\uDD25"} {entry.max_streak}</div></div><div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",flexShrink:0}}><div style={{color:"#00D4FF",fontWeight:800,fontSize:16}}>{entry.total_score}</div><div style={{fontSize:9,color:eTier.color,fontWeight:600}}>{eTier.icon} {t(`rankTier_${eTier.key}`)}</div></div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div style={{display:"flex",alignItems:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}</span><span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span><span style={{color:"var(--glass-20)"}}>|</span><span>{t("leaderboardScoreCol")}</span><span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
@@ -4234,7 +4234,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             ))}
           </div>);})()}
           {/* ── Guest signup card (after topics) ── */}
-          {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track("signup_clicked",{source:"quiz_game"})}catch{}}} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button><span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track("login_clicked",{source:"quiz_game"})}catch{}}} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span></div>}
+          {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"quiz_game"})}catch{}}} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button><span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"quiz_game"})}catch{}}} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span></div>}
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><span>{a.icon}</span>{getLocalizedField(a, "name", lang)}</div>)}</div></div>}
           </>)}
           {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir}/>}
@@ -5027,7 +5027,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 // BUG-C fix: retries must never reset streak
                 if (timerEnabled||isInterviewMode) setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));
                 setScreen("topic");
-                window.va?.track("retry_quiz", { topic: selectedTopic?.name || selectedTopic?.id });
+                window.va?.track?.("retry_quiz", { topic: selectedTopic?.name || selectedTopic?.id });
                 console.debug("[RETRY] screen set to topic");
                 } catch (err) { console.error("[RETRY] failed:", err); }
               }}
@@ -5037,7 +5037,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </>)}
             {isGuest&&<div style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:12,padding:"11px 16px",marginBottom:16,fontSize:13,color:"#4a9aba"}}>
               {t("guestSaveHint")}{" "}
-              <button onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track("signup_clicked",{source:"quiz_game"})}catch{}}} style={{background:"none",border:"none",color:"#00D4FF",fontWeight:700,cursor:"pointer",fontSize:13,textDecoration:"underline"}}>{t("signupLink")}</button>
+              <button onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"quiz_game"})}catch{}}} style={{background:"none",border:"none",color:"#00D4FF",fontWeight:700,cursor:"pointer",fontSize:13,textDecoration:"underline"}}>{t("signupLink")}</button>
             </div>}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {/* Next topic button - only shown when ALL levels of current topic are mastered */}
@@ -5097,7 +5097,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </div>
                 );
               })()}
-              <button onClick={()=>{window.va?.track("restart_full_quiz",{topic:selectedTopic?.name||selectedTopic?.id,previousScore:result?.correct});selectedTopic.id==="mixed"?startMixedQuiz():selectedTopic.id==="daily"?startDailyChallenge():startTopic(selectedTopic,selectedLevel);}} style={{padding:13,background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:12,color:"var(--text-secondary)",fontSize:13,fontWeight:600,cursor:"pointer"}}>{t("restartFullQuiz")}</button>
+              <button onClick={()=>{window.va?.track?.("restart_full_quiz",{topic:selectedTopic?.name||selectedTopic?.id,previousScore:result?.correct});selectedTopic.id==="mixed"?startMixedQuiz():selectedTopic.id==="daily"?startDailyChallenge():startTopic(selectedTopic,selectedLevel);}} style={{padding:13,background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:12,color:"var(--text-secondary)",fontSize:13,fontWeight:600,cursor:"pointer"}}>{t("restartFullQuiz")}</button>
               <button onClick={()=>setScreen("home")} style={{padding:13,background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:12,color:"var(--text-primary)",fontSize:13,fontWeight:600,cursor:"pointer"}}>{t("backToTopics")}</button>
             </div>
             {showReview&&quizHistory.length>0&&(
@@ -5148,7 +5148,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 onClick={()=>{
                   console.log("[KubeQuest:warroom] Button clicked. isGuest:",isGuest,"user:",!!user,"supabase:",!!supabase,"registered:",warRoomInterestRegistered);
                   if(warRoomInterestRegistered)return;
-                  window.va?.track("war_room_interest_clicked",{user_id:user?.id||null,timestamp:new Date().toISOString(),environment:import.meta.env.PROD?"prod":"dev"});
+                  window.va?.track?.("war_room_interest_clicked",{user_id:user?.id||null,timestamp:new Date().toISOString(),environment:import.meta.env.PROD?"prod":"dev"});
                   const onSuccess=()=>{
                     console.log("[KubeQuest:warroom] Registration succeeded");
                     setWarRoomInterestRegistered(true);
