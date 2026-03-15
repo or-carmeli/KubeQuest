@@ -86,6 +86,7 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
   const isProd    = import.meta.env.MODE === "production";
   const env       = isProd ? "Production" : "Development";
   const buildTime = typeof __BUILD_TIME__ !== "undefined" ? new Date(__BUILD_TIME__) : null;
+  const buildHash = typeof __BUILD_HASH__ !== "undefined" && __BUILD_HASH__ ? __BUILD_HASH__ : null;
   const isSecure  = typeof window !== "undefined" && window.location.protocol === "https:";
 
   const loading = monitorServices === null;
@@ -187,17 +188,25 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
   const isStaleCritical = secondsAgo !== null && secondsAgo > 900;
 
   const metricCard = (label, value, sub, accent="#94a3b8") => (
-    <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"14px 16px",minWidth:0}}>
-      <div style={{fontSize:11,color:"var(--text-muted)",fontWeight:600,marginBottom:6}}>{label}</div>
-      <div style={{fontSize:18,fontWeight:700,color:accent,fontFamily:"'Fira Code','Courier New',monospace",lineHeight:1}}>{value}</div>
-      {sub&&<div style={{fontSize:11,color:"var(--text-dim)",marginTop:4}}>{sub}</div>}
+    <div className="metric-card" style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:12,padding:"18px 20px",minWidth:0}}>
+      <div style={{fontSize:11,color:"var(--text-muted)",fontWeight:600,marginBottom:8,letterSpacing:0.3,textTransform:"uppercase"}}>{label}</div>
+      <div className="metric-value" style={{fontSize:24,fontWeight:700,color:accent,fontFamily:"'Fira Code','Courier New',monospace",lineHeight:1}}>{value}</div>
+      {sub&&<div style={{fontSize:11,color:"var(--text-dim)",marginTop:6}}>{sub}</div>}
     </div>
   );
 
-  const infoRow = (label, value, accent="#cbd5e1", mono=false) => (
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid var(--glass-4)"}}>
-      <span style={{fontSize:12,color:"var(--text-muted)",fontWeight:500}}>{label}</span>
-      <span style={{fontSize:12,color:accent,fontWeight:500,fontFamily:mono?"'Fira Code','Courier New',monospace":"inherit",textAlign:"end",maxWidth:"60%",wordBreak:"break-all"}}>{value}</span>
+  const securityCard = (label, value, sub, accent="#94a3b8") => (
+    <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:8,padding:"12px 14px"}}>
+      <div style={{fontSize:10,color:"var(--text-muted)",fontWeight:600,letterSpacing:0.3,textTransform:"uppercase",marginBottom:6}}>{label}</div>
+      <div style={{fontSize:13,color:accent,fontWeight:600}}>{value}</div>
+      {sub&&<div style={{fontSize:10,color:"var(--text-dim)",marginTop:3}}>{sub}</div>}
+    </div>
+  );
+
+  const deployRow = (label, value, accent="#64748b", mono=false) => (
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0"}}>
+      <span style={{fontSize:11,color:"var(--text-muted)",fontWeight:500}}>{label}</span>
+      <span style={{fontSize:11,color:accent,fontWeight:500,fontFamily:mono?"'Fira Code','Courier New',monospace":"inherit",textAlign:"end",maxWidth:"65%",wordBreak:"break-all"}}>{value}</span>
     </div>
   );
 
@@ -251,19 +260,25 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
     ? (secondsAgo < 60 ? "Just now" : secondsAgo < 120 ? "1 min ago" : `${Math.floor(secondsAgo/60)} min ago`)
     : "Loading...";
 
+  const supabaseLabel = !supabase ? "Unavailable" : dbStatus === null ? "Checking..." : monitorServices !== null ? "Connected" : "Unreachable";
+  const supabaseColor = !supabase ? "#EF4444" : dbStatus === null ? "#F59E0B" : monitorServices !== null ? "#94a3b8" : "#EF4444";
+  const lastCheckText = secondsAgo !== null
+    ? (secondsAgo < 5 ? "Just now" : secondsAgo < 60 ? `${secondsAgo}s ago` : secondsAgo < 120 ? "1 min ago" : `${Math.floor(secondsAgo/60)} min ago`)
+    : "Checking...";
+
   return (
     <>
       {/* -- Standalone status header (status.kubequest.online only) -- */}
       {isStatusDomain && (
         <header style={{borderBottom:"1px solid var(--glass-5)",padding:"12px 24px"}}>
-          <div style={{maxWidth:1080,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{fontSize:14,fontWeight:600,color:"var(--text-primary)",letterSpacing:-0.2}}>KubeQuest Status</div>
             <a href="https://kubequest.online" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"var(--text-muted)",textDecoration:"none"}}>kubequest.online ↗</a>
           </div>
         </header>
       )}
 
-      <div className="page-pad" dir="ltr" style={{maxWidth:1080,margin:"0 auto",padding:isStatusDomain?"28px 16px 48px":"20px 16px 48px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
+      <div className="page-pad" dir="ltr" style={{maxWidth:1200,margin:"0 auto",padding:isStatusDomain?"28px 16px 48px":"20px 16px 48px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
 
         {/* Back (hidden on standalone status subdomain) */}
         {!isStatusDomain && (
@@ -393,7 +408,7 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
 
         {/* -- 7. PERFORMANCE METRICS -- */}
         {sectionTitle("Performance")}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
+        <div className="perf-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
           {metricCard("Avg Latency", avgLatency!=null?`${avgLatency}ms`:"-", loading?"loading...":"across services", "#94a3b8")}
           {metricCard("Max Latency", maxLatency!=null?`${maxLatency}ms`:"-", loading?"loading...":"slowest service", "#94a3b8")}
           {metricCard("Uptime", overallUptime?`${overallUptime}%`:"-", `last ${monitoringDays} days`, "#94a3b8")}
@@ -402,27 +417,36 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
 
         {/* -- 8 & 9. SECURITY + DEPLOYMENT (side by side on desktop) -- */}
         <div className="status-bottom-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:32}}>
-          <div>
+          <div style={{display:"flex",flexDirection:"column"}}>
             <div style={{fontSize:11,color:"var(--text-muted)",fontWeight:600,letterSpacing:0.5,textTransform:"uppercase",marginBottom:10}}>Security</div>
-            <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"2px 16px"}}>
-              {infoRow("TLS Certificate", isSecure ? "Valid - Let's Encrypt" : "Not active", isSecure?"#94a3b8":"#EF4444")}
-              {infoRow("Connection",      isSecure ? "HTTPS - Encrypted" : "HTTP - Unencrypted",   isSecure?"#94a3b8":"#F59E0B")}
-              {infoRow("HSTS",            "Enabled",  "#94a3b8")}
-              {infoRow("Security Headers", "Active",  "#94a3b8")}
-              {infoRow("CSP",             "Configured", "#94a3b8")}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",position:"relative"}} title="Grade A security headers assessment, Mar 2026">
-                <span style={{fontSize:12,color:"var(--text-muted)",fontWeight:500}}>Last Security Audit</span>
-                <span style={{fontSize:12,color:"#94a3b8",fontWeight:500}}>Grade A - Mar 2026</span>
-              </div>
+            <div className="security-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,flex:1}}>
+              {securityCard("TLS Certificate", isSecure ? "Valid" : "Not Active", isSecure ? "Let's Encrypt" : null, isSecure?"#94a3b8":"#EF4444")}
+              {securityCard("Connection", isSecure ? "HTTPS" : "HTTP", isSecure ? "Encrypted" : "Unencrypted", isSecure?"#94a3b8":"#F59E0B")}
+              {securityCard("HSTS", "Enabled", null, "#94a3b8")}
+              {securityCard("Headers", "Active", null, "#94a3b8")}
+              {securityCard("CSP", "Configured", null, "#94a3b8")}
+              {securityCard("Last Audit", "Grade A", "Mar 2026", "#94a3b8")}
             </div>
           </div>
-          <div>
+          <div style={{display:"flex",flexDirection:"column"}}>
             <div style={{fontSize:11,color:"var(--text-muted)",fontWeight:600,letterSpacing:0.5,textTransform:"uppercase",marginBottom:10}}>Deployment</div>
-            <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"2px 16px"}}>
-              {infoRow("Version", `v${APP_VERSION}`, "#cbd5e1", true)}
-              {infoRow("Environment", env, isProd?"#94a3b8":"#F59E0B")}
-              {infoRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "-", "#64748b", true)}
-              <div style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",fontSize:11,color:"var(--text-dim)",flexWrap:"wrap"}}>
+            <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"18px 20px",flex:1,display:"flex",flexDirection:"column"}}>
+              <div style={{marginBottom:4}}>
+                <div style={{fontSize:10,color:"var(--text-muted)",fontWeight:600,letterSpacing:0.3,textTransform:"uppercase",marginBottom:4}}>Version</div>
+                <div style={{fontSize:18,fontWeight:700,color:"#cbd5e1",fontFamily:"'Fira Code','Courier New',monospace"}}>{`v${APP_VERSION}`}</div>
+              </div>
+              <div style={{borderTop:"1px solid var(--glass-4)",marginTop:10,paddingTop:6}}>
+                {deployRow("Commit", buildHash || "-", "#94a3b8", true)}
+                {deployRow("Environment", env, isProd?"#94a3b8":"#F59E0B")}
+                {deployRow("Last Deploy", buildTime ? buildTime.toUTCString().replace(" GMT"," UTC") : "-", "#64748b", true)}
+              </div>
+              <div style={{borderTop:"1px solid var(--glass-4)",marginTop:6,paddingTop:6}}>
+                {deployRow("Supabase", supabaseLabel, supabaseColor)}
+                {deployRow("DB Connections", "-", "#64748b", true)}
+                {deployRow("Cache", "Unknown", "#64748b")}
+                {deployRow("Last Check", lastCheckText, "#94a3b8")}
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:12,fontSize:11,color:"var(--text-dim)",flexWrap:"wrap",borderTop:"1px solid var(--glass-4)",paddingTop:10,marginTop:"auto"}}>
                 <span style={{fontFamily:"'Fira Code','Courier New',monospace"}}>main</span>
                 <span style={{display:"flex",alignItems:"center",gap:4}}>
                   <span style={{width:5,height:5,borderRadius:"50%",background:"#10B981",display:"inline-block"}} />
@@ -437,7 +461,7 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
           </div>
         </div>
 
-        <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}.svc-row:hover{background:rgba(0,255,170,0.04)!important}@media(max-width:768px){.status-bottom-grid{grid-template-columns:1fr!important}}`}</style>
+        <style>{`@keyframes ping{0%{transform:scale(1);opacity:0.4}70%{transform:scale(2.2);opacity:0}100%{transform:scale(2.2);opacity:0}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor,0 0 24px currentColor}50%{opacity:.85;box-shadow:0 0 4px currentColor,0 0 10px currentColor,0 0 16px currentColor}}.svc-row:hover{background:rgba(0,255,170,0.04)!important}@media(min-width:640px){.perf-grid{grid-template-columns:repeat(4,1fr)!important}}@media(min-width:768px){.metric-card{padding:22px 24px!important}.metric-value{font-size:28px!important}}@media(max-width:768px){.status-bottom-grid{grid-template-columns:1fr!important}}@media(max-width:480px){.security-grid{grid-template-columns:1fr!important}}`}</style>
       </div>
     </>
   );

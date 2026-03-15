@@ -1,11 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { readFileSync, writeFileSync } from 'fs'
+import { execSync } from 'child_process'
 import { resolve } from 'path'
 
 // Bump this number ONLY when localStorage schema changes in a backward-incompatible way.
 // Incrementing this will clear transient keys on first load after deploy.
 const APP_DATA_VERSION = 1;
+
+// Build hash: prefer env vars (CI/Vercel), fall back to git short hash
+let buildHash = process.env.VITE_BUILD_HASH || '';
+if (!buildHash) {
+  const envSha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.VITE_GIT_COMMIT_SHA || '';
+  if (envSha) buildHash = envSha.slice(0, 7);
+}
+if (!buildHash) {
+  try { buildHash = execSync('git rev-parse --short HEAD').toString().trim(); } catch { buildHash = ''; }
+}
 
 function swCacheVersionPlugin() {
   return {
@@ -29,6 +40,7 @@ export default defineConfig({
   plugins: [react(), swCacheVersionPlugin()],
   define: {
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    __BUILD_HASH__: JSON.stringify(buildHash),
     __APP_DATA_VERSION__: APP_DATA_VERSION,
   },
 })
