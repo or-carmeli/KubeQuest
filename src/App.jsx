@@ -5142,31 +5142,35 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <div style={{fontSize:56,marginBottom:16}}>🚧</div>
               <h2 style={{margin:"0 0 8px",color:"var(--text-bright)",fontSize:26,fontWeight:900}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
               <div style={{display:"inline-block",background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:12,fontWeight:700,padding:"4px 14px",borderRadius:20,letterSpacing:0.5,marginBottom:16}}>Coming Soon</div>
-              <p style={{margin:"0 0 12px",color:"var(--text-secondary)",fontSize:14,lineHeight:1.7}}>{lang==="en"?"This feature is under development and will be available soon.":"הפיצ'ר נמצא בפיתוח ויהיה זמין בקרוב."}</p>
-              <p style={{margin:"0 0 20px",color:"var(--text-dim)",fontSize:12}}>{lang==="en"?"We'll notify you when it's ready.":"נשמח לעדכן בקרוב."}</p>
+              <p style={{margin:"0 0 20px",color:"var(--text-secondary)",fontSize:14,lineHeight:1.7}}>{lang==="en"?"This feature is under development and will be available soon.":"הפיצ'ר נמצא בפיתוח ויהיה זמין בקרוב."}</p>
               <button
                 disabled={warRoomInterestRegistered||warRoomEmailSending}
                 onClick={()=>{
+                  console.log("[KubeQuest:warroom] Button clicked. isGuest:",isGuest,"user:",!!user,"supabase:",!!supabase,"registered:",warRoomInterestRegistered);
                   if(warRoomInterestRegistered)return;
                   window.va?.track("war_room_interest_clicked",{user_id:user?.id||null,timestamp:new Date().toISOString(),environment:import.meta.env.PROD?"prod":"dev"});
                   const onSuccess=()=>{
+                    console.log("[KubeQuest:warroom] Registration succeeded");
                     setWarRoomInterestRegistered(true);
                     try{localStorage.setItem("warroom_interest_v1","1");}catch{}
                     setWarRoomNotifyToast({msg:lang==="en"?"Subscribed":"נרשמת לעדכון",isError:false});
                     setTimeout(()=>setWarRoomNotifyToast(null),3000);
+                    supabase?.rpc("get_war_room_interest_count").then(({data})=>{if(data?.count!=null)setWarRoomInterestCount(data.count);});
                   };
                   const onError=(err)=>{
-                    console.error("[KubeQuest] War Room interest registration failed:",err);
+                    console.error("[KubeQuest:warroom] Registration failed:",err);
                     setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
                     setTimeout(()=>setWarRoomNotifyToast(null),4000);
                   };
                   if(!isGuest&&user&&supabase){
                     setWarRoomEmailSending(true);
-                    supabase.rpc("register_war_room_interest",{user_email:null}).then(({error})=>{
+                    supabase.rpc("register_war_room_interest",{user_email:null}).then(({data,error})=>{
+                      console.log("[KubeQuest:warroom] RPC response - data:",data,"error:",error);
                       setWarRoomEmailSending(false);
                       if(!error){onSuccess();}else{onError(error);}
                     }).catch(e=>{setWarRoomEmailSending(false);onError(e);});
                   }else if(supabase){
+                    console.log("[KubeQuest:warroom] Opening email modal for guest");
                     setWarRoomEmailModal(true);
                   }else{
                     onError("Supabase not available");
@@ -5178,6 +5182,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               >{warRoomEmailSending?(lang==="en"?"...":"...")
                 :warRoomInterestRegistered?(lang==="en"?"Subscribed":"נרשמת")
                 :(lang==="en"?"Notify me":"הירשם לעדכון")}</button>
+              {warRoomInterestCount!=null&&warRoomInterestCount>0&&(
+                <p style={{margin:"16px 0 0",color:"var(--text-dim)",fontSize:11,opacity:0.6}}>
+                  {lang==="en"?`${warRoomInterestCount} waiting`:`${warRoomInterestCount} ממתינים`}
+                </p>
+              )}
               {warRoomNotifyToast&&(
                 <div style={{position:"absolute",bottom:-56,left:"50%",transform:"translateX(-50%)",background:warRoomNotifyToast.isError?"rgba(239,68,68,0.15)":"var(--bg-card)",border:`1px solid ${warRoomNotifyToast.isError?"rgba(239,68,68,0.3)":"var(--glass-9)"}`,borderRadius:10,padding:"8px 16px",fontSize:12,color:warRoomNotifyToast.isError?"#EF4444":"var(--text-secondary)",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(0,0,0,0.3)",animation:"fadeIn 0.3s ease"}}>
                   {warRoomNotifyToast.msg}
@@ -5200,7 +5209,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   if(!email||!email.includes("@")||!email.includes("."))return;
                   if(!supabase)return;
                   setWarRoomEmailSending(true);
-                  supabase.rpc("register_war_room_interest",{user_email:email}).then(({error})=>{
+                  supabase.rpc("register_war_room_interest",{user_email:email}).then(({data,error})=>{
+                    console.log("[KubeQuest:warroom] Email RPC response - data:",data,"error:",error);
                     setWarRoomEmailSending(false);
                     if(!error){
                       setWarRoomEmailModal(false);
@@ -5209,6 +5219,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       try{localStorage.setItem("warroom_interest_v1","1");}catch{}
                       setWarRoomNotifyToast({msg:lang==="en"?"Subscribed":"נרשמת לעדכון",isError:false});
                       setTimeout(()=>setWarRoomNotifyToast(null),3000);
+                      supabase.rpc("get_war_room_interest_count").then(({data:d})=>{if(d?.count!=null)setWarRoomInterestCount(d.count);});
                     }else{
                       console.error("[KubeQuest] War Room email registration failed:",error);
                       setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
