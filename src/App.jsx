@@ -1129,7 +1129,7 @@ export default function K8sQuestApp() {
   const loadingDataRef = useRef(false); // prevents concurrent loadUserData calls
   const prevLangRef = useRef(lang);     // tracks previous lang for mid-quiz language switch detection
   const quizRunIdRef  = useRef(null);
-  const answerCacheRef = useRef({});  // prefetched { [questionId]: { correctIndex, explanation } }
+
   const liveIndexRef  = useRef(0);   // highest question index reached; never decremented
   const questionRef   = useRef(null); // focus target when question changes
   const nextBtnRef    = useRef(null); // focus target after submitting an answer
@@ -1511,21 +1511,7 @@ export default function K8sQuestApp() {
     } catch {}
   }, [user, stats, completedTopics, unlockedAchievements]);
 
-  // Prefetch answer for current question so submit feedback is instant
-  useEffect(() => {
-    if (screen !== "topic" || topicScreen !== "quiz") return;
-    const q = currentQuestions[questionIndex];
-    if (!supabase || !q?.id || answerCacheRef.current[q.id]) return;
-    const originalIndex = q._optionMap ? q._optionMap[0] : 0;
-    const isDaily = selectedTopic?.id === "daily";
-    const rpc = isDaily ? checkDailyAnswer : checkQuizAnswer;
-    rpc(supabase, q.id, originalIndex).then(res => {
-      if (res) {
-        const ci = q._optionMap ? q._optionMap.indexOf(res.correct_answer) : res.correct_answer;
-        answerCacheRef.current[q.id] = { correctIndex: ci, explanation: res.explanation };
-      }
-    }).catch(() => {});
-  }, [questionIndex, screen, topicScreen]);
+
 
   // When language changes during an active quiz, restart with correct language.
   // Online questions have server-assigned IDs tied to a specific language, so a
@@ -2046,7 +2032,6 @@ export default function K8sQuestApp() {
     topicCorrectRef.current = Number(saved.topicCorrect) || 0;
     quizRunIdRef.current    = saved.quizRunId;
     liveIndexRef.current    = safeIndex;
-    answerCacheRef.current  = {};
     setHintVisible(false);
     setEliminatedOption(null);
     setTryAgainActive(false);
@@ -2194,15 +2179,11 @@ export default function K8sQuestApp() {
     setSubmitted(true);
     const q = currentQuestions[questionIndex];
 
-    // Resolve answer: prefetch cache → local field → server RPC (last resort)
+    // Resolve answer: local field → server RPC
     let result;
-    const cached = supabase && q.id ? answerCacheRef.current[q.id] : null;
-    if (cached) {
-      result = { correct: selectedAnswer === cached.correctIndex, correctIndex: cached.correctIndex, explanation: cached.explanation };
-    } else if (typeof q.answer === "number") {
+    if (typeof q.answer === "number") {
       result = { correct: selectedAnswer === q.answer, correctIndex: q.answer, explanation: q.explanation };
     } else if (supabase && q.id) {
-      // Cache miss and no local answer - fall back to server call
       setCheckingAnswer(true);
       const originalIndex = q._optionMap ? q._optionMap[selectedAnswer] : selectedAnswer;
       const isDaily = selectedTopic?.id === "daily";
@@ -2393,7 +2374,6 @@ export default function K8sQuestApp() {
 
   const startTopic = async (topic, level) => {
     quizRunIdRef.current = Date.now().toString(36);
-    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     submittingRef.current = false;
     clearQuizState();
@@ -2441,7 +2421,6 @@ export default function K8sQuestApp() {
 
   const startMixedQuiz = async () => {
     quizRunIdRef.current = Date.now().toString(36);
-    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     submittingRef.current = false;
     clearQuizState();
@@ -2496,7 +2475,6 @@ export default function K8sQuestApp() {
 
   const startDailyChallenge = async () => {
     quizRunIdRef.current = Date.now().toString(36);
-    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     submittingRef.current = false;
     clearQuizState();
@@ -2598,7 +2576,6 @@ export default function K8sQuestApp() {
   const startBookmarksQuiz = () => {
     if (!bookmarks.length) return;
     quizRunIdRef.current = Date.now().toString(36);
-    answerCacheRef.current = {};
     liveIndexRef.current = 0;
     submittingRef.current = false;
     clearQuizState();
@@ -4644,7 +4621,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 liveIndexRef.current=0;
                 quizRunIdRef.current=Date.now().toString(36);
                 submittingRef.current=false;
-                answerCacheRef.current={};
                 setSessionScore(0);
                 setQuizHistory([]); setShowReview(false);
                 // BUG-C fix: retries must never reset streak
