@@ -89,8 +89,8 @@ export function init({ dsn, environment, release }) {
       replaysSessionSampleRate: 0,
       replaysOnErrorSampleRate: 0,
 
-      // No optional integrations — error monitoring only
-      integrations: [],
+      // Keep all default integrations (GlobalHandlers, Breadcrumbs, etc.)
+      // No extra integrations added — error monitoring only, no tracing/replay
 
       // ── Scrub events before they leave the browser ──
       beforeSend(event) {
