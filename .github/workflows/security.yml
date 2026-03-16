@@ -1,20 +1,22 @@
-name: Security Scan
+name: Weekly Security Scan
 
-# Run weekly on Monday + on every push to main
+# Catches newly disclosed CVEs against main between PRs
 on:
   schedule:
     - cron: '0 9 * * 1'   # Every Monday at 09:00 UTC
-  push:
-    branches: [main]
-  workflow_dispatch:       # Allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   # ── 1. Dependency audit ──────────────────────────────────────────────────────
   npm-audit:
     name: npm Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,53 +27,58 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Fails if any HIGH or CRITICAL vulnerabilities are found in npm packages
       - name: Run npm audit
         run: npm audit --audit-level=high
 
-  # ── 2. Container image scan ──────────────────────────────────────────────────
+  # ── 2. Container image scan ────────────────────────────────────────────────
   trivy:
     name: Trivy Container Scan
     runs-on: ubuntu-latest
     permissions:
-      security-events: write   # Required to upload results to GitHub Security tab
+      contents: read
+      security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Docker image for scanning
-        run: docker build -t kubequest:scan .
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: kubequest:scan
+          cache-from: type=gha
 
-      # Trivy scans the image for known CVEs in OS packages and dependencies
-      # Results appear in GitHub → Security → Code scanning alerts
       - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: kubequest:scan
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
-          exit-code: '0'        # Don't fail the job — just report findings
 
       - name: Upload Trivy results to GitHub Security tab
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
 
-  # ── 3. CodeQL static analysis ────────────────────────────────────────────────
+  # ── 3. CodeQL static analysis ──────────────────────────────────────────────
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
     permissions:
-      security-events: write
-      actions: read
       contents: read
+      security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # CodeQL scans JavaScript/JSX source for security vulnerabilities
-      # e.g. XSS, prototype pollution, insecure use of eval
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
