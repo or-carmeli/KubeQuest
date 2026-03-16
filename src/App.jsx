@@ -13,6 +13,7 @@ import { INCIDENTS } from "./content/incidents";
 import { CHEATSHEET } from "./content/cheatsheet";
 import { saveQuizState, loadQuizState, clearQuizState, isRecentQuizState } from "./utils/quizPersistence";
 import { safeGetItem, safeGetJSON, checkDataVersion } from "./utils/storage";
+import { captureError, setUserContext, setScreen as setTelemetryScreen } from "./utils/telemetry";
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
 import { TerminalBlock, YamlBlock } from "./components/CodeBlocks";
@@ -1227,6 +1228,10 @@ export default function K8sQuestApp() {
   const sessionStartRef = useRef(Date.now());
   const quizzesPlayedRef = useRef(0);
 
+  // ── Telemetry context (safe metadata only) ────────────────────────────────
+  useEffect(() => { setUserContext({ isGuest }); }, [isGuest]);
+  useEffect(() => { setTelemetryScreen(screen); }, [screen]);
+
   // ── War Room (Incident) state ─────────────────────────────────────────────
   const [selectedIncident,   setSelectedIncident]   = useState(null);
   const [incidentStepIndex,  setIncidentStepIndex]  = useState(0);
@@ -1971,6 +1976,7 @@ export default function K8sQuestApp() {
     } catch (err) {
       // Network error or unexpected failure - unblock the UI and surface the error
       console.error("[KubeQuest:boot] loadUserData failed:", err);
+      captureError(err, { flow: "loadUserData", screen, isGuest });
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
       achievementsLoaded.current = true;
@@ -2047,6 +2053,7 @@ export default function K8sQuestApp() {
       });
     } catch (err) {
       console.error("[KubeQuest] saveUserData failed:", err);
+      captureError(err, { flow: "saveUserData", screen, isGuest });
       const errorKey = classifySaveError(err);
       const errorMsg = t(errorKey);
       setSaveError(errorMsg);
@@ -2625,6 +2632,7 @@ export default function K8sQuestApp() {
     if (correct && stats.current_streak === 0) window.va?.track?.("streak_started", { topic: selectedTopic?.name || selectedTopic?.id });
     } catch (err) {
       console.error("handleSubmit error:", err);
+      captureError(err, { flow: "handleSubmit", screen, isGuest });
       submittingRef.current = false;
       setCheckingAnswer(false);
     }
@@ -2697,6 +2705,7 @@ export default function K8sQuestApp() {
       if (finalCorrect < currentQuestions.length) window.va?.track?.("quiz_failed", { score: finalCorrect, topic: selectedTopic?.name || selectedTopic?.id });
       } catch (err) {
         console.error("[FINISH_DEBUG] nextQuestion error:", err.message);
+        captureError(err, { flow: "nextQuestion", screen, isGuest });
         submittingRef.current = false;
       }
       console.debug("[FINISH_DEBUG] setScreen topicComplete (normal path)");
@@ -2733,7 +2742,8 @@ export default function K8sQuestApp() {
           fetchQuizQuestions(supabase, topic.id, level, lang),
           fetchTheory(supabase, topic.id, level, lang),
         ]);
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "fetchQuizQuestions", screen, isGuest });
         rawQs = getLocalizedField(topic.levels[level], "questions", lang);
         theory = getLocalizedField(topic.levels[level], "theory", lang);
       }
@@ -2776,7 +2786,8 @@ export default function K8sQuestApp() {
       setLoadingQuestions(true);
       try {
         rawQs = await fetchMixedQuestions(supabase, lang, 10);
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "fetchMixedQuestions", screen, isGuest });
         const all = [];
         TOPICS.forEach(topic => {
           LEVEL_ORDER.forEach(level => {
@@ -2830,7 +2841,8 @@ export default function K8sQuestApp() {
       setLoadingQuestions(true);
       try {
         dailyQs = await fetchDailyQuestions(supabase, lang, 5);
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "fetchDailyQuestions", screen, isGuest });
         dailyQs = null;
       }
       setLoadingQuestions(false);
@@ -3002,7 +3014,8 @@ export default function K8sQuestApp() {
         correct = rpcResult.correct;
         correctAnswer = rpcResult.correct_answer;
         result = { correct, correctIndex: correctAnswer, explanation: rpcResult.explanation, explanationHe: rpcResult.explanation_he };
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "checkIncidentAnswer", screen, isGuest });
         correct = ans === step.answer;
         correctAnswer = step.answer;
         result = { correct, correctIndex: correctAnswer, explanation: step.explanation, explanationHe: step.explanationHe };

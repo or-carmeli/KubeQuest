@@ -30,6 +30,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@sentry/react": "^10.43.0",
     "@supabase/supabase-js": "^2.98.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^2.0.0",
@@ -37,6 +38,7 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^5.1.1",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^5.0.0",
     "vitest": "^4.0.18"

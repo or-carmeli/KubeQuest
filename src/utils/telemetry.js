@@ -1,0 +1,199 @@
+// ── Telemetry utility ────────────────────────────────────────────────────────
+// Thin wrapper around Sentry for centralized, safe error reporting.
+// All Sentry imports are lazy so the app works identically when Sentry
+// is unavailable (dev, ad-blockers, init failure).
+
+import * as Sentry from "@sentry/react";
+
+// ── Sensitive-data scrubbing ────────────────────────────────────────────────
+
+const SENSITIVE_KEYS = /token|key|secret|password|authorization|cookie|session|jwt|email|supabase/i;
+const SENSITIVE_VALUES = /eyJ[A-Za-z0-9_-]{10,}|Bearer\s+\S+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
+/** Strip sensitive fields from a plain object (shallow). */
+function scrubObject(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  const clean = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (SENSITIVE_KEYS.test(k)) {
+      clean[k] = "[REDACTED]";
+    } else if (typeof v === "string") {
+      clean[k] = v.replace(SENSITIVE_VALUES, "[REDACTED]");
+    } else {
+      clean[k] = v;
+    }
+  }
+  return clean;
+}
+
+/** Build a safe, short message from an error — never expose raw backend text. */
+function safeMessage(err) {
+  if (!err) return "Unknown error";
+  const msg = err.message || String(err);
+  // Strip anything that looks like SQL, table names, or Postgres internals
+  if (/select |insert |update |delete |pg_|from\s+\w+/i.test(msg)) {
+    return "Database operation failed";
+  }
+  // Cap length to avoid sending huge payloads
+  return msg.slice(0, 256);
+}
+
+// ── Error classification ────────────────────────────────────────────────────
+
+/** Classify an error into a safe category tag for Sentry grouping. */
+function classifyError(err) {
+  const msg = (err?.message || "").toLowerCase();
+  const code = err?.code || "";
+  const status = err?.status || err?.statusCode || 0;
+
+  if (err instanceof TypeError || msg.includes("fetch") || msg.includes("networkerror") || msg.includes("failed to fetch") || msg.includes("load failed")) {
+    return "network";
+  }
+  if (msg.includes("timeout") || msg.includes("aborted")) {
+    return "timeout";
+  }
+  if (status === 401 || status === 403 || msg.includes("jwt") || msg.includes("not authenticated") || msg.includes("refresh_token") || code === "PGRST301") {
+    return "auth";
+  }
+  if (status >= 500 || code.startsWith("PGRST") || code.startsWith("42") || code.startsWith("23")) {
+    return "server";
+  }
+  return "unknown";
+}
+
+// ── Public API ──────────────────────────────────────────────────────────────
+
+/** Whether Sentry is currently active (initialized in production). */
+export function isActive() {
+  try {
+    return !!Sentry.getClient();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Initialize Sentry. Call once from the app entry point.
+ * No-ops silently if DSN is missing or environment is not production.
+ */
+export function init({ dsn, environment, release }) {
+  if (!dsn) return;
+  try {
+    Sentry.init({
+      dsn,
+      environment: environment || "production",
+      release: release || undefined,
+
+      // ── Error monitoring only — no performance tracing ──
+      tracesSampleRate: 0,
+      profilesSampleRate: 0,
+      replaysSessionSampleRate: 0,
+      replaysOnErrorSampleRate: 0,
+
+      // Keep default integrations but disable ones that consume quota
+      integrations(defaults) {
+        return defaults.filter(
+          (i) => !["BrowserTracing", "Replay", "BrowserProfiling"].includes(i.name)
+        );
+      },
+
+      // ── Scrub events before they leave the browser ──
+      beforeSend(event) {
+        // Strip sensitive headers / cookies
+        if (event.request) {
+          delete event.request.cookies;
+          if (event.request.headers) {
+            event.request.headers = scrubObject(event.request.headers);
+          }
+        }
+
+        // Strip breadcrumb data that may contain tokens
+        if (event.breadcrumbs) {
+          event.breadcrumbs = event.breadcrumbs.map((b) => ({
+            ...b,
+            data: b.data ? scrubObject(b.data) : b.data,
+          }));
+        }
+
+        return event;
+      },
+
+      // Limit breadcrumbs to keep payload small
+      maxBreadcrumbs: 30,
+
+      // Ignore common non-actionable errors
+      ignoreErrors: [
+        "ResizeObserver loop",
+        "Non-Error promise rejection",
+        /Loading chunk \d+ failed/,
+        /Importing a module script failed/,
+      ],
+    });
+  } catch {
+    // Sentry init failure must never break the app
+  }
+}
+
+/**
+ * Capture an error with safe metadata.
+ * @param {Error|string} err   - The error to report
+ * @param {object}       ctx   - Extra context (flow, screen, etc.)
+ */
+export function captureError(err, ctx = {}) {
+  if (!isActive()) return;
+  try {
+    const category = classifyError(err);
+    const { screen, flow, isGuest, extra } = ctx;
+
+    Sentry.withScope((scope) => {
+      scope.setTag("error.category", category);
+      if (flow) scope.setTag("flow", flow);
+      if (screen) scope.setTag("screen", screen);
+      if (typeof isGuest === "boolean") scope.setTag("user.guest", String(isGuest));
+
+      if (extra) scope.setContext("details", scrubObject(extra));
+
+      if (typeof err === "string") {
+        Sentry.captureMessage(err, "error");
+      } else {
+        // Override the message to the safe version so raw backend text never ships
+        const safeErr = new Error(safeMessage(err));
+        safeErr.name = err?.name || "Error";
+        // Preserve original stack for source-map resolution
+        if (err?.stack) safeErr.stack = err.stack;
+        Sentry.captureException(safeErr);
+      }
+    });
+  } catch {
+    // Telemetry must never break the app
+  }
+}
+
+/**
+ * Set persistent user-level context (called on auth change).
+ * Only stores guest/authenticated flag — never PII.
+ */
+export function setUserContext({ isGuest }) {
+  if (!isActive()) return;
+  try {
+    Sentry.setUser(isGuest ? { id: "guest" } : null);
+    Sentry.setTag("user.guest", String(!!isGuest));
+  } catch {
+    // no-op
+  }
+}
+
+/**
+ * Update the current screen tag for breadcrumb context.
+ */
+export function setScreen(screen) {
+  if (!isActive()) return;
+  try {
+    Sentry.setTag("screen", screen);
+  } catch {
+    // no-op
+  }
+}
+
+/** Re-export Sentry's ErrorBoundary for use in main.jsx. */
+export const SentryErrorBoundary = Sentry.ErrorBoundary;

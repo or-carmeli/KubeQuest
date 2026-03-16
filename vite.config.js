@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { readFileSync, writeFileSync } from 'fs'
 import { execSync } from 'child_process'
 import { resolve } from 'path'
@@ -36,8 +37,28 @@ function swCacheVersionPlugin() {
   };
 }
 
+const release = `kubequest@${buildHash || 'unknown'}`;
+
 export default defineConfig({
-  plugins: [react(), swCacheVersionPlugin()],
+  build: {
+    sourcemap: true, // required for Sentry stack traces
+  },
+  plugins: [
+    react(),
+    swCacheVersionPlugin(),
+    // Upload source maps to Sentry during production builds.
+    // Requires SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT env vars.
+    // Skips silently when credentials are missing (local dev, CI without secrets).
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: release },
+      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+      telemetry: false,
+      disable: !process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
   define: {
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     __BUILD_HASH__: JSON.stringify(buildHash),
