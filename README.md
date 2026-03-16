@@ -163,20 +163,13 @@ flowchart TB
 KubeQuest uses Supabase Authentication for user management. Authenticated users have their progress synced to the cloud, while guest mode allows full access without registration - progress is stored locally. Password reset uses the PKCE flow for secure email-based recovery. Sessions persist across page reloads via Supabase's session storage.
 
 ```mermaid
-flowchart TD
-    START["App Start"] --> CHECK{Session exists?}
-    CHECK -->|Yes| LOAD["Load User"]
-    CHECK -->|No| GUEST{Guest session?}
+flowchart LR
+    START["App Start"] --> CHECK{Session?}
+    CHECK -->|Yes| LOAD["Load User"] --> AUTHED["Authenticated"]
+    CHECK -->|No| GUEST{Guest?}
     GUEST -->|Yes| GMODE["Guest Mode"]
-    GUEST -->|No| LOGIN["Login / Signup"]
-
-    LOGIN --> AUTH["Supabase Auth"]
-    AUTH --> LOAD
-
-    LOGIN --> RESET["Password Reset<br/>PKCE Flow"]
-    RESET --> LOGIN
-
-    LOAD --> AUTHED["Authenticated User"]
+    GUEST -->|No| LOGIN["Login / Signup"] --> AUTH["Supabase Auth"] --> LOAD
+    RESET["Password Reset<br/>PKCE"] -.-> LOGIN
 
     style CHECK fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
     style GUEST fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
@@ -186,7 +179,7 @@ flowchart TD
     style GMODE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
     style AUTH fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
     style AUTHED fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
-    style RESET fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
+    style RESET fill:#111827,stroke:#EF4444,stroke-dasharray:5 5,color:#fff
 ```
 
 ---
