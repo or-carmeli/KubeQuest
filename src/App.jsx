@@ -51,7 +51,7 @@ function supabaseLock(name, acquireTimeout, fn) {
 }
 
 const supabase = (SUPABASE_URL && SUPABASE_KEY) ? createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { lock: supabaseLock }
+  auth: { lock: supabaseLock, flowType: 'pkce' }
 }) : null;
 if (!supabase) console.warn("[KubeQuest] Supabase not configured. VITE_SUPABASE_URL:", !!SUPABASE_URL, "VITE_SUPABASE_ANON_KEY:", !!SUPABASE_KEY);
 
@@ -174,6 +174,7 @@ const TRANSLATIONS = {
     forgotPassword: "שכחת סיסמה?",
     resetEmailSent: "✅ נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
     resetEmailError: "❌ שגיאה בשליחת קישור איפוס. נסי שוב.",
+    resetLinkWrongBrowser: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקשי קישור חדש.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
     newPasswordLabel: "סיסמה חדשה", confirmPasswordLabel: "אימות סיסמה",
@@ -258,6 +259,7 @@ const TRANSLATIONS = {
     sendResetLink_m: "שלח קישור איפוס",
     resetEmailSent_m: "✅ נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "❌ שגיאה בשליחת קישור איפוס. נסה שוב.",
+    resetLinkWrongBrowser_m: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקש קישור חדש.",
     saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
@@ -414,6 +416,7 @@ const TRANSLATIONS = {
     forgotPassword: "Forgot password?",
     resetEmailSent: "✅ Password reset link sent! Check your inbox.",
     resetEmailError: "❌ Failed to send reset link. Please try again.",
+    resetLinkWrongBrowser: "This reset link must be opened in the same browser where you requested it. Please request a new link.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
     newPasswordLabel: "New Password", confirmPasswordLabel: "Confirm Password",
@@ -1498,8 +1501,21 @@ export default function K8sQuestApp() {
           setUser(session.user);
           loadUserData(session.user.id, session.user);
         } else {
-          // Restore guest session if user previously chose guest mode
-          if (safeGetItem("k8s_guest_session")) setUser(GUEST_USER);
+          // Cross-browser safety: ?code= was in the URL but the PKCE exchange
+          // failed (no code_verifier - user opened the link in a different browser).
+          // Show a clear error instead of silently falling into guest mode.
+          const pendingRecovery = sessionStorage.getItem("kq_recovery_pending");
+          if (pendingRecovery) {
+            console.warn("[KubeQuest:boot] Recovery code detected but PKCE exchange failed (wrong browser?)");
+            sessionStorage.removeItem("kq_recovery_pending");
+            // Strip the unconsumed ?code= from the URL
+            try { window.history.replaceState(null, "", window.location.pathname); } catch {}
+            setAuthError(t("resetLinkWrongBrowser"));
+            setShowResetModal(true);
+          } else if (safeGetItem("k8s_guest_session")) {
+            // Restore guest session if user previously chose guest mode
+            setUser(GUEST_USER);
+          }
           setDataLoaded(true);
         }
         setAuthChecked(true);
@@ -1513,6 +1529,7 @@ export default function K8sQuestApp() {
           activateRecovery(session);
           return;
         }
+        setDataLoaded(false);
         setUser(session.user);
         loadUserData(session.user.id, session.user);
         setAuthChecked(true);
@@ -2151,6 +2168,8 @@ export default function K8sQuestApp() {
       console.error("[KubeQuest] signOut error:", err);
     }
     setUser(null);
+    setStats({ total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 });
+    setCompletedTopics({}); setUnlockedAchievements([]);
     achievementsLoaded.current = false;
     loadingDataRef.current = false;
     setDataLoaded(true);
@@ -3552,12 +3571,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <form onSubmit={e=>{e.preventDefault();handlePasswordUpdate();}}>
             <div style={{marginBottom:12}}>
               <label htmlFor="new-password" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("newPasswordLabel")}</label>
-              <input id="new-password" type="password" autoComplete="new-password" autoFocus value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="••••••••"
+              <input id="new-password" type="password" name="new-password" autoComplete="new-password" autoFocus value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="••••••••"
                 style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
             </div>
             <div style={{marginBottom:16}}>
               <label htmlFor="confirm-password" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("confirmPasswordLabel")}</label>
-              <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••"
+              <input id="confirm-password" type="password" name="confirm-password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="••••••••"
                 style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
             </div>
             {passwordResetError&&<div role="alert" aria-live="assertive" style={{marginBottom:12,color:"#EF4444",fontSize:12,padding:"8px 12px",background:"rgba(239,68,68,0.08)",borderRadius:8}}>{passwordResetError}</div>}
@@ -3635,7 +3654,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           )}
           <div style={{marginBottom:11}}>
             <label htmlFor="auth-email" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
-            <input id="auth-email" type="email" name="email" autoComplete={authScreen==="login"?"username":"email"} defaultValue="" placeholder="you@example.com"
+            <input id="auth-email" type="email" name="email" inputMode="email" autoComplete={authScreen==="login"?"username":"email"} defaultValue="" placeholder="you@example.com"
               style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr"}}/>
           </div>
           <div style={{marginBottom:authScreen==="login"?8:14}}>
@@ -3678,14 +3697,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             style={{background:"var(--bg-card)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:18,padding:"24px 22px",width:"min(380px,100%)",animation:"fadeIn 0.3s ease",direction:dir,position:"relative"}}>
             <button onClick={()=>setShowResetModal(false)} aria-label="Close" style={{position:"absolute",top:12,[dir==="rtl"?"left":"right"]:14,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",lineHeight:1}}>✕</button>
             <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700,color:"var(--text-primary)"}}>{t("resetPasswordTitle")}</h3>
-            <label style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
-            <input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} placeholder="you@example.com"
-              style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:14}}/>
-            {resetStatus&&<div style={{marginBottom:12,fontSize:12,padding:"8px 12px",borderRadius:8,color:resetStatus.includes("\u2705")?"#10B981":"#EF4444",background:resetStatus.includes("\u2705")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)"}}>{resetStatus}</div>}
-            <button onClick={handleResetPassword} disabled={!resetEmail||resetLoading}
-              style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",opacity:(!resetEmail||resetLoading)?0.5:1}}>
-              {resetLoading?t("loading"):t("sendResetLink")}
-            </button>
+            <form onSubmit={e=>{e.preventDefault();handleResetPassword();}} autoComplete="on">
+              <label htmlFor="reset-email" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
+              <input id="reset-email" type="email" name="email" inputMode="email" autoComplete="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} placeholder="you@example.com"
+                style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:14}}/>
+              {resetStatus&&<div style={{marginBottom:12,fontSize:12,padding:"8px 12px",borderRadius:8,color:resetStatus.includes("\u2705")?"#10B981":"#EF4444",background:resetStatus.includes("\u2705")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)"}}>{resetStatus}</div>}
+              <button type="submit" disabled={!resetEmail||resetLoading}
+                style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",opacity:(!resetEmail||resetLoading)?0.5:1}}>
+                {resetLoading?t("loading"):t("sendResetLink")}
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -5412,7 +5433,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   });
                 }}>
                   <input
-                    type="email" required autoFocus
+                    type="email" name="email" inputMode="email" autoComplete="email" required autoFocus
                     placeholder={lang==="en"?"Email":"אימייל"}
                     value={warRoomEmail}
                     onChange={e=>setWarRoomEmail(e.target.value)}
