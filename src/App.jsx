@@ -212,6 +212,11 @@ const TRANSLATIONS = {
     reviewBtn: "צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
     saveErrorText: "⚠️ הנתונים לא נשמרו - בדקי חיבור לאינטרנט",
+    saveErrorNetwork: "⚠️ לא ניתן לשמור את ההתקדמות. בדקי חיבור לאינטרנט.",
+    saveErrorAuth: "⚠️ פג תוקף ההתחברות. יש להתחבר מחדש.",
+    saveErrorServer: "⚠️ אירעה שגיאה בשמירת ההתקדמות. נסי שוב בעוד רגע.",
+    saveErrorTimeout: "⚠️ הבקשה לקחה יותר מדי זמן. נסי שוב.",
+    saveErrorUnknown: "⚠️ אירעה שגיאה בלתי צפויה.",
     loadDataError: "⚠️ טעינת הנתונים נכשלה - משתמשת בנתונים מקומיים",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
     optionLabels: ["א","ב","ג","ד"], guestName: "אורחת",
@@ -275,6 +280,11 @@ const TRANSLATIONS = {
     timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
     reviewBtn_m: "צפה בסקירה", hideReview_m: "הסתר סקירה",
     saveErrorText_m: "⚠️ הנתונים לא נשמרו - בדוק חיבור לאינטרנט",
+    saveErrorNetwork_m: "⚠️ לא ניתן לשמור את ההתקדמות. בדוק חיבור לאינטרנט.",
+    saveErrorAuth_m: "⚠️ פג תוקף ההתחברות. יש להתחבר מחדש.",
+    saveErrorServer_m: "⚠️ אירעה שגיאה בשמירת ההתקדמות. נסה שוב בעוד רגע.",
+    saveErrorTimeout_m: "⚠️ הבקשה לקחה יותר מדי זמן. נסה שוב.",
+    saveErrorUnknown_m: "⚠️ אירעה שגיאה בלתי צפויה.",
     loadDataError_m: "⚠️ טעינת הנתונים נכשלה - משתמש בנתונים מקומיים",
     guestName_m: "אורח",
     resetProgress_m: "אפס התקדמות", resetConfirm_m: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
@@ -454,6 +464,11 @@ const TRANSLATIONS = {
     reviewBtn: "View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
     loadingText: "Loading...",
     saveErrorText: "⚠️ Data not saved - check your internet connection",
+    saveErrorNetwork: "⚠️ Could not save progress. Check your internet connection.",
+    saveErrorAuth: "⚠️ Session expired. Please sign in again.",
+    saveErrorServer: "⚠️ Error saving progress. Try again in a moment.",
+    saveErrorTimeout: "⚠️ Request took too long. Try again.",
+    saveErrorUnknown: "⚠️ An unexpected error occurred.",
     loadDataError: "⚠️ Failed to load your data - using cached progress",
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
     optionLabels: ["A","B","C","D"], guestName: "Guest",
@@ -1960,7 +1975,14 @@ export default function K8sQuestApp() {
       loadingDataRef.current = false;
       achievementsLoaded.current = true;
       setDataLoaded(true);
-      setSaveError(t("loadDataError") || "Failed to load your data. Using cached progress.");
+      const errorKey = classifySaveError(err);
+      if (errorKey === "saveErrorAuth") {
+        setSaveError(t("saveErrorAuth"));
+      } else {
+        setSaveError(t("loadDataError"));
+      }
+      // Auto-dismiss load errors after 5 seconds — data is usable from cache
+      setTimeout(() => setSaveError((prev) => prev === t("loadDataError") || prev === t("saveErrorAuth") ? "" : prev), 5000);
     }
 
     // Check for a saved in-progress quiz belonging to this user
@@ -1973,6 +1995,32 @@ export default function K8sQuestApp() {
     if (user && !isGuest && dataLoaded && supabase) loadUserRank();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isGuest, dataLoaded]);
+
+  // Classify Supabase / network errors into user-friendly categories.
+  // Returns a translation key — never exposes internal details to the UI.
+  const classifySaveError = (err) => {
+    const msg = (err?.message || "").toLowerCase();
+    const code = err?.code || "";
+    const status = err?.status || err?.statusCode || 0;
+
+    // Network / fetch failures
+    if (err instanceof TypeError || msg.includes("fetch") || msg.includes("networkerror") || msg.includes("failed to fetch") || msg.includes("load failed")) {
+      return "saveErrorNetwork";
+    }
+    // Timeout
+    if (msg.includes("timeout") || msg.includes("aborted")) {
+      return "saveErrorTimeout";
+    }
+    // Auth / session expired
+    if (status === 401 || status === 403 || msg.includes("not authenticated") || msg.includes("jwt expired") || msg.includes("invalid claim") || code === "PGRST301" || msg.includes("refresh_token")) {
+      return "saveErrorAuth";
+    }
+    // Server errors (5xx, Postgres errors)
+    if (status >= 500 || code.startsWith("PGRST") || code.startsWith("42") || code.startsWith("23")) {
+      return "saveErrorServer";
+    }
+    return "saveErrorUnknown";
+  };
 
   // Persist stats to Supabase via server RPC. The RPC does NOT accept
   // total_score - it is managed exclusively by the answer-check RPCs
@@ -1997,8 +2045,15 @@ export default function K8sQuestApp() {
         achievements: na,
         topicStats: topicStats,
       });
-    } catch {
-      setSaveError(t("saveErrorText"));
+    } catch (err) {
+      console.error("[KubeQuest] saveUserData failed:", err);
+      const errorKey = classifySaveError(err);
+      const errorMsg = t(errorKey);
+      setSaveError(errorMsg);
+      // Auth errors persist (user must act); transient errors auto-dismiss after 6s
+      if (errorKey !== "saveErrorAuth") {
+        setTimeout(() => setSaveError((prev) => prev === errorMsg ? "" : prev), 6000);
+      }
     }
   };
 
