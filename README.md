@@ -19,7 +19,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 [kubequest.online](https://www.kubequest.online/) - no registration required, works instantly in guest mode.
 
 <div align="center">
-  <img src="public/GIF-Demo-README.gif" alt="KubeQuest Demo" width="420">
+  <img src="public/app-demo-gif-english.gif" alt="KubeQuest Demo" width="420">
 </div>
 
 ---
