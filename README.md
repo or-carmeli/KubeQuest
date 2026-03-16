@@ -153,8 +153,8 @@ flowchart TB
 | Application | Content Security Policy (no inline scripts), X-Frame-Options DENY, COOP/CORP same-origin |
 | API | `SECURITY DEFINER` RPC endpoints, rate limiting on answer verification |
 | Database | Row Level Security on all tables, server-side validation |
-| Container | Cosign-signed images, SBOM attestations, Trivy scanning |
-| Code | CodeQL static analysis, npm audit, Dependabot weekly updates |
+| Container | Cosign-signed images, SBOM attestations, Trivy scanning, Kyverno policy enforcement |
+| Code | CodeQL static analysis, npm audit, Gitleaks secret scanning, Dependabot weekly updates |
 
 ---
 
