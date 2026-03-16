@@ -74,6 +74,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 | Supply Chain | [Cosign](https://docs.sigstore.dev/cosign/overview/) + [Trivy](https://trivy.dev/) + SBOM + Provenance |
 | Security | CSP, HSTS, CORS, RLS, CodeQL, npm audit, Gitleaks, Kyverno |
 | Monitoring | Supabase Edge Functions + pg_cron (60s interval) |
+| Error Tracking | [Sentry](https://sentry.io) (production-only, free tier) |
 | Testing | [Vitest](https://vitest.dev) |
 | Dependency Management | [Dependabot](https://docs.github.com/en/code-security/dependabot) (weekly - npm, Docker, Actions) |
 
@@ -219,6 +220,22 @@ flowchart LR
 - **Frontend** - live status page with real-time polling
 
 Full documentation: [docs/monitoring.md](docs/monitoring.md) | Live status: [status.kubequest.online](https://status.kubequest.online)
+
+### Error Tracking (Sentry)
+
+Client-side errors are reported to [Sentry](https://sentry.io) in production only. The integration is error-monitoring only — no performance tracing, session replay, or profiling (free-tier friendly).
+
+**What is captured:**
+- Uncaught exceptions and unhandled promise rejections
+- React render crashes (via ErrorBoundary)
+- Failures in data load/save, quiz answer submission, and question fetching
+
+**What is NOT sent:**
+- Auth tokens, JWTs, or Supabase keys
+- Email addresses or personally identifying information
+- SQL queries, table names, or raw backend error payloads
+
+**Configuration:** Set `VITE_SENTRY_DSN` as an environment variable (Vercel / `.env`). Without it, Sentry is disabled and the app runs normally. For source map uploads in CI, also set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` as GitHub Actions secrets.
 
 ---
 
@@ -383,9 +400,10 @@ npm run dev            # → http://localhost:5173
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+VITE_SENTRY_DSN=                # optional — enables error tracking in production
 ```
 
-> Auth, leaderboard, and cross-device sync require a Supabase project. All other features work without credentials.
+> Auth, leaderboard, and cross-device sync require a Supabase project. All other features work without credentials. Sentry is optional — omit the DSN to disable error tracking.
 
 ### Available Scripts
 
