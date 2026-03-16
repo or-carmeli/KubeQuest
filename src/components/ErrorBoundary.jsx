@@ -1,5 +1,6 @@
 import { Component } from "react";
 import { clearAppData } from "../utils/storage";
+import { captureError } from "../utils/telemetry";
 
 export default class ErrorBoundary extends Component {
   state = { hasError: false };
@@ -20,6 +21,7 @@ export default class ErrorBoundary extends Component {
     try { diag.kq_screen_v1 = localStorage.getItem("kq_screen_v1"); } catch {}
     try { diag.k8s_quiz_inprogress_v1 = localStorage.getItem("k8s_quiz_inprogress_v1")?.slice(0, 200); } catch {}
     console.error("[KubeQuest] ErrorBoundary caught render crash:", diag);
+    captureError(error, { flow: "react-render", screen: diag.kq_screen_v1 || "unknown" });
   }
 
   handleReload = () => window.location.reload();
