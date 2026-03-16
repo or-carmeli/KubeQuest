@@ -78,61 +78,47 @@ export function isActive() {
  */
 export function init({ dsn, environment, release }) {
   if (!dsn) return;
-  try {
-    Sentry.init({
-      dsn,
-      environment: environment || "production",
-      release: release || undefined,
 
-      // ── Error monitoring only — no performance tracing ──
-      tracesSampleRate: 0,
-      replaysSessionSampleRate: 0,
-      replaysOnErrorSampleRate: 0,
-
-      // Keep all default integrations (GlobalHandlers, Breadcrumbs, etc.)
-      // No extra integrations added — error monitoring only, no tracing/replay
-
-      // ── Scrub events before they leave the browser ──
-      beforeSend(event) {
-        try {
-          // Strip sensitive headers / cookies
-          if (event.request) {
-            delete event.request.cookies;
-            if (event.request.headers) {
-              event.request.headers = scrubObject(event.request.headers);
-            }
+  Sentry.init({
+    dsn,
+    environment: environment || "production",
+    release: release || undefined,
+    tracesSampleRate: 0,
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 0,
+    maxBreadcrumbs: 30,
+    ignoreErrors: [
+      "ResizeObserver loop",
+      "Non-Error promise rejection",
+      "Loading chunk",
+      "Importing a module script failed",
+    ],
+    beforeSend(event) {
+      try {
+        if (event.request) {
+          delete event.request.cookies;
+          if (event.request.headers) {
+            event.request.headers = scrubObject(event.request.headers);
           }
-
-          // Strip breadcrumb data that may contain tokens
-          if (event.breadcrumbs) {
-            event.breadcrumbs = event.breadcrumbs.map((b) => ({
-              ...b,
-              data: b.data ? scrubObject(b.data) : b.data,
-            }));
-          }
-        } catch {
-          // Scrubbing failed — send the event unscrubbed rather than dropping it
         }
+        if (event.breadcrumbs) {
+          event.breadcrumbs = event.breadcrumbs.map((b) => ({
+            ...b,
+            data: b.data ? scrubObject(b.data) : b.data,
+          }));
+        }
+      } catch {
+        // Scrubbing failed — send unscrubbed rather than drop
+      }
+      return event;
+    },
+  });
 
-        return event;
-      },
-
-      // Limit breadcrumbs to keep payload small
-      maxBreadcrumbs: 30,
-
-      // Ignore common non-actionable errors
-      ignoreErrors: [
-        "ResizeObserver loop",
-        "Non-Error promise rejection",
-        "Loading chunk",
-        "Importing a module script failed",
-      ],
-    });
-    if (!Sentry.getClient()) {
-      console.warn("[KubeQuest:telemetry] Sentry.init() completed but no client was created");
-    }
-  } catch (e) {
-    console.warn("[KubeQuest:telemetry] Sentry init failed:", e);
+  const client = Sentry.getClient();
+  if (client) {
+    console.info("[KubeQuest:telemetry] Sentry initialized, DSN:", dsn.substring(0, 30) + "...");
+  } else {
+    console.error("[KubeQuest:telemetry] Sentry.init() ran but NO CLIENT created. DSN was:", dsn);
   }
 }
 
