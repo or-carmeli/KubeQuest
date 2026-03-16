@@ -72,7 +72,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 | Orchestration | Kubernetes (Deployment, HPA, Ingress, cert-manager) |
 | CI/CD | GitHub Actions (build, scan, sign, attest) |
 | Supply Chain | [Cosign](https://docs.sigstore.dev/cosign/overview/) + [Trivy](https://trivy.dev/) + SBOM + Provenance |
-| Security | CSP, HSTS, CORS, RLS, CodeQL, npm audit |
+| Security | CSP, HSTS, CORS, RLS, CodeQL, npm audit, Gitleaks, Kyverno |
 | Monitoring | Supabase Edge Functions + pg_cron (60s interval) |
 | Testing | [Vitest](https://vitest.dev) |
 | Dependency Management | [Dependabot](https://docs.github.com/en/code-security/dependabot) (weekly - npm, Docker, Actions) |
@@ -495,18 +495,20 @@ src/
 public/
   sw.js                # Service worker (offline cache, build-stamped)
 k8s/                   # Kubernetes manifests (namespace, deployment, service, ingress, HPA)
+  policies/            # Kyverno policies (trusted registries, no-latest, resource limits)
 supabase/
   migrations/          # Database schema and RPCs (11 migrations)
   functions/
     health-check/      # Edge Function - real-time service health checks
 .github/
   workflows/
-    ci.yml             # Build validation
-    docker.yml         # Container build, scan, sign, push
+    ci.yml             # PR gate (build, npm audit, Gitleaks, CodeQL, Trivy, K8s policies)
+    docker.yml         # Container build, scan, push, SBOM, provenance, Cosign sign
     security.yml       # Weekly security scanning (npm audit, Trivy, CodeQL)
   dependabot.yml       # Weekly dependency updates (npm, Docker, Actions)
 docs/
   monitoring.md        # Monitoring system documentation
+  k8s-admission-policies.md  # Runtime admission policy guide (Kyverno, OPA, Cosign)
 ```
 
 ---
