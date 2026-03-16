@@ -19,12 +19,8 @@ spec:
               kinds:
                 - Pod
       validate:
-        message: "Images must come from ghcr.io/or-carmeli/. Got: {{ element.image }}"
-        foreach:
-          - list: "request.object.spec.containers"
-            deny:
-              conditions:
-                all:
-                  - key: "{{ element.image }}"
-                    operator: NotEquals
-                    value: "ghcr.io/or-carmeli/*"
+        message: "Images must come from ghcr.io/or-carmeli/."
+        pattern:
+          spec:
+            containers:
+              - image: "ghcr.io/or-carmeli/*"
