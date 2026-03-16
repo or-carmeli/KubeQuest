@@ -30,6 +30,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Security Model](#security-model)
+- [Authentication Flow](#authentication-flow)
 - [Observability](#observability)
 - [CI/CD & Supply Chain Security](#cicd--supply-chain-security)
 - [Kubernetes Deployment](#kubernetes-deployment)
@@ -154,6 +155,39 @@ flowchart TB
 | Database | Row Level Security on all tables, server-side validation |
 | Container | Cosign-signed images, SBOM attestations, Trivy scanning |
 | Code | CodeQL static analysis, npm audit, Dependabot weekly updates |
+
+---
+
+## Authentication Flow
+
+KubeQuest uses Supabase Authentication for user management. Authenticated users have their progress synced to the cloud, while guest mode allows full access without registration - progress is stored locally. Password reset uses the PKCE flow for secure email-based recovery. Sessions persist across page reloads via Supabase's session storage.
+
+```mermaid
+flowchart TD
+    START["App Start"] --> CHECK{Session exists?}
+    CHECK -->|Yes| LOAD["Load User"]
+    CHECK -->|No| GUEST{Guest session?}
+    GUEST -->|Yes| GMODE["Guest Mode"]
+    GUEST -->|No| LOGIN["Login / Signup"]
+
+    LOGIN --> AUTH["Supabase Auth"]
+    AUTH --> LOAD
+
+    LOGIN --> RESET["Password Reset<br/>PKCE Flow"]
+    RESET --> LOGIN
+
+    LOAD --> AUTHED["Authenticated User"]
+
+    style CHECK fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style GUEST fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style START fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style LOAD fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style LOGIN fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style GMODE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style AUTH fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
+    style AUTHED fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
+    style RESET fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
+```
 
 ---
 
