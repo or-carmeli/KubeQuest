@@ -86,16 +86,11 @@ export function init({ dsn, environment, release }) {
 
       // ── Error monitoring only — no performance tracing ──
       tracesSampleRate: 0,
-      profilesSampleRate: 0,
       replaysSessionSampleRate: 0,
       replaysOnErrorSampleRate: 0,
 
-      // Keep default integrations but disable ones that consume quota
-      integrations(defaults) {
-        return defaults.filter(
-          (i) => !["BrowserTracing", "Replay", "BrowserProfiling"].includes(i.name)
-        );
-      },
+      // No optional integrations — error monitoring only
+      integrations: [],
 
       // ── Scrub events before they leave the browser ──
       beforeSend(event) {
