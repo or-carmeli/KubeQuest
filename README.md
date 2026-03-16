@@ -228,23 +228,49 @@ Full documentation: [docs/monitoring.md](docs/monitoring.md) | Live status: [sta
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| [ci.yml](.github/workflows/ci.yml) | Every PR / push to `main` | Build validation - ensures `npm run build` succeeds |
+| [ci.yml](.github/workflows/ci.yml) | Every PR / push to `main`, `dev` | Build + npm audit + Gitleaks + CodeQL + Trivy + K8s policy (PR gate) |
 | [docker.yml](.github/workflows/docker.yml) | Push to `main` / version tags | Build, scan, push to GHCR, SBOM + provenance, Cosign sign |
-| [security.yml](.github/workflows/security.yml) | Weekly (Monday) + on-demand | npm audit + Trivy container scan + CodeQL static analysis |
+| [security.yml](.github/workflows/security.yml) | Weekly (Monday) + on-demand | npm audit + Trivy + CodeQL for newly disclosed CVEs |
 
-### Container Pipeline
+### PR Gate (shift-left)
+
+All six CI jobs must pass before a PR can merge:
 
 ```mermaid
 flowchart LR
-    PUSH["git push"] --> CI["CI Check"] --> BUILD["Build Image"] --> SCAN["Trivy Scan"]
-    SCAN --> PUSH_IMG["Push to GHCR"] --> ATTEST["SBOM +<br/>Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
-    BOT["Dependabot"] -.->|weekly PRs| CI
+    PR["Pull Request"] --> BUILD["Build"]
+    PR --> AUDIT["npm Audit"]
+    PR --> GITLEAKS["Gitleaks"]
+    PR --> CODEQL["CodeQL"]
+    PR --> TRIVY["Trivy Scan"]
+    PR --> K8S["K8s Policies"]
+    BUILD --> MERGE["Merge"]
+    AUDIT --> MERGE
+    GITLEAKS --> MERGE
+    CODEQL --> MERGE
+    TRIVY --> MERGE
+    K8S --> MERGE
+
+    style PR fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style BUILD fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style AUDIT fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
+    style GITLEAKS fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
+    style CODEQL fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
+    style TRIVY fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
+    style K8S fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style MERGE fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
+```
+
+### Publish Pipeline (post-merge)
+
+```mermaid
+flowchart LR
+    PUSH["Push to main"] --> SCAN["Build &<br/>Trivy Scan"] --> GHCR["Push to<br/>GHCR"] --> ATTEST["SBOM +<br/>Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
+    BOT["Dependabot"] -.->|weekly PRs| PUSH
 
     style PUSH fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
-    style CI fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
-    style BUILD fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
     style SCAN fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
-    style PUSH_IMG fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style GHCR fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
     style ATTEST fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
     style SIGN fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
     style VERIFY fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
@@ -259,13 +285,15 @@ flowchart LR
 
 | Trigger | Tag | Example |
 |---------|-----|---------|
-| Push to `main` | `latest` + `sha-<commit>` | `latest`, `sha-a1b2c3d` |
+| Push to `main` | `latest` + `sha-<commit>` + `package.json` version | `latest`, `sha-a1b2c3d`, `2.4.0` |
 | Git tag `v1.2.0` | Semver + `sha-<commit>` | `1.2.0`, `sha-a1b2c3d` |
 | Manual dispatch | `sha-<commit>` | `sha-a1b2c3d` |
 
 ### Supply Chain Security
 
+- **Secret scanning** - [Gitleaks](https://gitleaks.io/) scans every PR for leaked credentials, API keys, and tokens
 - **Vulnerability scanning** - [Trivy](https://trivy.dev/) scans the image before push; the workflow fails on HIGH and CRITICAL vulnerabilities (unfixed CVEs excluded)
+- **K8s policy enforcement** - [Kyverno](https://kyverno.io/) CLI validates manifests in CI; runtime admission policies available for cluster-side enforcement ([docs](docs/k8s-admission-policies.md))
 - **SBOM** - Software Bill of Materials attached to every published image
 - **Provenance** - build provenance attestation (`mode=max`) provides cryptographic proof of build origin
 - **Keyless signing** - [Cosign](https://docs.sigstore.dev/cosign/overview/) signs images by digest using GitHub OIDC; no secret keys to manage or rotate

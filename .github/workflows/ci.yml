@@ -60,7 +60,28 @@ jobs:
       - name: Run npm audit
         run: npm audit --audit-level=high
 
-  # ── 3. CodeQL static analysis ────────────────────────────────────────────────
+  # ── 3. Secret scanning ──────────────────────────────────────────────────────
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+            | tar xz -C /usr/local/bin gitleaks
+
+      - name: Run Gitleaks
+        run: gitleaks detect --source . --verbose
+
+  # ── 4. CodeQL static analysis ────────────────────────────────────────────────
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
@@ -80,7 +101,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
-  # ── 4. Trivy container scan (build image, scan, block on HIGH/CRITICAL) ─────
+  # ── 5. Trivy container scan (build image, scan, block on HIGH/CRITICAL) ─────
   trivy:
     name: Trivy Scan
     runs-on: ubuntu-latest
@@ -127,3 +148,22 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
+
+  # ── 6. Kubernetes manifest policy validation ─────────────────────────────────
+  k8s-policies:
+    name: K8s Policy Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Kyverno CLI
+        run: |
+          curl -sSfL https://github.com/kyverno/kyverno/releases/download/v1.13.2/kyverno-cli_v1.13.2_linux_x86_64.tar.gz \
+            | tar xz -C /usr/local/bin kyverno
+
+      - name: Validate manifests against policies
+        run: kyverno apply k8s/policies/ --resource k8s/*.yaml

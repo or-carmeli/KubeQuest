@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-trusted-registries
+  annotations:
+    policies.kyverno.io/title: Require Trusted Container Registries
+    policies.kyverno.io/description: >-
+      Only allow images from ghcr.io/or-carmeli to prevent pulling
+      untrusted or unscanned images into the cluster.
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: trusted-registries
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Images must come from ghcr.io/or-carmeli/. Got: {{ element.image }}"
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                all:
+                  - key: "{{ element.image }}"
+                    operator: NotEquals
+                    value: "ghcr.io/or-carmeli/*"

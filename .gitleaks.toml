@@ -1,0 +1,12 @@
+# Gitleaks configuration — extends the built-in rules
+# https://github.com/gitleaks/gitleaks
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-level allowlist"
+paths = [
+  '''package-lock\.json''',
+  '''\.github/workflows/.*\.yml''',
+]
