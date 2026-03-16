@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: kubequest
-          image: ghcr.io/or-carmeli/kubequest:latest
+          image: ghcr.io/or-carmeli/kubequest:2.4.0  # pin to release tag; use @sha256:<digest> for immutable deploys
           ports:
             - containerPort: 80
 

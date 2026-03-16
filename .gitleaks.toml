@@ -1,0 +1,31 @@
+# Gitleaks configuration — extends the built-in rules
+# https://github.com/gitleaks/gitleaks
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-level allowlist"
+paths = [
+  '''package-lock\.json''',
+  '''\.github/workflows/.*\.yml''',
+]
+
+# Hebrew quiz content containing "NAT/masquerade" triggers generic-api-key false positive
+[[rules]]
+id = "generic-api-key"
+description = "generic-api-key"
+[rules.allowlist]
+paths = [
+  '''src/content/dailyQuestions\.js''',
+  '''src/dailyQuestions\.js''',
+]
+
+# Supabase anon key (public, not secret) was hardcoded in early commits
+[[rules]]
+id = "jwt"
+description = "jwt"
+[rules.allowlist]
+paths = [
+  '''src/App\.jsx''',
+]
