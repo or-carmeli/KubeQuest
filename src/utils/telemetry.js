@@ -94,20 +94,24 @@ export function init({ dsn, environment, release }) {
 
       // ── Scrub events before they leave the browser ──
       beforeSend(event) {
-        // Strip sensitive headers / cookies
-        if (event.request) {
-          delete event.request.cookies;
-          if (event.request.headers) {
-            event.request.headers = scrubObject(event.request.headers);
+        try {
+          // Strip sensitive headers / cookies
+          if (event.request) {
+            delete event.request.cookies;
+            if (event.request.headers) {
+              event.request.headers = scrubObject(event.request.headers);
+            }
           }
-        }
 
-        // Strip breadcrumb data that may contain tokens
-        if (event.breadcrumbs) {
-          event.breadcrumbs = event.breadcrumbs.map((b) => ({
-            ...b,
-            data: b.data ? scrubObject(b.data) : b.data,
-          }));
+          // Strip breadcrumb data that may contain tokens
+          if (event.breadcrumbs) {
+            event.breadcrumbs = event.breadcrumbs.map((b) => ({
+              ...b,
+              data: b.data ? scrubObject(b.data) : b.data,
+            }));
+          }
+        } catch {
+          // Scrubbing failed — send the event unscrubbed rather than dropping it
         }
 
         return event;
@@ -120,12 +124,15 @@ export function init({ dsn, environment, release }) {
       ignoreErrors: [
         "ResizeObserver loop",
         "Non-Error promise rejection",
-        /Loading chunk \d+ failed/,
-        /Importing a module script failed/,
+        "Loading chunk",
+        "Importing a module script failed",
       ],
     });
-  } catch {
-    // Sentry init failure must never break the app
+    if (!Sentry.getClient()) {
+      console.warn("[KubeQuest:telemetry] Sentry.init() completed but no client was created");
+    }
+  } catch (e) {
+    console.warn("[KubeQuest:telemetry] Sentry init failed:", e);
   }
 }
 
