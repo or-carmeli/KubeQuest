@@ -51,7 +51,7 @@ function supabaseLock(name, acquireTimeout, fn) {
 }
 
 const supabase = (SUPABASE_URL && SUPABASE_KEY) ? createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { lock: supabaseLock }
+  auth: { lock: supabaseLock, flowType: 'pkce' }
 }) : null;
 if (!supabase) console.warn("[KubeQuest] Supabase not configured. VITE_SUPABASE_URL:", !!SUPABASE_URL, "VITE_SUPABASE_ANON_KEY:", !!SUPABASE_KEY);
 
@@ -174,6 +174,7 @@ const TRANSLATIONS = {
     forgotPassword: "שכחת סיסמה?",
     resetEmailSent: "✅ נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
     resetEmailError: "❌ שגיאה בשליחת קישור איפוס. נסי שוב.",
+    resetLinkWrongBrowser: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקשי קישור חדש.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
     newPasswordLabel: "סיסמה חדשה", confirmPasswordLabel: "אימות סיסמה",
@@ -258,6 +259,7 @@ const TRANSLATIONS = {
     sendResetLink_m: "שלח קישור איפוס",
     resetEmailSent_m: "✅ נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "❌ שגיאה בשליחת קישור איפוס. נסה שוב.",
+    resetLinkWrongBrowser_m: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקש קישור חדש.",
     saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
@@ -414,6 +416,7 @@ const TRANSLATIONS = {
     forgotPassword: "Forgot password?",
     resetEmailSent: "✅ Password reset link sent! Check your inbox.",
     resetEmailError: "❌ Failed to send reset link. Please try again.",
+    resetLinkWrongBrowser: "This reset link must be opened in the same browser where you requested it. Please request a new link.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
     newPasswordLabel: "New Password", confirmPasswordLabel: "Confirm Password",
@@ -1498,8 +1501,21 @@ export default function K8sQuestApp() {
           setUser(session.user);
           loadUserData(session.user.id, session.user);
         } else {
-          // Restore guest session if user previously chose guest mode
-          if (safeGetItem("k8s_guest_session")) setUser(GUEST_USER);
+          // Cross-browser safety: ?code= was in the URL but the PKCE exchange
+          // failed (no code_verifier - user opened the link in a different browser).
+          // Show a clear error instead of silently falling into guest mode.
+          const pendingRecovery = sessionStorage.getItem("kq_recovery_pending");
+          if (pendingRecovery) {
+            console.warn("[KubeQuest:boot] Recovery code detected but PKCE exchange failed (wrong browser?)");
+            sessionStorage.removeItem("kq_recovery_pending");
+            // Strip the unconsumed ?code= from the URL
+            try { window.history.replaceState(null, "", window.location.pathname); } catch {}
+            setAuthError(t("resetLinkWrongBrowser"));
+            setShowResetModal(true);
+          } else if (safeGetItem("k8s_guest_session")) {
+            // Restore guest session if user previously chose guest mode
+            setUser(GUEST_USER);
+          }
           setDataLoaded(true);
         }
         setAuthChecked(true);
