@@ -3665,7 +3665,6 @@ export const TOPICS = [
     description: "ArgoCD · Workflows · ApplicationSets · Rollouts",
     descriptionEn: "ArgoCD · Workflows · ApplicationSets · Rollouts",
     isComingSoon: true,
-    devOnly: true,
     levels: {
       easy: {
         theory: "GitOps ו-ArgoCD - עקרונות בסיסיים.\n🔹 GitOps:\u200E Git הוא ה-source of truth היחיד למצב הרצוי של הקלאסטר\n🔹 ArgoCD:\u200E כלי continuous delivery שמסנכרן בין Git repo למצב ב-Kubernetes\n🔹 Sync:\u200E התהליך שבו ArgoCD מיישם את השינויים מ-Git לקלאסטר\n🔹 OutOfSync:\u200E המצב בקלאסטר שונה ממה שמוגדר ב-Git\n🔹 Synced:\u200E המצב בקלאסטר תואם את Git\n🔹 Application:\u200E אובייקט ב-ArgoCD שמגדיר מאיפה לקחת manifests ולאן לפרוס\n🔹 Health Status:\u200E Healthy, Degraded, Progressing, Missing\nCODE:\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: my-app\n  namespace: argocd\nspec:\n  project: default\n  source:\n    repoURL: https://github.com/org/repo\n    targetRevision: main\n    path: k8s/\n  destination:\n    server: https://kubernetes.default.svc\n    namespace: production",

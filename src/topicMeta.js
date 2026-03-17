@@ -109,6 +109,5 @@ export const TOPIC_META = [
     description: "ArgoCD · Workflows · ApplicationSets · Rollouts",
     descriptionEn: "ArgoCD · Workflows · ApplicationSets · Rollouts",
     isComingSoon: true,
-    devOnly: true,
   },
 ];
