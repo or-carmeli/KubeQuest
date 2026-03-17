@@ -74,7 +74,7 @@ if ("serviceWorker" in navigator) {
         console.log("SW registered:", reg.scope);
         // Check for updates every 60 s
         setInterval(function () {
-          reg.update();
+          reg.update().catch(function () {});
         }, 60000);
       })
       .catch(function (e) {
