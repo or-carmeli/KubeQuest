@@ -4,7 +4,7 @@ const TOPIC_NAMES = {
   config:          "Config & Secrets",
   storage:         "Storage & Helm",
   troubleshooting: "Troubleshooting & Debugging",
-  linux:           "Linux Deep Dive",
+  linux:           "OS & Linux Deep Dive",
   argo:            "Argo & GitOps",
 };
 

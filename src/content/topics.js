@@ -3097,7 +3097,7 @@ export const TOPICS = [
   {
     id: "linux",
     icon: "🖥️",
-    name: "Linux Deep Dive",
+    name: "OS & Linux Deep Dive",
     color: "#6366F1",
     description: "Processes · Memory · CPU · Networking",
     descriptionEn: "Processes · Memory · CPU · Networking",
