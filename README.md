@@ -122,41 +122,23 @@ flowchart TB
 sequenceDiagram
     actor User
     participant SPA as React SPA
-    participant SW as Service Worker
-    participant Auth as Supabase Auth
-    participant API as Supabase RPC
-    participant DB as PostgreSQL
-    participant Sentry
+    participant API as Supabase (Auth + RPC + DB)
 
     User->>SPA: Open app
-    SPA->>SW: Cache static assets
-    SPA->>Auth: Check session (PKCE)
-    alt Has session
-        Auth-->>SPA: User session
-        SPA->>API: loadUserData()
-        API->>DB: SELECT user_stats
-        DB-->>SPA: Stats + progress
-    else No session
-        SPA-->>User: Guest mode (localStorage)
-    end
+    SPA->>API: Auth check (PKCE)
+    API-->>SPA: Session or guest mode
 
     User->>SPA: Start quiz
-    SPA->>API: fetchQuizQuestions()
-    API->>DB: get_quiz_questions RPC
-    DB-->>SPA: Questions (no answers)
-
+    SPA->>API: Fetch questions (no answers shipped)
     User->>SPA: Submit answer
-    SPA->>API: checkQuizAnswer()
-    API->>DB: Validate + update score
-    DB-->>SPA: { correct, explanation }
+    SPA->>API: Server validates + scores
+    API-->>SPA: Result + explanation
 
-    User->>SPA: Finish quiz
-    SPA->>API: saveUserProgress()
-    API->>DB: Upsert stats
-    Note over SPA,Sentry: On any error, Sentry<br/>captures with safe context
-
+    SPA->>API: Save progress
     SPA-->>User: Results + achievements
 ```
+
+The client never sees correct answers until after submission — all scoring is server-authoritative via `SECURITY DEFINER` RPC functions.
 
 ### Stack Layers
 
@@ -171,24 +153,19 @@ sequenceDiagram
 ## Security Model
 
 ```mermaid
-flowchart TB
-    USER([User])
+flowchart LR
+    USER([User]) -->|HTTPS| EDGE["Edge<br/>HSTS · CORS"]
+    EDGE --> APP["App<br/>CSP · No Inline"]
+    APP --> API["API<br/>RPC · Rate Limit"]
+    API --> DB[("DB<br/>RLS")]
 
-    EDGE["Edge Security<br/>HTTPS / HSTS"]
-    APP["Application Security<br/>Strict CSP · No Inline Scripts"]
-    API["API Validation<br/>RPC Validation · Rate Limiting"]
-    DB[("Database Security<br/>PostgreSQL · Row Level Security")]
-
-    USER -->|HTTPS| EDGE
-    EDGE --> APP
-    APP --> API
-    API --> DB
-
-    style EDGE fill:#111827,stroke:#EF4444,stroke-width:2px,color:#ffffff
-    style APP fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#ffffff
-    style API fill:#111827,stroke:#A855F7,stroke-width:2px,color:#ffffff
-    style DB fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#ffffff
+    style EDGE fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
+    style APP fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style API fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style DB fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
 ```
+
+Four layers of defense — no layer trusts the one above it:
 
 | Layer | Controls |
 |-------|----------|
