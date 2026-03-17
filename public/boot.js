@@ -40,16 +40,24 @@ setTimeout(function () {
       .addEventListener("click", function () {
         localStorage.clear();
         sessionStorage.clear();
+        var tasks = [];
         if (navigator.serviceWorker) {
-          navigator.serviceWorker.getRegistrations().then(function (r) {
-            r.forEach(function (s) {
-              s.unregister();
-            });
-          });
+          tasks.push(
+            navigator.serviceWorker.getRegistrations().then(function (r) {
+              return Promise.all(r.map(function (s) { return s.unregister(); }));
+            })
+          );
         }
-        setTimeout(function () {
+        if (typeof caches !== "undefined") {
+          tasks.push(
+            caches.keys().then(function (keys) {
+              return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+            })
+          );
+        }
+        Promise.all(tasks).then(function () {
           location.reload();
-        }, 500);
+        });
       });
   }
 }, 8000);

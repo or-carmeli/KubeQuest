@@ -47,10 +47,10 @@ export const TOPICS = [
   {
     id: "workloads",
     icon: "⚙️",
-    name: "Workloads & Scheduling",
+    name: "Workloads & Pods",
     color: "#00D4FF",
-    description: "Pods · Deployments · StatefulSets · Scheduling · Resources",
-    descriptionEn: "Pods · Deployments · StatefulSets · Scheduling · Resources",
+    description: "Pods · Deployments · Jobs · Scheduling",
+    descriptionEn: "Pods · Deployments · Jobs · Scheduling",
     levels: {
       easy: {
         theory: "Pods ו-Deployments הם ליבת Kubernetes.\n🔹 Pod:\u200E יחידת הריצה הקטנה ביותר, מכיל קונטיינר אחד או יותר\n🔹 Pods זמניים: Pod מנוהל (Deployment/ReplicaSet) שמת, נוצר חדש עם IP חדש. Pod עצמאי שמת. נשאר מת\n🔹 Deployment מנהל קבוצת Pods זהים ומבטיח שהמספר הרצוי תמיד רץ\n🔹 replicas:\u200E עותקים זהים של ה-Pod שרצים במקביל\nCODE:\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: my-app\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: my-app",
@@ -657,10 +657,10 @@ export const TOPICS = [
   {
     id: "networking",
     icon: "🌐",
-    name: "Networking & Service Exposure",
+    name: "Networking & Services",
     color: "#A855F7",
-    description: "Services · Ingress · NetworkPolicy · DNS",
-    descriptionEn: "Services · Ingress · NetworkPolicy · DNS",
+    description: "Services · Ingress · DNS · NetworkPolicy",
+    descriptionEn: "Services · Ingress · DNS · NetworkPolicy",
     levels: {
       easy: {
         theory: "Services מספקים כתובת IP יציבה לגישה ל-Pods.\n🔹 ClusterIP:\u200E גישה פנימית בלבד (ברירת מחדל)\n🔹 NodePort:\u200E חשיפה על port בכל Node\n🔹 LoadBalancer:\u200E IP חיצוני ב-cloud\n🔹 Service מוצא Pods לפי labels ו-selector\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n - port: 80\n    targetPort: 8080",
@@ -1267,10 +1267,10 @@ export const TOPICS = [
   {
     id: "config",
     icon: "🔐",
-    name: "Configuration & Security",
+    name: "Config & Secrets",
     color: "#F59E0B",
-    description: "ConfigMaps · Secrets · RBAC · ServiceAccounts",
-    descriptionEn: "ConfigMaps · Secrets · RBAC · ServiceAccounts",
+    description: "ConfigMaps · Secrets · RBAC · SA",
+    descriptionEn: "ConfigMaps · Secrets · RBAC · SA",
     levels: {
       easy: {
         theory: "ConfigMap ו-Secret מפרידים קוד מקונפיגורציה.\n🔹 ConfigMap:\u200E הגדרות רגילות (DB_URL, timeout)\n🔹 Secret:\u200E נתונים רגישים (passwords, tokens)\n🔹 Secrets מקודדים ב-base64 (לא מוצפנים לחלוטין!)\n🔹 שניהם: env variables או volume\nCODE:\napiVersion: v1\nkind: ConfigMap\ndata:\n  DB_URL: postgres://db:5432\n  MAX_CONN: \"100\"",
@@ -1877,10 +1877,10 @@ export const TOPICS = [
   {
     id: "storage",
     icon: "💾",
-    name: "Storage & Package Management",
+    name: "Storage & Helm",
     color: "#10B981",
-    description: "PersistentVolumes · StorageClass · Helm · Operators",
-    descriptionEn: "PersistentVolumes · StorageClass · Helm · Operators",
+    description: "PV · StorageClass · Helm · Operators",
+    descriptionEn: "PV · StorageClass · Helm · Operators",
     levels: {
       easy: {
         theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 PV:\u200E יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 PVC:\u200E בקשה לאחסון מ-Pod\n🔹 Helm Chart:\u200E חבילה של Kubernetes manifests עם templates\n🔹 helm install:\u200E מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
@@ -2487,10 +2487,10 @@ export const TOPICS = [
   {
     id: "troubleshooting",
     icon: "🔧",
-    name: "Cluster Operations & Troubleshooting",
+    name: "Troubleshooting & Debugging",
     color: "#F97316",
-    description: "Debugging · Observability · אבחון · כלים",
-    descriptionEn: "Debugging · Observability · Diagnosis · Tools",
+    description: "Logs · Events · Probes · Observability",
+    descriptionEn: "Logs · Events · Probes · Observability",
     levels: {
       easy: {
         theory: "פקודות Debug בסיסיות\n\nCMD:kubectl describe pod <pod-name>\nDESC:מידע מפורט על Pod כולל Events\n\nCMD:kubectl logs <pod-name>\nDESC:צפייה בלוגים של הקונטיינר\n\nCMD:kubectl exec -it <pod-name> -- bash\nDESC:הרצת פקודה או פתיחת shell בתוך הקונטיינר\n\nCMD:kubectl get pods -A\nDESC:רשימת כל ה-Pods בכל ה-Namespaces\n\nCMD:kubectl get events -A\nDESC:רשימת אירועים מכל ה-Namespaces\n\nFLOW_TITLE:זרימת עבודה לדיבוג\nFLOW:kubectl get pods -A\nFLOW:kubectl describe pod my-pod\nFLOW:kubectl logs my-pod\nFLOW:kubectl exec -it my-pod -- bash",
@@ -3097,10 +3097,10 @@ export const TOPICS = [
   {
     id: "linux",
     icon: "🖥️",
-    name: "OS & Linux Deep Dive",
+    name: "Linux Deep Dive",
     color: "#6366F1",
-    description: "תהליכים · לוגים · CPU · זיכרון · רשת",
-    descriptionEn: "Processes · Logs · CPU · Memory · Networking",
+    description: "Processes · Memory · CPU · Networking",
+    descriptionEn: "Processes · Memory · CPU · Networking",
     isNew: true,
     levels: {
       easy: {
