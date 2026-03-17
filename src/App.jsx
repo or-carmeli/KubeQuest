@@ -942,7 +942,7 @@ function renderQuestion(qText, lang, animate) {
           }
 
           // Terminal command block
-          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/m.test(code);
+          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/m.test(code);
           if (isCommand) {
             return <TerminalBlock key={idx} animate={animate}>{code}</TerminalBlock>;
           }
@@ -968,7 +968,7 @@ function renderQuestion(qText, lang, animate) {
           const cleaned = para.replace(/^["״"]+|["״"]+$/g, "").trim();
           const firstLine = nonEmpty[0]?.trim() || "";
           const isError = /^(error:|Error:|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:)/i.test(firstLine);
-          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/.test(firstLine);
+          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/.test(firstLine);
           // YAML-like content
           if (/^\s*[\w.\-/]+:\s/m.test(cleaned) && /\n\s+\w/.test(cleaned)) {
             return <YamlBlock key={idx}>{cleaned}</YamlBlock>;
@@ -3220,7 +3220,7 @@ export default function K8sQuestApp() {
   }, [screen]);
 
   // Splits a code block into Terminal vs YAML sub-blocks and pushes them.
-  const cmdPat = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make)\s/;
+  const cmdPat = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/;
   const flushCodeBlock = (elements, lines, keyBase) => {
     if (!lines.length) return;
     // Group consecutive lines by type: "cmd" or "yaml"
