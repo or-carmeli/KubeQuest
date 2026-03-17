@@ -2,13 +2,13 @@ import { useState } from "react";
 import { getLocalizedField } from "../utils/i18n";
 
 const STAGE_SUBTITLES = {
-  workloads:       "Pods · Deployments · StatefulSets · Scheduling · Resources",
-  networking:      "Services · Ingress · NetworkPolicy · DNS",
-  config:          "ConfigMaps · Secrets · RBAC · ServiceAccounts",
-  storage:         "PersistentVolumes · StorageClass · Helm · Operators",
-  troubleshooting: "Debugging · Observability · Diagnosis · Tools",
-  linux:            "Processes · Logs · CPU · Memory · Networking",
-  argo:             "ArgoCD · Workflows · ApplicationSets · Rollouts",
+  workloads:       "Pods · Deployments · Jobs · Scheduling",
+  networking:      "Services · Ingress · DNS · NetworkPolicy",
+  config:          "ConfigMaps · Secrets · RBAC · SA",
+  storage:         "PV · StorageClass · Helm · Operators",
+  troubleshooting: "Logs · Events · Probes · Observability",
+  linux:           "Processes · Memory · CPU · Networking",
+  argo:            "ArgoCD · Workflows · ApplicationSets · Rollouts",
 };
 
 const LVL_ORDER = ["easy", "medium", "hard"];

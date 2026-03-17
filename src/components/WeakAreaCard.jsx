@@ -1,10 +1,10 @@
 const TOPIC_NAMES = {
-  workloads:       "Workloads & Scheduling",
-  networking:      "Networking & Service Exposure",
-  config:          "Configuration & Security",
-  storage:         "Storage & Package Management",
-  troubleshooting: "Cluster Operations & Troubleshooting",
-  linux:           "OS & Linux Deep Dive",
+  workloads:       "Workloads & Pods",
+  networking:      "Networking & Services",
+  config:          "Config & Secrets",
+  storage:         "Storage & Helm",
+  troubleshooting: "Troubleshooting & Debugging",
+  linux:           "Linux Deep Dive",
   argo:            "Argo & GitOps",
 };
 
