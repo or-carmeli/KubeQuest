@@ -3715,39 +3715,6 @@ export const TOPICS = [
             explanation: "אלה שני מדדים נפרדים:\nSync Status - האם המצב בקלאסטר תואם את Git (Synced / OutOfSync).\nHealth Status - האם המשאבים עצמם תקינים (Healthy / Degraded / Progressing).\nאפשר להיות Synced אבל Degraded, למשל כשה-manifests הוחלו אבל ה-Pod נופל ב-CrashLoopBackOff.",
           },
           {
-            q: "יצרת Application חדש ב-ArgoCD.\nהוא מופיע כ-OutOfSync ו-Missing.\n\nמה המצב?",
-            options: [
-              "יש בעיית הרשאות ב-Git repo",
-              "ה-manifests קיימים ב-Git אבל עדיין לא הוחלו על הקלאסטר",
-              "ה-target namespace נמחק מהקלאסטר",
-              "ArgoCD לא מצליח להתחבר לקלאסטר",
-            ],
-            answer: 1,
-            explanation: "כשיוצרים Application חדש, ArgoCD רואה את ה-manifests ב-Git אבל הם עדיין לא קיימים בקלאסטר.\nזה המצב הנורמלי לפני sync ראשון.\nOutOfSync = Git שונה מהקלאסטר.\nMissing = המשאבים לא קיימים כלל בקלאסטר.",
-          },
-          {
-            q: "מה תפקיד שדה destination ב-ArgoCD Application?",
-            options: [
-              "מגדיר את ה-Git branch שממנו לקחת את ה-manifests",
-              "מגדיר לאיזה קלאסטר ו-namespace לפרוס",
-              "מגדיר את ה-Docker registry שממנו למשוך images",
-              "מגדיר את ה-webhook URL לקבלת notifications",
-            ],
-            answer: 1,
-            explanation: "destination מגדיר את היעד של הפריסה:\nserver - כתובת ה-Kubernetes API server.\nnamespace - ה-namespace שבו ייווצרו המשאבים.\nGit branch מוגדר ב-source.targetRevision.\nDocker registry מוגדר ב-manifests עצמם.",
-          },
-          {
-            q: "איזה health status יציג ArgoCD עבור Deployment שבו 3 מתוך 5 replicas רצים?",
-            options: [
-              "Healthy - כי יש Pods שרצים",
-              "Degraded - כי לא כל ה-replicas זמינים",
-              "Progressing - כי ה-Deployment עדיין לא הגיע למצב הרצוי",
-              "Missing - כי חסרים Pods",
-            ],
-            answer: 2,
-            explanation: "כשמספר ה-replicas הרצים קטן מה-desired, ה-Deployment נחשב Progressing.\nKubernetes עדיין מנסה להגיע למצב היעד.\nDegraded יופיע אם יש Pods ב-CrashLoopBackOff.\nMissing מתייחס למשאבים שלא קיימים כלל בקלאסטר.",
-          },
-          {
             q: "צוות רוצה לעשות rollback ל-version קודם של אפליקציה.\nהם משתמשים ב-GitOps עם ArgoCD.\n\nמה הדרך הנכונה?",
             options: [
               "ללחוץ Rollback ב-ArgoCD UI",
@@ -3757,17 +3724,6 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation: "ב-GitOps, כל שינוי צריך לעבור דרך Git.\ngit revert יוצר commit חדש שמבטל את השינוי, ו-ArgoCD יסנכרן אוטומטית.\nkubectl rollout undo ו-ArgoCD Rollback עובדים, אבל יוצרים drift מ-Git.\nהמטרה היא לשמור על Git כ-source of truth.",
-          },
-          {
-            q: "מה קורה כשמפעילים auto-sync ב-ArgoCD Application?",
-            options: [
-              "ArgoCD ידרוש אישור ידני לפני כל sync",
-              "ArgoCD יסנכרן אוטומטית כשיש שינוי ב-Git",
-              "ArgoCD יסנכרן רק פעם ביום בשעה קבועה",
-              "ArgoCD ימחק את ה-Application אם ה-sync נכשל",
-            ],
-            answer: 1,
-            explanation: "auto-sync אומר ש-ArgoCD יזהה שינויים ב-Git ויחיל אותם אוטומטית על הקלאסטר.\nזה מבטל את הצורך בלחיצה ידנית על Sync.\nברירת המחדל היא manual sync שדורש פעולה מפורשת.",
           },
           {
             q: "ArgoCD Application מוגדר עם:\n\n```\nsource:\n  repoURL: https://github.com/org/app\n  targetRevision: main\n  path: deploy/production\n```\n\nמאיפה ArgoCD יקרא את ה-manifests?",
@@ -3790,39 +3746,6 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation: "Synced = ה-manifests הוחלו בהצלחה, הקלאסטר תואם את Git.\nDegraded = יש בעיה ב-runtime, למשל Pod ב-CrashLoopBackOff או ImagePullBackOff.\nהבעיה היא לא ב-manifests עצמם אלא באפליקציה או ב-image.\nאם Git לא נגיש, ה-sync status היה Unknown, לא Synced.",
-          },
-          {
-            q: "מה ההבדל בין manual sync ל-auto-sync ב-ArgoCD?",
-            options: [
-              "manual sync מוחל רק על namespace אחד, auto-sync על כל הקלאסטר",
-              "manual sync דורש לחיצה מפורשת, auto-sync מחיל שינויים אוטומטית כשמזוהה הבדל",
-              "manual sync עובד רק עם Helm, auto-sync עובד רק עם plain manifests",
-              "manual sync שומר היסטוריה, auto-sync לא",
-            ],
-            answer: 1,
-            explanation: "manual sync - המשתמש צריך ללחוץ Sync ב-UI או להריץ argocd app sync.\nauto-sync - ArgoCD מחיל שינויים אוטומטית ברגע שמזוהה הבדל בין Git לקלאסטר.\nשני המצבים עובדים עם כל סוגי ה-manifests ושומרים היסטוריה.",
-          },
-          {
-            q: "ב-ArgoCD, מה קורה כשה-Git repo לא נגיש (למשל בעיית רשת)?",
-            options: [
-              "ArgoCD מוחק את כל המשאבים מהקלאסטר",
-              "ArgoCD ממשיך לעבוד עם ה-state האחרון שנשמר, ומדווח על שגיאה",
-              "ArgoCD עוצר את כל ה-Pods שמנוהלים על ידו",
-              "ArgoCD עושה rollback אוטומטי לגרסה הקודמת",
-            ],
-            answer: 1,
-            explanation: "ArgoCD לא מוחק משאבים ולא עוצר Pods בגלל בעיית גישה ל-Git.\nהמשאבים בקלאסטר ממשיכים לרוץ כרגיל.\nArgoCD ידווח על שגיאת חיבור ויציג Unknown כ-sync status.\nברגע שה-repo יהיה נגיש שוב, ArgoCD יחזור לפעולה רגילה.",
-          },
-          {
-            q: "מנהל צוות רוצה להגביל אילו repos ו-namespaces מותרים לפרויקט ב-ArgoCD.\n\nאיזה אובייקט מגדיר את זה?",
-            options: [
-              "Application",
-              "AppProject",
-              "ClusterRole",
-              "NetworkPolicy",
-            ],
-            answer: 1,
-            explanation: "AppProject ב-ArgoCD מגדיר הגבלות על פרויקט:\n- אילו Git repos מותרים כ-source.\n- אילו קלאסטרים ו-namespaces מותרים כ-destination.\n- אילו סוגי משאבים מותרים.\nApplication מגדיר פריסה בודדת.\nClusterRole ו-NetworkPolicy הם משאבי Kubernetes רגילים.",
           },
           {
             q: "מפתח דוחף שינוי ל-Git.\nArgoCD מוגדר עם auto-sync ו-self-heal.\n\nמהנדס אחר עושה kubectl edit ומשנה משהו ידנית בקלאסטר.\n\nמה יקרה?",
@@ -3908,17 +3831,6 @@ export const TOPICS = [
             explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\nmetadata:\n  finalizers:\n  - resources-finalizer.argocd.argoproj.io\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
-            q: "sync נכשל עם השגיאה:\n\n```\nComparisonError: failed to load target state:\npermission denied\n```\n\nמה הסיבה הסבירה?",
-            options: [
-              "ל-ArgoCD אין הרשאות לקרוא מה-Git repo",
-              "ה-ServiceAccount של ArgoCD חסר RBAC permissions בקלאסטר",
-              "ה-namespace הוגדר כ-read-only",
-              "ה-Application הוגדר עם manual sync בלבד",
-            ],
-            answer: 0,
-            explanation: "load target state מתייחס לטעינת המצב הרצוי מ-Git.\npermission denied בשלב הזה אומר שה-credentials של ה-repo לא תקינים או פגו.\nצריך לבדוק את ה-repo credentials ב-ArgoCD:\n\nargocd repo list\n\nRBAC permissions בקלאסטר היו גורמים לשגיאה בשלב ה-sync, לא בשלב ה-load.",
-          },
-          {
             q: "מה ההבדל בין prune: true ל-selfHeal: true?",
             options: [
               "prune מוחק משאבים שנמחקו מ-Git, selfHeal מתקן drift בקלאסטר",
@@ -3930,61 +3842,6 @@ export const TOPICS = [
             explanation: "prune: true - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\nselfHeal: true - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
           },
           {
-            q: "ArgoCD Application מוגדר עם retry:\n\n```\nretry:\n  limit: 3\n  backoff:\n    duration: 10s\n    factor: 2\n    maxDuration: 2m\n```\n\nsync נכשל בפעם הראשונה.\nכמה זמן ArgoCD ימתין לפני הניסיון השני?",
-            options: [
-              "10 שניות",
-              "20 שניות",
-              "2 דקות",
-              "30 שניות",
-            ],
-            answer: 0,
-            explanation: "duration: 10s זה זמן ההמתנה הראשוני.\nfactor: 2 מכפיל את הזמן בכל ניסיון.\nניסיון 1 נכשל -> המתנה 10s -> ניסיון 2.\nניסיון 2 נכשל -> המתנה 20s -> ניסיון 3.\nmaxDuration: 2m מגביל שההמתנה לא תעלה על 2 דקות.",
-          },
-          {
-            q: "מפתח מנסה לפרוס אפליקציה עם ArgoCD.\nה-sync נכשל עם:\n\n```\nthe server could not find the requested resource\n```\n\nמה הסיבה הסבירה?",
-            options: [
-              "ה-manifest מתייחס ל-CRD שלא מותקן בקלאסטר",
-              "ה-Git repo לא נגיש",
-              "ה-ArgoCD server עצמו לא רץ",
-              "ה-namespace מלא ואין מקום למשאבים נוספים",
-            ],
-            answer: 0,
-            explanation: "server could not find the requested resource מתרחש כשה-Kubernetes API לא מכיר את סוג המשאב.\nזה קורה כש-manifest מתייחס ל-CRD (Custom Resource Definition) שעדיין לא הותקן.\nהפתרון: להתקין את ה-CRD לפני ה-Application, או להשתמש ב-sync waves כדי שה-CRD ייווצר ראשון.",
-          },
-          {
-            q: "לצוות יש ArgoCD Application שמצביע על Helm chart.\nהם רוצים לעשות override ל-values שונים לכל environment.\n\nמה הגישה המומלצת?",
-            options: [
-              "ליצור Application נפרד לכל environment עם values file שונה",
-              "להשתמש ב-kubectl apply עם flags שונים לכל environment",
-              "לשנות את ה-Helm chart source code לכל environment",
-              "להשתמש ב-ArgoCD UI כדי לשנות parameters ידנית",
-            ],
-            answer: 0,
-            explanation: "הגישה המומלצת היא Application per environment, כשכל אחד מצביע על values file שונה:\n\nhelm:\n  valueFiles:\n  - values-production.yaml\n\nזה שומר על GitOps - הכל ב-Git, כל environment מוגדר בנפרד.\nשינוי ידני ב-UI עוקף GitOps.\nשינוי ה-chart source code שובר את ההפרדה.",
-          },
-          {
-            q: "מה PostSync hook עושה ב-ArgoCD?",
-            options: [
-              "מריץ Job אחרי ש-sync הסתיים בהצלחה",
-              "שולח notification על sync failure",
-              "מוחק resources ישנים אחרי sync",
-              "מעדכן את ה-Git repo עם המצב הנוכחי של הקלאסטר",
-            ],
-            answer: 0,
-            explanation: "PostSync hook מריץ Job אחרי שה-sync הסתיים בהצלחה.\nשימושים נפוצים:\n- הרצת smoke tests\n- שליחת notifications\n- ניקוי temporary resources\n\nמוגדר ע\"י annotation:\nargocd.argoproj.io/hook: PostSync",
-          },
-          {
-            q: "ArgoCD מוגדר עם auto-sync אבל בלי selfHeal.\nמהנדס עשה kubectl scale deployment --replicas=10.\n\nמה יקרה?",
-            options: [
-              "ArgoCD יחזיר מיד את replicas למה שמוגדר ב-Git",
-              "השינוי יישאר עד ל-commit הבא ב-Git שיגרום ל-sync",
-              "ArgoCD ימחק את ה-deployment ויצור אותו מחדש",
-              "ArgoCD ידווח על שגיאה ויעצור את ה-auto-sync",
-            ],
-            answer: 1,
-            explanation: "בלי selfHeal, ArgoCD לא מתקן drift באופן יזום.\nauto-sync רץ רק כשיש שינוי ב-Git.\nהשינוי הידני (replicas=10) יישאר עד שיהיה commit חדש ב-Git.\nברגע שיהיה commit, ArgoCD יעשה sync ויחזיר את replicas למה שמוגדר ב-Git.",
-          },
-          {
             q: "sync נכשל עם השגיאה:\n\n```\none or more objects failed to apply:\nnamespace \"payments\" not found\n```\n\nמה הפתרון?",
             options: [
               "ליצור את ה-namespace ידנית ב-cluster",
@@ -3994,17 +3851,6 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation: "הפתרון הנכון ב-GitOps הוא אחד משניים:\n1. להוסיף Namespace manifest ב-Git עם sync wave 0- כדי שייווצר ראשון.\n2. להפעיל CreateNamespace=true ב-syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n  - CreateNamespace=true\n\nיצירה ידנית עובדת אבל עוקפת GitOps.",
-          },
-          {
-            q: "מה היתרון של ApplicationSet על פני יצירת Applications ידנית?",
-            options: [
-              "ApplicationSet מאפשר ליצור Applications מרובים מתוך template אחד",
-              "ApplicationSet מהיר יותר ב-sync מאשר Application רגיל",
-              "ApplicationSet תומך ב-Helm אבל Application לא",
-              "ApplicationSet לא דורש Git repo",
-            ],
-            answer: 0,
-            explanation: "ApplicationSet הוא controller שיוצר ומנהל Applications מרובים מ-template.\nלמשל, יצירת Application לכל cluster, לכל environment, או לכל תיקייה ב-repo.\n\ngenerators:\n- clusters: {}\ntemplate:\n  spec:\n    destination:\n      server: '{{server}}'\n\nזה חוסך duplicate configuration ומבטיח consistency.",
           },
         ],
       },
@@ -4057,39 +3903,6 @@ export const TOPICS = [
             explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\nignoreDifferences:\n- group: \"*\"\n  kind: \"*\"\n  managedFieldsManagers:\n  - \"kube-controller-manager\"\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
           },
           {
-            q: "צוות DevOps רוצה לקבל Slack notification כשאפליקציה עוברת מ-Healthy ל-Degraded.\n\nאיזה מנגנון ב-ArgoCD משמש לזה?",
-            options: [
-              "ArgoCD Notifications Engine עם trigger על health status change",
-              "Kubernetes Event Watcher חיצוני שמנטר ArgoCD events",
-              "Webhook שמוגדר ב-Git repo",
-              "Prometheus AlertManager שמנטר ArgoCD metrics",
-            ],
-            answer: 0,
-            explanation: "ArgoCD Notifications Engine הוא built-in ותומך ב-triggers ו-templates.\n\ntrigger:\n- when: app.status.health.status == 'Degraded'\n  send: [slack-notification]\n\ntemplate:\n- name: slack-notification\n  message: |\n    App {{.app.metadata.name}} is Degraded\n\nPrometheus AlertManager עובד גם, אבל ArgoCD Notifications הוא הפתרון המובנה והישיר יותר.",
-          },
-          {
-            q: "ApplicationSet מוגדר עם Git generator:\n\n```\ngenerators:\n- git:\n    repoURL: https://github.com/org/config\n    revision: main\n    directories:\n    - path: apps/*\n    - path: apps/legacy/*\n      exclude: true\n```\n\nמה יקרה?",
-            options: [
-              "ApplicationSet ייצור Application לכל תיקייה תחת apps/ חוץ מתיקיות תחת apps/legacy/",
-              "ApplicationSet ייצור Application רק לתיקיות תחת apps/legacy/",
-              "השגיאה - אי אפשר לשלב include ו-exclude באותו generator",
-              "ApplicationSet ייצור Application לכל תיקייה ב-repo כולל legacy",
-            ],
-            answer: 0,
-            explanation: "Git directory generator תומך ב-include ו-exclude:\n- path: apps/* - כולל כל תיקייה ישירה תחת apps/\n- path: apps/legacy/* עם exclude: true - מוציא תיקיות legacy\n\nזה מאפשר שליטה מדויקת על אילו תיקיות מייצרות Applications.",
-          },
-          {
-            q: "ארגון רוצה לאכוף שכל Application ב-ArgoCD חייב לכלול resource limits.\n\nמה הגישה הנכונה?",
-            options: [
-              "OPA Gatekeeper / Kyverno policies בקלאסטר שחוסמים Pods בלי limits",
-              "ArgoCD RBAC rule שבודק limits",
-              "Git pre-commit hook שמוודא limits ב-manifests",
-              "ArgoCD sync hook שמריץ בדיקה אחרי apply",
-            ],
-            answer: 0,
-            explanation: "ArgoCD לא בודק תוכן של manifests - הוא רק מחיל אותם.\nהאכיפה צריכה להיות בשכבת ה-admission control:\n- OPA Gatekeeper\n- Kyverno\n\nהם חוסמים את ה-API request אם המשאב לא עומד ב-policy.\nGit hooks עוזרים אבל אפשר לעקוף אותם.\nArgoCD RBAC לא בודק תוכן של manifests.",
-          },
-          {
             q: "sync של אפליקציה גדולה נכשל עם:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nמה הבעיה ומה הפתרון?",
             options: [
               "ה-Application manifests חורגים מ-gRPC message size limit של ArgoCD",
@@ -4112,28 +3925,6 @@ export const TOPICS = [
             explanation: "אם ה-tag ב-Git הוא latest וגם בקלאסטר הוא latest, ArgoCD רואה אותם כזהים.\nהוא לא בודק את ה-image digest, רק את ה-manifest.\nPod לא יעשה pull מחדש אם imagePullPolicy הוא IfNotPresent.\n\nפתרון: להשתמש ב-immutable tags (v1.2.3, git SHA) במקום latest.\nאו להגדיר imagePullPolicy: Always.",
           },
           {
-            q: "צריך לפרוס את אותו Helm chart ל-20 clusters שונים.\nלכל cluster יש values קצת שונים.\n\nמה הארכיטקטורה המומלצת?",
-            options: [
-              "ApplicationSet עם Cluster generator ו-values override per cluster label",
-              "20 Application manifests נפרדים ב-Git",
-              "ArgoCD instance נפרד לכל cluster",
-              "Helm umbrella chart שמכיל 20 sub-charts",
-            ],
-            answer: 0,
-            explanation: "ApplicationSet עם Cluster generator:\n\ngenerators:\n- clusters:\n    selector:\n      matchLabels:\n        tier: production\ntemplate:\n  spec:\n    source:\n      helm:\n        valueFiles:\n        - values-{{name}}.yaml\n\nכל cluster מקבל values file ייעודי.\nהוספת cluster חדש עם ה-label הנכון מייצרת Application אוטומטית.",
-          },
-          {
-            q: "ב-ArgoCD, מה ההבדל בין server-side diff ל-client-side diff?",
-            options: [
-              "server-side diff שולח את ה-manifest ל-API server עם dry-run לחישוב ה-diff, client-side עושה השוואה מקומית",
-              "server-side diff רץ על ה-ArgoCD server, client-side רץ ב-browser",
-              "אין הבדל, זה רק naming convention",
-              "server-side diff עובד רק עם Helm, client-side רק עם plain manifests",
-            ],
-            answer: 0,
-            explanation: "server-side diff (החל מ-ArgoCD 2.5+) שולח manifest ל-Kubernetes API עם dry-run.\nה-API server מחזיר את התוצאה אחרי שכל ה-mutating webhooks רצו.\nזה נותן diff מדויק יותר כי הוא כולל defaults, injected fields, ו-webhook modifications.\n\nclient-side diff משווה ישירות ויכול להראות diffs שקריים.",
-          },
-          {
             q: "ארגון רוצה לאפשר rollback מהיר ב-production בלי לחכות ל-CI pipeline.\n\nמה הדרך הנכונה ב-GitOps?",
             options: [
               "לאפשר ל-ArgoCD לעשות sync ל-Git commit ספציפי קודם דרך UI",
@@ -4143,28 +3934,6 @@ export const TOPICS = [
             ],
             answer: 3,
             explanation: "ArgoCD Rollback מחזיר את הקלאסטר ל-sync state קודם מתוך ההיסטוריה.\nזה מהיר כי הוא לא דורש שינוי ב-Git.\nאבל חשוב להבין: אחרי rollback, האפליקציה תהיה OutOfSync עד שה-Git יתעדכן.\n\ngit revert הוא הפתרון ה-GitOps טהור, אבל דורש pipeline.\nב-production emergency, rollback ב-ArgoCD ואז git revert הוא הגישה המעשית.",
-          },
-          {
-            q: "ArgoCD Application מוגדר עם:\n\n```\nsyncPolicy:\n  automated:\n    prune: true\n    selfHeal: true\n  syncOptions:\n  - RespectIgnoreDifferences=true\n  - ServerSideApply=true\n  - PrunePropagationPolicy=foreground\n```\n\nמה PrunePropagationPolicy=foreground אומר?",
-            options: [
-              "כשמוחקים resource, Kubernetes מחכה שכל ה-dependents יימחקו לפני שה-parent נמחק",
-              "ArgoCD מציג popup confirmation לפני כל prune",
-              "Prune קורה רק ב-foreground של ה-ArgoCD UI, לא ב-CLI",
-              "Resources נמחקים במקביל במקום לפי סדר",
-            ],
-            answer: 0,
-            explanation: "PrunePropagationPolicy קובע איך Kubernetes מוחק resources:\n- foreground: ה-parent מחכה שכל ה-dependents יימחקו (למשל Deployment מחכה ש-Pods ייעלמו).\n- background (default): ה-parent נמחק מיד ו-dependents נמחקים ברקע.\n- orphan: ה-parent נמחק אבל dependents נשארים.\n\nforeground מבטיח מחיקה מסודרת.",
-          },
-          {
-            q: "צוות Security מבקש ש-ArgoCD ישתמש ב-SSO עם OIDC provider של הארגון.\n\nאיפה מגדירים את ה-OIDC config?",
-            options: [
-              "ב-argocd-cm ConfigMap תחת oidc.config",
-              "ב-ArgoCD Application manifest",
-              "ב-AppProject spec",
-              "בקובץ .argocd-config ב-home directory של המשתמש",
-            ],
-            answer: 0,
-            explanation: "OIDC configuration מוגדר ב-argocd-cm ConfigMap:\n\ndata:\n  oidc.config: |\n    name: Okta\n    issuer: https://org.okta.com\n    clientID: argo-cd\n    clientSecret: $oidc.okta.clientSecret\n    requestedScopes:\n    - openid\n    - profile\n    - email\n\nה-secret מאוחסן ב-argocd-secret.\nAppProject מגדיר RBAC, לא authentication.",
           },
           {
             q: "ApplicationSet עם Matrix generator:\n\n```\ngenerators:\n- matrix:\n    generators:\n    - clusters:\n        selector:\n          matchLabels:\n            env: production\n    - list:\n        elements:\n        - app: payments\n          team: billing\n        - app: orders\n          team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
