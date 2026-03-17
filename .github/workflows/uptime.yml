@@ -28,7 +28,7 @@ jobs:
               echo "✅ $name: $status (${time}s)"
             else
               echo "❌ $name: expected $expected, got $status (${time}s)"
-              echo "::error::$name is DOWN — returned $status"
+              echo "::error::$name is DOWN - returned $status"
               return 1
             fi
           }
