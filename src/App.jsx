@@ -1683,7 +1683,13 @@ export default function K8sQuestApp() {
           initialAccuracyRef.current = Math.round(s.total_correct / s.total_answered * 100);
         }
       }
-      if (u) setUnlockedAchievements(u);
+      // Backfill achievements that should be unlocked based on stored stats
+      const savedU = u || [];
+      const backfilledU = [
+        ...savedU,
+        ...ACHIEVEMENTS.filter(a => !savedU.includes(a.id) && a.condition(s || {}, c || {})).map(a => a.id),
+      ];
+      setUnlockedAchievements(backfilledU);
     }
     guestLoadedRef.current = true;
     achievementsLoaded.current = true;
@@ -1959,8 +1965,6 @@ export default function K8sQuestApp() {
           mergedCompleted[key] = val;
       });
 
-      const mergedAch = [...new Set([...(base.achievements || []), ...ga])];
-
       const mergedStats = {
         total_answered: (base.total_answered || 0) + (gs.total_answered || 0),
         total_correct:  (base.total_correct  || 0) + (gs.total_correct  || 0),
@@ -1969,6 +1973,14 @@ export default function K8sQuestApp() {
         max_streak:     Math.max(base.max_streak || 0, gs.max_streak || 0),
         current_streak: Math.max(base.current_streak || 0, gs.current_streak || 0),
       };
+
+      // Backfill achievements that should be unlocked based on current stats
+      // (prevents false notification on load when DB achievements are out of sync with max_streak)
+      const savedAch = [...new Set([...(base.achievements || []), ...ga])];
+      const mergedAch = [
+        ...savedAch,
+        ...ACHIEVEMENTS.filter(a => !savedAch.includes(a.id) && a.condition(mergedStats, mergedCompleted)).map(a => a.id),
+      ];
 
       setStats(mergedStats);
       if (initialAccuracyRef.current === null && mergedStats.total_answered > 0) {
@@ -2694,7 +2706,11 @@ export default function K8sQuestApp() {
           if (prevResult) {
             const newCompleted = { ...completedTopics, [key]: { ...prevResult, correct: prevResult.total, retryComplete: true, wrongIndices: [], wrongQuestions: [] } };
             setCompletedTopics(newCompleted);
-            try { if (!isFreeMode(selectedTopic.id)) await saveUserData(stats, newCompleted, unlockedAchievements); } catch (e) { console.error("[FINISH_DEBUG] saveUserData error (retry):", e.message); }
+            const retryAch = [
+              ...unlockedAchievements,
+              ...ACHIEVEMENTS.filter(a => !unlockedAchievements.includes(a.id) && a.condition(stats, newCompleted)).map(a => a.id),
+            ];
+            try { if (!isFreeMode(selectedTopic.id)) await saveUserData(stats, newCompleted, retryAch); } catch (e) { console.error("[FINISH_DEBUG] saveUserData error (retry):", e.message); }
             loadUserRank();
           }
           setAllowNextLevel(true);
