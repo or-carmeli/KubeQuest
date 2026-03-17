@@ -2111,7 +2111,7 @@ export const TOPICS = [
                 "כשה-PVC נמחק, גם ה-PV והדיסק הפיזי (EBS, GCP PD) נמחקים אוטומטית.\nOption 0 מתאר את Retain policy, לא Delete. Option 1 שגוי: אין backup אוטומטי. Option 2 שגוי: Delete מוחק הכל.\nRetain לעומת זאת משמר את הנתונים גם אחרי מחיקת ה-PVC.",
             },
             {
-              q: "איך משנים Helm value מה-command line?",
+              q: "איך עוקפים ערך מ-values.yaml בזמן התקנת Helm Chart?",
               options: [
               "helm template --set key=value",
               "helm rollback --set key=value",
@@ -3104,8 +3104,8 @@ export const TOPICS = [
     isNew: true,
     levels: {
       easy: {
-        theory: "פקודות בסיסיות לניטור תהליכים ומשאבי מערכת ב-Linux כוללות top, ps, free ו-df. הכרת כלים אלו חיונית לאבחון בעיות בסביבות ייצור.",
-        theoryEn: "Basic Linux commands for monitoring processes and system resources include top, ps, free, and df. Knowing these tools is essential for diagnosing issues in production environments.",
+        theory: "פקודות בסיסיות לניטור תהליכים ומשאבי מערכת ב-Linux.\n🔹 top:\u200E תצוגה בזמן אמת של תהליכים, CPU, זיכרון ו-load average\n🔹 ps aux:\u200E תמונת מצב של כל התהליכים הרצים במערכת\n🔹 free -h:\u200E סיכום שימוש בזיכרון (total, used, available, buff/cache)\n🔹 df -h:\u200E שימוש בדיסק לפי מחיצות ונקודות mount\n🔹 systemctl status:\u200E בדיקת מצב שירות (active/failed/inactive)\n🔹 journalctl -u:\u200E צפייה בלוגים של שירות ספציפי\n🔹 tail -f:\u200E מעקב אחרי קובץ לוג בזמן אמת\nCODE:\nps aux --sort=-%mem | head\ndf -h\nfree -h\nsystemctl status nginx\njournalctl -u nginx --no-pager -n 50\ntail -f /var/log/syslog",
+        theoryEn: "Essential Linux commands for monitoring processes and system resources.\n🔹 top - real-time view of processes, CPU, memory, and load average\n🔹 ps aux - snapshot of all running processes\n🔹 free -h - memory usage summary (total, used, available, buff/cache)\n🔹 df -h - disk usage by partition and mount point\n🔹 systemctl status - check service state (active/failed/inactive)\n🔹 journalctl -u - view logs for a specific service\n🔹 tail -f - follow a log file in real time\nCODE:\nps aux --sort=-%mem | head\ndf -h\nfree -h\nsystemctl status nginx\njournalctl -u nginx --no-pager -n 50\ntail -f /var/log/syslog",
         questions: [
           {
             q: "צריך למצוא תהליך שצורך הכי הרבה זיכרון.\n\nאיזו פקודה הכי מתאימה?",
@@ -3121,9 +3121,9 @@ export const TOPICS = [
           {
             q: "הרצת:\n\n```\ndf -h\n```\n\nפלט:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nמה הבעיה ומה הצעד הראשון?",
             options: [
-              "הדיסק כמעט מלא - יש להריץ du -sh /* לזיהוי קבצים גדולים",
-              "הדיסק כמעט מלא - יש להריץ fsck לתיקון שגיאות מערכת קבצים",
-              "הדיסק כמעט מלא - יש למחוק את כל /var/log ולהפעיל מחדש",
+              "הדיסק כמעט מלא - יש להריץ \u2066du -sh /*\u2069 לזיהוי קבצים גדולים",
+              "הדיסק כמעט מלא - יש להריץ \u2066fsck\u2069 לתיקון שגיאות מערכת קבצים",
+              "הדיסק כמעט מלא - יש למחוק את כל \u2066/var/log\u2069 ולהפעיל מחדש",
               "השימוש בדיסק תקין - ערך של 96% סביר לשרת ייצור",
             ],
             answer: 0,
@@ -3288,8 +3288,8 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "אבחון מתקדם כולל פרשנות פלטי ניטור, הבנת מצבי תהליכים, ניתוח לוגים מתקדם, ואבחון בעיות I/O ורשת ברמת המערכת.",
-        theoryEn: "Advanced troubleshooting involves interpreting monitoring output, understanding process states, advanced log analysis, and diagnosing I/O and network issues at the system level.",
+        theory: "אבחון מתקדם וניתוח ביצועים ברמת המערכת.\n🔹 top - %us/%sy/%wa/%idle:\u200E פירוש שורת CPU. wa גבוה = בעיית דיסק, idle נמוך = עומס CPU\n🔹 free - available:\u200E העמודה החשובה, כמה זיכרון באמת פנוי לתהליכים חדשים\n🔹 uptime - load average:\u200E ממוצע תהליכים בתור. מעל מספר הליבות = עומס\n🔹 ss -tlnp:\u200E פורטים פתוחים ותהליכים שמאזינים עליהם\n🔹 iostat -x:\u200E ניתוח I/O של דיסקים (%util, await, r/s, w/s)\n🔹 מצבי תהליכים:\u200E R=running, S=sleeping, D=I/O wait, Z=zombie, T=stopped\n🔹 OOM Killer:\u200E kernel הורג תהליכים שחורגים ממגבלת זיכרון (dmesg)\nCODE:\ntop (לחץ P למיון לפי CPU, M למיון לפי Memory)\niostat -x 1 3\nss -tlnp | grep 8080\ngrep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
+        theoryEn: "Advanced troubleshooting and system-level performance analysis.\n🔹 top - %us/%sy/%wa/%idle - CPU line breakdown. High wa = disk issue, low idle = CPU load\n🔹 free - available - the key column, how much memory is actually free for new processes\n🔹 uptime - load average - avg processes in queue. Above core count = overloaded\n🔹 ss -tlnp - open ports and which processes are listening\n🔹 iostat -x - disk I/O analysis (%util, await, r/s, w/s)\n🔹 Process states - R=running, S=sleeping, D=I/O wait, Z=zombie, T=stopped\n🔹 OOM Killer - kernel kills processes exceeding memory limits (check dmesg)\nCODE:\ntop (press P to sort by CPU, M to sort by Memory)\niostat -x 1 3\nss -tlnp | grep 8080\ngrep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
         questions: [
           {
             q: "שרת מגיב לאט.\n\nהרצת:\n\n```\ntop\n```\n\nאיזה ערך מציין עומס גבוה על ה-CPU?",
@@ -3472,8 +3472,8 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "אבחון מערכת מתקדם כולל ניתוח ביצועים עם perf ו-strace, אבחון בעיות kernel עם dmesg ו-/proc, ניהול cgroups, ואבחון בעיות רשת ברמת ה-TCP stack.",
-        theoryEn: "Advanced system diagnostics includes performance analysis with perf and strace, kernel issue diagnosis with dmesg and /proc, cgroup management, and TCP stack-level network troubleshooting.",
+        theory: "אבחון מערכת מתקדם וניתוח ביצועים ברמת kernel.\n🔹 strace -c -p PID:\u200E סיכום system calls לפי זמן - מזהה צווארי בקבוק (futex = lock contention)\n🔹 perf top:\u200E profiling בזמן אמת - מציג פונקציות שצורכות הכי הרבה CPU\n🔹 /proc/net/sockstat:\u200E מצב TCP stack - orphans, TIME_WAIT, צריכת זיכרון\n🔹 /proc/buddyinfo:\u200E memory fragmentation - בלוקים פנויים ב-buddy allocator\n🔹 /proc/PID/fd:\u200E file descriptors פתוחים - זיהוי FD leaks\n🔹 sar -n DEV:\u200E סטטיסטיקות רשת - bandwidth, drops, packets per second\n🔹 errno.h:\u200E קודי שגיאה בkernel: -12=ENOMEM, -13=EACCES, -22=EINVAL\nCODE:\nstrace -c -p 1234\nperf top\nperf record -g -a sleep 10 && perf report\ncat /proc/net/sockstat\nls /proc/1234/fd | wc -l\nsar -n DEV 1 5",
+        theoryEn: "Advanced system diagnostics and kernel-level performance analysis.\n🔹 strace -c -p PID - summarize system calls by time - identifies bottlenecks (futex = lock contention)\n🔹 perf top - real-time profiling - shows functions consuming the most CPU\n🔹 /proc/net/sockstat - TCP stack state - orphans, TIME_WAIT, memory usage\n🔹 /proc/buddyinfo - memory fragmentation - free blocks in the buddy allocator\n🔹 /proc/PID/fd - open file descriptors - detecting FD leaks\n🔹 sar -n DEV - network statistics - bandwidth, drops, packets per second\n🔹 errno.h - kernel error codes: -12=ENOMEM, -13=EACCES, -22=EINVAL\nCODE:\nstrace -c -p 1234\nperf top\nperf record -g -a sleep 10 && perf report\ncat /proc/net/sockstat\nls /proc/1234/fd | wc -l\nsar -n DEV 1 5",
         questions: [
           {
             q: "אתה צריך לאבחן למה תהליך מסוים איטי.\n\nהרצת:\n\n```\nstrace -c -p 1234\n```\n\nפלט:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nמה המסקנה?",
