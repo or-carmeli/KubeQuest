@@ -3094,6 +3094,7 @@ export const TOPICS = [
     color: "#6366F1",
     description: "תהליכים · לוגים · CPU · זיכרון · רשת",
     descriptionEn: "Processes · Logs · CPU · Memory · Networking",
+    isNew: true,
     levels: {
       easy: {
         theory: "פקודות בסיסיות לניטור תהליכים ומשאבי מערכת ב-Linux כוללות top, ps, free ו-df. הכרת כלים אלו חיונית לאבחון בעיות בסביבות ייצור.",
@@ -3154,6 +3155,39 @@ export const TOPICS = [
             answer: 1,
             explanation: "העמודה available (500M) היא המדד החשוב — היא כוללת free + cache שניתן לשחרור. כש-available נמוך, המערכת עלולה להתחיל להשתמש ב-swap או להרוג תהליכים (OOM Killer).",
           },
+          {
+            q: "צריך לבדוק אם שירות nginx פעיל.\n\nאיזו פקודה הכי מתאימה?",
+            options: [
+              "systemctl status nginx",
+              "cat /var/log/nginx",
+              "top -u nginx",
+              "netstat -a",
+            ],
+            answer: 0,
+            explanation: "systemctl status מציג את מצב השירות (active/inactive/failed), את ה-PID, זמן ריצה, ושורות לוג אחרונות — כל מה שצריך לבדיקה ראשונית.",
+          },
+          {
+            q: "הרצת:\n\n```\nuptime\n```\n\nפלט:\n\n```\n 14:23:01 up 3 days,  2:15,  2 users,  load average: 12.50, 11.80, 8.20\n```\n\nהשרת הוא 4-core. מה המצב?",
+            options: [
+              "השרת במצב תקין — load average נמוך",
+              "ה-load average (12.5) גבוה פי 3 ממספר הליבות (4) — יש עומס חמור על המערכת",
+              "load average לא קשור למספר ליבות",
+              "הבעיה היא שיש 2 משתמשים מחוברים",
+            ],
+            answer: 1,
+            explanation: "load average מייצג מספר ממוצע של תהליכים שממתינים ל-CPU או I/O. כשהערך גבוה ממספר הליבות (כאן 12.5 על 4 cores), יש עומס חמור. הערך עולה (8.2 → 11.8 → 12.5) מה שמעיד שהמצב מחמיר.",
+          },
+          {
+            q: "אתה רוצה לעקוב אחרי קובץ לוג בזמן אמת.\n\nאיזו פקודה הכי מתאימה?",
+            options: [
+              "cat /var/log/syslog",
+              "grep error /var/log/syslog",
+              "tail -f /var/log/syslog",
+              "head -100 /var/log/syslog",
+            ],
+            answer: 2,
+            explanation: "tail -f עוקב אחרי הקובץ בזמן אמת ומציג שורות חדשות ברגע שהן נכתבות. זה הכלי הסטנדרטי לניטור לוגים חיים.",
+          },
         ],
         questionsEn: [
           {
@@ -3211,6 +3245,39 @@ export const TOPICS = [
             answer: 1,
             explanation: "The available column (500M) is the key metric — it includes free + reclaimable cache. When available is low, the system may start using swap or killing processes (OOM Killer).",
           },
+          {
+            q: "You need to check if the nginx service is running.\n\nWhich command is most appropriate?",
+            options: [
+              "systemctl status nginx",
+              "cat /var/log/nginx",
+              "top -u nginx",
+              "netstat -a",
+            ],
+            answer: 0,
+            explanation: "systemctl status shows the service state (active/inactive/failed), PID, uptime, and recent log lines — everything needed for an initial check.",
+          },
+          {
+            q: "You ran:\n\n```\nuptime\n```\n\nOutput:\n\n```\n 14:23:01 up 3 days,  2:15,  2 users,  load average: 12.50, 11.80, 8.20\n```\n\nThe server has 4 cores. What is the situation?",
+            options: [
+              "The server is in good shape — load average is low",
+              "Load average (12.5) is 3x the core count (4) — the system is under severe load",
+              "Load average is not related to the number of cores",
+              "The issue is that there are 2 users connected",
+            ],
+            answer: 1,
+            explanation: "Load average represents the average number of processes waiting for CPU or I/O. When it exceeds the core count (here 12.5 on 4 cores), there is severe load. The rising trend (8.2 → 11.8 → 12.5) indicates the situation is worsening.",
+          },
+          {
+            q: "You want to follow a log file in real time.\n\nWhich command is most appropriate?",
+            options: [
+              "cat /var/log/syslog",
+              "grep error /var/log/syslog",
+              "tail -f /var/log/syslog",
+              "head -100 /var/log/syslog",
+            ],
+            answer: 2,
+            explanation: "tail -f follows the file in real time and displays new lines as they are written. It is the standard tool for monitoring live logs.",
+          },
         ],
       },
       medium: {
@@ -3250,6 +3317,61 @@ export const TOPICS = [
             answer: 1,
             explanation: "grep ישירות על הקובץ (בלי cat) יעיל יותר, וסינון נוסף לפי תבנית זמן מצמצם את התוצאות לשעה האחרונה בלבד.",
           },
+          {
+            q: "הרצת:\n\n```\nps aux\n```\n\nאתה רואה תהליך במצב Z (zombie).\n\nמה הדרך הנכונה לטפל בו?",
+            options: [
+              "kill -9 על התהליך ה-zombie עצמו",
+              "לזהות ולהרוג או להפעיל מחדש את תהליך האב (parent process) כדי שיקרא wait()",
+              "להפעיל מחדש את השרת",
+              "להתעלם — zombies תמיד נעלמים מעצמם",
+            ],
+            answer: 1,
+            explanation: "תהליך zombie כבר סיים לרוץ אך תהליך האב לא קרא wait() לאסוף את exit status שלו. kill -9 לא עובד על zombie כי הוא כבר מת. הפתרון: לגרום לתהליך האב לקרוא wait() — בדרך כלל על ידי שליחת SIGCHLD או הפעלה מחדש של האב.",
+          },
+          {
+            q: "שרת לא מצליח ליצור חיבורי רשת חדשים.\n\nהרצת:\n\n```\nsysctl net.ipv4.ip_local_port_range\n```\n\nפלט:\n\n```\nnet.ipv4.ip_local_port_range = 32768    60999\n```\n\nוגם:\n\n```\nss -s\n```\n\nפלט:\n\n```\nTCP:   28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nמה הבעיה?",
+            options: [
+              "טווח הפורטים הזמינים (28,232 פורטים) כמעט מלא עם 28,231 חיבורים — יש למחזר פורטים מהר יותר או להרחיב את הטווח",
+              "יותר מדי orphaned connections",
+              "יש להקטין את מספר ה-established connections",
+              "הגדרות ה-TCP stack תקינות, הבעיה ב-DNS",
+            ],
+            answer: 0,
+            explanation: "הטווח 32768–60999 נותן 28,232 פורטים ephemeral. עם 28,231 בשימוש, כמעט אין פורטים פנויים. הפתרון: הרחבת הטווח עם sysctl (למשל 1024–65535), הפעלת tcp_tw_reuse, או צמצום חיבורים קצרי-חיים.",
+          },
+          {
+            q: "הרצת:\n\n```\niostat -x 1 3\n```\n\nפלט:\n\n```\nDevice   r/s    w/s   rkB/s   wkB/s  await  %util\nsda      5.00  450.00  20.00 51200.00 250.00  99.80\n```\n\nמה המסקנה?",
+            options: [
+              "הדיסק sda רווי (%util 99.8%) עם זמן המתנה גבוה (await 250ms) — יש צוואר בקבוק I/O",
+              "כמות הקריאות (5/s) נמוכה מדי",
+              "הדיסק תקין — %util גבוה זה רגיל",
+              "הבעיה היא בכמות הכתיבות בלבד",
+            ],
+            answer: 0,
+            explanation: "%util של 99.8% מציין שהדיסק עסוק כמעט 100% מהזמן. await של 250ms (זמן ממוצע לפעולת I/O) גבוה מאוד — ערך תקין הוא פחות מ-10ms ל-SSD. יש לזהות את התהליך שכותב 50MB/s ולבדוק אם אפשר לייעל.",
+          },
+          {
+            q: "אתה מנסה להתחבר לשרת מרוחק בפורט 8080 אבל החיבור נכשל.\n\nהרצת:\n\n```\ncurl -v http://remote-server:8080\n```\n\nפלט:\n\n```\n* connect to remote-server port 8080 failed: Connection refused\n```\n\nמה המשמעות?",
+            options: [
+              "השרת פועל אבל יש בעיית DNS",
+              "אין שירות שמאזין על פורט 8080 בשרת המרוחק, או firewall חוסם את הפורט",
+              "הבעיה היא בפורט המקומי של הלקוח",
+              "curl לא תומך בפורט 8080",
+            ],
+            answer: 1,
+            explanation: "Connection refused מציין שחבילת TCP SYN הגיעה לשרת אבל אין תהליך שמאזין על הפורט, או ש-firewall שלח RST. יש לבדוק בשרת המרוחק: ss -tlnp | grep 8080 ואת חוקי ה-firewall.",
+          },
+          {
+            q: "הרצת:\n\n```\nlsof +D /var/log/ | head -20\n```\n\nלמה הפקודה הזו שימושית?",
+            options: [
+              "היא מציגה את כל התהליכים שמחזיקים קבצים פתוחים בתיקיית /var/log/ — שימושי לפני מחיקת לוגים או dismount",
+              "היא מוחקת קבצי לוג ישנים",
+              "היא דוחסת את קבצי הלוג",
+              "היא מציגה את גודל קבצי הלוג",
+            ],
+            answer: 0,
+            explanation: "lsof +D מציג תהליכים שמחזיקים קבצים פתוחים בתיקייה. זה קריטי לפני מחיקת לוגים: אם תהליך מחזיק קובץ פתוח, המקום בדיסק לא ישתחרר גם אחרי מחיקה. צריך קודם לסגור את ה-file handle (למשל עם logrotate).",
+          },
         ],
         questionsEn: [
           {
@@ -3284,6 +3406,61 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation: "Using grep directly on the file (without cat) is more efficient, and an additional time pattern filter narrows results to the last hour only.",
+          },
+          {
+            q: "You ran:\n\n```\nps aux\n```\n\nYou see a process in Z state (zombie).\n\nWhat is the correct way to handle it?",
+            options: [
+              "kill -9 the zombie process itself",
+              "Identify and kill or restart the parent process so it calls wait()",
+              "Restart the server",
+              "Ignore it — zombies always disappear on their own",
+            ],
+            answer: 1,
+            explanation: "A zombie process has already finished running but the parent did not call wait() to collect its exit status. kill -9 does not work on zombies because they are already dead. The fix: get the parent to call wait() — usually by sending SIGCHLD or restarting the parent.",
+          },
+          {
+            q: "A server cannot create new network connections.\n\nYou ran:\n\n```\nsysctl net.ipv4.ip_local_port_range\n```\n\nOutput:\n\n```\nnet.ipv4.ip_local_port_range = 32768    60999\n```\n\nAnd:\n\n```\nss -s\n```\n\nOutput:\n\n```\nTCP:   28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nWhat is the problem?",
+            options: [
+              "The available port range (28,232 ports) is almost exhausted with 28,231 connections — recycle ports faster or expand the range",
+              "Too many orphaned connections",
+              "The number of established connections should be reduced",
+              "TCP stack settings are fine, the issue is DNS",
+            ],
+            answer: 0,
+            explanation: "The range 32768–60999 provides 28,232 ephemeral ports. With 28,231 in use, almost no ports are available. Fix: expand the range with sysctl (e.g., 1024–65535), enable tcp_tw_reuse, or reduce short-lived connections.",
+          },
+          {
+            q: "You ran:\n\n```\niostat -x 1 3\n```\n\nOutput:\n\n```\nDevice   r/s    w/s   rkB/s   wkB/s  await  %util\nsda      5.00  450.00  20.00 51200.00 250.00  99.80\n```\n\nWhat is the conclusion?",
+            options: [
+              "Disk sda is saturated (%util 99.8%) with high wait time (await 250ms) — there is an I/O bottleneck",
+              "The number of reads (5/s) is too low",
+              "The disk is fine — high %util is normal",
+              "The problem is only the number of writes",
+            ],
+            answer: 0,
+            explanation: "%util of 99.8% means the disk is busy almost 100% of the time. await of 250ms (average time per I/O operation) is very high — a normal value is less than 10ms for SSD. Identify the process writing 50MB/s and check if it can be optimized.",
+          },
+          {
+            q: "You are trying to connect to a remote server on port 8080 but the connection fails.\n\nYou ran:\n\n```\ncurl -v http://remote-server:8080\n```\n\nOutput:\n\n```\n* connect to remote-server port 8080 failed: Connection refused\n```\n\nWhat does this mean?",
+            options: [
+              "The server is running but there is a DNS issue",
+              "No service is listening on port 8080 on the remote server, or a firewall is blocking the port",
+              "The issue is with the local port on the client side",
+              "curl does not support port 8080",
+            ],
+            answer: 1,
+            explanation: "Connection refused means the TCP SYN packet reached the server but no process is listening on the port, or a firewall sent RST. Check on the remote server: ss -tlnp | grep 8080 and review firewall rules.",
+          },
+          {
+            q: "You ran:\n\n```\nlsof +D /var/log/ | head -20\n```\n\nWhy is this command useful?",
+            options: [
+              "It shows all processes holding open files in /var/log/ — useful before deleting logs or unmounting",
+              "It deletes old log files",
+              "It compresses log files",
+              "It shows the size of log files",
+            ],
+            answer: 0,
+            explanation: "lsof +D shows processes holding open files in a directory. This is critical before deleting logs: if a process has an open file handle, the disk space will not be freed even after deletion. You need to close the handle first (e.g., with logrotate).",
           },
         ],
       },
@@ -3324,6 +3501,61 @@ export const TOPICS = [
             answer: 0,
             explanation: "12,500 orphan sockets (חיבורים ללא תהליך מקושר) ו-65,000 חיבורים ב-TIME_WAIT מצביעים על connection leak או הגדרות timeout לא נכונות. יש לבדוק tcp_tw_reuse, tcp_fin_timeout, ואם האפליקציה סוגרת connections כראוי.",
           },
+          {
+            q: "הרצת:\n\n```\ncat /proc/buddyinfo\n```\n\nפלט:\n\n```\nNode 0, zone   Normal   1  0  0  0  0  0  0  0  0  0  0\n```\n\nמה המצב?",
+            options: [
+              "המערכת סובלת מ-memory fragmentation חמור — אין בלוקים רציפים גדולים זמינים, מה שעלול לגרום לכשלון בהקצאות גדולות",
+              "הזיכרון ריק לגמרי ויש להוסיף RAM",
+              "הכל תקין — המספרים מייצגים שימוש נורמלי",
+              "יש בעיית swap שצריך לטפל בה",
+            ],
+            answer: 0,
+            explanation: "buddyinfo מציג בלוקים פנויים לפי גודל (order 0 עד 10). כשיש רק בלוק אחד קטן (order 0 = 4KB) ו-0 בכל הגדלים האחרים, יש fragmentation חמור. הקצאות שדורשות דפים רציפים (כמו huge pages) ייכשלו. פתרון: echo 1 > /proc/sys/vm/compact_memory או הפעלה מחדש.",
+          },
+          {
+            q: "אתה חושד שתהליך מדליף file descriptors.\n\nהרצת:\n\n```\nls /proc/1234/fd | wc -l\n```\n\nפלט:\n\n```\n45892\n```\n\nוגם:\n\n```\ncat /proc/1234/limits | grep 'Max open files'\n```\n\nפלט:\n\n```\nMax open files    65536    65536    files\n```\n\nמה המצב ומה עלול לקרות?",
+            options: [
+              "התהליך מחזיק 45,892 file descriptors מתוך מגבלה של 65,536 — הוא מתקרב למגבלה ועלול להיכשל עם שגיאת EMFILE (Too many open files)",
+              "45,892 file descriptors זה מספר תקין לשרת עמוס",
+              "המגבלה של 65,536 נמוכה מדי — יש להגדיל אותה",
+              "הבעיה היא ב-soft limit ולא ב-hard limit",
+            ],
+            answer: 0,
+            explanation: "45,892 מתוך 65,536 (70%) מצביע על file descriptor leak. תהליך תקין סוגר FDs שהוא לא צריך. בקצב הזה, התהליך יגיע למגבלה ויקבל EMFILE. יש לאבחן עם lsof -p 1234 | awk '{print $5}' | sort | uniq -c | sort -rn לזהות את סוג ה-FDs שדולפים.",
+          },
+          {
+            q: "הרצת:\n\n```\nsar -n DEV 1 5\n```\n\nפלט (ממוצע):\n\n```\nIFACE   rxpck/s  txpck/s   rxkB/s   txkB/s  rxdrop/s  txdrop/s\neth0    95000    92000    115000    110000     850       0\n```\n\nכרטיס הרשת הוא 1Gbps. מה הבעיה?",
+            options: [
+              "rxkB/s (115MB/s) חורג מקיבולת 1Gbps (~125MB/s) ויש 850 drops/s — כרטיס הרשת רווי ומאבד מנות",
+              "מספר המנות תקין לשרת בעומס",
+              "הבעיה היא רק ב-txdrop ולא ב-rxdrop",
+              "יש לעבור ל-UDP במקום TCP",
+            ],
+            answer: 0,
+            explanation: "115MB/s מתקרב למגבלת 1Gbps (125MB/s תיאורטי), ו-850 drops/s מאשר שכרטיס הרשת לא מספיק לעמוס. הפתרון: שדרוג ל-10Gbps, הפעלת RSS (Receive Side Scaling), או חלוקת עומס בין ממשקים.",
+          },
+          {
+            q: "הרצת:\n\n```\nperf top\n```\n\nפלט:\n\n```\n  35.2%  [kernel]        [k] _raw_spin_lock\n  18.1%  [kernel]        [k] copy_user_generic_unrolled\n  12.4%  libc.so.6       [.] __memcpy_avx2\n   8.3%  myapp           [.] parse_request\n```\n\nמה המסקנה?",
+            options: [
+              "35% מזמן ה-CPU מתבזבז על kernel spinlock — יש contention חמור בין cores על משאב משותף",
+              "הבעיה העיקרית היא ב-memcpy — צריך לייעל העתקות זיכרון",
+              "parse_request הוא צוואר הבקבוק כי הוא הפונקציה היחידה מהאפליקציה",
+              "הכל תקין — kernel functions תמיד בראש הרשימה",
+            ],
+            answer: 0,
+            explanation: "35% על _raw_spin_lock מצביע על kernel-level contention חמור — cores ממתינים בלולאה פעילה (busy-wait) לנעילה. זה לרוב קשור ל-I/O path, networking stack, או מבנה נתונים של kernel שנגיש מ-threads רבים. יש לבדוק עם perf record -g לזהות את ה-call stack המלא.",
+          },
+          {
+            q: "אחרי שדרוג kernel, שרת מציג:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nמה error -12 מציין?",
+            options: [
+              "Error -12 הוא ENOMEM (Out of Memory) — ה-driver nouveau נכשל בהקצאת זיכרון בזמן אתחול, כנראה בגלל בעיית תאימות עם ה-kernel החדש",
+              "Error -12 הוא שגיאת permission — צריך להריץ כ-root",
+              "Error -12 מציין שהכרטיס הגרפי פגום פיזית",
+              "Error -12 הוא שגיאת ACPI בלבד ולא קשור ל-driver",
+            ],
+            answer: 0,
+            explanation: "בקוד kernel של Linux, ערכי שגיאה שליליים מוגדרים ב-errno.h. ערך -12 הוא ENOMEM (Cannot allocate memory). ה-driver nouveau (open-source NVIDIA) נכשל בהקצאת זיכרון. זה שכיח אחרי שדרוג kernel כשיש שינויים ב-memory management. הפתרון: בדיקת תאימות driver, שימוש ב-proprietary driver, או הגדרת פרמטרים כמו nouveau.modeset=0.",
+          },
         ],
         questionsEn: [
           {
@@ -3358,6 +3590,61 @@ export const TOPICS = [
             ],
             answer: 0,
             explanation: "12,500 orphan sockets (connections with no associated process) and 65,000 connections in TIME_WAIT indicate a connection leak or incorrect timeout settings. Check tcp_tw_reuse, tcp_fin_timeout, and whether the application closes connections properly.",
+          },
+          {
+            q: "You ran:\n\n```\ncat /proc/buddyinfo\n```\n\nOutput:\n\n```\nNode 0, zone   Normal   1  0  0  0  0  0  0  0  0  0  0\n```\n\nWhat is the situation?",
+            options: [
+              "The system suffers from severe memory fragmentation — no large contiguous blocks are available, which may cause large allocation failures",
+              "Memory is completely empty and RAM needs to be added",
+              "Everything is fine — the numbers represent normal usage",
+              "There is a swap issue that needs to be addressed",
+            ],
+            answer: 0,
+            explanation: "buddyinfo shows free blocks by size (order 0 to 10). When there is only one small block (order 0 = 4KB) and 0 for all larger sizes, there is severe fragmentation. Allocations requiring contiguous pages (like huge pages) will fail. Fix: echo 1 > /proc/sys/vm/compact_memory or reboot.",
+          },
+          {
+            q: "You suspect a process is leaking file descriptors.\n\nYou ran:\n\n```\nls /proc/1234/fd | wc -l\n```\n\nOutput:\n\n```\n45892\n```\n\nAnd:\n\n```\ncat /proc/1234/limits | grep 'Max open files'\n```\n\nOutput:\n\n```\nMax open files    65536    65536    files\n```\n\nWhat is the situation and what might happen?",
+            options: [
+              "The process holds 45,892 file descriptors out of a 65,536 limit — it is approaching the limit and may fail with EMFILE (Too many open files)",
+              "45,892 file descriptors is a normal number for a busy server",
+              "The limit of 65,536 is too low — it should be increased",
+              "The issue is the soft limit, not the hard limit",
+            ],
+            answer: 0,
+            explanation: "45,892 out of 65,536 (70%) indicates a file descriptor leak. A healthy process closes FDs it no longer needs. At this rate, the process will hit the limit and receive EMFILE. Diagnose with lsof -p 1234 | awk '{print $5}' | sort | uniq -c | sort -rn to identify which type of FDs are leaking.",
+          },
+          {
+            q: "You ran:\n\n```\nsar -n DEV 1 5\n```\n\nOutput (average):\n\n```\nIFACE   rxpck/s  txpck/s   rxkB/s   txkB/s  rxdrop/s  txdrop/s\neth0    95000    92000    115000    110000     850       0\n```\n\nThe network card is 1Gbps. What is the problem?",
+            options: [
+              "rxkB/s (115MB/s) exceeds 1Gbps capacity (~125MB/s) and there are 850 drops/s — the NIC is saturated and dropping packets",
+              "The packet count is normal for a busy server",
+              "The issue is only with txdrop, not rxdrop",
+              "Switch to UDP instead of TCP",
+            ],
+            answer: 0,
+            explanation: "115MB/s approaches the 1Gbps limit (125MB/s theoretical), and 850 drops/s confirms the NIC cannot handle the load. Fix: upgrade to 10Gbps, enable RSS (Receive Side Scaling), or distribute load across interfaces.",
+          },
+          {
+            q: "You ran:\n\n```\nperf top\n```\n\nOutput:\n\n```\n  35.2%  [kernel]        [k] _raw_spin_lock\n  18.1%  [kernel]        [k] copy_user_generic_unrolled\n  12.4%  libc.so.6       [.] __memcpy_avx2\n   8.3%  myapp           [.] parse_request\n```\n\nWhat is the conclusion?",
+            options: [
+              "35% of CPU time is spent on kernel spinlock — there is severe contention between cores over a shared resource",
+              "The main issue is memcpy — memory copies need optimization",
+              "parse_request is the bottleneck since it is the only application function",
+              "Everything is fine — kernel functions are always at the top of the list",
+            ],
+            answer: 0,
+            explanation: "35% on _raw_spin_lock indicates severe kernel-level contention — cores are busy-waiting in a spin loop for a lock. This is usually related to the I/O path, networking stack, or a kernel data structure accessed by many threads. Investigate with perf record -g to identify the full call stack.",
+          },
+          {
+            q: "After a kernel upgrade, a server shows:\n\n```\ndmesg | grep -i error\n```\n\nOutput:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nWhat does error -12 indicate?",
+            options: [
+              "Error -12 is ENOMEM (Out of Memory) — the nouveau driver failed to allocate memory during initialization, likely due to a compatibility issue with the new kernel",
+              "Error -12 is a permission error — run as root",
+              "Error -12 indicates the graphics card is physically damaged",
+              "Error -12 is an ACPI error only, unrelated to the driver",
+            ],
+            answer: 0,
+            explanation: "In Linux kernel code, negative error values are defined in errno.h. Value -12 is ENOMEM (Cannot allocate memory). The nouveau driver (open-source NVIDIA) failed to allocate memory. This is common after kernel upgrades with memory management changes. Fix: check driver compatibility, use the proprietary driver, or set parameters like nouveau.modeset=0.",
           },
         ],
       },

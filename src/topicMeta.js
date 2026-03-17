@@ -92,5 +92,6 @@ export const TOPIC_META = [
     color: "#6366F1",
     description: "תהליכים · לוגים · CPU · זיכרון · רשת",
     descriptionEn: "Processes · Logs · CPU · Memory · Networking",
+    isNew: true,
   },
 ];
