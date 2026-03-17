@@ -16,7 +16,7 @@ import { safeGetItem, safeGetJSON, checkDataVersion } from "./utils/storage";
 import { captureError, setUserContext, setScreen as setTelemetryScreen } from "./utils/telemetry";
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
-import { TerminalBlock, YamlBlock } from "./components/CodeBlocks";
+import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } from "./components/CodeBlocks";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress } from "./api/quiz";
 import StatusView from "./components/StatusView";
 
@@ -3218,56 +3218,6 @@ export default function K8sQuestApp() {
     return () => clearTimeout(timer);
   }, [screen]);
 
-  // ── YAML code block renderer (VS Code style) ──────────────────────────────
-  const highlightYaml = (code) => {
-    return code.split("\n").map((line, i) => {
-      const indent = line.match(/^(\s*)/)[1].length;
-      const guides = [];
-      for (let g = 2; g <= indent; g += 2) {
-        guides.push(<span key={`g${g}`} style={{position:"absolute",left:g * 7.7 - 2,top:0,bottom:0,width:1,background:"rgba(255,255,255,0.08)"}}/>);
-      }
-      // Syntax highlight: key: value
-      const trimmed = line.trimStart();
-      let content;
-      const kvMatch = trimmed.match(/^([\w.-]+)(:)\s*(.*)$/);
-      if (kvMatch) {
-        const [, key, colon, val] = kvMatch;
-        let valSpan = null;
-        if (val) {
-          const isString = /^".*"$/.test(val) || /^'.*'$/.test(val);
-          const isNum = /^\d+(\.\d+)?$/.test(val);
-          const isBool = /^(true|false)$/i.test(val);
-          const color = isString ? "#CE9178" : isNum ? "#B5CEA8" : isBool ? "#569CD6" : "#D4D4D4";
-          valSpan = <span style={{color}}>{val}</span>;
-        }
-        content = <><span style={{color:"#9CDCFE"}}>{key}</span><span style={{color:"#D4D4D4"}}>{colon}</span>{val ? " " : ""}{valSpan}</>;
-      } else if (trimmed.startsWith("- ")) {
-        content = <><span style={{color:"#D4D4D4"}}>-</span><span style={{color:"#9CDCFE"}}>{trimmed.slice(1)}</span></>;
-      } else if (trimmed.startsWith("#")) {
-        content = <span style={{color:"#6A9955"}}>{trimmed}</span>;
-      } else {
-        content = <span style={{color:"#D4D4D4"}}>{trimmed}</span>;
-      }
-      return (
-        <div key={i} style={{position:"relative",minHeight:20}}>
-          {guides}
-          <span style={{whiteSpace:"pre"}}>{" ".repeat(indent)}</span>{content}
-        </div>
-      );
-    });
-  };
-
-  const YamlBlock = ({ code, keyProp }) => (
-    <div key={keyProp} dir="ltr" style={{marginTop:12,borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 2px 12px rgba(0,0,0,0.25)",background:"#1E1E2E"}}>
-      <div style={{padding:"6px 14px",background:"rgba(255,255,255,0.04)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",gap:6}}>
-        <span style={{fontSize:9,fontWeight:700,color:"#888",letterSpacing:1.5,textTransform:"uppercase"}}>YAML</span>
-      </div>
-      <div style={{padding:"16px 18px",fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro','SF Mono',monospace",fontSize:12.5,lineHeight:1.75,overflowX:"auto",direction:"ltr",textAlign:"left"}}>
-        {highlightYaml(code)}
-      </div>
-    </div>
-  );
-
   // Splits a code block into Terminal vs YAML sub-blocks and pushes them.
   const cmdPat = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make)\s/;
   const flushCodeBlock = (elements, lines, keyBase) => {
@@ -3288,7 +3238,7 @@ export default function K8sQuestApp() {
       if (g.type === "cmd") {
         elements.push(<TerminalBlock key={`cmd-${keyBase}`}>{g.lines.join("\n")}</TerminalBlock>);
       } else {
-        elements.push(<YamlBlock key={`code-${keyBase}`} keyProp={`code-${keyBase}`} code={g.lines.join("\n")} />);
+        elements.push(<YamlBlock key={`code-${keyBase}`}>{g.lines.join("\n")}</YamlBlock>);
       }
       return;
     }
@@ -3298,7 +3248,7 @@ export default function K8sQuestApp() {
       if (g.type === "cmd") {
         elements.push(<TerminalBlock key={`cmd-${keyBase}-${gi}`}>{g.lines.join("\n")}</TerminalBlock>);
       } else {
-        elements.push(<YamlBlock key={`code-${keyBase}-${gi}`} keyProp={`code-${keyBase}-${gi}`} code={g.lines.join("\n")} />);
+        elements.push(<YamlBlock key={`code-${keyBase}-${gi}`}>{g.lines.join("\n")}</YamlBlock>);
       }
     }
   };
@@ -3327,7 +3277,7 @@ export default function K8sQuestApp() {
       }
       if (line.startsWith('CMD:')) {
         elements.push(
-          <div key={i} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"var(--code-text)",background:"rgba(125,211,252,0.06)",borderRadius:6,padding:"8px 12px",marginTop:12,direction:"ltr",textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}}>{line.slice(4)}</div>
+          <div key={i} style={{fontFamily:MONO_FONT,fontSize:12,color:"#c9d1d9",background:"#0d1117",border:"1px solid rgba(255,255,255,0.06)",borderRadius:4,padding:"8px 12px",marginTop:12,direction:"ltr",textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}}>{line.slice(4)}</div>
         );
         continue;
       }
@@ -3466,18 +3416,11 @@ export default function K8sQuestApp() {
       if (isCmd)   { headerLabel = "Terminal"; headerIcon = ">_"; }
       if (isYaml)  { headerLabel = "YAML";    headerIcon = "{}"; }
       if (isError) { headerLabel = "Error";   headerIcon = "!"; }
+      const variant = isError ? "error" : isYaml ? "yaml" : isCmd ? undefined : "output";
       elements.push(
-        <div key={`term-${elements.length}`} style={{borderRadius:8,marginTop:6,marginBottom:6,overflow:"hidden",border:"1px solid var(--glass-6)",direction:"ltr",unicodeBidi:"isolate"}}>
-          <div style={{display:"flex",alignItems:"center",gap:6,padding:"5px 12px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid var(--glass-4)"}}>
-            <span style={{fontFamily:"'SF Mono','Fira Code',monospace",fontSize:10,fontWeight:700,color:isError?"#f87171":"var(--text-dim)",letterSpacing:0.5}}>{headerIcon}</span>
-            <span style={{fontSize:10,fontWeight:600,color:isError?"#f87171":"var(--text-dim)",letterSpacing:0.5,textTransform:"uppercase"}}>{headerLabel}</span>
-          </div>
-          <div style={{background:"rgba(0,0,0,0.35)",padding:"10px 12px",overflowX:"auto"}}>
-            {termGroup.map((tl, ti) => (
-              <div key={ti} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:isError?"#fca5a5":"var(--code-text)",lineHeight:1.8,whiteSpace:"pre-wrap",wordBreak:"keep-all",overflowWrap:"break-word",direction:"ltr",unicodeBidi:"isolate"}}>{tl}</div>
-            ))}
-          </div>
-        </div>
+        <TerminalBlock key={`term-${elements.length}`} variant={variant} label={isCmd ? undefined : undefined}>
+          {joined}
+        </TerminalBlock>
       );
       termGroup = [];
     };
@@ -5034,7 +4977,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
                       {isCodeOption
                         ? <span dir="ltr" style={{flex:1,minWidth:0,lineHeight:1.55,unicodeBidi:"isolate"}}>
-                            <span className="opt-cmd-scroll" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"rgba(0,0,0,0.18)",borderRadius:6,padding:"5px 10px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"inherit"}}>{renderBidi(opt,lang)}</span>
+                            <span className="opt-cmd-scroll" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"#0d1117",borderRadius:4,padding:"5px 10px",fontFamily:"'JetBrains Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"#c9d1d9"}}>{renderBidi(opt,lang)}</span>
                           </span>
                         : <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang)}</span>
                       }
@@ -5123,8 +5066,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             );
                             if (isCodeOnly) {
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
-                              if (s.startsWith("```")) return <YamlBlock key={idx} keyProp={`exp-code-${idx}`} code={code} />;
-                              return <code key={idx} dir="ltr" style={{display:"block",background:"#1E1E2E",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"14px 16px",fontSize:12,fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro',monospace",color:"#D4D4D4",lineHeight:1.65,overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>{code}</code>;
+                              return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
                             }
                             return (
                               <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
@@ -5177,8 +5119,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             );
                             if (isCodeOnly) {
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
-                              if (s.startsWith("```")) return <YamlBlock key={idx} keyProp={`iexp-code-${idx}`} code={code} />;
-                              return <code key={idx} dir="ltr" style={{display:"block",background:"#1E1E2E",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"14px 16px",fontSize:12,fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro',monospace",color:"#D4D4D4",lineHeight:1.65,overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>{code}</code>;
+                              return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
                             }
                             return (
                               <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>

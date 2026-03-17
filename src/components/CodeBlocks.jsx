@@ -1,125 +1,111 @@
 import React from "react";
 
-const MONO_FONT = "'JetBrains Mono','Fira Code','Cascadia Code',monospace";
-
-const HEADER_STYLE = {
-  display: "flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "6px 14px",
-  fontSize: 10.5,
-  fontWeight: 600,
-  letterSpacing: 0.5,
-  fontFamily: MONO_FONT,
-  userSelect: "none",
-};
+// ── Shared terminal constants ────────────────────────────────────────────────
+export const MONO_FONT = "'JetBrains Mono','Fira Code','Cascadia Code','SF Mono',monospace";
+export const TERM_BG = "#0d1117";
+export const TERM_BORDER = "rgba(255,255,255,0.06)";
+export const TERM_TEXT = "#c9d1d9";
+export const TERM_DIM = "#8b949e";
+export const TERM_CMD = "#79c0ff";
+export const TERM_PROMPT = "#484f58";
+export const TERM_ERROR = "#f85149";
+export const TERM_ERROR_BG = "rgba(248,81,73,0.06)";
 
 /**
- * Terminal-style code block for kubectl commands and shell output.
+ * Minimal, matte terminal block. Designed to look like a real CLI,
+ * not a glowing UI card.
  *
- * - `command` lines get a $ prompt prefix and brighter color
- * - `output` lines render in dimmer color
- * - Set `variant="output"` to render everything as output (no $ prompt)
- * - Set `variant="error"` for red-tinted error output
- *
- * Each block includes a type header (>_ Terminal, ⌘ Output) for clarity.
+ * Variants:
+ *   (default) - command block with optional $ prompt detection
+ *   "output"  - neutral output text
+ *   "error"   - red-tinted error output
+ *   "yaml"    - YAML/config with key:value highlighting
  */
-export function TerminalBlock({ children, variant }) {
+export function TerminalBlock({ children, variant, label }) {
   const isOutput = variant === "output";
   const isError = variant === "error";
+  const isYaml = variant === "yaml";
   const lines = (children || "").split("\n");
 
-  // Header config per variant
-  let headerIcon, headerText, headerColor, headerBg, headerBorder;
-  if (isError) {
-    headerIcon = "\u2318";
-    headerText = "Output";
-    headerColor = "rgba(239,68,68,0.55)";
-    headerBg = "rgba(239,68,68,0.04)";
-    headerBorder = "rgba(239,68,68,0.08)";
-  } else if (isOutput) {
-    headerIcon = "\u2318";
-    headerText = "Output";
-    headerColor = "rgba(0,212,255,0.4)";
-    headerBg = "rgba(0,212,255,0.02)";
-    headerBorder = "rgba(0,212,255,0.07)";
-  } else {
-    headerIcon = ">_";
-    headerText = "";
-    headerColor = "rgba(0,212,255,0.5)";
-    headerBg = "rgba(0,212,255,0.03)";
-    headerBorder = "rgba(0,212,255,0.08)";
-  }
+  const bg = isError ? TERM_ERROR_BG : TERM_BG;
+  const border = isError ? `1px solid rgba(248,81,73,0.12)` : `1px solid ${TERM_BORDER}`;
 
-  const bg = isError ? "rgba(239,68,68,0.03)" : "var(--code-bg, rgba(0,0,0,0.45))";
-  const borderColor = isError ? "rgba(239,68,68,0.15)" : "rgba(0,212,255,0.13)";
+  // Minimal header label - only shown if there's a label or variant provides one
+  let headerLabel = label;
+  if (!headerLabel) {
+    if (isError) headerLabel = "error";
+    else if (isYaml) headerLabel = "yaml";
+  }
 
   return (
     <div
       dir="ltr"
       style={{
         background: bg,
-        border: `1px solid ${borderColor}`,
-        borderRadius: 10,
+        border,
+        borderRadius: 6,
         overflow: "hidden",
         direction: "ltr",
         unicodeBidi: "isolate",
         margin: "4px 0",
       }}
     >
-      <div
-        style={{
-          ...HEADER_STYLE,
-          color: headerColor,
-          background: headerBg,
-          borderBottom: `1px solid ${headerBorder}`,
-        }}
-      >
-        <span style={{ opacity: 0.7 }}>{headerIcon}</span>
-        {headerText && <span>{headerText}</span>}
-      </div>
+      {headerLabel && (
+        <div
+          style={{
+            padding: "4px 12px",
+            fontSize: 10,
+            fontWeight: 600,
+            fontFamily: MONO_FONT,
+            color: isError ? TERM_ERROR : TERM_DIM,
+            letterSpacing: 0.5,
+            textTransform: "uppercase",
+            borderBottom: `1px solid ${TERM_BORDER}`,
+            userSelect: "none",
+          }}
+        >
+          {headerLabel}
+        </div>
+      )}
       <div style={{ padding: "10px 14px" }}>
         <pre
           style={{
             margin: 0,
             fontFamily: MONO_FONT,
-            fontSize: 13,
+            fontSize: 12.5,
             lineHeight: 1.7,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
             textAlign: "left",
+            color: TERM_TEXT,
           }}
         >
           {lines.map((line, i) => {
+            // YAML highlighting
+            if (isYaml) {
+              return <React.Fragment key={i}>{renderYamlLine(line)}{i < lines.length - 1 ? "\n" : ""}</React.Fragment>;
+            }
+            // Command detection (non-output, non-error)
             const isCmd =
               !isOutput &&
               !isError &&
-              /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/.test(
+              /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/.test(
                 line.trim()
               );
             if (isCmd) {
               const cmd = line.trim().replace(/^\$\s*/, "");
               return (
                 <React.Fragment key={i}>
-                  <span style={{ color: "rgba(0,212,255,0.4)" }}>$ </span>
-                  <span style={{ color: "#7dd3fc" }}>{cmd}</span>
+                  <span style={{ color: TERM_PROMPT }}>$ </span>
+                  <span style={{ color: TERM_CMD }}>{cmd}</span>
                   {i < lines.length - 1 ? "\n" : ""}
                 </React.Fragment>
               );
             }
+            // Error or output text
             return (
               <React.Fragment key={i}>
-                <span
-                  style={{
-                    color: isError
-                      ? "rgba(252,165,165,0.85)"
-                      : isOutput
-                        ? "rgba(125,211,252,0.6)"
-                        : "#7dd3fc",
-                  }}
-                >
-                  {line}
-                </span>
+                <span style={{ color: isError ? TERM_ERROR : TERM_TEXT }}>{line}</span>
                 {i < lines.length - 1 ? "\n" : ""}
               </React.Fragment>
             );
@@ -131,83 +117,29 @@ export function TerminalBlock({ children, variant }) {
 }
 
 /**
- * YAML / config code block with purple-tinted styling.
- *
- * Simple syntax highlighting: keys (before `:`) in brighter color,
- * values (after `:`) in dimmer color.
- * YAML blocks keep `white-space: pre` to preserve indentation structure.
- *
- * Includes a "YAML" type header for visual identification.
+ * YAML-specific block. Convenience wrapper around TerminalBlock.
  */
 export function YamlBlock({ children }) {
-  const lines = (children || "").split("\n");
+  return <TerminalBlock variant="yaml">{children}</TerminalBlock>;
+}
 
-  return (
-    <div
-      dir="ltr"
-      style={{
-        background: "rgba(139,92,246,0.05)",
-        border: "1px solid rgba(139,92,246,0.18)",
-        borderRadius: 10,
-        overflow: "hidden",
-        overflowX: "auto",
-        direction: "ltr",
-        unicodeBidi: "isolate",
-        margin: "4px 0",
-      }}
-    >
-      <div
-        style={{
-          ...HEADER_STYLE,
-          color: "rgba(139,92,246,0.55)",
-          background: "rgba(139,92,246,0.04)",
-          borderBottom: "1px solid rgba(139,92,246,0.10)",
-        }}
-      >
-        <span>YAML</span>
-      </div>
-      <div style={{ padding: "10px 14px" }}>
-        <pre
-          style={{
-            margin: 0,
-            fontFamily: MONO_FONT,
-            fontSize: 13,
-            lineHeight: 1.7,
-            whiteSpace: "pre",
-            textAlign: "left",
-          }}
-        >
-          {lines.map((line, i) => {
-            // Match leading whitespace + key + colon + optional value
-            const m = line.match(/^(\s*)([\w.\-/]+)(:)(.*)$/);
-            if (m) {
-              const [, indent, key, colon, value] = m;
-              return (
-                <React.Fragment key={i}>
-                  <span style={{ color: "rgba(196,181,253,0.5)" }}>
-                    {indent}
-                  </span>
-                  <span style={{ color: "#c4b5fd" }}>{key}</span>
-                  <span style={{ color: "rgba(196,181,253,0.5)" }}>
-                    {colon}
-                  </span>
-                  <span style={{ color: "rgba(196,181,253,0.7)" }}>
-                    {value}
-                  </span>
-                  {i < lines.length - 1 ? "\n" : ""}
-                </React.Fragment>
-              );
-            }
-            // Comment or other line
-            return (
-              <React.Fragment key={i}>
-                <span style={{ color: "rgba(196,181,253,0.6)" }}>{line}</span>
-                {i < lines.length - 1 ? "\n" : ""}
-              </React.Fragment>
-            );
-          })}
-        </pre>
-      </div>
-    </div>
-  );
+// ── YAML line highlighting ─────────────────────────────────────────────────
+function renderYamlLine(line) {
+  const m = line.match(/^(\s*)([\w.\-/]+)(:)(.*)$/);
+  if (m) {
+    const [, indent, key, colon, value] = m;
+    return (
+      <>
+        <span style={{ color: TERM_DIM }}>{indent}</span>
+        <span style={{ color: "#79c0ff" }}>{key}</span>
+        <span style={{ color: TERM_DIM }}>{colon}</span>
+        <span style={{ color: TERM_TEXT }}>{value}</span>
+      </>
+    );
+  }
+  // Comment lines
+  if (line.trimStart().startsWith("#")) {
+    return <span style={{ color: TERM_DIM }}>{line}</span>;
+  }
+  return <span style={{ color: TERM_TEXT }}>{line}</span>;
 }
