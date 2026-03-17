@@ -110,7 +110,7 @@ const INCIDENT_SAVE_KEY = "incident_progress_v1";
 // v2.2.0: real-time monitoring system (health checks, uptime history, auto-incidents)
 // v2.3.0: startup resilience (SW cache, localStorage defence, Supabase lock fix, NaN guards)
 // v2.4.0: analytics events, RTL fixes (hyphens, arrows), quiz UX improvements, score display cleanup
-const APP_VERSION  = "2.4.0";
+const APP_VERSION  = "2.5.0";
 const SESSION_START = new Date();
 
 // Resume modal behaviour constants
