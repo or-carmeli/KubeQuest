@@ -178,10 +178,14 @@ export function TerminalBlock({ children, variant, label, animate }) {
           {/* Command lines with typing animation */}
           {commandText && (
             <>
-              <span style={{ color: TERM_PROMPT }}>$ </span>
-              <span style={{ color: TERM_CMD }}>{shouldAnimate ? typedCmd : commandText}</span>
-              {showCursor && <span className={cursorClass} />}
-              {"\n"}
+              {(shouldAnimate ? typedCmd : commandText).split("\n").map((line, i, arr) => (
+                <React.Fragment key={i}>
+                  <span style={{ color: TERM_PROMPT }}>$ </span>
+                  <span style={{ color: TERM_CMD }}>{line}</span>
+                  {i === arr.length - 1 && showCursor && <span className={cursorClass} />}
+                  {"\n"}
+                </React.Fragment>
+              ))}
             </>
           )}
 
