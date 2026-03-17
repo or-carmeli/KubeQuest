@@ -44,7 +44,6 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 ## Features
 
-- **🚨 Incident Mode** - multi-step Kubernetes failure scenarios with step-by-step diagnosis and scoring
 - **🧠 Topic Quizzes** - 5 topics x 3 difficulty levels, progressively unlocked
 - **🔥 Daily Challenge** - 5 fresh questions every day
 - **🎲 Mixed Quiz** - random questions across all topics
@@ -58,6 +57,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 - **🌐 Hebrew / English** - full bilingual support with RTL layout
 - **👤 Guest Mode** - no account needed; sign up to sync progress across devices
 - **📊 Real-Time Monitoring** - live status page with health checks, uptime history, and auto-detected incidents
+- **🚨 War Room** - multi-step Kubernetes failure scenarios with step-by-step diagnosis and scoring *(Coming Soon)*
 
 ---
 
