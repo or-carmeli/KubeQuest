@@ -110,7 +110,7 @@ const INCIDENT_SAVE_KEY = "incident_progress_v1";
 // v2.2.0: real-time monitoring system (health checks, uptime history, auto-incidents)
 // v2.3.0: startup resilience (SW cache, localStorage defence, Supabase lock fix, NaN guards)
 // v2.4.0: analytics events, RTL fixes (hyphens, arrows), quiz UX improvements, score display cleanup
-const APP_VERSION  = "2.4.0";
+const APP_VERSION  = "2.5.0";
 const SESSION_START = new Date();
 
 // Resume modal behaviour constants
@@ -2632,7 +2632,7 @@ export default function K8sQuestApp() {
     if (correct && stats.current_streak === 0) window.va?.track?.("streak_started", { topic: selectedTopic?.name || selectedTopic?.id });
     } catch (err) {
       console.error("handleSubmit error:", err);
-      captureError(err, { flow: "handleSubmit", screen, isGuest });
+      captureError(err, { flow: "handleSubmit", screen, isGuest, extra: { topic: selectedTopic?.id, level: selectedLevel, questionIndex } });
       submittingRef.current = false;
       setCheckingAnswer(false);
     }
@@ -2705,7 +2705,7 @@ export default function K8sQuestApp() {
       if (finalCorrect < currentQuestions.length) window.va?.track?.("quiz_failed", { score: finalCorrect, topic: selectedTopic?.name || selectedTopic?.id });
       } catch (err) {
         console.error("[FINISH_DEBUG] nextQuestion error:", err.message);
-        captureError(err, { flow: "nextQuestion", screen, isGuest });
+        captureError(err, { flow: "nextQuestion", screen, isGuest, extra: { topic: selectedTopic?.id, level: selectedLevel, questionIndex } });
         submittingRef.current = false;
       }
       console.debug("[FINISH_DEBUG] setScreen topicComplete (normal path)");
@@ -2743,7 +2743,7 @@ export default function K8sQuestApp() {
           fetchTheory(supabase, topic.id, level, lang),
         ]);
       } catch (err) {
-        captureError(err, { flow: "fetchQuizQuestions", screen, isGuest });
+        captureError(err, { flow: "fetchQuizQuestions", screen, isGuest, extra: { topic: topic?.id, level } });
         rawQs = getLocalizedField(topic.levels[level], "questions", lang);
         theory = getLocalizedField(topic.levels[level], "theory", lang);
       }
@@ -3015,7 +3015,7 @@ export default function K8sQuestApp() {
         correctAnswer = rpcResult.correct_answer;
         result = { correct, correctIndex: correctAnswer, explanation: rpcResult.explanation, explanationHe: rpcResult.explanation_he };
       } catch (err) {
-        captureError(err, { flow: "checkIncidentAnswer", screen, isGuest });
+        captureError(err, { flow: "checkIncidentAnswer", screen, isGuest, extra: { incidentId: selectedIncident?.id, stepIndex: incidentStepIndex } });
         correct = ans === step.answer;
         correctAnswer = step.answer;
         result = { correct, correctIndex: correctAnswer, explanation: step.explanation, explanationHe: step.explanationHe };

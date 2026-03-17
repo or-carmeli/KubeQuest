@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { ThemeProvider } from './ThemeContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
-import { init as initTelemetry, captureError } from './utils/telemetry.js'
+import { init as initTelemetry, captureError, reportWebVital } from './utils/telemetry.js'
 import './theme.css'
 
 // Initialize Sentry as early as possible — production only.
@@ -14,6 +14,15 @@ if (import.meta.env.PROD) {
     environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || "production",
     release: `kubequest@${typeof __BUILD_HASH__ !== "undefined" ? __BUILD_HASH__ : "unknown"}`,
   });
+}
+
+// Report Core Web Vitals to Sentry (production only, lazy-loaded)
+if (import.meta.env.PROD) {
+  import('web-vitals').then(({ onCLS, onINP, onLCP }) => {
+    onCLS(reportWebVital);
+    onINP(reportWebVital);
+    onLCP(reportWebVital);
+  }).catch(() => {});
 }
 
 console.info("[KubeQuest:boot] main.jsx module loaded");
