@@ -2744,6 +2744,9 @@ export default function K8sQuestApp() {
         ]);
       } catch (err) {
         captureError(err, { flow: "fetchQuizQuestions", screen, isGuest, extra: { topic: topic?.id, level } });
+      }
+      // Fall back to local content if Supabase returned nothing (e.g. topic not yet seeded in DB)
+      if (!rawQs || rawQs.length === 0) {
         rawQs = getLocalizedField(topic.levels[level], "questions", lang);
         theory = getLocalizedField(topic.levels[level], "theory", lang);
       }
