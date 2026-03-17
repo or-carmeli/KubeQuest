@@ -4,7 +4,7 @@ const TOPIC_NAMES = {
   config:          "Configuration & Security",
   storage:         "Storage & Package Management",
   troubleshooting: "Cluster Operations & Troubleshooting",
-  linux:           "System & Linux Troubleshooting",
+  linux:           "OS & Linux Deep Dive",
 };
 
 // Returns the hex color for the side-bar indicator based on accuracy (0-100).
