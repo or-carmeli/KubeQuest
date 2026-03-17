@@ -207,40 +207,20 @@ flowchart LR
 ## Observability
 
 ```mermaid
-flowchart TB
-    APP["React SPA"]
-
-    subgraph Client["Client-Side"]
-        SENTRY["Sentry<br/>Error Tracking"]
-        VITALS["Web Vitals<br/>LCP · CLS · INP"]
-        VERCEL_A["Vercel Analytics<br/>+ Speed Insights"]
-    end
-
-    subgraph External["External Monitoring"]
-        SYNTH["Synthetic Monitor<br/>every 6h"]
-        UPTIME["Uptime Check<br/>every 30min"]
-    end
-
-    subgraph Backend["Backend Health"]
-        EDGE["Edge Function<br/>health-check"]
-        CRON["pg_cron<br/>every 60s"]
-        STATUS[("Status Tables")]
-    end
-
-    APP --> SENTRY
-    APP --> VITALS
-    VITALS --> SENTRY
-    APP --> VERCEL_A
-    SYNTH -->|curl| APP
-    UPTIME -->|curl| APP
-    CRON --> EDGE
-    EDGE --> STATUS
+flowchart LR
+    EXT["External<br/>Uptime · Synthetic"] -->|curl| APP["React SPA"]
+    APP --> CLIENT["Client<br/>Sentry · Web Vitals"]
+    BACKEND["Backend<br/>pg_cron · Edge Function"] --> STATUS[("Status<br/>Tables")]
     STATUS --> APP
 
-    style Client fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
-    style External fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
-    style Backend fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style EXT fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style APP fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style CLIENT fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
+    style BACKEND fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
+    style STATUS fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
 ```
+
+Three monitoring layers — external pings catch outages, client-side captures runtime errors and performance, backend health checks monitor all services every 60s.
 
 ### Health Checks
 
