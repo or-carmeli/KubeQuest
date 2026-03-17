@@ -116,6 +116,48 @@ flowchart TB
     style Database fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#ffffff
 ```
 
+### App Flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant SPA as React SPA
+    participant SW as Service Worker
+    participant Auth as Supabase Auth
+    participant API as Supabase RPC
+    participant DB as PostgreSQL
+    participant Sentry
+
+    User->>SPA: Open app
+    SPA->>SW: Cache static assets
+    SPA->>Auth: Check session (PKCE)
+    alt Has session
+        Auth-->>SPA: User session
+        SPA->>API: loadUserData()
+        API->>DB: SELECT user_stats
+        DB-->>SPA: Stats + progress
+    else No session
+        SPA-->>User: Guest mode (localStorage)
+    end
+
+    User->>SPA: Start quiz
+    SPA->>API: fetchQuizQuestions()
+    API->>DB: get_quiz_questions RPC
+    DB-->>SPA: Questions (no answers)
+
+    User->>SPA: Submit answer
+    SPA->>API: checkQuizAnswer()
+    API->>DB: Validate + update score
+    DB-->>SPA: { correct, explanation }
+
+    User->>SPA: Finish quiz
+    SPA->>API: saveUserProgress()
+    API->>DB: Upsert stats
+    Note over SPA,Sentry: On any error, Sentry<br/>captures with safe context
+
+    SPA-->>User: Results + achievements
+```
+
 ### Stack Layers
 
 **Frontend** - React single-page application built with Vite, deployed on Vercel. Includes a manual service worker for offline caching and a PWA manifest for installability. All routing is handled client-side.
@@ -186,6 +228,44 @@ flowchart LR
 ---
 
 ## Observability
+
+```mermaid
+flowchart TB
+    APP["React SPA"]
+
+    subgraph Client["Client-Side"]
+        SENTRY["Sentry<br/>Error Tracking"]
+        VITALS["Web Vitals<br/>LCP · CLS · INP"]
+        VERCEL_A["Vercel Analytics<br/>+ Speed Insights"]
+    end
+
+    subgraph External["External Monitoring"]
+        SYNTH["Synthetic Monitor<br/>every 6h"]
+        UPTIME["Uptime Check<br/>every 30min"]
+    end
+
+    subgraph Backend["Backend Health"]
+        EDGE["Edge Function<br/>health-check"]
+        CRON["pg_cron<br/>every 60s"]
+        STATUS[("Status Tables")]
+    end
+
+    APP --> SENTRY
+    APP --> VITALS
+    VITALS --> SENTRY
+    APP --> VERCEL_A
+    SYNTH -->|curl| APP
+    UPTIME -->|curl| APP
+    CRON --> EDGE
+    EDGE --> STATUS
+    STATUS --> APP
+
+    style Client fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
+    style External fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style Backend fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+```
+
+### Health Checks
 
 A Supabase Edge Function executes health checks every 60 seconds via `pg_cron`, monitoring 5 services:
 
@@ -320,7 +400,7 @@ flowchart LR
 
 | Trigger | Tag | Example |
 |---------|-----|---------|
-| Push to `main` | `latest` + `sha-<commit>` + `package.json` version | `latest`, `sha-a1b2c3d`, `2.4.0` |
+| Push to `main` | `latest` + `sha-<commit>` + `package.json` version | `latest`, `sha-a1b2c3d`, `2.5.0` |
 | Git tag `v1.2.0` | Semver + `sha-<commit>` | `1.2.0`, `sha-a1b2c3d` |
 | Manual dispatch | `sha-<commit>` | `sha-a1b2c3d` |
 
@@ -513,6 +593,7 @@ Key test areas:
 ```
 src/
   App.jsx              # Main application (UI + state)
+  main.jsx             # Entry point (Sentry init, Web Vitals, React mount)
   api/
     quiz.js            # Quiz, daily, incident, leaderboard RPCs
     monitoring.js      # System status monitoring RPCs
@@ -522,9 +603,12 @@ src/
     dailyQuestions.js  # Daily Challenge question pool
   components/
     RoadmapView.jsx    # Visual learning path
+    StatsView.jsx      # User statistics dashboard
+    StatusView.jsx     # System status monitor
     WeakAreaCard.jsx   # Lowest-accuracy topic card
-    ErrorBoundary.jsx  # Crash recovery wrapper
+    ErrorBoundary.jsx  # Crash recovery wrapper + Sentry capture
   utils/
+    telemetry.js       # Sentry wrapper (error capture, scrubbing, web vitals)
     storage.js         # Safe localStorage layer with corruption recovery
     bidi.jsx           # BiDi text rendering for Hebrew/English mixed content
     quizPersistence.js # localStorage helpers for quiz resume
@@ -541,9 +625,12 @@ supabase/
     ci.yml             # PR gate (build, npm audit, Gitleaks, CodeQL, Trivy, K8s policies)
     docker.yml         # Container build, scan, push, SBOM, provenance, Cosign sign
     security.yml       # Weekly security scanning (npm audit, Trivy, CodeQL)
+    synthetic-monitor.yml  # Smoke tests every 6h (homepage, assets, response time, headers)
+    uptime.yml         # External uptime checks every 30 min
   dependabot.yml       # Weekly dependency updates (npm, Docker, Actions)
 docs/
-  monitoring.md        # Monitoring system documentation
+  monitoring.md        # Health-check monitoring documentation
+  observability.md     # Full observability guide (Sentry, alerts, SLOs, web vitals)
   k8s-admission-policies.md  # Runtime admission policy guide (Kyverno, OPA, Cosign)
 ```
 
