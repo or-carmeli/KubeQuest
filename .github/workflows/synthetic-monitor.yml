@@ -1,0 +1,55 @@
+name: Synthetic Monitor
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours
+  workflow_dispatch: # manual trigger
+
+jobs:
+  smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check homepage loads
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://www.kubequest.online")
+          echo "Homepage status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Homepage returned $STATUS"
+            exit 1
+          fi
+
+      - name: Check critical assets load
+        run: |
+          # Verify the HTML contains the React root and main script
+          BODY=$(curl -s --max-time 15 "https://www.kubequest.online")
+          echo "$BODY" | grep -q 'id="root"' || { echo "::error::Missing #root element"; exit 1; }
+          echo "$BODY" | grep -q 'assets/index-' || { echo "::error::Missing main JS bundle"; exit 1; }
+          echo "Critical assets present"
+
+      - name: Check Supabase API reachable
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://knzawpdrpahilmohzpbl.supabase.co/auth/v1/health")
+          echo "Supabase auth health: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "::warning::Supabase auth health returned $STATUS"
+          fi
+
+      - name: Check response time
+        run: |
+          TIME=$(curl -s -o /dev/null -w "%{time_total}" --max-time 15 "https://www.kubequest.online")
+          echo "Response time: ${TIME}s"
+          # Warn if homepage takes more than 3 seconds
+          if (( $(echo "$TIME > 3.0" | bc -l) )); then
+            echo "::warning::Homepage response time ${TIME}s exceeds 3s threshold"
+          fi
+
+      - name: Check security headers
+        run: |
+          HEADERS=$(curl -s -D - -o /dev/null --max-time 10 "https://www.kubequest.online")
+          echo "$HEADERS" | grep -qi "strict-transport-security" || echo "::warning::Missing HSTS header"
+          echo "$HEADERS" | grep -qi "content-security-policy" || echo "::warning::Missing CSP header"
+          echo "$HEADERS" | grep -qi "x-content-type-options" || echo "::warning::Missing X-Content-Type-Options header"
+          echo "Security headers checked"

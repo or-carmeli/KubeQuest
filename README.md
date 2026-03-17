@@ -237,6 +237,24 @@ Client-side errors are reported to [Sentry](https://sentry.io) in production onl
 
 **Configuration:** Set `VITE_SENTRY_DSN` as an environment variable (Vercel / `.env`). Without it, Sentry is disabled and the app runs normally. For source map uploads in CI, also set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` as GitHub Actions secrets.
 
+### Web Vitals
+
+Core Web Vitals (LCP, CLS, INP) are reported to Sentry as breadcrumbs and tags, correlating performance with errors. Also tracked independently by Vercel Speed Insights.
+
+### Synthetic Monitoring
+
+A GitHub Actions workflow (`synthetic-monitor.yml`) runs every 6 hours and verifies:
+- Homepage returns 200 with critical assets
+- Supabase API is reachable
+- Response time is under 3 seconds
+- Security headers are present
+
+### Uptime Monitoring
+
+External uptime checks (`uptime.yml`) ping the homepage and Supabase auth every 30 minutes. Failed runs indicate downtime.
+
+Full documentation: [docs/observability.md](docs/observability.md)
+
 ---
 
 ## CI/CD & Supply Chain Security

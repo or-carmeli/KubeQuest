@@ -183,5 +183,23 @@ export function setScreen(screen) {
   }
 }
 
+/**
+ * Report a Core Web Vital metric as a Sentry measurement.
+ * Called from the web-vitals callback — no PII, just metric name + value.
+ */
+export function reportWebVital({ name, value, rating }) {
+  if (!isActive()) return;
+  try {
+    Sentry.setTag(`webvital.${name}`, rating || "unknown");
+    Sentry.addBreadcrumb({
+      category: "web-vital",
+      message: `${name}: ${Math.round(value)}ms (${rating})`,
+      level: "info",
+    });
+  } catch {
+    // no-op
+  }
+}
+
 /** Re-export Sentry's ErrorBoundary for use in main.jsx. */
 export const SentryErrorBoundary = Sentry.ErrorBoundary;

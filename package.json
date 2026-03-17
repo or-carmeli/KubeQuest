@@ -1,6 +1,6 @@
 {
   "name": "kubequest",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Interactive Kubernetes learning game - quizzes, incident scenarios, leaderboard, and progress tracking",
   "author": "Or Carmeli <https://github.com/or-carmeli>",
   "license": "MIT",
@@ -35,7 +35,8 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^2.0.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
     "@sentry/vite-plugin": "^5.1.1",
