@@ -4467,7 +4467,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
                   <div aria-hidden="true" style={{fontSize:24,width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>{topic.icon}</div>
                   <div style={{flex:1}}>
-                    <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>{topic.isNew&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}{topic.name}</h3>
+                    <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>{topic.name}{topic.isNew&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}</h3>
                     <div style={{color:"var(--text-dim)",fontSize:12}}>{getLocalizedField(topic, "description", lang)}</div>
                   </div>
                   {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{display:"flex",alignItems:"center",gap:6}}>
