@@ -30,14 +30,14 @@ export const ACHIEVEMENTS = [
     icon: "⭐",
     name: "כל הנושאים קל",
     nameEn: "All Topics Easy",
-    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_easy")).length >= 5,
+    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_easy")).length >= 6,
   },
   {
     id: "master",
     icon: "🏆",
     name: "מאסטר K8s",
     nameEn: "K8s Master",
-    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_hard")).length >= 5,
+    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_hard")).length >= 6,
   },
 ];
 
@@ -84,5 +84,13 @@ export const TOPIC_META = [
     color: "#F97316",
     description: "Debugging · Observability · אבחון · כלים",
     descriptionEn: "Debugging · Observability · Diagnosis · Tools",
+  },
+  {
+    id: "linux",
+    icon: "🖥️",
+    name: "System & Linux Troubleshooting",
+    color: "#6366F1",
+    description: "תהליכים · לוגים · CPU · זיכרון · רשת",
+    descriptionEn: "Processes · Logs · CPU · Memory · Networking",
   },
 ];

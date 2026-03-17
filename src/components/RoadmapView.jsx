@@ -7,6 +7,7 @@ const STAGE_SUBTITLES = {
   config:          "ConfigMaps · Secrets · RBAC · ServiceAccounts",
   storage:         "PersistentVolumes · StorageClass · Helm · Operators",
   troubleshooting: "Debugging · Observability · Diagnosis · Tools",
+  linux:            "Processes · Logs · CPU · Memory · Networking",
 };
 
 const LVL_ORDER = ["easy", "medium", "hard"];

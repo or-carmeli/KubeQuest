@@ -25,14 +25,14 @@ export const ACHIEVEMENTS = [
     icon: "⭐",
     name: "כל הנושאים קל",
     nameEn: "All Topics Easy",
-    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_easy")).length >= 5,
+    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_easy")).length >= 6,
   },
   {
     id: "master",
     icon: "🏆",
     name: "מאסטר K8s",
     nameEn: "K8s Master",
-    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_hard")).length >= 5,
+    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_hard")).length >= 6,
   },
 ];
 
@@ -3083,6 +3083,282 @@ export const TOPICS = [
               explanation:
                 "On a fresh cluster, NotReady almost always means the CNI plugin hasn't been installed.\nKubernetes requires CNI for Pod networking. Without it, the Node can't become Ready.\nInstall a CNI plugin (Calico/Flannel/Cilium) and the Node will transition to Ready.",
             },
+        ],
+      },
+    },
+  },
+  {
+    id: "linux",
+    icon: "🖥️",
+    name: "System & Linux Troubleshooting",
+    color: "#6366F1",
+    description: "תהליכים · לוגים · CPU · זיכרון · רשת",
+    descriptionEn: "Processes · Logs · CPU · Memory · Networking",
+    levels: {
+      easy: {
+        theory: "פקודות בסיסיות לניטור תהליכים ומשאבי מערכת ב-Linux כוללות top, ps, free ו-df. הכרת כלים אלו חיונית לאבחון בעיות בסביבות ייצור.",
+        theoryEn: "Basic Linux commands for monitoring processes and system resources include top, ps, free, and df. Knowing these tools is essential for diagnosing issues in production environments.",
+        questions: [
+          {
+            q: "שרת מגיב לאט.\n\nהרצת:\n\n```\ntop\n```\n\nאיזה ערך מציין עומס גבוה על ה-CPU?",
+            options: [
+              "ערך %idle גבוה (מעל 90%)",
+              "ערך %wa גבוה (מעל 50%)",
+              "ערך %us + %sy גבוה (מעל 90%) ו-%idle נמוך",
+              "ערך load average נמוך מ-1",
+            ],
+            answer: 2,
+            explanation: "כאשר %us (user) + %sy (system) גבוהים ו-%idle נמוך, ה-CPU עמוס. ערך %wa גבוה מצביע על המתנה ל-I/O, לא בהכרח עומס CPU.",
+          },
+          {
+            q: "צריך למצוא תהליך שצורך הכי הרבה זיכרון.\n\nאיזו פקודה הכי מתאימה?",
+            options: [
+              "ps aux --sort=-%mem | head",
+              "ls -la /proc/meminfo",
+              "cat /etc/passwd",
+              "df -h",
+            ],
+            answer: 0,
+            explanation: "ps aux --sort=-%mem ממיין תהליכים לפי צריכת זיכרון בסדר יורד. head מציג רק את התוצאות הראשונות.",
+          },
+          {
+            q: "הרצת:\n\n```\ndf -h\n```\n\nפלט:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nמה הבעיה ומה הצעד הראשון?",
+            options: [
+              "הדיסק כמעט מלא — יש לזהות קבצים גדולים עם du -sh /* ולמחוק/להעביר לפי הצורך",
+              "הזיכרון RAM מלא — יש להוסיף swap",
+              "ה-CPU עמוס — יש להפעיל מחדש את השרת",
+              "אין בעיה, 96% שימוש זה תקין",
+            ],
+            answer: 0,
+            explanation: "96% שימוש בדיסק הוא מצב קריטי. הצעד הראשון הוא לזהות מה תופס מקום עם du -sh /* ולנקות קבצים מיותרים כמו לוגים ישנים.",
+          },
+          {
+            q: "שירות לא עולה אחרי הפעלה מחדש של השרת.\n\nאיזו פקודה תראה את הלוגים של השירות?",
+            options: [
+              "ping localhost",
+              "journalctl -u service-name --no-pager -n 50",
+              "whoami",
+              "ifconfig eth0",
+            ],
+            answer: 1,
+            explanation: "journalctl -u מציג לוגים של שירות systemd ספציפי. הדגל -n 50 מגביל ל-50 שורות אחרונות, ו---no-pager מציג ישירות בטרמינל.",
+          },
+          {
+            q: "הרצת:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n              total   used   free   shared  buff/cache  available\nMem:           16G    15G   200M     100M        800M       500M\n```\n\nמה המצב?",
+            options: [
+              "הכל תקין — רוב הזיכרון ב-cache ואפשר לשחרר אותו",
+              "הזיכרון כמעט מלא — available רק 500M מתוך 16G, יש לבדוק אילו תהליכים צורכים הכי הרבה",
+              "אין בעיה כי free מראה 200M",
+              "צריך להפעיל מחדש את השרת",
+            ],
+            answer: 1,
+            explanation: "העמודה available (500M) היא המדד החשוב — היא כוללת free + cache שניתן לשחרור. כש-available נמוך, המערכת עלולה להתחיל להשתמש ב-swap או להרוג תהליכים (OOM Killer).",
+          },
+        ],
+        questionsEn: [
+          {
+            q: "A server is responding slowly.\n\nYou ran:\n\n```\ntop\n```\n\nWhich value indicates high CPU load?",
+            options: [
+              "High %idle (above 90%)",
+              "High %wa (above 50%)",
+              "High %us + %sy (above 90%) and low %idle",
+              "Load average below 1",
+            ],
+            answer: 2,
+            explanation: "When %us (user) + %sy (system) are high and %idle is low, the CPU is under heavy load. High %wa indicates I/O wait, not necessarily CPU load.",
+          },
+          {
+            q: "You need to find the process consuming the most memory.\n\nWhich command is most appropriate?",
+            options: [
+              "ps aux --sort=-%mem | head",
+              "ls -la /proc/meminfo",
+              "cat /etc/passwd",
+              "df -h",
+            ],
+            answer: 0,
+            explanation: "ps aux --sort=-%mem sorts processes by memory usage in descending order. head shows only the top results.",
+          },
+          {
+            q: "You ran:\n\n```\ndf -h\n```\n\nOutput:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nWhat is the issue and what is the first step?",
+            options: [
+              "Disk is almost full — identify large files with du -sh /* and delete/move as needed",
+              "RAM is full — add swap",
+              "CPU is overloaded — restart the server",
+              "No issue, 96% usage is normal",
+            ],
+            answer: 0,
+            explanation: "96% disk usage is critical. The first step is to identify what's consuming space with du -sh /* and clean up unnecessary files like old logs.",
+          },
+          {
+            q: "A service won't start after a server reboot.\n\nWhich command will show the service logs?",
+            options: [
+              "ping localhost",
+              "journalctl -u service-name --no-pager -n 50",
+              "whoami",
+              "ifconfig eth0",
+            ],
+            answer: 1,
+            explanation: "journalctl -u shows logs for a specific systemd service. The -n 50 flag limits output to the last 50 lines, and --no-pager displays directly in the terminal.",
+          },
+          {
+            q: "You ran:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n              total   used   free   shared  buff/cache  available\nMem:           16G    15G   200M     100M        800M       500M\n```\n\nWhat is the situation?",
+            options: [
+              "Everything is fine — most memory is in cache and can be freed",
+              "Memory is nearly exhausted — only 500M available out of 16G, investigate which processes are consuming the most",
+              "No problem since free shows 200M",
+              "Need to restart the server",
+            ],
+            answer: 1,
+            explanation: "The available column (500M) is the key metric — it includes free + reclaimable cache. When available is low, the system may start using swap or killing processes (OOM Killer).",
+          },
+        ],
+      },
+      medium: {
+        theory: "אבחון מתקדם כולל ניתוח לוגים עם כלים כמו grep, awk ו-sed, שימוש ב-strace לעקיבה אחר system calls, וניטור רשת עם ss ו-tcpdump.",
+        theoryEn: "Advanced troubleshooting includes log analysis with tools like grep, awk, and sed, using strace to trace system calls, and network monitoring with ss and tcpdump.",
+        questions: [
+          {
+            q: "אתה רואה שתהליך תקוע במצב D (uninterruptible sleep).\n\nמה הסיבה הסבירה?",
+            options: [
+              "התהליך ממתין לפעולת I/O (דיסק או רשת) שלא מסתיימת",
+              "התהליך צורך יותר מדי CPU",
+              "התהליך הוא zombie ויש להרוג את תהליך האב",
+              "התהליך נעצר עם SIGSTOP",
+            ],
+            answer: 0,
+            explanation: "מצב D (uninterruptible sleep) מציין שהתהליך ממתין לפעולת I/O שלא ניתן לבטל. לרוב מדובר בבעיית דיסק (NFS תקוע, דיסק כושל) או בעיית driver.",
+          },
+          {
+            q: "הרצת:\n\n```\nss -tlnp\n```\n\nפלט:\n\n```\nState    Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process\nLISTEN   0       128     0.0.0.0:80           0.0.0.0:*          users:((\"nginx\",pid=1234,fd=6))\nLISTEN   0       128     0.0.0.0:443          0.0.0.0:*          users:((\"nginx\",pid=1234,fd=7))\n```\n\nמה אנחנו רואים?",
+            options: [
+              "nginx מאזין על פורטים 80 ו-443 על כל הממשקים",
+              "nginx לא פועל כי אין חיבורים פעילים",
+              "יש בעיית firewall שחוסמת את הפורטים",
+              "nginx מאזין רק על localhost",
+            ],
+            answer: 0,
+            explanation: "0.0.0.0 פירושו שהשירות מאזין על כל ממשקי הרשת. LISTEN מציין שהפורט פתוח ומחכה לחיבורים. ss -tlnp מציג TCP listening sockets עם מספרי פורטים ותהליכים.",
+          },
+          {
+            q: "יש לך קובץ לוג בגודל 2GB ואתה צריך למצוא את כל השורות שמכילות \"ERROR\" מהשעה האחרונה.\n\nאיזו גישה הכי יעילה?",
+            options: [
+              "cat log.txt | grep ERROR",
+              "grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
+              "tail -f log.txt",
+              "head -1000 log.txt | grep ERROR",
+            ],
+            answer: 1,
+            explanation: "grep ישירות על הקובץ (בלי cat) יעיל יותר, וסינון נוסף לפי תבנית זמן מצמצם את התוצאות לשעה האחרונה בלבד.",
+          },
+        ],
+        questionsEn: [
+          {
+            q: "You see a process stuck in D state (uninterruptible sleep).\n\nWhat is the likely cause?",
+            options: [
+              "The process is waiting for an I/O operation (disk or network) that won't complete",
+              "The process is consuming too much CPU",
+              "The process is a zombie and the parent process should be killed",
+              "The process was stopped with SIGSTOP",
+            ],
+            answer: 0,
+            explanation: "D state (uninterruptible sleep) means the process is waiting for an I/O operation that cannot be interrupted. Usually caused by disk issues (stuck NFS, failing disk) or driver problems.",
+          },
+          {
+            q: "You ran:\n\n```\nss -tlnp\n```\n\nOutput:\n\n```\nState    Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process\nLISTEN   0       128     0.0.0.0:80           0.0.0.0:*          users:((\"nginx\",pid=1234,fd=6))\nLISTEN   0       128     0.0.0.0:443          0.0.0.0:*          users:((\"nginx\",pid=1234,fd=7))\n```\n\nWhat do we see?",
+            options: [
+              "nginx is listening on ports 80 and 443 on all interfaces",
+              "nginx is not running because there are no active connections",
+              "There is a firewall issue blocking the ports",
+              "nginx is listening only on localhost",
+            ],
+            answer: 0,
+            explanation: "0.0.0.0 means the service is listening on all network interfaces. LISTEN indicates the port is open and waiting for connections. ss -tlnp shows TCP listening sockets with port numbers and processes.",
+          },
+          {
+            q: "You have a 2GB log file and need to find all lines containing \"ERROR\" from the last hour.\n\nWhich approach is most efficient?",
+            options: [
+              "cat log.txt | grep ERROR",
+              "grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
+              "tail -f log.txt",
+              "head -1000 log.txt | grep ERROR",
+            ],
+            answer: 1,
+            explanation: "Using grep directly on the file (without cat) is more efficient, and an additional time pattern filter narrows results to the last hour only.",
+          },
+        ],
+      },
+      hard: {
+        theory: "אבחון מערכת מתקדם כולל ניתוח ביצועים עם perf, אבחון בעיות kernel עם dmesg, ניהול cgroups, ושימוש ב-eBPF לניטור ברמה נמוכה.",
+        theoryEn: "Advanced system diagnostics includes performance analysis with perf, kernel issue diagnosis with dmesg, cgroup management, and using eBPF for low-level monitoring.",
+        questions: [
+          {
+            q: "קונטיינר נהרג באופן בלתי צפוי.\n\nהרצת:\n\n```\ndmesg | tail -20\n```\n\nפלט:\n\n```\n[  512.123] Out of memory: Killed process 4521 (java)\n            total-vm:4048576kB, anon-rss:3145728kB\n```\n\nמה קרה ומה הפתרון?",
+            options: [
+              "OOM Killer הרג את התהליך כי הוא חרג ממגבלת הזיכרון — יש להגדיל את memory limit או לייעל את צריכת הזיכרון",
+              "התהליך קרס בגלל bug — יש לעדכן את הגרסה",
+              "הדיסק התמלא — יש לפנות מקום",
+              "ה-CPU הגיע ל-100% — יש להוסיף cores",
+            ],
+            answer: 0,
+            explanation: "הודעת 'Out of memory: Killed process' מ-dmesg מציינת שה-OOM Killer של ה-kernel הרג את התהליך. הפתרון: הגדלת memory limits ב-cgroup/container spec, או אופטימיזציית צריכת הזיכרון של האפליקציה.",
+          },
+          {
+            q: "אתה צריך לאבחן למה תהליך מסוים איטי.\n\nהרצת:\n\n```\nstrace -c -p 1234\n```\n\nפלט:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nמה המסקנה?",
+            options: [
+              "התהליך מבזבז 85% מהזמן על futex (lock contention) — יש בעיית concurrency שדורשת בדיקה",
+              "התהליך עושה יותר מדי קריאות read — צריך caching",
+              "התהליך כותב יותר מדי לדיסק — צריך buffer",
+              "אין בעיה, futex הוא חלק נורמלי מריצת תהליך",
+            ],
+            answer: 0,
+            explanation: "85% מהזמן על futex (Fast Userspace muTEX) מצביע על lock contention חמור. התהליך מבזבז את רוב הזמן בהמתנה ל-locks במקום לעבוד. יש לבדוק בעיות concurrency, deadlocks, או שימוש מופרז ב-mutexes.",
+          },
+          {
+            q: "שרת מדווח על latency גבוה לבקשות רשת.\n\nהרצת:\n\n```\ncat /proc/net/sockstat\n```\n\nפלט:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nמה הבעיה?",
+            options: [
+              "מספר גבוה של orphan sockets (12500) ו-TIME_WAIT (65000) מצביע על connections שלא נסגרים כראוי — יש לבדוק את הגדרות ה-keepalive ו-timeout",
+              "מספר ה-TCP connections (28542) נמוך מדי",
+              "צריכת הזיכרון של ה-TCP stack תקינה",
+              "אין בעיה — המספרים נורמליים לשרת עמוס",
+            ],
+            answer: 0,
+            explanation: "12,500 orphan sockets (חיבורים ללא תהליך מקושר) ו-65,000 חיבורים ב-TIME_WAIT מצביעים על connection leak או הגדרות timeout לא נכונות. יש לבדוק tcp_tw_reuse, tcp_fin_timeout, ואם האפליקציה סוגרת connections כראוי.",
+          },
+        ],
+        questionsEn: [
+          {
+            q: "A container was unexpectedly killed.\n\nYou ran:\n\n```\ndmesg | tail -20\n```\n\nOutput:\n\n```\n[  512.123] Out of memory: Killed process 4521 (java)\n            total-vm:4048576kB, anon-rss:3145728kB\n```\n\nWhat happened and what is the solution?",
+            options: [
+              "OOM Killer terminated the process because it exceeded its memory limit — increase the memory limit or optimize memory usage",
+              "The process crashed due to a bug — update the version",
+              "The disk was full — free up space",
+              "CPU reached 100% — add more cores",
+            ],
+            answer: 0,
+            explanation: "The 'Out of memory: Killed process' message from dmesg indicates the kernel's OOM Killer terminated the process. Solution: increase memory limits in cgroup/container spec, or optimize the application's memory consumption.",
+          },
+          {
+            q: "You need to diagnose why a specific process is slow.\n\nYou ran:\n\n```\nstrace -c -p 1234\n```\n\nOutput:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nWhat is the conclusion?",
+            options: [
+              "The process spends 85% of time on futex (lock contention) — there is a concurrency issue that needs investigation",
+              "The process makes too many read calls — needs caching",
+              "The process writes too much to disk — needs buffering",
+              "No issue, futex is a normal part of process execution",
+            ],
+            answer: 0,
+            explanation: "85% of time on futex (Fast Userspace muTEX) indicates severe lock contention. The process spends most of its time waiting for locks instead of doing work. Investigate concurrency issues, deadlocks, or excessive mutex usage.",
+          },
+          {
+            q: "A server reports high latency for network requests.\n\nYou ran:\n\n```\ncat /proc/net/sockstat\n```\n\nOutput:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nWhat is the problem?",
+            options: [
+              "High number of orphan sockets (12500) and TIME_WAIT (65000) indicate connections not closing properly — check keepalive and timeout settings",
+              "TCP connection count (28542) is too low",
+              "TCP stack memory usage is normal",
+              "No problem — the numbers are normal for a busy server",
+            ],
+            answer: 0,
+            explanation: "12,500 orphan sockets (connections with no associated process) and 65,000 connections in TIME_WAIT indicate a connection leak or incorrect timeout settings. Check tcp_tw_reuse, tcp_fin_timeout, and whether the application closes connections properly.",
+          },
         ],
       },
     },
