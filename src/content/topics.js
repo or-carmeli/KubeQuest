@@ -254,7 +254,7 @@ export const TOPICS = [
       },
       medium: {
         theory: "Rolling Update\nמעדכן Pods בהדרגה - Pod חדש עולה, רק אז הישן יורד. ללא downtime.\n🔹 מתי נשתמש: פריסת גרסה חדשה ב-production\nCODE:\nkubectl set image deployment/my-app web=my-app:v2\n\nRollback\nמחזיר Deployment לגרסה קודמת. Kubernetes שומר היסטוריית גרסאות אוטומטית.\n🔹 מתי נשתמש: גרסה חדשה גורמת לתקלות\nCODE:\nkubectl rollout undo deployment/my-app\n\nStatefulSet\nכמו Deployment, אבל לכל Pod יש שם קבוע (pod-0, pod-1) ואחסון משלו.\n🔹 מתי נשתמש: databases, Kafka, ZooKeeper\n🔹 סדר הפעלה: Pods עולים לפי סדר - Pod-1 ייווצר רק אחרי ש-Pod-0 תקין\nCODE:\napiVersion: apps/v1\nkind: StatefulSet",
-        theoryEn: "Rolling Update\nGradually replaces Pods with no downtime.\n🔹 When: safe production updates\nCODE:\nkubectl set image deployment/my-app web=my-app:v2\n\nRollback\nRevert to a previous version if something breaks.\nCODE:\nkubectl rollout undo deployment/my-app\n\nStatefulSet\nPods with stable identity and persistent storage.\n🔹 Used for: databases, Kafka, ZooKeeper\n🔹 Pods start in order (pod-0, pod-1)\nCODE:\napiVersion: apps/v1\nkind: StatefulSet",
+        theoryEn: "Rolling Update\nGradually replaces Pods with no downtime.\n🔹 When to use: safe production updates\nCODE:\nkubectl set image deployment/my-app web=my-app:v2\n\nRollback\nRevert to a previous version if something breaks.\nCODE:\nkubectl rollout undo deployment/my-app\n\nStatefulSet\nPods with stable identity and persistent storage.\n🔹 Used for: databases, Kafka, ZooKeeper\n🔹 Pods start in order (pod-0, pod-1)\nCODE:\napiVersion: apps/v1\nkind: StatefulSet",
         questions: [
             {
               q: "מה היתרון של Rolling Update?",
