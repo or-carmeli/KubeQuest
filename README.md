@@ -208,23 +208,33 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    EXT["External<br/>Uptime · Synthetic"] -->|curl| APP["React SPA"]
-    APP --> CLIENT["Client<br/>Sentry · Web Vitals"]
-    BACKEND["Backend<br/>pg_cron · Edge Function"] --> STATUS[("Status<br/>Tables")]
-    STATUS --> APP
+    CRON["pg_cron<br/>every 60s"] --> EDGE["Edge Function"]
+    EDGE --> DB["DB"]
+    EDGE --> API["API"]
+    EDGE --> QUIZ["Quiz"]
+    EDGE --> LB["Leaderboard"]
+    EDGE --> AUTH["Auth"]
+    EDGE -->|results| STORE[("status tables")]
+    STORE -->|polls 30s| UI["Status Page"]
+    UI -.->|alerts| USER([User])
 
-    style EXT fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
-    style APP fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
-    style CLIENT fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
-    style BACKEND fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
-    style STATUS fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style STORE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style UI fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
 ```
 
-Three monitoring layers — external pings catch outages, client-side captures runtime errors and performance, backend health checks monitor all services every 60s.
+The core of the observability stack is a **self-monitoring loop** built entirely on Supabase:
+
+1. **pg_cron** triggers a Supabase Edge Function every 60 seconds
+2. The Edge Function health-checks all 5 services (DB, API, Quiz Engine, Leaderboard, Auth)
+3. Results are written to PostgreSQL status tables (append-only for uptime history)
+4. 3 consecutive failures auto-create an incident
+5. The frontend polls these tables every 30 seconds and renders a live status page
+
+Additional layers: **Sentry** captures client-side errors and Web Vitals, **GitHub Actions** run external uptime checks (every 30min) and synthetic smoke tests (every 6h).
 
 ### Health Checks
-
-A Supabase Edge Function executes health checks every 60 seconds via `pg_cron`, monitoring 5 services:
 
 | Service | Check |
 |---------|-------|
@@ -234,27 +244,9 @@ A Supabase Edge Function executes health checks every 60 seconds via `pg_cron`, 
 | Leaderboard | `get_leaderboard` RPC |
 | Authentication | GoTrue `/auth/v1/health` |
 
-```mermaid
-flowchart LR
-    CRON["pg_cron<br/>every 60s"] --> EDGE["Edge Function<br/>health-check"]
-    EDGE --> DB["Database"]
-    EDGE --> API["Content API"]
-    EDGE --> QUIZ["Quiz Engine"]
-    EDGE --> LB["Leaderboard"]
-    EDGE --> AUTH["Auth"]
-    EDGE --> STORE[("PostgreSQL<br/>status tables")]
-    STORE --> UI["Frontend<br/>polls every 30s"]
-
-    style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
-    style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
-    style STORE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
-    style UI fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
-```
-
-- **Status classification** - operational (<2s), degraded (>2s), down (error)
-- **Auto-incident detection** - 3 consecutive failures trigger automatic incident creation
-- **Data retention** - append-only `system_status_history` table for uptime tracking
-- **Frontend** - live status page with real-time polling
+- **Status classification** — operational (<2s), degraded (>2s), down (error)
+- **Auto-incident detection** — 3 consecutive failures trigger automatic incident creation
+- **Data retention** — append-only `system_status_history` table for uptime tracking
 
 Full documentation: [docs/monitoring.md](docs/monitoring.md) | Live status: [status.kubequest.online](https://status.kubequest.online)
 
