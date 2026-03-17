@@ -95,7 +95,7 @@ export const TOPIC_META = [
   {
     id: "linux",
     icon: "🖥️",
-    name: "System & Linux Troubleshooting",
+    name: "OS & Linux Deep Dive",
     color: "#6366F1",
     description: "תהליכים · לוגים · CPU · זיכרון · רשת",
     descriptionEn: "Processes · Logs · CPU · Memory · Networking",
