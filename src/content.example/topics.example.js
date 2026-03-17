@@ -24,10 +24,10 @@ export const TOPICS = [
   {
     id: "workloads",
     icon: "⚙️",
-    name: "Workloads & Scheduling",
+    name: "Workloads & Pods",
     color: "#00D4FF",
-    description: "Pods · Deployments · StatefulSets · Scheduling · Resources",
-    descriptionEn: "Pods · Deployments · StatefulSets · Scheduling · Resources",
+    description: "Pods · Deployments · Jobs · Scheduling",
+    descriptionEn: "Pods · Deployments · Jobs · Scheduling",
     levels: {
       easy: {
         theory: "Pod הוא יחידת הריצה הקטנה ביותר ב-Kubernetes.",
@@ -74,5 +74,5 @@ export const TOPICS = [
     },
   },
   // Add more topics here matching TOPIC_META ids:
-  // "networking", "config", "storage", "troubleshooting"
+  // "networking", "config", "storage", "troubleshooting", "linux"
 ];

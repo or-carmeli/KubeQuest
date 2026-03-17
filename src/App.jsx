@@ -13,9 +13,10 @@ import { INCIDENTS } from "./content/incidents";
 import { CHEATSHEET } from "./content/cheatsheet";
 import { saveQuizState, loadQuizState, clearQuizState, isRecentQuizState } from "./utils/quizPersistence";
 import { safeGetItem, safeGetJSON, checkDataVersion } from "./utils/storage";
+import { captureError, setUserContext, setScreen as setTelemetryScreen } from "./utils/telemetry";
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
-import { TerminalBlock, YamlBlock } from "./components/CodeBlocks";
+import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } from "./components/CodeBlocks";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress } from "./api/quiz";
 import StatusView from "./components/StatusView";
 
@@ -109,7 +110,7 @@ const INCIDENT_SAVE_KEY = "incident_progress_v1";
 // v2.2.0: real-time monitoring system (health checks, uptime history, auto-incidents)
 // v2.3.0: startup resilience (SW cache, localStorage defence, Supabase lock fix, NaN guards)
 // v2.4.0: analytics events, RTL fixes (hyphens, arrows), quiz UX improvements, score display cleanup
-const APP_VERSION  = "2.4.0";
+const APP_VERSION  = "2.5.0";
 const SESSION_START = new Date();
 
 // Resume modal behaviour constants
@@ -323,6 +324,12 @@ const TRANSLATIONS = {
     incidentFailed: "האירוע לא נפתר",
     incidentFailedSub: "התקלה עדיין קיימת. נסי שוב כדי למצוא את שורש הבעיה.",
     incidentFailedSub_m: "התקלה עדיין קיימת. נסה שוב כדי למצוא את שורש הבעיה.",
+    incidentFailReason: "האירוע נכשל כי לא הושגו מספיק צעדי חקירה נכונים",
+    incidentFailThreshold: "כדי לפתור את האירוע נדרשות לפחות {required} תשובות נכונות מתוך {total}",
+    incidentFailAllowedMistakes: "מותרות עד {allowed} טעויות במהלך החקירה",
+    incidentCorrectCount: "צעדים נכונים",
+    incidentWrongCount: "צעדים שגויים",
+    incidentRequiredCount: "סף הצלחה",
     incidentRetry: "נסי שוב את האירוע", incidentRetry_m: "נסה שוב את האירוע",
     incidentCorrect: "צעד נכון בחקירה", incidentWrong: "צעד לא נכון",
     incidentWhyCorrect: "למה זו התשובה הנכונה",
@@ -338,6 +345,11 @@ const TRANSLATIONS = {
     incidentRootCause: "שורש התקלה",
     incidentCorrectApproach: "מה היה צריך לעשות",
     incidentHintPrefix: "רמז",
+    incidentHintBtn: "רמז",
+    incidentObjective: "מטרה",
+    incidentConstraints: "אילוצים",
+    incidentSignals: "אותות מהמערכת",
+    incidentDestructive: "הרסנית",
     incidentResumeBanner: "המשיכי את האירוע", incidentResumeBanner_m: "המשך את האירוע",
     incidentDiscard: "נטשי", incidentDiscard_m: "נטוש",
     incidentActiveLabel: "אירוע פעיל", incidentAvailableLabel: "אירועים זמינים",
@@ -386,6 +398,11 @@ const TRANSLATIONS = {
     statsLearningProgress: "התקדמות בלמידה",
     statsAccuracy: "דיוק",
     statsTotalAnswered: "סה״כ תשובות",
+    statsNextGoal: "יעד הבא",
+    statsImprove: "שפרו את",
+    statsTo: "ל-",
+    statsAllPerfect: "כל הנושאים ב-100%!",
+    statsXpMilestone: "אבן דרך הבאה",
     installApp: "📲 התקנה לנייד",
     installTitle: "התקנת האפליקציה",
     installDesc: "ניתן להוסיף את KubeQuest למסך הבית ולהשתמש בה כמו אפליקציה רגילה.",
@@ -525,6 +542,12 @@ const TRANSLATIONS = {
     incidentResolvedSub: "The issue was identified and resolved successfully.",
     incidentFailed: "Incident Not Resolved",
     incidentFailedSub: "The issue still persists. Try again to find the root cause.",
+    incidentFailReason: "The incident failed because not enough correct investigation steps were taken",
+    incidentFailThreshold: "At least {required} correct answers out of {total} are needed to resolve the incident",
+    incidentFailAllowedMistakes: "Up to {allowed} mistakes are allowed during the investigation",
+    incidentCorrectCount: "Correct steps",
+    incidentWrongCount: "Wrong steps",
+    incidentRequiredCount: "Required to pass",
     incidentRetry: "Retry This Incident",
     incidentCorrect: "Correct investigation step", incidentWrong: "Incorrect step",
     incidentWhyCorrect: "Why this is the correct answer",
@@ -538,6 +561,11 @@ const TRANSLATIONS = {
     incidentRootCause: "Root Cause",
     incidentCorrectApproach: "What Should Have Been Done",
     incidentHintPrefix: "Hint",
+    incidentHintBtn: "Hint",
+    incidentObjective: "Objective",
+    incidentConstraints: "Constraints",
+    incidentSignals: "System Signals",
+    incidentDestructive: "destructive",
     incidentResumeBanner: "Continue Incident",
     incidentDiscard: "Discard",
     incidentActiveLabel: "Active Incident", incidentAvailableLabel: "Available Incidents",
@@ -584,6 +612,11 @@ const TRANSLATIONS = {
     statsLearningProgress: "Learning Progress",
     statsAccuracy: "Accuracy",
     statsTotalAnswered: "Total Answered",
+    statsNextGoal: "Next Goal",
+    statsImprove: "Improve",
+    statsTo: "to",
+    statsAllPerfect: "All topics at 100%!",
+    statsXpMilestone: "Next Milestone",
     installApp: "📲 Install App",
     installTitle: "Install the App",
     installDesc: "Add KubeQuest to your home screen and use it like a regular app.",
@@ -789,7 +822,7 @@ function isBlockCodeLine(line) {
 // Render a question text that may contain \n\n paragraphs and code blocks.
 // Single-paragraph questions with embedded commands/errors are split into structured sections.
 // Paragraphs with inner \n are rendered as monospace code blocks.
-function renderQuestion(qText, lang) {
+function renderQuestion(qText, lang, animate) {
   if (!qText) return null;
   warnIfHebrew(qText, lang, "quiz.question");
   // Explicit direction: dir="auto" fails when renderBidi wraps all text in
@@ -854,10 +887,10 @@ function renderQuestion(qText, lang) {
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {reordered.map((seg, idx) => {
           if (seg.type === "command") {
-            return <TerminalBlock key={idx}>{seg.content}</TerminalBlock>;
+            return <TerminalBlock key={idx} animate={animate}>{seg.content}</TerminalBlock>;
           }
           if (seg.type === "error") {
-            return <TerminalBlock key={idx} variant="output">{seg.content}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="output" animate={animate}>{seg.content}</TerminalBlock>;
           }
           if (seg.type === "question") {
             return (
@@ -941,20 +974,20 @@ function renderQuestion(qText, lang) {
           }
 
           // Terminal command block
-          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/m.test(code);
+          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/m.test(code);
           if (isCommand) {
-            return <TerminalBlock key={idx}>{code}</TerminalBlock>;
+            return <TerminalBlock key={idx} animate={animate}>{code}</TerminalBlock>;
           }
 
           // Error output block
           const firstCodeLine = code.split("\n")[0]?.trim() || "";
           const isFencedError = /^(error|Error|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:|denied)/i.test(firstCodeLine);
           if (isFencedError) {
-            return <TerminalBlock key={idx} variant="error">{code}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="error" animate={animate}>{code}</TerminalBlock>;
           }
 
           // Generic output block
-          return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
+          return <TerminalBlock key={idx} variant="output" animate={animate}>{code}</TerminalBlock>;
         }
 
         // Auto-detected code block (non-fenced terminal output)
@@ -967,18 +1000,18 @@ function renderQuestion(qText, lang) {
           const cleaned = para.replace(/^["״"]+|["״"]+$/g, "").trim();
           const firstLine = nonEmpty[0]?.trim() || "";
           const isError = /^(error:|Error:|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:)/i.test(firstLine);
-          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/.test(firstLine);
+          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/.test(firstLine);
           // YAML-like content
           if (/^\s*[\w.\-/]+:\s/m.test(cleaned) && /\n\s+\w/.test(cleaned)) {
             return <YamlBlock key={idx}>{cleaned}</YamlBlock>;
           }
           if (isError) {
-            return <TerminalBlock key={idx} variant="error">{cleaned}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="error" animate={animate}>{cleaned}</TerminalBlock>;
           }
           if (isCommand) {
-            return <TerminalBlock key={idx}>{cleaned}</TerminalBlock>;
+            return <TerminalBlock key={idx} animate={animate}>{cleaned}</TerminalBlock>;
           }
-          return <TerminalBlock key={idx} variant="output">{cleaned}</TerminalBlock>;
+          return <TerminalBlock key={idx} variant="output" animate={animate}>{cleaned}</TerminalBlock>;
         }
 
         // Regular text paragraph
@@ -1123,6 +1156,7 @@ export default function K8sQuestApp() {
   const bestImprovedRef = useRef(true); // Whether this session improved the topic's best result
   const submittingRef = useRef(false);
   const initialAccuracyRef = useRef(null); // Accuracy at session start for trend indicator
+  const termAnimatedQsRef = useRef(new Set()); // Track which questions have already shown terminal animation this session
 
   // Refs for browser back-button handler and keyboard shortcuts (avoids stale closures)
   const screenRef = useRef(screen);
@@ -1227,6 +1261,10 @@ export default function K8sQuestApp() {
   const sessionStartRef = useRef(Date.now());
   const quizzesPlayedRef = useRef(0);
 
+  // ── Telemetry context (safe metadata only) ────────────────────────────────
+  useEffect(() => { setUserContext({ isGuest }); }, [isGuest]);
+  useEffect(() => { setTelemetryScreen(screen); }, [screen]);
+
   // ── War Room (Incident) state ─────────────────────────────────────────────
   const [selectedIncident,   setSelectedIncident]   = useState(null);
   const [incidentStepIndex,  setIncidentStepIndex]  = useState(0);
@@ -1235,6 +1273,7 @@ export default function K8sQuestApp() {
   const [incidentElapsed,    setIncidentElapsed]    = useState(0);   // seconds
   const [incidentAnswer,     setIncidentAnswer]     = useState(null);
   const [incidentSubmitted,  setIncidentSubmitted]  = useState(false);
+  const [incidentStepHintVisible, setIncidentStepHintVisible] = useState(false);
   const [incidentHistory,    setIncidentHistory]    = useState([]);
   const [incidentResume,     setIncidentResume]     = useState(null); // saved state for resume banner
   const [incidentShareCopied,setIncidentShareCopied]= useState(false);
@@ -1846,6 +1885,7 @@ export default function K8sQuestApp() {
             setIncidentElapsed(saved.elapsed ?? 0);
             setIncidentAnswer(null);
             setIncidentSubmitted(false);
+            setIncidentStepHintVisible(false);
             setIncidentAnswerResult(null);
             incidentCheckingRef.current = false;
             setIncidentHistory(saved.history || []);
@@ -1971,6 +2011,7 @@ export default function K8sQuestApp() {
     } catch (err) {
       // Network error or unexpected failure - unblock the UI and surface the error
       console.error("[KubeQuest:boot] loadUserData failed:", err);
+      captureError(err, { flow: "loadUserData", screen, isGuest });
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
       achievementsLoaded.current = true;
@@ -2047,6 +2088,7 @@ export default function K8sQuestApp() {
       });
     } catch (err) {
       console.error("[KubeQuest] saveUserData failed:", err);
+      captureError(err, { flow: "saveUserData", screen, isGuest });
       const errorKey = classifySaveError(err);
       const errorMsg = t(errorKey);
       setSaveError(errorMsg);
@@ -2240,6 +2282,7 @@ export default function K8sQuestApp() {
     setCompletedIncidentIds([]);
     clearIncidentProgress();
     setIncidentResume(null);
+    clearQuizState();
     try { localStorage.removeItem("topicStats_v1"); } catch {}
     try { localStorage.removeItem("scoredFreeKeys_v1"); } catch {}
     try { localStorage.removeItem("incident_completed_v1"); } catch {}
@@ -2275,6 +2318,9 @@ export default function K8sQuestApp() {
     // Also clear per-topic weak-area data for this topic
     const newTopicStats = { ...topicStats };
     delete newTopicStats[topicId];
+    // Clear saved quiz if it belongs to the topic being reset
+    const savedQuiz = loadQuizState();
+    if (savedQuiz && savedQuiz.topicId === topicId) clearQuizState();
     setCompletedTopics(newCompleted);
     setStats(newStats);
     setTopicStats(newTopicStats);
@@ -2625,6 +2671,7 @@ export default function K8sQuestApp() {
     if (correct && stats.current_streak === 0) window.va?.track?.("streak_started", { topic: selectedTopic?.name || selectedTopic?.id });
     } catch (err) {
       console.error("handleSubmit error:", err);
+      captureError(err, { flow: "handleSubmit", screen, isGuest, extra: { topic: selectedTopic?.id, level: selectedLevel, questionIndex } });
       submittingRef.current = false;
       setCheckingAnswer(false);
     }
@@ -2697,6 +2744,7 @@ export default function K8sQuestApp() {
       if (finalCorrect < currentQuestions.length) window.va?.track?.("quiz_failed", { score: finalCorrect, topic: selectedTopic?.name || selectedTopic?.id });
       } catch (err) {
         console.error("[FINISH_DEBUG] nextQuestion error:", err.message);
+        captureError(err, { flow: "nextQuestion", screen, isGuest, extra: { topic: selectedTopic?.id, level: selectedLevel, questionIndex } });
         submittingRef.current = false;
       }
       console.debug("[FINISH_DEBUG] setScreen topicComplete (normal path)");
@@ -2733,7 +2781,11 @@ export default function K8sQuestApp() {
           fetchQuizQuestions(supabase, topic.id, level, lang),
           fetchTheory(supabase, topic.id, level, lang),
         ]);
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "fetchQuizQuestions", screen, isGuest, extra: { topic: topic?.id, level } });
+      }
+      // Fall back to local content if Supabase returned nothing (e.g. topic not yet seeded in DB)
+      if (!rawQs || rawQs.length === 0) {
         rawQs = getLocalizedField(topic.levels[level], "questions", lang);
         theory = getLocalizedField(topic.levels[level], "theory", lang);
       }
@@ -2776,7 +2828,8 @@ export default function K8sQuestApp() {
       setLoadingQuestions(true);
       try {
         rawQs = await fetchMixedQuestions(supabase, lang, 10);
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "fetchMixedQuestions", screen, isGuest });
         const all = [];
         TOPICS.forEach(topic => {
           LEVEL_ORDER.forEach(level => {
@@ -2830,7 +2883,8 @@ export default function K8sQuestApp() {
       setLoadingQuestions(true);
       try {
         dailyQs = await fetchDailyQuestions(supabase, lang, 5);
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "fetchDailyQuestions", screen, isGuest });
         dailyQs = null;
       }
       setLoadingQuestions(false);
@@ -2957,7 +3011,10 @@ export default function K8sQuestApp() {
     setIncidentAnswerResult(null);
     let steps = null;
     if (supabase) {
-      try { steps = await fetchIncidentSteps(supabase, incident.id); } catch { steps = null; }
+      try {
+        steps = await fetchIncidentSteps(supabase, incident.id);
+        if (!steps?.length) steps = null; // fall back to local data
+      } catch { steps = null; }
     }
     setIncidentSteps(steps);
     setSelectedIncident(incident);
@@ -2967,6 +3024,7 @@ export default function K8sQuestApp() {
     setIncidentElapsed(0);
     setIncidentAnswer(null);
     setIncidentSubmitted(false);
+    setIncidentStepHintVisible(false);
     setIncidentPassed(false);
     incidentCheckingRef.current = false;
     setIncidentHistory([]);
@@ -3002,7 +3060,8 @@ export default function K8sQuestApp() {
         correct = rpcResult.correct;
         correctAnswer = rpcResult.correct_answer;
         result = { correct, correctIndex: correctAnswer, explanation: rpcResult.explanation, explanationHe: rpcResult.explanation_he };
-      } catch {
+      } catch (err) {
+        captureError(err, { flow: "checkIncidentAnswer", screen, isGuest, extra: { incidentId: selectedIncident?.id, stepIndex: incidentStepIndex } });
         correct = ans === step.answer;
         correctAnswer = step.answer;
         result = { correct, correctIndex: correctAnswer, explanation: step.explanation, explanationHe: step.explanationHe };
@@ -3028,7 +3087,7 @@ export default function K8sQuestApp() {
   };
 
   const nextIncidentStep = () => {
-    const totalSteps = incidentSteps ? incidentSteps.length : selectedIncident.steps.length;
+    const totalSteps = incidentSteps?.length || selectedIncident.steps.length;
     const isLast = incidentStepIndex >= totalSteps - 1;
     if (isLast) {
       clearIncidentProgress();
@@ -3042,6 +3101,7 @@ export default function K8sQuestApp() {
       setIncidentStepIndex(nextIdx);
       setIncidentAnswer(null);
       setIncidentSubmitted(false);
+      setIncidentStepHintVisible(false);
       setIncidentAnswerResult(null);
       incidentCheckingRef.current = false;
       saveIncidentProgress(selectedIncident, nextIdx, incidentScore, incidentMistakes, incidentElapsed, incidentHistory);
@@ -3058,6 +3118,7 @@ export default function K8sQuestApp() {
     setIncidentElapsed(elapsed);
     setIncidentAnswer(null);
     setIncidentSubmitted(false);
+    setIncidentStepHintVisible(false);
     setIncidentPassed(false);
     setIncidentHistory(history || []);
     setIncidentResume(null);
@@ -3156,7 +3217,7 @@ export default function K8sQuestApp() {
     if (screen !== "incident" || !selectedIncident || incidentSteps) return;
     if (!supabase) return;
     fetchIncidentSteps(supabase, selectedIncident.id)
-      .then(steps => { if (steps) setIncidentSteps(steps); })
+      .then(steps => { if (steps?.length) setIncidentSteps(steps); })
       .catch(() => {}); // silently fall back to offline steps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, selectedIncident]);
@@ -3202,58 +3263,8 @@ export default function K8sQuestApp() {
     return () => clearTimeout(timer);
   }, [screen]);
 
-  // ── YAML code block renderer (VS Code style) ──────────────────────────────
-  const highlightYaml = (code) => {
-    return code.split("\n").map((line, i) => {
-      const indent = line.match(/^(\s*)/)[1].length;
-      const guides = [];
-      for (let g = 2; g <= indent; g += 2) {
-        guides.push(<span key={`g${g}`} style={{position:"absolute",left:g * 7.7 - 2,top:0,bottom:0,width:1,background:"rgba(255,255,255,0.08)"}}/>);
-      }
-      // Syntax highlight: key: value
-      const trimmed = line.trimStart();
-      let content;
-      const kvMatch = trimmed.match(/^([\w.-]+)(:)\s*(.*)$/);
-      if (kvMatch) {
-        const [, key, colon, val] = kvMatch;
-        let valSpan = null;
-        if (val) {
-          const isString = /^".*"$/.test(val) || /^'.*'$/.test(val);
-          const isNum = /^\d+(\.\d+)?$/.test(val);
-          const isBool = /^(true|false)$/i.test(val);
-          const color = isString ? "#CE9178" : isNum ? "#B5CEA8" : isBool ? "#569CD6" : "#D4D4D4";
-          valSpan = <span style={{color}}>{val}</span>;
-        }
-        content = <><span style={{color:"#9CDCFE"}}>{key}</span><span style={{color:"#D4D4D4"}}>{colon}</span>{val ? " " : ""}{valSpan}</>;
-      } else if (trimmed.startsWith("- ")) {
-        content = <><span style={{color:"#D4D4D4"}}>-</span><span style={{color:"#9CDCFE"}}>{trimmed.slice(1)}</span></>;
-      } else if (trimmed.startsWith("#")) {
-        content = <span style={{color:"#6A9955"}}>{trimmed}</span>;
-      } else {
-        content = <span style={{color:"#D4D4D4"}}>{trimmed}</span>;
-      }
-      return (
-        <div key={i} style={{position:"relative",minHeight:20}}>
-          {guides}
-          <span style={{whiteSpace:"pre"}}>{" ".repeat(indent)}</span>{content}
-        </div>
-      );
-    });
-  };
-
-  const YamlBlock = ({ code, keyProp }) => (
-    <div key={keyProp} dir="ltr" style={{marginTop:12,borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 2px 12px rgba(0,0,0,0.25)",background:"#1E1E2E"}}>
-      <div style={{padding:"6px 14px",background:"rgba(255,255,255,0.04)",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",gap:6}}>
-        <span style={{fontSize:9,fontWeight:700,color:"#888",letterSpacing:1.5,textTransform:"uppercase"}}>YAML</span>
-      </div>
-      <div style={{padding:"16px 18px",fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro','SF Mono',monospace",fontSize:12.5,lineHeight:1.75,overflowX:"auto",direction:"ltr",textAlign:"left"}}>
-        {highlightYaml(code)}
-      </div>
-    </div>
-  );
-
   // Splits a code block into Terminal vs YAML sub-blocks and pushes them.
-  const cmdPat = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make)\s/;
+  const cmdPat = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/;
   const flushCodeBlock = (elements, lines, keyBase) => {
     if (!lines.length) return;
     // Group consecutive lines by type: "cmd" or "yaml"
@@ -3272,7 +3283,7 @@ export default function K8sQuestApp() {
       if (g.type === "cmd") {
         elements.push(<TerminalBlock key={`cmd-${keyBase}`}>{g.lines.join("\n")}</TerminalBlock>);
       } else {
-        elements.push(<YamlBlock key={`code-${keyBase}`} keyProp={`code-${keyBase}`} code={g.lines.join("\n")} />);
+        elements.push(<YamlBlock key={`code-${keyBase}`}>{g.lines.join("\n")}</YamlBlock>);
       }
       return;
     }
@@ -3282,7 +3293,7 @@ export default function K8sQuestApp() {
       if (g.type === "cmd") {
         elements.push(<TerminalBlock key={`cmd-${keyBase}-${gi}`}>{g.lines.join("\n")}</TerminalBlock>);
       } else {
-        elements.push(<YamlBlock key={`code-${keyBase}-${gi}`} keyProp={`code-${keyBase}-${gi}`} code={g.lines.join("\n")} />);
+        elements.push(<YamlBlock key={`code-${keyBase}-${gi}`}>{g.lines.join("\n")}</YamlBlock>);
       }
     }
   };
@@ -3293,16 +3304,31 @@ export default function K8sQuestApp() {
     let codeLines = [];
     let inCode = false;
     let flowIdx = 0;
+    let isNewSection = true; // track if next plain line is a section title
+    let sectionIdx = 0;      // count sections for dividers
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (line === 'CODE:' || (!inCode && line.startsWith('```'))) {
-        inCode = true;
+      if (line === 'CODE:') {
+        inCode = "unfenced";
         continue;
       }
-      if (inCode && line.startsWith('```')) {
+      if (!inCode && line.startsWith('```')) {
+        inCode = "fenced";
+        continue;
+      }
+      if (inCode === "fenced" && line.startsWith('```')) {
         flushCodeBlock(elements, codeLines, i);
         codeLines = [];
         inCode = false;
+        continue;
+      }
+      // Unfenced CODE blocks end at empty lines
+      if (inCode === "unfenced" && !line.trim()) {
+        flushCodeBlock(elements, codeLines, i);
+        codeLines = [];
+        inCode = false;
+        isNewSection = true;
         continue;
       }
       if (inCode) {
@@ -3311,7 +3337,7 @@ export default function K8sQuestApp() {
       }
       if (line.startsWith('CMD:')) {
         elements.push(
-          <div key={i} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:"var(--code-text)",background:"rgba(125,211,252,0.06)",borderRadius:6,padding:"8px 12px",marginTop:12,direction:"ltr",textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}}>{line.slice(4)}</div>
+          <div key={i} style={{fontFamily:MONO_FONT,fontSize:12,color:"#c9d1d9",background:"#0d1117",border:"1px solid rgba(255,255,255,0.06)",borderRadius:4,padding:"8px 12px",marginTop:12,direction:"ltr",textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}}>{line.slice(4)}</div>
         );
         continue;
       }
@@ -3340,6 +3366,7 @@ export default function K8sQuestApp() {
       }
       if (line.startsWith('🔹')) {
         const text = line.slice(2).trimStart();
+        isNewSection = false;
         elements.push(
           <div key={i} dir={dir} style={{display:"flex",flexDirection:"row",alignItems:"flex-start",gap:6,marginBottom:8,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>
             <span style={{flexShrink:0,fontSize:13,lineHeight:1.5}}>🔹</span>
@@ -3348,8 +3375,29 @@ export default function K8sQuestApp() {
         );
         continue;
       }
-      if (!line.trim()) { elements.push(<div key={i} style={{height:6}}/>); continue; }
-      elements.push(<div key={i} style={{color:"var(--text-primary)",fontSize:15,fontWeight:700,marginBottom:8}}>{line}</div>);
+      // Empty line = section break
+      if (!line.trim()) {
+        // Flush any pending code
+        if (codeLines.length > 0) {
+          flushCodeBlock(elements, codeLines, `mid-${i}`);
+          codeLines = [];
+        }
+        isNewSection = true;
+        continue;
+      }
+      // Plain text line: title or description based on position
+      if (isNewSection) {
+        // Section divider (not before first section)
+        if (sectionIdx > 0) {
+          elements.push(<div key={`div-${i}`} style={{height:1,background:"rgba(255,255,255,0.06)",margin:"18px 0 16px"}}/>);
+        }
+        sectionIdx++;
+        isNewSection = false;
+        elements.push(<div key={i} style={{color:"var(--text-primary)",fontSize:16,fontWeight:800,marginBottom:6,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{line}</div>);
+      } else {
+        // Description line - smaller, dimmer
+        elements.push(<div key={i} style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,marginBottom:6,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{renderBidiBlock(line,lang)}</div>);
+      }
     }
     if (codeLines.length > 0) {
       flushCodeBlock(elements, codeLines, "tail");
@@ -3450,18 +3498,11 @@ export default function K8sQuestApp() {
       if (isCmd)   { headerLabel = "Terminal"; headerIcon = ">_"; }
       if (isYaml)  { headerLabel = "YAML";    headerIcon = "{}"; }
       if (isError) { headerLabel = "Error";   headerIcon = "!"; }
+      const variant = isError ? "error" : isYaml ? "yaml" : isCmd ? undefined : "output";
       elements.push(
-        <div key={`term-${elements.length}`} style={{borderRadius:8,marginTop:6,marginBottom:6,overflow:"hidden",border:"1px solid var(--glass-6)",direction:"ltr",unicodeBidi:"isolate"}}>
-          <div style={{display:"flex",alignItems:"center",gap:6,padding:"5px 12px",background:"rgba(255,255,255,0.03)",borderBottom:"1px solid var(--glass-4)"}}>
-            <span style={{fontFamily:"'SF Mono','Fira Code',monospace",fontSize:10,fontWeight:700,color:isError?"#f87171":"var(--text-dim)",letterSpacing:0.5}}>{headerIcon}</span>
-            <span style={{fontSize:10,fontWeight:600,color:isError?"#f87171":"var(--text-dim)",letterSpacing:0.5,textTransform:"uppercase"}}>{headerLabel}</span>
-          </div>
-          <div style={{background:"rgba(0,0,0,0.35)",padding:"10px 12px",overflowX:"auto"}}>
-            {termGroup.map((tl, ti) => (
-              <div key={ti} style={{fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,color:isError?"#fca5a5":"var(--code-text)",lineHeight:1.8,whiteSpace:"pre-wrap",wordBreak:"keep-all",overflowWrap:"break-word",direction:"ltr",unicodeBidi:"isolate"}}>{tl}</div>
-            ))}
-          </div>
-        </div>
+        <TerminalBlock key={`term-${elements.length}`} variant={variant} label={isCmd ? undefined : undefined}>
+          {joined}
+        </TerminalBlock>
       );
       termGroup = [];
     };
@@ -3785,7 +3826,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
       </a>}
-      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes termCursorBlink{0%,100%{opacity:1}50%{opacity:0}}.term-cursor{display:inline-block;width:7px;height:14px;background:#484f58;vertical-align:text-bottom;margin-left:1px}.term-cursor-blink{animation:termCursorBlink 600ms step-end infinite}.term-output-reveal{animation:termFadeIn 200ms ease-out forwards}@keyframes termFadeIn{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.term-cursor-blink{animation:none}.term-output-reveal{animation:none}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar-right{gap:8px!important}
@@ -3856,7 +3897,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
       {showConfetti&&!a11y.reduceMotion&&<Confetti/>}
-      {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span aria-hidden="true" style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"var(--text-primary)",fontSize:14,fontWeight:700}}>{getLocalizedField(newAchievement, "name", lang)}</div></div></div>}
+      {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid var(--glass-10)",borderRadius:10,padding:"8px 16px",display:"flex",alignItems:"center",gap:9,zIndex:9999,boxShadow:"0 0 16px rgba(0,212,255,0.08), 0 2px 10px rgba(0,0,0,0.35)",animation:"toast 0.3s ease",direction:dir}}><span aria-hidden="true" style={{fontSize:15,lineHeight:1,flexShrink:0}}>{newAchievement.icon}</span><span style={{color:"var(--text-bright)",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>{getLocalizedField(newAchievement,"name",lang)}</span></div>}
       {saveError&&<div role="alert" aria-live="assertive" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
       {resumeToast&&<div role="status" aria-live="polite" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid rgba(0,212,255,0.35)",borderRadius:12,padding:"10px 20px",color:"#00D4FF",fontSize:13,fontWeight:600,zIndex:9999,boxShadow:"0 0 20px rgba(0,212,255,0.15)",animation:"fadeIn 0.3s ease",whiteSpace:"nowrap"}}>{t("resumeToast")}</div>}
 
@@ -4293,6 +4334,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <span style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
               {dailyStreak.streak > 0 && <span style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"2px 8px",fontSize:11,color:"#F59E0B",fontWeight:700,flexShrink:0}}>🔥 {dailyStreak.streak}</span>}
             </div>
+            {isInterviewMode && (
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginTop:6}}>
+                <span style={{fontSize:11,color:"rgba(180,210,255,0.75)",fontWeight:400,direction:"rtl",lineHeight:1}}>מצב ראיון פעיל · טיימר פעיל · רמזים כבויים</span>
+              </div>
+            )}
           </div>
 
           {/* ── 1. HERO SECTION - Main action card ── */}
@@ -4451,7 +4497,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
                   <div aria-hidden="true" style={{fontSize:24,width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>{topic.icon}</div>
                   <div style={{flex:1}}>
-                    <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15}}>{topic.name}</h3>
+                    <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>{topic.name}{topic.isNew&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}</h3>
                     <div style={{color:"var(--text-dim)",fontSize:12}}>{getLocalizedField(topic, "description", lang)}</div>
                   </div>
                   {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -4492,7 +4538,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"quiz_game"})}catch{}}} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button><span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"quiz_game"})}catch{}}} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span></div>}
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><span>{a.icon}</span>{getLocalizedField(a, "name", lang)}</div>)}</div></div>}
           </>)}
-          {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir}/>}
+          {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir} isGuest={isGuest} onSignup={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"roadmap"})}catch{}}} onLogin={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"roadmap"})}catch{}}}/>}
           <Footer lang={lang} onPrivacy={()=>setScreen("privacy")} onTerms={()=>setScreen("terms")}/>
         </div>
       )}
@@ -4948,7 +4994,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
               <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
                 style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"18px 16px 18px",marginBottom:10,outline:"none",position:"relative"}}>
-                {renderQuestion(currentQuestions[questionIndex].q, lang)}
+                {(() => {
+                  const qId = currentQuestions[questionIndex]?.id ?? `${selectedTopic?.id}_${selectedLevel}_${questionIndex}`;
+                  const shouldAnimate = !isInHistoryMode && !retryMode && !termAnimatedQsRef.current.has(qId);
+                  if (shouldAnimate) termAnimatedQsRef.current.add(qId);
+                  return renderQuestion(currentQuestions[questionIndex].q, lang, shouldAnimate);
+                })()}
                 {!isInHistoryMode&&!tryAgainActive&&!isFreeMode(selectedTopic?.id)&&(
                   <button onClick={toggleBookmark}
                     aria-label={currentQBookmarked ? t("removeBookmark") : t("bookmark")}
@@ -5018,7 +5069,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
                       {isCodeOption
                         ? <span dir="ltr" style={{flex:1,minWidth:0,lineHeight:1.55,unicodeBidi:"isolate"}}>
-                            <span className="opt-cmd-scroll" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"rgba(0,0,0,0.18)",borderRadius:6,padding:"5px 10px",fontFamily:"'SF Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"inherit"}}>{renderBidi(opt,lang)}</span>
+                            <span className="opt-cmd-scroll" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"#0d1117",borderRadius:4,padding:"5px 10px",fontFamily:"'JetBrains Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"#c9d1d9"}}>{renderBidi(opt,lang)}</span>
                           </span>
                         : <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang)}</span>
                       }
@@ -5107,8 +5158,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             );
                             if (isCodeOnly) {
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
-                              if (s.startsWith("```")) return <YamlBlock key={idx} keyProp={`exp-code-${idx}`} code={code} />;
-                              return <code key={idx} dir="ltr" style={{display:"block",background:"#1E1E2E",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"14px 16px",fontSize:12,fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro',monospace",color:"#D4D4D4",lineHeight:1.65,overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>{code}</code>;
+                              return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
                             }
                             return (
                               <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
@@ -5161,8 +5211,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             );
                             if (isCodeOnly) {
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
-                              if (s.startsWith("```")) return <YamlBlock key={idx} keyProp={`iexp-code-${idx}`} code={code} />;
-                              return <code key={idx} dir="ltr" style={{display:"block",background:"#1E1E2E",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"14px 16px",fontSize:12,fontFamily:"'JetBrains Mono','Fira Code','Source Code Pro',monospace",color:"#D4D4D4",lineHeight:1.65,overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>{code}</code>;
+                              return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
                             }
                             return (
                               <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
@@ -5634,7 +5683,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!import.meta.env.PROD&&screen==="incident"&&selectedIncident&&(()=>{
         const step = getIncidentStep(incidentStepIndex);
         if (!step) { return <div style={{textAlign:"center",padding:"40px 20px"}}><p style={{color:"var(--text-secondary)",fontSize:14}}>{lang==="en"?"Incident step not found. Returning...":"שלב לא נמצא. חוזר..."}</p><button onClick={()=>setScreen("incidentList")} style={{marginTop:12,padding:"10px 22px",background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:10,color:"var(--text-secondary)",fontSize:14,cursor:"pointer"}}>{lang==="en"?"Back":"חזרה"}</button></div>; }
-        const totalSteps = incidentSteps ? incidentSteps.length : (selectedIncident.steps?.length || 0);
+        const totalSteps = incidentSteps?.length || (selectedIncident.steps?.length || 0);
         const maxScore = totalSteps * 10;
         const progress = totalSteps > 0 ? ((incidentStepIndex + (incidentSubmitted ? 1 : 0)) / totalSteps) * 100 : 0;
         const incidentNum = INCIDENTS.findIndex(inc => inc.id === selectedIncident.id) + 1;
@@ -5698,6 +5747,46 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             </div>
 
+            {/* Briefing: Objective + Constraints + Signals (shown only on first step) */}
+            {incidentStepIndex === 0 && (
+              <div style={{background:"rgba(15,23,42,0.5)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"14px 16px",marginBottom:14,direction:dir}}>
+                {/* Objective */}
+                {selectedIncident.objective && (
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.2,color:"#60a5fa",marginBottom:6}}>{t("incidentObjective")}</div>
+                    <div style={{fontSize:13,color:"var(--text-secondary)",lineHeight:1.6}}>{getLocalizedField(selectedIncident,"objective",lang)}</div>
+                  </div>
+                )}
+                {/* Constraints */}
+                {selectedIncident.constraints && (
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.2,color:"#f59e0b",marginBottom:6}}>{t("incidentConstraints")}</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      {(getLocalizedField(selectedIncident,"constraints",lang)||[]).map((c,i)=>(
+                        <div key={i} style={{display:"flex",alignItems:"flex-start",gap:6,fontSize:12,color:"var(--text-secondary)",lineHeight:1.5}}>
+                          <span style={{color:"#f59e0b",fontSize:10,marginTop:3,flexShrink:0}}>&#9679;</span>
+                          <span>{c}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* System Signals */}
+                {selectedIncident.signals && (
+                  <div>
+                    <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.2,color:"#ef4444",marginBottom:6}}>{t("incidentSignals")}</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      {(getLocalizedField(selectedIncident,"signals",lang)||[]).map((s,i)=>(
+                        <div key={i} style={{fontFamily:"'SF Mono','Fira Code',monospace",fontSize:11,color:"var(--text-secondary)",lineHeight:1.6,direction:"ltr",unicodeBidi:"isolate",textAlign:"left",padding:"3px 8px",background:"rgba(0,0,0,0.3)",borderRadius:4}}>
+                          {s}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Prompt */}
             <div dir={dir} style={{background:"rgba(15,23,42,0.7)",border:"1px solid var(--glass-10)",borderRadius:12,padding:"16px 18px",marginBottom:16,overflowX:"auto",direction:dir}}>
               {renderIncidentPrompt(getLocalizedField(step, "prompt", lang))}
@@ -5705,7 +5794,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
             {/* Options - card layout always follows page direction (RTL for Hebrew), only text content isolates LTR for commands */}
             <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-              {(getLocalizedField(step, "options", lang) || []).map((opt,i)=>{
+              {(getLocalizedField(step, "options", lang) || []).map((rawOpt,i)=>{
+                const isDestructive = /\s*\[destructive\]\s*$/i.test(rawOpt);
+                const opt = rawOpt.replace(/\s*\[destructive\]\s*$/i, "");
                 const isCorrect  = incidentAnswerResult ? i === incidentAnswerResult.correctIndex : i === step?.answer;
                 const isChosen   = i === incidentAnswer;
                 let bg = "var(--glass-2)", border = "var(--glass-9)", color = "var(--text-light)", labelBg = "var(--glass-7)", labelColor = "var(--text-secondary)";
@@ -5737,6 +5828,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       ) : (
                         <span dir={contentDir} style={{display:"block",lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:contentDir,unicodeBidi:"isolate",textAlign:contentDir==="rtl"?"right":"left"}}>{renderBidi(opt,lang)}</span>
                       )}
+                      {isDestructive && <span style={{display:"inline-block",marginTop:4,fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,background:"rgba(239,68,68,0.12)",color:"#EF4444",letterSpacing:0.3}}>&#9888; {t("incidentDestructive")}</span>}
                     </span>
                     {incidentSubmitted&&isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✓</span>}
                     {incidentSubmitted&&isChosen&&!isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✗</span>}
@@ -5744,6 +5836,24 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 );
               })}
             </div>
+
+            {/* Step hint button + hint display */}
+            {!incidentSubmitted && getLocalizedField(step, "hint", lang) && (
+              <div style={{marginBottom:10}}>
+                {!incidentStepHintVisible ? (
+                  <button onClick={()=>setIncidentStepHintVisible(true)}
+                    style={{padding:"8px 16px",background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:8,color:"#d97706",fontSize:12,cursor:"pointer",transition:"all 0.15s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,0.12)";e.currentTarget.style.borderColor="rgba(245,158,11,0.35)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,0.07)";e.currentTarget.style.borderColor="rgba(245,158,11,0.18)";}}>
+                    {t("incidentHintBtn")}
+                  </button>
+                ) : (
+                  <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:8,padding:"10px 14px",animation:"fadeIn 0.2s ease"}}>
+                    <span style={{fontSize:12,color:"#fbbf24",lineHeight:1.6}}>{getLocalizedField(step, "hint", lang)}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Confirm answer button */}
             {!incidentSubmitted&&incidentAnswer!==null&&(
@@ -5771,7 +5881,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           <span style={{fontWeight:800,fontSize:14,color:incCorrect?"#10B981":"#EF4444"}}>{incCorrect?t("incidentCorrect"):t("incidentWrong")}</span>
                         </div>
                         {!incCorrect&&<p style={{fontSize:12,color:"var(--text-muted)",margin:"0 0 10px",lineHeight:1.5}}>{t("incidentWrongSub")}</p>}
-                        {incCorrect&&<div style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",margin:"6px 0 8px"}}>{t("incidentWhyCorrect")}</div>}
                         {renderIncidentExplanation(incExplanation)}
                       </div>
                       <button onClick={nextIncidentStep}
@@ -5791,10 +5900,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
       {/* ── INCIDENT COMPLETE ─────────────────────────────────────────────── */}
       {!import.meta.env.PROD&&screen==="incidentComplete"&&selectedIncident&&(()=>{
-        const maxScore = (incidentSteps ? incidentSteps.length : (selectedIncident.steps?.length || 0)) * 10;
+        const totalSteps = incidentSteps?.length || (selectedIncident.steps?.length || 0);
+        const maxScore = totalSteps * 10;
         const passed   = incidentPassed; // single source of truth - set in nextIncidentStep
         const accentColor = passed ? "#22C55E" : "#EF4444";
         const accentRgb   = passed ? "34,197,94" : "239,68,68";
+        const correctCount = incidentScore / 10;
+        const wrongCount = incidentMistakes;
+        const requiredCorrect = Math.ceil(totalSteps * 0.7);
+        const allowedMistakes = totalSteps - requiredCorrect;
         return(
           <div style={{maxWidth:480,margin:"20px auto",padding:"0 18px",textAlign:"center",animation:"fadeIn 0.5s ease",direction:dir}}>
             {/* Result header */}
@@ -5806,6 +5920,40 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <p style={{color:"var(--text-muted)",fontSize:13,margin:"0 0 6px"}}>{getLocalizedField(selectedIncident, "title", lang)}</p>
               <p style={{color:"var(--text-dim)",fontSize:12,margin:"0 0 20px",fontStyle:"italic"}}>{passed?t("incidentNextUnlocked"):t("incidentFailedSub")}</p>
             </div>
+
+            {/* ── Failure Explanation ── */}
+            {!passed&&(
+              <div style={{
+                background:"rgba(239,68,68,0.06)",
+                border:"1px solid rgba(239,68,68,0.2)",
+                borderRadius:14,
+                padding:"16px 18px",
+                marginBottom:20,
+                textAlign:"start",
+              }}>
+                <div style={{fontSize:14,fontWeight:800,color:"#EF4444",marginBottom:10}}>
+                  {t("incidentFailReason")}
+                </div>
+                <div style={{fontSize:13,color:"var(--text-secondary)",lineHeight:1.7,marginBottom:12}}>
+                  {t("incidentFailThreshold").replace("{required}",requiredCorrect).replace("{total}",totalSteps)}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                  {[
+                    {label:t("incidentCorrectCount"), value:correctCount, color:"#10B981"},
+                    {label:t("incidentWrongCount"),    value:wrongCount,   color:"#EF4444"},
+                    {label:t("incidentRequiredCount"), value:`${requiredCorrect}/${totalSteps}`, color:"#A855F7"},
+                  ].map((s,i)=>(
+                    <div key={i} style={{background:"var(--glass-3)",borderRadius:10,padding:"10px 6px"}}>
+                      <div style={{fontSize:20,fontWeight:800,color:s.color}}>{s.value}</div>
+                      <div style={{fontSize:11,color:"var(--text-dim)",marginTop:3}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{fontSize:12,color:"var(--text-dim)",marginTop:10,fontStyle:"italic"}}>
+                  {t("incidentFailAllowedMistakes").replace("{allowed}",allowedMistakes)}
+                </div>
+              </div>
+            )}
 
             {/* Stats grid */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:24}}>

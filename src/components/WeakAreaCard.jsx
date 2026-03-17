@@ -1,9 +1,10 @@
 const TOPIC_NAMES = {
-  workloads:       "Workloads & Scheduling",
-  networking:      "Networking & Service Exposure",
-  config:          "Configuration & Security",
-  storage:         "Storage & Package Management",
-  troubleshooting: "Cluster Operations & Troubleshooting",
+  workloads:       "Workloads & Pods",
+  networking:      "Networking & Services",
+  config:          "Config & Secrets",
+  storage:         "Storage & Helm",
+  troubleshooting: "Troubleshooting & Debugging",
+  linux:           "Linux Deep Dive",
 };
 
 // Returns the hex color for the side-bar indicator based on accuracy (0-100).

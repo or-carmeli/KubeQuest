@@ -3,7 +3,27 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { ThemeProvider } from './ThemeContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { init as initTelemetry, captureError, reportWebVital } from './utils/telemetry.js'
 import './theme.css'
+
+// Initialize Sentry as early as possible — production only.
+// If DSN is missing or init fails, the app continues normally.
+if (import.meta.env.PROD) {
+  initTelemetry({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || "production",
+    release: `kubequest@${typeof __BUILD_HASH__ !== "undefined" ? __BUILD_HASH__ : "unknown"}`,
+  });
+}
+
+// Report Core Web Vitals to Sentry (production only, lazy-loaded)
+if (import.meta.env.PROD) {
+  import('web-vitals').then(({ onCLS, onINP, onLCP }) => {
+    onCLS(reportWebVital);
+    onINP(reportWebVital);
+    onLCP(reportWebVital);
+  }).catch(() => {});
+}
 
 console.info("[KubeQuest:boot] main.jsx module loaded");
 
@@ -22,6 +42,7 @@ try {
   console.info("[KubeQuest:boot] render() called - React is mounting");
 } catch (err) {
   console.error("[KubeQuest:boot] FATAL bootstrap error:", err);
+  captureError(err, { flow: "bootstrap" });
   const el = document.getElementById('root');
   if (el) {
     el.innerHTML = `

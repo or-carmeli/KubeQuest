@@ -74,6 +74,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 | Supply Chain | [Cosign](https://docs.sigstore.dev/cosign/overview/) + [Trivy](https://trivy.dev/) + SBOM + Provenance |
 | Security | CSP, HSTS, CORS, RLS, CodeQL, npm audit, Gitleaks, Kyverno |
 | Monitoring | Supabase Edge Functions + pg_cron (60s interval) |
+| Error Tracking | [Sentry](https://sentry.io) (production-only, free tier) |
 | Testing | [Vitest](https://vitest.dev) |
 | Dependency Management | [Dependabot](https://docs.github.com/en/code-security/dependabot) (weekly - npm, Docker, Actions) |
 
@@ -115,6 +116,30 @@ flowchart TB
     style Database fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#ffffff
 ```
 
+### App Flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant SPA as React SPA
+    participant API as Supabase (Auth + RPC + DB)
+
+    User->>SPA: Open app
+    SPA->>API: Auth check (PKCE)
+    API-->>SPA: Session or guest mode
+
+    User->>SPA: Start quiz
+    SPA->>API: Fetch questions (no answers shipped)
+    User->>SPA: Submit answer
+    SPA->>API: Server validates + scores
+    API-->>SPA: Result + explanation
+
+    SPA->>API: Save progress
+    SPA-->>User: Results + achievements
+```
+
+The client never sees correct answers until after submission — all scoring is server-authoritative via `SECURITY DEFINER` RPC functions.
+
 ### Stack Layers
 
 **Frontend** - React single-page application built with Vite, deployed on Vercel. Includes a manual service worker for offline caching and a PWA manifest for installability. All routing is handled client-side.
@@ -128,24 +153,19 @@ flowchart TB
 ## Security Model
 
 ```mermaid
-flowchart TB
-    USER([User])
+flowchart LR
+    USER([User]) -->|HTTPS| EDGE["Edge<br/>HSTS · CORS"]
+    EDGE --> APP["App<br/>CSP · No Inline"]
+    APP --> API["API<br/>RPC · Rate Limit"]
+    API --> DB[("DB<br/>RLS")]
 
-    EDGE["Edge Security<br/>HTTPS / HSTS"]
-    APP["Application Security<br/>Strict CSP · No Inline Scripts"]
-    API["API Validation<br/>RPC Validation · Rate Limiting"]
-    DB[("Database Security<br/>PostgreSQL · Row Level Security")]
-
-    USER -->|HTTPS| EDGE
-    EDGE --> APP
-    APP --> API
-    API --> DB
-
-    style EDGE fill:#111827,stroke:#EF4444,stroke-width:2px,color:#ffffff
-    style APP fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#ffffff
-    style API fill:#111827,stroke:#A855F7,stroke-width:2px,color:#ffffff
-    style DB fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#ffffff
+    style EDGE fill:#111827,stroke:#EF4444,stroke-width:2px,color:#fff
+    style APP fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style API fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style DB fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
 ```
+
+Four layers of defense — no layer trusts the one above it:
 
 | Layer | Controls |
 |-------|----------|
@@ -186,7 +206,35 @@ flowchart LR
 
 ## Observability
 
-A Supabase Edge Function executes health checks every 60 seconds via `pg_cron`, monitoring 5 services:
+```mermaid
+flowchart LR
+    CRON["pg_cron<br/>every 60s"] --> EDGE["Edge Function"]
+    EDGE --> DB["DB"]
+    EDGE --> API["API"]
+    EDGE --> QUIZ["Quiz"]
+    EDGE --> LB["Leaderboard"]
+    EDGE --> AUTH["Auth"]
+    EDGE -->|results| STORE[("status tables")]
+    STORE -->|polls 30s| UI["Status Page"]
+    UI -.->|alerts| USER([User])
+
+    style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
+    style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style STORE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style UI fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
+```
+
+The core of the observability stack is a **self-monitoring loop** built entirely on Supabase:
+
+1. **pg_cron** triggers a Supabase Edge Function every 60 seconds
+2. The Edge Function health-checks all 5 services (DB, API, Quiz Engine, Leaderboard, Auth)
+3. Results are written to PostgreSQL status tables (append-only for uptime history)
+4. 3 consecutive failures auto-create an incident
+5. The frontend polls these tables every 30 seconds and renders a live status page
+
+Additional layers: **Sentry** captures client-side errors and Web Vitals, **GitHub Actions** run external uptime checks (every 30min) and synthetic smoke tests (every 6h).
+
+### Health Checks
 
 | Service | Check |
 |---------|-------|
@@ -196,29 +244,45 @@ A Supabase Edge Function executes health checks every 60 seconds via `pg_cron`, 
 | Leaderboard | `get_leaderboard` RPC |
 | Authentication | GoTrue `/auth/v1/health` |
 
-```mermaid
-flowchart LR
-    CRON["pg_cron<br/>every 60s"] --> EDGE["Edge Function<br/>health-check"]
-    EDGE --> DB["Database"]
-    EDGE --> API["Content API"]
-    EDGE --> QUIZ["Quiz Engine"]
-    EDGE --> LB["Leaderboard"]
-    EDGE --> AUTH["Auth"]
-    EDGE --> STORE[("PostgreSQL<br/>status tables")]
-    STORE --> UI["Frontend<br/>polls every 30s"]
-
-    style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
-    style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
-    style STORE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
-    style UI fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
-```
-
-- **Status classification** - operational (<2s), degraded (>2s), down (error)
-- **Auto-incident detection** - 3 consecutive failures trigger automatic incident creation
-- **Data retention** - append-only `system_status_history` table for uptime tracking
-- **Frontend** - live status page with real-time polling
+- **Status classification** — operational (<2s), degraded (>2s), down (error)
+- **Auto-incident detection** — 3 consecutive failures trigger automatic incident creation
+- **Data retention** — append-only `system_status_history` table for uptime tracking
 
 Full documentation: [docs/monitoring.md](docs/monitoring.md) | Live status: [status.kubequest.online](https://status.kubequest.online)
+
+### Error Tracking (Sentry)
+
+Client-side errors are reported to [Sentry](https://sentry.io) in production only. The integration is error-monitoring only — no performance tracing, session replay, or profiling (free-tier friendly).
+
+**What is captured:**
+- Uncaught exceptions and unhandled promise rejections
+- React render crashes (via ErrorBoundary)
+- Failures in data load/save, quiz answer submission, and question fetching
+
+**What is NOT sent:**
+- Auth tokens, JWTs, or Supabase keys
+- Email addresses or personally identifying information
+- SQL queries, table names, or raw backend error payloads
+
+**Configuration:** Set `VITE_SENTRY_DSN` as an environment variable (Vercel / `.env`). Without it, Sentry is disabled and the app runs normally. For source map uploads in CI, also set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` as GitHub Actions secrets.
+
+### Web Vitals
+
+Core Web Vitals (LCP, CLS, INP) are reported to Sentry as breadcrumbs and tags, correlating performance with errors. Also tracked independently by Vercel Speed Insights.
+
+### Synthetic Monitoring
+
+A GitHub Actions workflow (`synthetic-monitor.yml`) runs every 6 hours and verifies:
+- Homepage returns 200 with critical assets
+- Supabase API is reachable
+- Response time is under 3 seconds
+- Security headers are present
+
+### Uptime Monitoring
+
+External uptime checks (`uptime.yml`) ping the homepage and Supabase auth every 30 minutes. Failed runs indicate downtime.
+
+Full documentation: [docs/observability.md](docs/observability.md)
 
 ---
 
@@ -285,7 +349,7 @@ flowchart LR
 
 | Trigger | Tag | Example |
 |---------|-----|---------|
-| Push to `main` | `latest` + `sha-<commit>` + `package.json` version | `latest`, `sha-a1b2c3d`, `2.4.0` |
+| Push to `main` | `latest` + `sha-<commit>` + `package.json` version | `latest`, `sha-a1b2c3d`, `2.5.0` |
 | Git tag `v1.2.0` | Semver + `sha-<commit>` | `1.2.0`, `sha-a1b2c3d` |
 | Manual dispatch | `sha-<commit>` | `sha-a1b2c3d` |
 
@@ -383,9 +447,10 @@ npm run dev            # → http://localhost:5173
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+VITE_SENTRY_DSN=                # optional — enables error tracking in production
 ```
 
-> Auth, leaderboard, and cross-device sync require a Supabase project. All other features work without credentials.
+> Auth, leaderboard, and cross-device sync require a Supabase project. All other features work without credentials. Sentry is optional — omit the DSN to disable error tracking.
 
 ### Available Scripts
 
@@ -477,6 +542,7 @@ Key test areas:
 ```
 src/
   App.jsx              # Main application (UI + state)
+  main.jsx             # Entry point (Sentry init, Web Vitals, React mount)
   api/
     quiz.js            # Quiz, daily, incident, leaderboard RPCs
     monitoring.js      # System status monitoring RPCs
@@ -486,9 +552,12 @@ src/
     dailyQuestions.js  # Daily Challenge question pool
   components/
     RoadmapView.jsx    # Visual learning path
+    StatsView.jsx      # User statistics dashboard
+    StatusView.jsx     # System status monitor
     WeakAreaCard.jsx   # Lowest-accuracy topic card
-    ErrorBoundary.jsx  # Crash recovery wrapper
+    ErrorBoundary.jsx  # Crash recovery wrapper + Sentry capture
   utils/
+    telemetry.js       # Sentry wrapper (error capture, scrubbing, web vitals)
     storage.js         # Safe localStorage layer with corruption recovery
     bidi.jsx           # BiDi text rendering for Hebrew/English mixed content
     quizPersistence.js # localStorage helpers for quiz resume
@@ -505,9 +574,12 @@ supabase/
     ci.yml             # PR gate (build, npm audit, Gitleaks, CodeQL, Trivy, K8s policies)
     docker.yml         # Container build, scan, push, SBOM, provenance, Cosign sign
     security.yml       # Weekly security scanning (npm audit, Trivy, CodeQL)
+    synthetic-monitor.yml  # Smoke tests every 6h (homepage, assets, response time, headers)
+    uptime.yml         # External uptime checks every 30 min
   dependabot.yml       # Weekly dependency updates (npm, Docker, Actions)
 docs/
-  monitoring.md        # Monitoring system documentation
+  monitoring.md        # Health-check monitoring documentation
+  observability.md     # Full observability guide (Sentry, alerts, SLOs, web vitals)
   k8s-admission-policies.md  # Runtime admission policy guide (Kyverno, OPA, Cosign)
 ```
 

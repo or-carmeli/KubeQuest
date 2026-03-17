@@ -95,7 +95,9 @@ export function renderBidiInner(text, lang, keyPrefix) {
   }
   // Split on: flag sequences (--flag, -f), slash-paths (/api/v1), Latin word sequences, or left-arrow
   // Slash-paths require NOT preceded by Hebrew to avoid capturing "/ServiceAccount" from "משתמש/ServiceAccount"
-  const parts = text.split(/((?:(?<![\u0590-\u05FF])--?[A-Za-z][\w\-]*(?:=[^\s\u0590-\u05FF]*)?(?:\s+(?=(?:--?)?[A-Za-z]))?)+|(?:(?<![\u0590-\u05EA])\/[A-Za-z][A-Za-z0-9\-_/.:]*)|(?:[A-Za-z](?:[A-Za-z0-9\-_:/=]|\.[A-Za-z0-9])*(?:\s+(?=(?:--?)?[A-Za-z]))?)+|[←])/);
+  // Colon is only captured mid-token when followed by an alphanumeric char (port:8080, key:value)
+  // but NOT when followed by whitespace/Hebrew (B: בדוק) — keeps sentence colons in RTL flow.
+  const parts = text.split(/((?:(?<![\u0590-\u05FF])--?[A-Za-z][\w\-]*(?:=[^\s\u0590-\u05FF]*)?(?:\s+(?=(?:--?)?[A-Za-z]))?)+|(?:(?<![\u0590-\u05EA])\/[A-Za-z][A-Za-z0-9\-_/.:]*)|(?:[A-Za-z](?:[A-Za-z0-9\-_/=]|:[A-Za-z0-9]|\.[A-Za-z0-9])*(?:\s+(?=(?:--?)?[A-Za-z]))?)+|[←])/);
   if (parts.length <= 1) return text;
   const startsWithLatin = /^[A-Za-z]/.test(text) || /^--?[A-Za-z]/.test(text) || /^\/[A-Za-z]/.test(text);
   return parts.map((part, idx) => {
@@ -171,6 +173,10 @@ export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
 // Returns text unchanged for English mode.
 export function renderBidi(text, lang) {
   if (!text || lang !== "he") return text;
+
+  // Strip LTR marks (U+200E) - the span-based bidi isolation is more robust
+  // and these marks interfere with the keyword regex below.
+  text = text.replace(/\u200E/g, "");
 
   // @regression - Hebrew↔Latin slash normalization (see also renderBidiInner).
   // Prevents the bidi bug where "משתמש/ServiceAccount" was rendered as a "/ServiceAccount"

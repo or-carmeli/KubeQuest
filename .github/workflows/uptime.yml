@@ -1,0 +1,43 @@
+name: Uptime Monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes
+  workflow_dispatch:
+
+jobs:
+  uptime-check:
+    name: Uptime Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check endpoints
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          check_endpoint() {
+            local name="$1" url="$2" expected="$3"
+            local status time
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -H "apikey: ${SUPABASE_ANON_KEY:-}" "$url")
+            time=$(curl -s -o /dev/null -w "%{time_total}" --max-time 10 -H "apikey: ${SUPABASE_ANON_KEY:-}" "$url")
+            if [ "$status" = "$expected" ]; then
+              echo "✅ $name: $status (${time}s)"
+            else
+              echo "❌ $name: expected $expected, got $status (${time}s)"
+              echo "::error::$name is DOWN - returned $status"
+              return 1
+            fi
+          }
+
+          FAILED=0
+          check_endpoint "Homepage" "https://www.kubequest.online" "200" || FAILED=1
+          check_endpoint "Supabase Auth" "https://knzawpdrpahilmohzpbl.supabase.co/auth/v1/health" "200" || FAILED=1
+
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::One or more endpoints are down"
+            exit 1
+          fi

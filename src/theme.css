@@ -50,10 +50,10 @@
   /* Overlays & code backgrounds */
   --overlay: rgba(0,0,0,0.75);
   --overlay-light: rgba(0,0,0,0.7);
-  --code-bg: rgba(0,0,0,0.45);
-  --code-bg-light: rgba(0,0,0,0.35);
-  --code-bg-block: rgba(0,0,0,0.4);
-  --code-bg-block-hover: rgba(0,0,0,0.5);
+  --code-bg: #0d1117;
+  --code-bg-light: #0d1117;
+  --code-bg-block: #0d1117;
+  --code-bg-block-hover: #161b22;
 
   /* Shadows */
   --shadow-heavy: 0 8px 32px rgba(0,0,0,0.5);
