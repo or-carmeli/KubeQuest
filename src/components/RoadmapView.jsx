@@ -8,6 +8,7 @@ const STAGE_SUBTITLES = {
   storage:         "PV · StorageClass · Helm · Operators",
   troubleshooting: "Logs · Events · Probes · Observability",
   linux:           "Processes · Memory · CPU · Networking",
+  argo:            "ArgoCD · Workflows · ApplicationSets · Rollouts",
 };
 
 const LVL_ORDER = ["easy", "medium", "hard"];
@@ -177,7 +178,8 @@ export default function RoadmapView({
                   {/* Text - takes remaining space, clips instead of wrapping */}
                   <div style={{flex:1,minWidth:0,direction:"ltr",textAlign:"center"}}>
                     <div className="roadmap-title" style={{fontWeight:700,color:"var(--text-primary)",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
-                      {topic.isNew&&!completed&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}
+                      {topic.isComingSoon&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(234,179,8,0.25)"}}>COMING SOON</span>}
+                      {topic.isNew&&!completed&&!topic.isComingSoon&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}
                       <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topic.name}</span>
                       {completed&&<span style={{flexShrink:0}}>✅</span>}
                     </div>

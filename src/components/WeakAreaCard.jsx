@@ -5,6 +5,7 @@ const TOPIC_NAMES = {
   storage:         "Storage & Helm",
   troubleshooting: "Troubleshooting & Debugging",
   linux:           "Linux Deep Dive",
+  argo:            "Argo & GitOps",
 };
 
 // Returns the hex color for the side-bar indicator based on accuracy (0-100).

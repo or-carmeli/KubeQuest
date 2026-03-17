@@ -101,4 +101,14 @@ export const TOPIC_META = [
     descriptionEn: "Processes · Memory · CPU · Networking",
     isNew: true,
   },
+  {
+    id: "argo",
+    icon: "🔄",
+    name: "Argo & GitOps",
+    color: "#EF7B45",
+    description: "ArgoCD · Workflows · ApplicationSets · Rollouts",
+    descriptionEn: "ArgoCD · Workflows · ApplicationSets · Rollouts",
+    isComingSoon: true,
+    devOnly: true,
+  },
 ];
