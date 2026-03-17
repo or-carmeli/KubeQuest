@@ -81,6 +81,20 @@ if ("serviceWorker" in navigator) {
         console.log("SW error:", e);
       });
 
+    // Listen for stale-asset recovery messages from the SW.
+    // After a new Vercel deploy, old tabs may request hashed assets that no
+    // longer exist. The SW detects this and asks us to reload once so the
+    // browser picks up the new index.html with correct asset URLs.
+    // sessionStorage guard prevents infinite reload loops.
+    navigator.serviceWorker.addEventListener("message", function (evt) {
+      if (evt.data && evt.data.type === "STALE_ASSET_RECOVERY") {
+        if (sessionStorage.getItem("kq-stale-recovery")) return;
+        sessionStorage.setItem("kq-stale-recovery", "1");
+        console.warn("[KubeQuest] Stale asset detected - reloading to pick up new deployment");
+        location.reload();
+      }
+    });
+
     // Notify the app when a new SW takes control (not on first install)
     navigator.serviceWorker.addEventListener("controllerchange", function () {
       if (!hadController) {
