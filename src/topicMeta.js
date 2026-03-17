@@ -5,31 +5,38 @@
 
 export const ACHIEVEMENTS = [
   {
-    id: "first",
-    icon: "⚡",
-    name: "ראשית הדרך",
-    nameEn: "First Steps",
-    condition: (s) => s.total_answered >= 1,
-  },
-  {
     id: "streak3",
     icon: "🔥",
-    name: "שלושה ברצף",
-    nameEn: "Three in a Row",
+    name: "3 ברצף",
+    nameEn: "3 in a row",
     condition: (s) => s.max_streak >= 3,
+  },
+  {
+    id: "streak5",
+    icon: "🔥",
+    name: "5 ברצף",
+    nameEn: "5 in a row",
+    condition: (s) => s.max_streak >= 5,
+  },
+  {
+    id: "streak10",
+    icon: "🔥",
+    name: "10 ברצף",
+    nameEn: "10 in a row",
+    condition: (s) => s.max_streak >= 10,
   },
   {
     id: "score100",
     icon: "💯",
     name: "100 נקודות",
-    nameEn: "100 Points",
+    nameEn: "100 points",
     condition: (s) => s.total_score >= 100,
   },
   {
     id: "allEasy",
     icon: "⭐",
-    name: "כל הנושאים קל",
-    nameEn: "All Topics Easy",
+    name: "כל הנושאים ברמה קלה",
+    nameEn: "All topics on easy",
     condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_easy")).length >= 6,
   },
   {

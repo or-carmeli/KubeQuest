@@ -47,6 +47,7 @@ function nextRecommendedLevel(topicId, completedTopics, isLevelLocked) {
 export default function RoadmapView({
   topics, levelConfig, completedTopics, isLevelLocked,
   startTopic, lang, t, dir,
+  isGuest, onSignup, onLogin,
 }) {
   const [expandedStage, setExpandedStage] = useState(null);
   const rowDir = dir === "rtl" ? "row-reverse" : "row";
@@ -250,6 +251,13 @@ export default function RoadmapView({
           );
         })}
       </div>
+
+      {/* ── Guest signup card ── */}
+      {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10,direction:dir}}>
+        <span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span>
+        <button className="guest-banner-btn" onClick={onSignup} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button>
+        <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={onLogin} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span>
+      </div>}
     </div>
   );
 }

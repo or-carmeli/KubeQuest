@@ -324,6 +324,12 @@ const TRANSLATIONS = {
     incidentFailed: "האירוע לא נפתר",
     incidentFailedSub: "התקלה עדיין קיימת. נסי שוב כדי למצוא את שורש הבעיה.",
     incidentFailedSub_m: "התקלה עדיין קיימת. נסה שוב כדי למצוא את שורש הבעיה.",
+    incidentFailReason: "האירוע נכשל כי לא הושגו מספיק צעדי חקירה נכונים",
+    incidentFailThreshold: "כדי לפתור את האירוע נדרשות לפחות {required} תשובות נכונות מתוך {total}",
+    incidentFailAllowedMistakes: "מותרות עד {allowed} טעויות במהלך החקירה",
+    incidentCorrectCount: "צעדים נכונים",
+    incidentWrongCount: "צעדים שגויים",
+    incidentRequiredCount: "סף הצלחה",
     incidentRetry: "נסי שוב את האירוע", incidentRetry_m: "נסה שוב את האירוע",
     incidentCorrect: "צעד נכון בחקירה", incidentWrong: "צעד לא נכון",
     incidentWhyCorrect: "למה זו התשובה הנכונה",
@@ -339,6 +345,11 @@ const TRANSLATIONS = {
     incidentRootCause: "שורש התקלה",
     incidentCorrectApproach: "מה היה צריך לעשות",
     incidentHintPrefix: "רמז",
+    incidentHintBtn: "רמז",
+    incidentObjective: "מטרה",
+    incidentConstraints: "אילוצים",
+    incidentSignals: "אותות מהמערכת",
+    incidentDestructive: "הרסנית",
     incidentResumeBanner: "המשיכי את האירוע", incidentResumeBanner_m: "המשך את האירוע",
     incidentDiscard: "נטשי", incidentDiscard_m: "נטוש",
     incidentActiveLabel: "אירוע פעיל", incidentAvailableLabel: "אירועים זמינים",
@@ -387,6 +398,11 @@ const TRANSLATIONS = {
     statsLearningProgress: "התקדמות בלמידה",
     statsAccuracy: "דיוק",
     statsTotalAnswered: "סה״כ תשובות",
+    statsNextGoal: "יעד הבא",
+    statsImprove: "שפרו את",
+    statsTo: "ל-",
+    statsAllPerfect: "כל הנושאים ב-100%!",
+    statsXpMilestone: "אבן דרך הבאה",
     installApp: "📲 התקנה לנייד",
     installTitle: "התקנת האפליקציה",
     installDesc: "ניתן להוסיף את KubeQuest למסך הבית ולהשתמש בה כמו אפליקציה רגילה.",
@@ -526,6 +542,12 @@ const TRANSLATIONS = {
     incidentResolvedSub: "The issue was identified and resolved successfully.",
     incidentFailed: "Incident Not Resolved",
     incidentFailedSub: "The issue still persists. Try again to find the root cause.",
+    incidentFailReason: "The incident failed because not enough correct investigation steps were taken",
+    incidentFailThreshold: "At least {required} correct answers out of {total} are needed to resolve the incident",
+    incidentFailAllowedMistakes: "Up to {allowed} mistakes are allowed during the investigation",
+    incidentCorrectCount: "Correct steps",
+    incidentWrongCount: "Wrong steps",
+    incidentRequiredCount: "Required to pass",
     incidentRetry: "Retry This Incident",
     incidentCorrect: "Correct investigation step", incidentWrong: "Incorrect step",
     incidentWhyCorrect: "Why this is the correct answer",
@@ -539,6 +561,11 @@ const TRANSLATIONS = {
     incidentRootCause: "Root Cause",
     incidentCorrectApproach: "What Should Have Been Done",
     incidentHintPrefix: "Hint",
+    incidentHintBtn: "Hint",
+    incidentObjective: "Objective",
+    incidentConstraints: "Constraints",
+    incidentSignals: "System Signals",
+    incidentDestructive: "destructive",
     incidentResumeBanner: "Continue Incident",
     incidentDiscard: "Discard",
     incidentActiveLabel: "Active Incident", incidentAvailableLabel: "Available Incidents",
@@ -585,6 +612,11 @@ const TRANSLATIONS = {
     statsLearningProgress: "Learning Progress",
     statsAccuracy: "Accuracy",
     statsTotalAnswered: "Total Answered",
+    statsNextGoal: "Next Goal",
+    statsImprove: "Improve",
+    statsTo: "to",
+    statsAllPerfect: "All topics at 100%!",
+    statsXpMilestone: "Next Milestone",
     installApp: "📲 Install App",
     installTitle: "Install the App",
     installDesc: "Add KubeQuest to your home screen and use it like a regular app.",
@@ -1241,6 +1273,7 @@ export default function K8sQuestApp() {
   const [incidentElapsed,    setIncidentElapsed]    = useState(0);   // seconds
   const [incidentAnswer,     setIncidentAnswer]     = useState(null);
   const [incidentSubmitted,  setIncidentSubmitted]  = useState(false);
+  const [incidentStepHintVisible, setIncidentStepHintVisible] = useState(false);
   const [incidentHistory,    setIncidentHistory]    = useState([]);
   const [incidentResume,     setIncidentResume]     = useState(null); // saved state for resume banner
   const [incidentShareCopied,setIncidentShareCopied]= useState(false);
@@ -1852,6 +1885,7 @@ export default function K8sQuestApp() {
             setIncidentElapsed(saved.elapsed ?? 0);
             setIncidentAnswer(null);
             setIncidentSubmitted(false);
+            setIncidentStepHintVisible(false);
             setIncidentAnswerResult(null);
             incidentCheckingRef.current = false;
             setIncidentHistory(saved.history || []);
@@ -2248,6 +2282,7 @@ export default function K8sQuestApp() {
     setCompletedIncidentIds([]);
     clearIncidentProgress();
     setIncidentResume(null);
+    clearQuizState();
     try { localStorage.removeItem("topicStats_v1"); } catch {}
     try { localStorage.removeItem("scoredFreeKeys_v1"); } catch {}
     try { localStorage.removeItem("incident_completed_v1"); } catch {}
@@ -2283,6 +2318,9 @@ export default function K8sQuestApp() {
     // Also clear per-topic weak-area data for this topic
     const newTopicStats = { ...topicStats };
     delete newTopicStats[topicId];
+    // Clear saved quiz if it belongs to the topic being reset
+    const savedQuiz = loadQuizState();
+    if (savedQuiz && savedQuiz.topicId === topicId) clearQuizState();
     setCompletedTopics(newCompleted);
     setStats(newStats);
     setTopicStats(newTopicStats);
@@ -2973,7 +3011,10 @@ export default function K8sQuestApp() {
     setIncidentAnswerResult(null);
     let steps = null;
     if (supabase) {
-      try { steps = await fetchIncidentSteps(supabase, incident.id); } catch { steps = null; }
+      try {
+        steps = await fetchIncidentSteps(supabase, incident.id);
+        if (!steps?.length) steps = null; // fall back to local data
+      } catch { steps = null; }
     }
     setIncidentSteps(steps);
     setSelectedIncident(incident);
@@ -2983,6 +3024,7 @@ export default function K8sQuestApp() {
     setIncidentElapsed(0);
     setIncidentAnswer(null);
     setIncidentSubmitted(false);
+    setIncidentStepHintVisible(false);
     setIncidentPassed(false);
     incidentCheckingRef.current = false;
     setIncidentHistory([]);
@@ -3045,7 +3087,7 @@ export default function K8sQuestApp() {
   };
 
   const nextIncidentStep = () => {
-    const totalSteps = incidentSteps ? incidentSteps.length : selectedIncident.steps.length;
+    const totalSteps = incidentSteps?.length || selectedIncident.steps.length;
     const isLast = incidentStepIndex >= totalSteps - 1;
     if (isLast) {
       clearIncidentProgress();
@@ -3059,6 +3101,7 @@ export default function K8sQuestApp() {
       setIncidentStepIndex(nextIdx);
       setIncidentAnswer(null);
       setIncidentSubmitted(false);
+      setIncidentStepHintVisible(false);
       setIncidentAnswerResult(null);
       incidentCheckingRef.current = false;
       saveIncidentProgress(selectedIncident, nextIdx, incidentScore, incidentMistakes, incidentElapsed, incidentHistory);
@@ -3075,6 +3118,7 @@ export default function K8sQuestApp() {
     setIncidentElapsed(elapsed);
     setIncidentAnswer(null);
     setIncidentSubmitted(false);
+    setIncidentStepHintVisible(false);
     setIncidentPassed(false);
     setIncidentHistory(history || []);
     setIncidentResume(null);
@@ -3173,7 +3217,7 @@ export default function K8sQuestApp() {
     if (screen !== "incident" || !selectedIncident || incidentSteps) return;
     if (!supabase) return;
     fetchIncidentSteps(supabase, selectedIncident.id)
-      .then(steps => { if (steps) setIncidentSteps(steps); })
+      .then(steps => { if (steps?.length) setIncidentSteps(steps); })
       .catch(() => {}); // silently fall back to offline steps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, selectedIncident]);
@@ -3260,16 +3304,31 @@ export default function K8sQuestApp() {
     let codeLines = [];
     let inCode = false;
     let flowIdx = 0;
+    let isNewSection = true; // track if next plain line is a section title
+    let sectionIdx = 0;      // count sections for dividers
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (line === 'CODE:' || (!inCode && line.startsWith('```'))) {
-        inCode = true;
+      if (line === 'CODE:') {
+        inCode = "unfenced";
         continue;
       }
-      if (inCode && line.startsWith('```')) {
+      if (!inCode && line.startsWith('```')) {
+        inCode = "fenced";
+        continue;
+      }
+      if (inCode === "fenced" && line.startsWith('```')) {
         flushCodeBlock(elements, codeLines, i);
         codeLines = [];
         inCode = false;
+        continue;
+      }
+      // Unfenced CODE blocks end at empty lines
+      if (inCode === "unfenced" && !line.trim()) {
+        flushCodeBlock(elements, codeLines, i);
+        codeLines = [];
+        inCode = false;
+        isNewSection = true;
         continue;
       }
       if (inCode) {
@@ -3307,6 +3366,7 @@ export default function K8sQuestApp() {
       }
       if (line.startsWith('🔹')) {
         const text = line.slice(2).trimStart();
+        isNewSection = false;
         elements.push(
           <div key={i} dir={dir} style={{display:"flex",flexDirection:"row",alignItems:"flex-start",gap:6,marginBottom:8,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>
             <span style={{flexShrink:0,fontSize:13,lineHeight:1.5}}>🔹</span>
@@ -3315,8 +3375,29 @@ export default function K8sQuestApp() {
         );
         continue;
       }
-      if (!line.trim()) { elements.push(<div key={i} style={{height:6}}/>); continue; }
-      elements.push(<div key={i} style={{color:"var(--text-primary)",fontSize:15,fontWeight:700,marginBottom:8}}>{line}</div>);
+      // Empty line = section break
+      if (!line.trim()) {
+        // Flush any pending code
+        if (codeLines.length > 0) {
+          flushCodeBlock(elements, codeLines, `mid-${i}`);
+          codeLines = [];
+        }
+        isNewSection = true;
+        continue;
+      }
+      // Plain text line: title or description based on position
+      if (isNewSection) {
+        // Section divider (not before first section)
+        if (sectionIdx > 0) {
+          elements.push(<div key={`div-${i}`} style={{height:1,background:"rgba(255,255,255,0.06)",margin:"18px 0 16px"}}/>);
+        }
+        sectionIdx++;
+        isNewSection = false;
+        elements.push(<div key={i} style={{color:"var(--text-primary)",fontSize:16,fontWeight:800,marginBottom:6,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{line}</div>);
+      } else {
+        // Description line - smaller, dimmer
+        elements.push(<div key={i} style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,marginBottom:6,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{renderBidiBlock(line,lang)}</div>);
+      }
     }
     if (codeLines.length > 0) {
       flushCodeBlock(elements, codeLines, "tail");
@@ -3816,7 +3897,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
       {showConfetti&&!a11y.reduceMotion&&<Confetti/>}
-      {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid #00D4FF55",borderRadius:14,padding:"12px 22px",display:"flex",alignItems:"center",gap:12,zIndex:9999,boxShadow:"0 0 40px rgba(0,212,255,0.3)",animation:"toast 0.4s ease",direction:"ltr"}}><span aria-hidden="true" style={{fontSize:26}}>{newAchievement.icon}</span><div><div style={{color:"#00D4FF",fontWeight:800,fontSize:11,letterSpacing:1}}>{t("newAchievement")}</div><div style={{color:"var(--text-primary)",fontSize:14,fontWeight:700}}>{getLocalizedField(newAchievement, "name", lang)}</div></div></div>}
+      {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid var(--glass-10)",borderRadius:10,padding:"8px 16px",display:"flex",alignItems:"center",gap:9,zIndex:9999,boxShadow:"0 0 16px rgba(0,212,255,0.08), 0 2px 10px rgba(0,0,0,0.35)",animation:"toast 0.3s ease",direction:dir}}><span aria-hidden="true" style={{fontSize:15,lineHeight:1,flexShrink:0}}>{newAchievement.icon}</span><span style={{color:"var(--text-bright)",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>{getLocalizedField(newAchievement,"name",lang)}</span></div>}
       {saveError&&<div role="alert" aria-live="assertive" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
       {resumeToast&&<div role="status" aria-live="polite" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid rgba(0,212,255,0.35)",borderRadius:12,padding:"10px 20px",color:"#00D4FF",fontSize:13,fontWeight:600,zIndex:9999,boxShadow:"0 0 20px rgba(0,212,255,0.15)",animation:"fadeIn 0.3s ease",whiteSpace:"nowrap"}}>{t("resumeToast")}</div>}
 
@@ -4253,6 +4334,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <span style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
               {dailyStreak.streak > 0 && <span style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"2px 8px",fontSize:11,color:"#F59E0B",fontWeight:700,flexShrink:0}}>🔥 {dailyStreak.streak}</span>}
             </div>
+            {isInterviewMode && (
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginTop:6}}>
+                <span style={{fontSize:11,color:"rgba(180,210,255,0.75)",fontWeight:400,direction:"rtl",lineHeight:1}}>מצב ראיון פעיל · טיימר פעיל · רמזים כבויים</span>
+              </div>
+            )}
           </div>
 
           {/* ── 1. HERO SECTION - Main action card ── */}
@@ -4452,7 +4538,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"quiz_game"})}catch{}}} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button><span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"quiz_game"})}catch{}}} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span></div>}
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><span>{a.icon}</span>{getLocalizedField(a, "name", lang)}</div>)}</div></div>}
           </>)}
-          {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir}/>}
+          {homeTab==="roadmap"&&<RoadmapView topics={TOPICS} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir} isGuest={isGuest} onSignup={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"roadmap"})}catch{}}} onLogin={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"roadmap"})}catch{}}}/>}
           <Footer lang={lang} onPrivacy={()=>setScreen("privacy")} onTerms={()=>setScreen("terms")}/>
         </div>
       )}
@@ -5597,7 +5683,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!import.meta.env.PROD&&screen==="incident"&&selectedIncident&&(()=>{
         const step = getIncidentStep(incidentStepIndex);
         if (!step) { return <div style={{textAlign:"center",padding:"40px 20px"}}><p style={{color:"var(--text-secondary)",fontSize:14}}>{lang==="en"?"Incident step not found. Returning...":"שלב לא נמצא. חוזר..."}</p><button onClick={()=>setScreen("incidentList")} style={{marginTop:12,padding:"10px 22px",background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:10,color:"var(--text-secondary)",fontSize:14,cursor:"pointer"}}>{lang==="en"?"Back":"חזרה"}</button></div>; }
-        const totalSteps = incidentSteps ? incidentSteps.length : (selectedIncident.steps?.length || 0);
+        const totalSteps = incidentSteps?.length || (selectedIncident.steps?.length || 0);
         const maxScore = totalSteps * 10;
         const progress = totalSteps > 0 ? ((incidentStepIndex + (incidentSubmitted ? 1 : 0)) / totalSteps) * 100 : 0;
         const incidentNum = INCIDENTS.findIndex(inc => inc.id === selectedIncident.id) + 1;
@@ -5661,6 +5747,46 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             </div>
 
+            {/* Briefing: Objective + Constraints + Signals (shown only on first step) */}
+            {incidentStepIndex === 0 && (
+              <div style={{background:"rgba(15,23,42,0.5)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"14px 16px",marginBottom:14,direction:dir}}>
+                {/* Objective */}
+                {selectedIncident.objective && (
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.2,color:"#60a5fa",marginBottom:6}}>{t("incidentObjective")}</div>
+                    <div style={{fontSize:13,color:"var(--text-secondary)",lineHeight:1.6}}>{getLocalizedField(selectedIncident,"objective",lang)}</div>
+                  </div>
+                )}
+                {/* Constraints */}
+                {selectedIncident.constraints && (
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.2,color:"#f59e0b",marginBottom:6}}>{t("incidentConstraints")}</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      {(getLocalizedField(selectedIncident,"constraints",lang)||[]).map((c,i)=>(
+                        <div key={i} style={{display:"flex",alignItems:"flex-start",gap:6,fontSize:12,color:"var(--text-secondary)",lineHeight:1.5}}>
+                          <span style={{color:"#f59e0b",fontSize:10,marginTop:3,flexShrink:0}}>&#9679;</span>
+                          <span>{c}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* System Signals */}
+                {selectedIncident.signals && (
+                  <div>
+                    <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1.2,color:"#ef4444",marginBottom:6}}>{t("incidentSignals")}</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      {(getLocalizedField(selectedIncident,"signals",lang)||[]).map((s,i)=>(
+                        <div key={i} style={{fontFamily:"'SF Mono','Fira Code',monospace",fontSize:11,color:"var(--text-secondary)",lineHeight:1.6,direction:"ltr",unicodeBidi:"isolate",textAlign:"left",padding:"3px 8px",background:"rgba(0,0,0,0.3)",borderRadius:4}}>
+                          {s}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Prompt */}
             <div dir={dir} style={{background:"rgba(15,23,42,0.7)",border:"1px solid var(--glass-10)",borderRadius:12,padding:"16px 18px",marginBottom:16,overflowX:"auto",direction:dir}}>
               {renderIncidentPrompt(getLocalizedField(step, "prompt", lang))}
@@ -5668,7 +5794,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
             {/* Options - card layout always follows page direction (RTL for Hebrew), only text content isolates LTR for commands */}
             <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-              {(getLocalizedField(step, "options", lang) || []).map((opt,i)=>{
+              {(getLocalizedField(step, "options", lang) || []).map((rawOpt,i)=>{
+                const isDestructive = /\s*\[destructive\]\s*$/i.test(rawOpt);
+                const opt = rawOpt.replace(/\s*\[destructive\]\s*$/i, "");
                 const isCorrect  = incidentAnswerResult ? i === incidentAnswerResult.correctIndex : i === step?.answer;
                 const isChosen   = i === incidentAnswer;
                 let bg = "var(--glass-2)", border = "var(--glass-9)", color = "var(--text-light)", labelBg = "var(--glass-7)", labelColor = "var(--text-secondary)";
@@ -5700,6 +5828,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       ) : (
                         <span dir={contentDir} style={{display:"block",lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:contentDir,unicodeBidi:"isolate",textAlign:contentDir==="rtl"?"right":"left"}}>{renderBidi(opt,lang)}</span>
                       )}
+                      {isDestructive && <span style={{display:"inline-block",marginTop:4,fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,background:"rgba(239,68,68,0.12)",color:"#EF4444",letterSpacing:0.3}}>&#9888; {t("incidentDestructive")}</span>}
                     </span>
                     {incidentSubmitted&&isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✓</span>}
                     {incidentSubmitted&&isChosen&&!isCorrect&&<span style={{flexShrink:0,fontSize:15}}>✗</span>}
@@ -5707,6 +5836,24 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 );
               })}
             </div>
+
+            {/* Step hint button + hint display */}
+            {!incidentSubmitted && getLocalizedField(step, "hint", lang) && (
+              <div style={{marginBottom:10}}>
+                {!incidentStepHintVisible ? (
+                  <button onClick={()=>setIncidentStepHintVisible(true)}
+                    style={{padding:"8px 16px",background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:8,color:"#d97706",fontSize:12,cursor:"pointer",transition:"all 0.15s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,0.12)";e.currentTarget.style.borderColor="rgba(245,158,11,0.35)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,0.07)";e.currentTarget.style.borderColor="rgba(245,158,11,0.18)";}}>
+                    {t("incidentHintBtn")}
+                  </button>
+                ) : (
+                  <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:8,padding:"10px 14px",animation:"fadeIn 0.2s ease"}}>
+                    <span style={{fontSize:12,color:"#fbbf24",lineHeight:1.6}}>{getLocalizedField(step, "hint", lang)}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Confirm answer button */}
             {!incidentSubmitted&&incidentAnswer!==null&&(
@@ -5734,7 +5881,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           <span style={{fontWeight:800,fontSize:14,color:incCorrect?"#10B981":"#EF4444"}}>{incCorrect?t("incidentCorrect"):t("incidentWrong")}</span>
                         </div>
                         {!incCorrect&&<p style={{fontSize:12,color:"var(--text-muted)",margin:"0 0 10px",lineHeight:1.5}}>{t("incidentWrongSub")}</p>}
-                        {incCorrect&&<div style={{fontSize:12,fontWeight:700,color:"var(--text-muted)",margin:"6px 0 8px"}}>{t("incidentWhyCorrect")}</div>}
                         {renderIncidentExplanation(incExplanation)}
                       </div>
                       <button onClick={nextIncidentStep}
@@ -5754,10 +5900,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
       {/* ── INCIDENT COMPLETE ─────────────────────────────────────────────── */}
       {!import.meta.env.PROD&&screen==="incidentComplete"&&selectedIncident&&(()=>{
-        const maxScore = (incidentSteps ? incidentSteps.length : (selectedIncident.steps?.length || 0)) * 10;
+        const totalSteps = incidentSteps?.length || (selectedIncident.steps?.length || 0);
+        const maxScore = totalSteps * 10;
         const passed   = incidentPassed; // single source of truth - set in nextIncidentStep
         const accentColor = passed ? "#22C55E" : "#EF4444";
         const accentRgb   = passed ? "34,197,94" : "239,68,68";
+        const correctCount = incidentScore / 10;
+        const wrongCount = incidentMistakes;
+        const requiredCorrect = Math.ceil(totalSteps * 0.7);
+        const allowedMistakes = totalSteps - requiredCorrect;
         return(
           <div style={{maxWidth:480,margin:"20px auto",padding:"0 18px",textAlign:"center",animation:"fadeIn 0.5s ease",direction:dir}}>
             {/* Result header */}
@@ -5769,6 +5920,40 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <p style={{color:"var(--text-muted)",fontSize:13,margin:"0 0 6px"}}>{getLocalizedField(selectedIncident, "title", lang)}</p>
               <p style={{color:"var(--text-dim)",fontSize:12,margin:"0 0 20px",fontStyle:"italic"}}>{passed?t("incidentNextUnlocked"):t("incidentFailedSub")}</p>
             </div>
+
+            {/* ── Failure Explanation ── */}
+            {!passed&&(
+              <div style={{
+                background:"rgba(239,68,68,0.06)",
+                border:"1px solid rgba(239,68,68,0.2)",
+                borderRadius:14,
+                padding:"16px 18px",
+                marginBottom:20,
+                textAlign:"start",
+              }}>
+                <div style={{fontSize:14,fontWeight:800,color:"#EF4444",marginBottom:10}}>
+                  {t("incidentFailReason")}
+                </div>
+                <div style={{fontSize:13,color:"var(--text-secondary)",lineHeight:1.7,marginBottom:12}}>
+                  {t("incidentFailThreshold").replace("{required}",requiredCorrect).replace("{total}",totalSteps)}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                  {[
+                    {label:t("incidentCorrectCount"), value:correctCount, color:"#10B981"},
+                    {label:t("incidentWrongCount"),    value:wrongCount,   color:"#EF4444"},
+                    {label:t("incidentRequiredCount"), value:`${requiredCorrect}/${totalSteps}`, color:"#A855F7"},
+                  ].map((s,i)=>(
+                    <div key={i} style={{background:"var(--glass-3)",borderRadius:10,padding:"10px 6px"}}>
+                      <div style={{fontSize:20,fontWeight:800,color:s.color}}>{s.value}</div>
+                      <div style={{fontSize:11,color:"var(--text-dim)",marginTop:3}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{fontSize:12,color:"var(--text-dim)",marginTop:10,fontStyle:"italic"}}>
+                  {t("incidentFailAllowedMistakes").replace("{allowed}",allowedMistakes)}
+                </div>
+              </div>
+            )}
 
             {/* Stats grid */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:24}}>
