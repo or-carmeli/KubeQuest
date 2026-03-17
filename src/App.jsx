@@ -790,7 +790,7 @@ function isBlockCodeLine(line) {
 // Render a question text that may contain \n\n paragraphs and code blocks.
 // Single-paragraph questions with embedded commands/errors are split into structured sections.
 // Paragraphs with inner \n are rendered as monospace code blocks.
-function renderQuestion(qText, lang) {
+function renderQuestion(qText, lang, animate) {
   if (!qText) return null;
   warnIfHebrew(qText, lang, "quiz.question");
   // Explicit direction: dir="auto" fails when renderBidi wraps all text in
@@ -855,10 +855,10 @@ function renderQuestion(qText, lang) {
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {reordered.map((seg, idx) => {
           if (seg.type === "command") {
-            return <TerminalBlock key={idx}>{seg.content}</TerminalBlock>;
+            return <TerminalBlock key={idx} animate={animate}>{seg.content}</TerminalBlock>;
           }
           if (seg.type === "error") {
-            return <TerminalBlock key={idx} variant="output">{seg.content}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="output" animate={animate}>{seg.content}</TerminalBlock>;
           }
           if (seg.type === "question") {
             return (
@@ -944,18 +944,18 @@ function renderQuestion(qText, lang) {
           // Terminal command block
           const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/m.test(code);
           if (isCommand) {
-            return <TerminalBlock key={idx}>{code}</TerminalBlock>;
+            return <TerminalBlock key={idx} animate={animate}>{code}</TerminalBlock>;
           }
 
           // Error output block
           const firstCodeLine = code.split("\n")[0]?.trim() || "";
           const isFencedError = /^(error|Error|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:|denied)/i.test(firstCodeLine);
           if (isFencedError) {
-            return <TerminalBlock key={idx} variant="error">{code}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="error" animate={animate}>{code}</TerminalBlock>;
           }
 
           // Generic output block
-          return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
+          return <TerminalBlock key={idx} variant="output" animate={animate}>{code}</TerminalBlock>;
         }
 
         // Auto-detected code block (non-fenced terminal output)
@@ -974,12 +974,12 @@ function renderQuestion(qText, lang) {
             return <YamlBlock key={idx}>{cleaned}</YamlBlock>;
           }
           if (isError) {
-            return <TerminalBlock key={idx} variant="error">{cleaned}</TerminalBlock>;
+            return <TerminalBlock key={idx} variant="error" animate={animate}>{cleaned}</TerminalBlock>;
           }
           if (isCommand) {
-            return <TerminalBlock key={idx}>{cleaned}</TerminalBlock>;
+            return <TerminalBlock key={idx} animate={animate}>{cleaned}</TerminalBlock>;
           }
-          return <TerminalBlock key={idx} variant="output">{cleaned}</TerminalBlock>;
+          return <TerminalBlock key={idx} variant="output" animate={animate}>{cleaned}</TerminalBlock>;
         }
 
         // Regular text paragraph
@@ -1124,6 +1124,7 @@ export default function K8sQuestApp() {
   const bestImprovedRef = useRef(true); // Whether this session improved the topic's best result
   const submittingRef = useRef(false);
   const initialAccuracyRef = useRef(null); // Accuracy at session start for trend indicator
+  const termAnimatedQsRef = useRef(new Set()); // Track which questions have already shown terminal animation this session
 
   // Refs for browser back-button handler and keyboard shortcuts (avoids stale closures)
   const screenRef = useRef(screen);
@@ -3744,7 +3745,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
       </a>}
-      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes termCursorBlink{0%,100%{opacity:1}50%{opacity:0}}.term-cursor{display:inline-block;width:7px;height:14px;background:#484f58;vertical-align:text-bottom;margin-left:1px}.term-cursor-blink{animation:termCursorBlink 600ms step-end infinite}.term-output-reveal{animation:termFadeIn 200ms ease-out forwards}@keyframes termFadeIn{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.term-cursor-blink{animation:none}.term-output-reveal{animation:none}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar-right{gap:8px!important}
@@ -4907,7 +4908,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
               <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
                 style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"18px 16px 18px",marginBottom:10,outline:"none",position:"relative"}}>
-                {renderQuestion(currentQuestions[questionIndex].q, lang)}
+                {(() => {
+                  const qId = currentQuestions[questionIndex]?.id ?? `${selectedTopic?.id}_${selectedLevel}_${questionIndex}`;
+                  const shouldAnimate = !isInHistoryMode && !retryMode && !termAnimatedQsRef.current.has(qId);
+                  if (shouldAnimate) termAnimatedQsRef.current.add(qId);
+                  return renderQuestion(currentQuestions[questionIndex].q, lang, shouldAnimate);
+                })()}
                 {!isInHistoryMode&&!tryAgainActive&&!isFreeMode(selectedTopic?.id)&&(
                   <button onClick={toggleBookmark}
                     aria-label={currentQBookmarked ? t("removeBookmark") : t("bookmark")}
