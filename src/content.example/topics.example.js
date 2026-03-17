@@ -74,5 +74,5 @@ export const TOPICS = [
     },
   },
   // Add more topics here matching TOPIC_META ids:
-  // "networking", "config", "storage", "troubleshooting"
+  // "networking", "config", "storage", "troubleshooting", "linux"
 ];

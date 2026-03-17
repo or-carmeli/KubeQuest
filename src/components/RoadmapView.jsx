@@ -7,6 +7,7 @@ const STAGE_SUBTITLES = {
   config:          "ConfigMaps · Secrets · RBAC · ServiceAccounts",
   storage:         "PersistentVolumes · StorageClass · Helm · Operators",
   troubleshooting: "Debugging · Observability · Diagnosis · Tools",
+  linux:            "Processes · Logs · CPU · Memory · Networking",
 };
 
 const LVL_ORDER = ["easy", "medium", "hard"];
@@ -46,6 +47,7 @@ function nextRecommendedLevel(topicId, completedTopics, isLevelLocked) {
 export default function RoadmapView({
   topics, levelConfig, completedTopics, isLevelLocked,
   startTopic, lang, t, dir,
+  isGuest, onSignup, onLogin,
 }) {
   const [expandedStage, setExpandedStage] = useState(null);
   const rowDir = dir === "rtl" ? "row-reverse" : "row";
@@ -175,6 +177,7 @@ export default function RoadmapView({
                   {/* Text - takes remaining space, clips instead of wrapping */}
                   <div style={{flex:1,minWidth:0,direction:"ltr",textAlign:"center"}}>
                     <div className="roadmap-title" style={{fontWeight:700,color:"var(--text-primary)",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                      {topic.isNew&&!completed&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}
                       <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topic.name}</span>
                       {completed&&<span style={{flexShrink:0}}>✅</span>}
                     </div>
@@ -248,6 +251,13 @@ export default function RoadmapView({
           );
         })}
       </div>
+
+      {/* ── Guest signup card ── */}
+      {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10,direction:dir}}>
+        <span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span>
+        <button className="guest-banner-btn" onClick={onSignup} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button>
+        <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={onLogin} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span>
+      </div>}
     </div>
   );
 }
