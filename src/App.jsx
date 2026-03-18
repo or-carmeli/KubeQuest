@@ -174,7 +174,7 @@ const TRANSLATIONS = {
     noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
     saveProgress: "רוצה לשמור את ההתקדמות?",
     username: "שם משתמש", email: "אימייל", password: "סיסמה",
-    loginTab: "התחברות", signupTab: "הרשמה",
+    loginTab: "התחברות", signupTab: "הרשמה", authCta: "התחבר / הירשם", authLogin: "התחבר", authSignup: "הירשם",
     loginBtn: "התחברי", signupBtn: "הירשמי", loading: "⏳ רגע...",
     emailAlreadySent: "✅ אימייל אימות כבר נשלח! בדקי את תיבת הדואר שלך.",
     emailSent: "✅ נשלח אימייל אימות! בדקי את תיבת הדואר.",
@@ -442,7 +442,7 @@ const TRANSLATIONS = {
     noRegNoPass: "No registration · No password · Instant",
     saveProgress: "Want to save your progress?",
     username: "Username", email: "Email", password: "Password",
-    loginTab: "Login", signupTab: "Sign Up",
+    loginTab: "Login", signupTab: "Sign Up", authCta: "Log in / Sign up", authLogin: "Log in", authSignup: "Sign up",
     loginBtn: "Sign In", signupBtn: "Register", loading: "⏳ Loading...",
     emailAlreadySent: "✅ Verification email already sent! Check your inbox.",
     emailSent: "✅ Verification email sent! Check your inbox.",
@@ -4578,7 +4578,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               return (
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",direction:"ltr"}}>
-                  {logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{homeBtn}{burgerBtn}</div>
+                  {logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{burgerBtn}</div>
                 </div>
               );
             })()}
@@ -4591,6 +4591,23 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {isInterviewMode && (
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginTop:6}}>
                 <span style={{fontSize:11,color:"rgba(180,210,255,0.75)",fontWeight:400,direction:dir,lineHeight:1}}>{t("interviewModeActive")}</span>
+              </div>
+            )}
+            {isGuest && (
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:3,marginTop:10,direction:dir}}>
+                <span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"header"})}catch{}}}
+                  style={{fontSize:11,fontWeight:500,color:"rgba(180,210,255,0.85)",cursor:"pointer",transition:"all 0.15s",textDecoration:"none",lineHeight:1}}
+                  onMouseEnter={e=>{e.currentTarget.style.textDecoration="underline";e.currentTarget.style.color="rgba(180,210,255,1)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.textDecoration="none";e.currentTarget.style.color="rgba(180,210,255,0.85)";}}>
+                  {t("authLogin")}
+                </span>
+                <span style={{fontSize:11,color:"rgba(180,210,255,0.35)",userSelect:"none",lineHeight:1,pointerEvents:"none"}} aria-hidden="true">/</span>
+                <span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"header"})}catch{}}}
+                  style={{fontSize:11,fontWeight:500,color:"rgba(180,210,255,0.85)",cursor:"pointer",transition:"all 0.15s",textDecoration:"none",lineHeight:1}}
+                  onMouseEnter={e=>{e.currentTarget.style.textDecoration="underline";e.currentTarget.style.color="rgba(180,210,255,1)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.textDecoration="none";e.currentTarget.style.color="rgba(180,210,255,0.85)";}}>
+                  {t("authSignup")}
+                </span>
               </div>
             )}
           </div>
