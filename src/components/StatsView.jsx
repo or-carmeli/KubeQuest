@@ -1,6 +1,6 @@
 import { getLocalizedField } from "../utils/i18n";
+// eslint-disable-next-line no-unused-vars
 import { loadArchitectureProgress, getArchitectureStats, getRank } from "../utils/architectureLogic";
-import Icon from "./Icon";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
