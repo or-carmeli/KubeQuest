@@ -4614,7 +4614,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     {logoIcon}{logoText}
                   </div>
                   <div style={{position:"absolute",[dir==="rtl"?"left":"right"]:0,top:"50%",transform:"translateY(-50%)"}}>
-                    <button onClick={()=>{setSearchQuery("");setScreen("search");}} aria-label={lang==="en"?"Search":"חיפוש"} style={{flexShrink:0,width:34,height:34,background:theme==="light"?"#FFFFFF":"var(--glass-4)",border:theme==="light"?"1px solid #E2E8F0":"1px solid var(--glass-10)",borderRadius:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}><Search size={16} strokeWidth={1.5} color="var(--text-muted)" /></button>
+                    <button onClick={()=>{setSearchQuery("");setScreen("search");}} aria-label={lang==="en"?"Search":"חיפוש"} style={{flexShrink:0,width:34,height:34,background:theme==="light"?"#FFFFFF":"var(--glass-4)",border:theme==="light"?"1px solid #E2E8F0":"1px solid var(--glass-10)",borderRadius:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}><Search size={16} strokeWidth={1.5} color="var(--text-secondary)" /></button>
                   </div>
                 </div>
               );
