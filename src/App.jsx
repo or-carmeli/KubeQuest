@@ -180,9 +180,10 @@ function mulberry32(seed) {
 const TRANSLATIONS = {
   he: {
     tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying: "התחילי לשחק עכשיו",
-    noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
-    saveProgress: "רוצה לשמור את ההתקדמות?",
+    startPlaying: "התחילי לשחק כאורחת",
+    noRegNoPass: "או",
+    saveProgress: "התחברי / הירשמי כדי לשמור התקדמות",
+    saveProgress_m: "התחבר / הירשם כדי לשמור התקדמות",
     username: "שם משתמש", email: "אימייל", password: "סיסמה",
     loginTab: "התחברות", signupTab: "הרשמה", authCta: "התחבר / הירשם", authLogin: "התחבר", authSignup: "הירשם",
     loginBtn: "התחברי", signupBtn: "הירשמי", loading: "⏳ רגע...",
@@ -278,7 +279,7 @@ const TRANSLATIONS = {
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
     tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying_m: "התחל לשחק עכשיו",
+    startPlaying_m: "התחל לשחק כאורח",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
     otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
@@ -447,10 +448,10 @@ const TRANSLATIONS = {
     updateRefresh: "רענון",
   },
   en: {
-    tagline: "Learn Kubernetes in a fun and interactive way",
-    startPlaying: "Start Playing Now",
-    noRegNoPass: "No registration · No password · Instant",
-    saveProgress: "Want to save your progress?",
+    tagline: "Train Your Kubernetes Skills",
+    startPlaying: "Start Playing as Guest",
+    noRegNoPass: "or",
+    saveProgress: "Log in / Sign up to save your progress",
     username: "Username", email: "Email", password: "Password",
     loginTab: "Login", signupTab: "Sign Up", authCta: "Log in / Sign up", authLogin: "Log in", authSignup: "Sign up",
     loginBtn: "Sign In", signupBtn: "Register", loading: "⏳ Loading...",
@@ -2323,8 +2324,10 @@ export default function K8sQuestApp() {
         const msg = error.message.toLowerCase();
         if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
           setAuthError(t("emailAlreadySent"));
-        else
+        else {
           setAuthError(error.message);
+          captureError(error, { flow: "signup", extra: { error_code: error.code || error.status } });
+        }
       } else if (!data.user?.identities?.length) {
         // Supabase returns fake success (empty identities) when email already exists (confirmed)
         setAuthError(t("emailAlreadyExists"));
@@ -2350,6 +2353,7 @@ export default function K8sQuestApp() {
       const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
       if (error) {
         setAuthError(t("wrongCredentials"));
+        if (error.status >= 500) captureError(error, { flow: "login", extra: { error_code: error.code || error.status } });
       } else if (window.PasswordCredential) {
         try {
           const cred = new window.PasswordCredential({ id: emailVal, password: passwordVal });
@@ -2373,6 +2377,7 @@ export default function K8sQuestApp() {
         email: emailVal,
         options: { emailRedirectTo: window.location.origin },
       });
+      if (error) captureError(error, { flow: "resend_confirmation", extra: { error_code: error.code || error.status } });
       setAuthError(error ? t("resendError") : t("resendSuccess"));
     } catch (err) {
       console.error("[KubeQuest] resend error:", err);
@@ -2390,6 +2395,7 @@ export default function K8sQuestApp() {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: window.location.origin,
       });
+      if (error) captureError(error, { flow: "password_reset", extra: { error_code: error.code || error.status } });
       setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
     } catch (err) {
       console.error("[KubeQuest] resetPassword error:", err);
@@ -3963,13 +3969,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
           <span style={{display:"inline-flex",alignItems:"center",gap:6}}><Zap size={18} strokeWidth={2} /> {t("startPlaying")}</span>
         </button>
-        <p style={{textAlign:"center",color:"var(--code-text)",opacity:0.75,fontSize:12,margin:"0 0 26px"}}>{t("noRegNoPass")}</p>
-
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,margin:"16px 0"}}>
           <div style={{flex:1,height:1,background:"var(--glass-10)"}}/>
-          <span style={{color:"var(--text-secondary)",fontSize:12,whiteSpace:"nowrap"}}>{t("saveProgress")}</span>
+          <span style={{color:"var(--text-muted)",fontSize:12,whiteSpace:"nowrap"}}>{t("noRegNoPass")}</span>
           <div style={{flex:1,height:1,background:"var(--glass-10)"}}/>
         </div>
+
+        <p style={{textAlign:"center",color:"var(--text-secondary)",fontSize:12,margin:"0 0 18px"}}>{t("saveProgress")}</p>
 
         <div style={{background:theme==="light"?"#FFFFFF":"var(--glass-5)",border:theme==="light"?"1px solid #CBD5E1":"1px solid var(--glass-12)",borderRadius:14,padding:"18px 20px",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)":"none"}}>
           <div style={{display:"flex",marginBottom:16,background:theme==="light"?"#F1F5F9":"var(--glass-4)",borderRadius:9,padding:3}}>
@@ -4071,7 +4077,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
       </a>}
-      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes termCursorBlink{0%,100%{opacity:1}50%{opacity:0}}.term-cursor{display:inline-block;width:7px;height:14px;background:#484f58;vertical-align:text-bottom;margin-left:1px}.term-cursor-blink{animation:termCursorBlink 600ms step-end infinite}.term-output-reveal{animation:termFadeIn 200ms ease-out forwards}@keyframes termFadeIn{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.term-cursor-blink{animation:none}.term-output-reveal{animation:none}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes termCursorBlink{0%,100%{opacity:1}50%{opacity:0}}.term-cursor{display:inline-block;width:7px;height:14px;background:#484f58;vertical-align:text-bottom;margin-left:1px}.term-cursor-blink{animation:termCursorBlink 600ms step-end infinite}.term-output-reveal{animation:termFadeIn 200ms ease-out forwards}@keyframes termFadeIn{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.term-cursor-blink{animation:none}.term-output-reveal{animation:none}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.gbtn{transition:all 0.2s}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,212,255,0.2)}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar-right{gap:8px!important}
@@ -4135,7 +4141,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .stats-cell{padding:8px 4px!important}
 .hero-card{padding:16px 12px 12px!important;margin-bottom:16px!important}
 .action-card{padding:11px 10px!important}
-}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .hero-card{margin-bottom:28px!important}.home-screen .stats-grid{margin-bottom:24px!important;gap:14px!important}.home-screen .action-card{margin-bottom:10px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.03)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284C7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.1)}[data-theme="light"] .topic-next{border-color:#0EA5E9!important;box-shadow:0 0 0 1px rgba(14,165,233,0.12),0 2px 8px rgba(14,165,233,0.06)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)!important}[data-theme="light"] .topic-card-section:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04)!important;border-color:#CBD5E1!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .stats-cell:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important;border-color:#CBD5E1!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn:hover{border-color:#0EA5E9!important;box-shadow:0 2px 8px rgba(14,165,233,0.1)!important}[data-theme="light"] .opt-cmd-scroll{background:rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12)}[data-theme="light"] .opt-cmd-scroll{scrollbar-color:rgba(0,0,0,0.12) transparent}[data-theme="light"] .hero-card{background:linear-gradient(135deg,rgba(14,165,233,0.04),rgba(139,92,246,0.03))!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .hero-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)!important}[data-theme="light"] .gbtn{background:#FFFFFF!important;border-color:#0EA5E9!important;color:#0369A1!important;box-shadow:0 1px 3px rgba(14,165,233,0.1)!important}[data-theme="light"] .gbtn:hover{background:rgba(14,165,233,0.04)!important;border-color:#0284C7!important;box-shadow:0 4px 12px rgba(14,165,233,0.12)!important;color:#0284C7!important}[data-theme="light"] .menu-item:hover{background:rgba(14,165,233,0.05)!important;color:#111827!important;border-inline-end-color:rgba(14,165,233,0.4)}[data-theme="light"] .menu-item:active{background:rgba(14,165,233,0.08)!important}[data-theme="light"] input{background:#FFFFFF!important;border-color:#CBD5E1!important}[data-theme="light"] input:focus{border-color:#0EA5E9!important;box-shadow:0 0 0 3px rgba(14,165,233,0.1)!important;outline:none}`}</style>
+}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.home-logo{width:32px!important;height:32px!important}.home-title-text{font-size:28px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .hero-card{margin-bottom:28px!important}.home-screen .stats-grid{margin-bottom:24px!important;gap:14px!important}.home-screen .action-card{margin-bottom:10px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.03)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284C7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.1)}[data-theme="light"] .topic-next{border-color:#0EA5E9!important;box-shadow:0 0 0 1px rgba(14,165,233,0.12),0 2px 8px rgba(14,165,233,0.06)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)!important}[data-theme="light"] .topic-card-section:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04)!important;border-color:#CBD5E1!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .stats-cell:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important;border-color:#CBD5E1!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn:hover{border-color:#0EA5E9!important;box-shadow:0 2px 8px rgba(14,165,233,0.1)!important}[data-theme="light"] .opt-cmd-scroll{background:rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12)}[data-theme="light"] .opt-cmd-scroll{scrollbar-color:rgba(0,0,0,0.12) transparent}[data-theme="light"] .hero-card{background:linear-gradient(135deg,rgba(14,165,233,0.04),rgba(139,92,246,0.03))!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .hero-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)!important}[data-theme="light"] .gbtn{background:#FFFFFF!important;border-color:#0EA5E9!important;color:#0369A1!important;box-shadow:0 1px 3px rgba(14,165,233,0.1)!important}[data-theme="light"] .gbtn:hover{background:rgba(14,165,233,0.04)!important;border-color:#0284C7!important;box-shadow:0 4px 12px rgba(14,165,233,0.12)!important;color:#0284C7!important}[data-theme="light"] .menu-item:hover{background:rgba(14,165,233,0.05)!important;color:#111827!important;border-inline-end-color:rgba(14,165,233,0.4)}[data-theme="light"] .menu-item:active{background:rgba(14,165,233,0.08)!important}[data-theme="light"] input{background:#FFFFFF!important;border-color:#CBD5E1!important}[data-theme="light"] input:focus{border-color:#0EA5E9!important;box-shadow:0 0 0 3px rgba(14,165,233,0.1)!important;outline:none}`}</style>
       {!isStatusDomain && <>
       {theme==="dark"&&<><div style={{position:"fixed",top:0,left:0,right:0,height:"55vh",pointerEvents:"none",background:"radial-gradient(ellipse 90% 55% at 50% 0%,rgba(0,212,255,0.05) 0%,transparent 70%)"}}/>
       <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
@@ -4370,9 +4376,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
 
       {/* Dropdown menu - rendered outside <main> so CSS zoom never affects it */}
-      {showMenu&&(()=>{const _br=burgerRef.current?.getBoundingClientRect();const _menuRight=_br?Math.max(8,window.innerWidth-_br.right):8;return(<>
+      {showMenu&&(()=>{const _br=burgerRef.current?.getBoundingClientRect();const _menuRight=_br?Math.max(8,window.innerWidth-_br.right):8;const _menuLeft=_br?Math.max(8,_br.left):8;const _isRtl=dir==="rtl";return(<>
         <div onClick={()=>setShowMenu(false)} style={{position:"fixed",inset:0,zIndex:199}}/>
-        <div style={{position:"fixed",top:82,right:_menuRight,background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:14,padding:"6px 0",zIndex:200,minWidth:240,boxShadow:"0 8px 32px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.2)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100dvh - 110px)"}}>
+        <div style={{position:"fixed",top:82,...(_isRtl?{right:_menuRight}:{left:_menuLeft}),background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:14,padding:"6px 0",zIndex:200,minWidth:240,boxShadow:"0 8px 32px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.2)",animation:"fadeIn 0.15s ease",direction:_isRtl?"ltr":"rtl",overflowY:"auto",maxHeight:"calc(100dvh - 110px)"}}><div style={{direction:"ltr"}}>
 
           {/* Language + Gender */}
           <div style={{padding:"8px 14px 10px",borderBottom:"1px solid var(--glass-6)",display:"flex",gap:8,alignItems:"center",justifyContent:"center"}}>
@@ -4540,7 +4546,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <LockIcon size={15} strokeWidth={1.5} color="var(--text-secondary)" style={{flexShrink:0}} />{t("logout")}
             </button>
           </div>
-        </div>
+        </div></div>
       </>);})()}
       </>}
       <main id="main-content" style={isStatusDomain ? undefined : {position:"relative",...(fs !== 1 ? {zoom: fs, width: `${+(100/fs).toFixed(4)}%`} : {})}}>
@@ -4553,7 +4559,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {/* Header row: logo+title on one side, burger on the other */}
             {(()=>{
               const logoIcon=(
-                <svg className="home-logo" width={54} height={54} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0,filter:"drop-shadow(0 0 14px rgba(0,212,255,0.45))"}}>
+                <svg className="home-logo" width={20} height={20} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0,filter:"drop-shadow(0 0 3px rgba(0,212,255,0.4))"}}>
                   <defs><radialGradient id="hbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#0f172a"/><stop offset="100%" stopColor="#020817"/></radialGradient><linearGradient id="hgr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00D4FF"/><stop offset="50%" stopColor="#A855F7"/><stop offset="100%" stopColor="#FF6B35"/></linearGradient></defs>
                   <circle cx="50" cy="50" r="50" fill="url(#hbg)"/>
                   <circle cx="50" cy="50" r="44" fill="none" stroke="url(#hgr)" strokeWidth="4" opacity="0.9"/>
@@ -4566,12 +4572,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </svg>
               );
               const logoText=(
-                <div style={{textAlign:"left"}}>
-                  <div style={{display:"inline-flex",alignItems:"center",gap:6}}><h1 className="home-title-text" style={{fontSize:28,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.5,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,flexShrink:0}}><span style={{fontSize:11,padding:"2px 6px",borderRadius:6,background:"var(--glass-8)",color:"var(--text-muted)",fontWeight:600,letterSpacing:0.3,lineHeight:1}}>Beta</span><span style={{fontSize:10,color:"var(--text-dim)",fontWeight:500,letterSpacing:0.2,lineHeight:1,opacity:0.55}}>v{APP_VERSION}</span></div></div>
-                  <div style={{marginTop:4}}>
-                    <span style={{fontSize:12,color:"var(--text-muted)",letterSpacing:0.3}}>Train Your Kubernetes Skills</span>
-                  </div>
-                </div>
+                <h1 className="home-title-text" style={{fontSize:18,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.3,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
               );
               const logoGroup=(
                 <div style={{display:"flex",alignItems:"center",gap:14}}>
@@ -4593,7 +4594,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               const burgerBtn=(
                 <button ref={burgerRef} onClick={()=>setShowMenu(p=>!p)} aria-label={lang==="en"?"Open menu":"פתח תפריט"} aria-expanded={showMenu} aria-haspopup="menu" title={lang==="en"?"Menu":"תפריט"}
-                  style={{flexShrink:0,width:46,height:46,
+                  style={{flexShrink:0,width:34,height:34,
                     background:showMenu?(theme==="light"?"rgba(14,165,233,0.06)":"rgba(0,212,255,0.1)"):(theme==="light"?"#FFFFFF":"var(--glass-4)"),
                     border:`1px solid ${showMenu?(theme==="light"?"#0EA5E9":"rgba(0,212,255,0.3)"):(theme==="light"?"#E2E8F0":"var(--glass-10)")}`,
                     borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,
@@ -4605,14 +4606,22 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </button>
               );
               return (
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",direction:"ltr"}}>
-                  {logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{burgerBtn}</div>
+                <div style={{display:"flex",alignItems:"center",width:"100%",direction:"ltr",position:"relative"}}>
+                  <div style={{position:"absolute",[dir==="rtl"?"right":"left"]:0,top:"50%",transform:"translateY(-50%)"}}>
+                    {burgerBtn}
+                  </div>
+                  <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+                    {logoIcon}{logoText}
+                  </div>
+                  <div style={{position:"absolute",[dir==="rtl"?"left":"right"]:0,top:"50%",transform:"translateY(-50%)"}}>
+                    <button onClick={()=>{setSearchQuery("");setScreen("search");}} aria-label={lang==="en"?"Search":"חיפוש"} style={{flexShrink:0,width:34,height:34,background:theme==="light"?"#FFFFFF":"var(--glass-4)",border:theme==="light"?"1px solid #E2E8F0":"1px solid var(--glass-10)",borderRadius:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}><Search size={16} strokeWidth={1.5} color="var(--text-secondary)" /></button>
+                  </div>
                 </div>
               );
             })()}
             {/* Compact greeting row */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:10,flexWrap:"nowrap",maxWidth:"100%",overflow:"hidden"}}>
-              <span style={{color:"var(--text-muted)",fontSize:13,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:8,flexWrap:"nowrap",maxWidth:"100%",overflow:"hidden"}}>
+              <span style={{color:"var(--text-muted)",fontSize:12,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
               <span style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
               {dailyStreak.streak > 0 && <span style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"2px 8px",fontSize:11,color:"#F59E0B",fontWeight:700,flexShrink:0}}>🔥 {dailyStreak.streak}</span>}
             </div>
@@ -4622,7 +4631,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             )}
             {isGuest && (
-              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:0,marginTop:6,direction:dir}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,marginTop:4}}>
                 <span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"header"})}catch{}}}
                   style={{fontSize:11,fontWeight:500,color:"rgba(180,210,255,0.85)",cursor:"pointer",transition:"all 0.15s",textDecoration:"none",lineHeight:1}}
                   onMouseEnter={e=>{e.currentTarget.style.textDecoration="underline";e.currentTarget.style.color="rgba(180,210,255,1)";}}
@@ -4670,7 +4679,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
                 {/* CTA button */}
                 {!allDone ? (
-                  <button onClick={()=>tryStartQuiz(()=>startTopic(nextTopic,nextLevel),"topic")} style={{width:"100%",height:52,padding:"0 20px",background:theme==="light"?"linear-gradient(135deg,#0EA5E9,#7C3AED)":"linear-gradient(135deg,#00D4FF,#A855F7)",border:"none",borderRadius:14,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",letterSpacing:0.3,boxShadow:theme==="light"?"0 2px 8px rgba(14,165,233,0.25)":"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)",transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=theme==="light"?"0 4px 16px rgba(14,165,233,0.3)":"0 6px 28px rgba(0,212,255,0.4),0 0 50px rgba(0,212,255,0.15)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow=theme==="light"?"0 2px 8px rgba(14,165,233,0.25)":"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)";}}>
+                  <button className="gbtn" onClick={()=>tryStartQuiz(()=>startTopic(nextTopic,nextLevel),"topic")} style={{width:"100%",padding:"16px 20px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:16,fontWeight:800,cursor:"pointer",letterSpacing:0.3,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
                     {completedCount > 0 ? t("heroContinueTrack") : t("heroStartTrack")}
                   </button>
                 ) : (
