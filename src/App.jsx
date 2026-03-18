@@ -28,6 +28,14 @@ import StatusView from "./components/StatusView";
 import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
 import TopicIcon from "./components/TopicIcon";
+import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon } from "lucide-react";
+import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon } from "lucide-react";
+const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: FlameIcon, mixed: ShuffleIcon, daily: CalendarIcon };
+const CHEAT_ICON_MAP = { search: SearchIcon, folder: FolderOpen, bug: Bug, "scroll-text": ScrollText, terminal: Terminal, globe: GlobeIcon, settings: SettingsIcon, "trending-up": TrendingUp, trash: TrashIcon };
+function CheatIcon({ name, size = 16, color }) { const C = CHEAT_ICON_MAP[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
+function LevelIcon({ name, size = 13, color }) { const C = LEVEL_ICON_MAP[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
+const STAT_ICONS = { star: Star, target: Target, trophy: Trophy, flame: FlameIcon };
+function StatIcon({ name, size = 15, color }) { const C = STAT_ICONS[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
 
 // Feature flag: Architecture Scenarios (dev only for now)
 const ARCHITECTURE_ENABLED = !import.meta.env.PROD;
@@ -102,11 +110,11 @@ console.info("[KubeQuest:boot] App.jsx module-level init complete");
 const GUEST_USER = { id: "guest", email: "guest", user_metadata: { username: "Guest" } };
 
 const LEVEL_CONFIG = {
-  easy:   { label: "קל",        labelEn: "Easy",             icon: "⚡", color: "#10B981", points: 10 },
-  medium: { label: "בינוני",    labelEn: "Medium",           icon: "🔶", color: "#F59E0B", points: 20 },
-  hard:   { label: "קשה",      labelEn: "Hard",             icon: "🔥", color: "#EF4444", points: 30 },
-  mixed:  { label: "מיקס",     labelEn: "Mixed",            icon: "🎲", color: "#A855F7", points: 15 },
-  daily:  { label: "אתגר יומי", labelEn: "Daily Challenge",  icon: "🔥", color: "#F59E0B", points: 15 },
+  easy:   { label: "קל",        labelEn: "Easy",             icon: "easy",   color: "#10B981", points: 10 },
+  medium: { label: "בינוני",    labelEn: "Medium",           icon: "medium", color: "#F59E0B", points: 20 },
+  hard:   { label: "קשה",      labelEn: "Hard",             icon: "hard",   color: "#EF4444", points: 30 },
+  mixed:  { label: "מיקס",     labelEn: "Mixed",            icon: "mixed",  color: "#A855F7", points: 15 },
+  daily:  { label: "אתגר יומי", labelEn: "Daily Challenge",  icon: "daily",  color: "#F59E0B", points: 15 },
 };
 
 const LEVEL_ORDER = ["easy", "medium", "hard"];
@@ -132,9 +140,9 @@ const RESUME_SESSION_KEY  = "resumeModalSeen";       // sessionStorage: shown on
 const RESUME_DISMISS_KEY  = "resumeDismissedAt";     // localStorage: legacy (kept for cleanup)
 const RESUME_MIN_PROGRESS = 0;                        // any answered question → offer resume
 
-const MIXED_TOPIC     = { id: "mixed",     icon: "🎲", name: "Mixed Quiz",        color: "#A855F7", levels: {} };
-const DAILY_TOPIC     = { id: "daily",     icon: "🔥", name: "Daily Challenge",    color: "#F59E0B", levels: {} };
-const BOOKMARKS_TOPIC = { id: "bookmarks", icon: "🔖", name: "Saved Questions",    color: "#A855F7", levels: {} };
+const MIXED_TOPIC     = { id: "mixed",     icon: "mixed", name: "Mixed Quiz",        color: "#A855F7", levels: {} };
+const DAILY_TOPIC     = { id: "daily",     icon: "daily", name: "Daily Challenge",    color: "#F59E0B", levels: {} };
+const BOOKMARKS_TOPIC = { id: "bookmarks", icon: "bookmarks", name: "Saved Questions",    color: "#A855F7", levels: {} };
 
 // Centralized resume progress calculation.
 // quizHistory tracks answered questions even if the user leaves before clicking Next.
@@ -172,7 +180,7 @@ function mulberry32(seed) {
 const TRANSLATIONS = {
   he: {
     tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying: "⚡ התחילי לשחק עכשיו",
+    startPlaying: "התחילי לשחק עכשיו",
     noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
     saveProgress: "רוצה לשמור את ההתקדמות?",
     username: "שם משתמש", email: "אימייל", password: "סיסמה",
@@ -211,7 +219,7 @@ const TRANSLATIONS = {
     pts: "נק׳",
     achievementsTitle: "🏅 הישגים",
     leaderboardTitle: "לוח תוצאות", noData: "אין נתונים עדיין", anonymous: "אנונימי",
-    back: "→ חזרה", theory: "📖 תיאוריה",
+    back: "→", theory: "תיאוריה",
     startQuiz: "🎯 התחילי חידון!", ptsPerQ: "נק׳ לשאלה",
     question: "שאלה", of: "מתוך", streakLabel: "רצף",
     answerPrompt: "מה נכון לעשות?",
@@ -221,8 +229,8 @@ const TRANSLATIONS = {
     correctCount: "נכון", perfect: "מושלם!", points: "נקודות",
     guestSaveHint: "💡 הירשמי כדי לשמור את הניקוד!", signupLink: "הירשמי עכשיו",
     tryAgain: "נסי שוב", restartFullQuiz: "🔄 שחקי מחדש את כל החידון", backToTopics: "חזרי לנושאים",
-    nextLevelBtn: "המשיכי לרמה הבאה", locked: "🔒 נעול", completePrevLevel: "סיימו את הרמה הקודמת",
-    skipTheory: "⚡ דלגי לחידון",
+    nextLevelBtn: "המשיכי לרמה הבאה", locked: "נעול", completePrevLevel: "סיימו את הרמה הקודמת",
+    skipTheory: "דלגי לחידון",
     timerOn: "⏱ כבי טיימר", timerOff: "⏱ הפעילי טיימר", timeUp: "⏰ הזמן נגמר!",
     reviewBtn: "צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
@@ -238,7 +246,7 @@ const TRANSLATIONS = {
     resetProgress: "אפסי התקדמות", resetConfirm: "האם את בטוחה? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
     resetTopic: "אפסי נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
     mixedQuizBtn: "חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
-    tabTopics: "📚 נושאים", tabRoadmap: "🗺️ מסלול",
+    tabTopics: "נושאים", tabRoadmap: "מסלול",
     interviewMode: "מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה", interviewModeActive: "מצב ראיון פעיל · טיימר פעיל · רמזים כבויים",
     dailyChallengeTitle: "אתגר יומי", dailyChallengeNew: "חדש היום",
     dailyChallengeDesc: "5 שאלות מכל הנושאים · מתחלף כל יום",
@@ -251,10 +259,10 @@ const TRANSLATIONS = {
     roadmapStart: "🗺️ התחילי את המסלול",
     roadmapStartHere: "התחילי כאן",
     roadmapContinue: "▶ המשיכי לשלב הבא",
-    roadmapLocked: "🔒 נפתח אחרי השלמת השלב הקודם",
-    roadmapDone: "✅ הושלם",
+    roadmapLocked: "נפתח אחרי השלמת השלב הקודם",
+    roadmapDone: "הושלם",
     roadmapContinueHere: "המשיכי מכאן",
-    weakAreaTitle: "📉 האזור החלש שלך",
+    weakAreaTitle: "האזור החלש שלך",
     weakAreaEmpty: "עדיין אין מספיק נתונים, התחילי לענות כדי שנמליץ מה לחזק.",
     allPerfectTitle: "🔥 הכל בשליטה",
     allPerfectMsg: "כל הנושאים עם דיוק מלא. רוצי להמשיך לאתגר הבא?",
@@ -270,7 +278,7 @@ const TRANSLATIONS = {
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
     tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying_m: "⚡ התחל לשחק עכשיו",
+    startPlaying_m: "התחל לשחק עכשיו",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
     otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
@@ -284,14 +292,14 @@ const TRANSLATIONS = {
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow_m: "הרשם", loginNow_m: "התחבר", alreadyHaveAccount_m: "יש לך חשבון?",
-    back_m: "→ חזרה",
+    back_m: "→",
     startQuiz_m: "🎯 התחל חידון!",
     confirmAnswer_m: "✔ אשר תשובה",
     finishTopic_m: "🎉 סיים נושא!",
     guestSaveHint_m: "💡 הרשם כדי לשמור את הניקוד!", signupLink_m: "הרשם עכשיו",
     tryAgain_m: "נסה שוב", restartFullQuiz_m: "🔄 שחק מחדש את כל החידון", backToTopics_m: "חזור לנושאים",
     nextLevelBtn_m: "המשך לרמה הבאה",
-    skipTheory_m: "⚡ דלג לחידון",
+    skipTheory_m: "דלג לחידון",
     timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
     reviewBtn_m: "צפה בסקירה", hideReview_m: "הסתר סקירה",
     saveErrorText_m: "⚠️ הנתונים לא נשמרו - בדוק חיבור לאינטרנט",
@@ -389,7 +397,7 @@ const TRANSLATIONS = {
     bookmark: "☆ שמרי", bookmarkActive: "★ שמורה",
     bookmark_m: "☆ שמור", bookmarkActive_m: "★ שמור",
     searchBtn: "חיפוש שאלה", searchPlaceholder: "חפשי לפי מילת מפתח...", searchNoResults: "לא נמצאו תוצאות",
-    mistakesBtn: "תרגול טעויות", mistakesEmpty: "אין טעויות! כל הכבוד 🎉", mistakesHint: "שאלות שטעית בהן",
+    mistakesBtn: "תרגול טעויות", mistakesEmpty: "אין טעויות! כל הכבוד", mistakesHint: "שאלות שטעית בהן",
     guideBtn: "פקודות", guideSub: "פקודות kubectl מוכנות להעתקה. לחצו לפתיחה", aboutBtn: "אודות האפליקציה",
     privacyBtn: "מדיניות פרטיות", termsBtn: "תנאי שימוש",
     shareBtn: "שתפי עם חבר", shareBtn_m: "שתף עם חבר",
@@ -440,7 +448,7 @@ const TRANSLATIONS = {
   },
   en: {
     tagline: "Learn Kubernetes in a fun and interactive way",
-    startPlaying: "⚡ Start Playing Now",
+    startPlaying: "Start Playing Now",
     noRegNoPass: "No registration · No password · Instant",
     saveProgress: "Want to save your progress?",
     username: "Username", email: "Email", password: "Password",
@@ -479,7 +487,7 @@ const TRANSLATIONS = {
     pts: "pts",
     achievementsTitle: "🏅 Achievements",
     leaderboardTitle: "Leaderboard", noData: "No data yet", anonymous: "Anonymous",
-    back: "← Return", theory: "📖 Theory",
+    back: "←", theory: "Theory",
     startQuiz: "🎯 Start Quiz!", ptsPerQ: "pts per question",
     question: "Question", of: "of", streakLabel: "Streak",
     answerPrompt: "What should you do?",
@@ -489,8 +497,8 @@ const TRANSLATIONS = {
     correctCount: "correct", perfect: "Perfect!", points: "points",
     guestSaveHint: "💡 Sign up to save your score!", signupLink: "Sign up now",
     tryAgain: "Try Again", restartFullQuiz: "Restart Full Quiz", backToTopics: "Back to Topics",
-    nextLevelBtn: "Next Level", locked: "🔒 Locked", completePrevLevel: "Complete previous level",
-    skipTheory: "⚡ Skip to Quiz",
+    nextLevelBtn: "Next Level", locked: "Locked", completePrevLevel: "Complete previous level",
+    skipTheory: "Skip to Quiz",
     timerOn: "⏱ Timer On", timerOff: "⏱ Timer Off", timeUp: "⏰ Time's Up!",
     reviewBtn: "View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
     loadingText: "Loading...",
@@ -515,17 +523,17 @@ const TRANSLATIONS = {
     roadmapStart: "▶ Start Roadmap",
     roadmapStartHere: "Start here",
     roadmapContinue: "▶ Continue to Next Stage",
-    roadmapLocked: "🔒 Unlocks after completing the previous stage",
-    roadmapDone: "✅ Completed",
+    roadmapLocked: "Unlocks after completing the previous stage",
+    roadmapDone: "Completed",
     roadmapContinueHere: "Continue from here",
-    weakAreaTitle: "📉 Your Weak Area",
+    weakAreaTitle: "Your Weak Area",
     weakAreaEmpty: "Not enough data yet, start answering to get recommendations.",
     allPerfectTitle: "🔥 All Under Control",
     allPerfectMsg: "All topics at 100% accuracy. Ready for the next challenge?",
     advancedPractice: "Advanced Practice",
     accuracyLabel: "accuracy",
     goBackToTopic: "Go back to this topic",
-    tabTopics: "📚 Topics", tabRoadmap: "🗺️ Roadmap",
+    tabTopics: "Topics", tabRoadmap: "Roadmap",
     interviewMode: "Interview Mode", interviewModeHint: "Hints off, timer on for every question", interviewModeActive: "Interview mode active · Timer on · Hints off",
     dailyChallengeTitle: "Daily Challenge", dailyChallengeNew: "NEW DAILY",
     dailyChallengeDesc: "5 mixed questions · resets every day",
@@ -1094,7 +1102,7 @@ function Footer({ lang, onPrivacy, onTerms }) {
         </a>
         {dot}
         <a href="https://buymeacoffee.com/ocarmeli7n" target="_blank" rel="noopener noreferrer" style={linkStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
-          {lang==="en"?"Support ☕":"תמיכה ☕"}
+          <span style={{display:"inline-flex",alignItems:"center",gap:3}}>{lang==="en"?"Support":"תמיכה"} <Coffee size={11} strokeWidth={1.5} /></span>
         </a>
       </div>
     </footer>
@@ -3931,7 +3939,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <LangSwitcher lang={lang} setLang={setLang}/>
           <button onClick={toggleTheme} aria-label={theme==="dark"?"Switch to light mode":"Switch to dark mode"}
             style={{background:"var(--glass-4)",border:"1px solid var(--glass-12)",borderRadius:8,color:"var(--text-secondary)",padding:"6px 10px",fontSize:13,cursor:"pointer"}}>
-            {theme==="dark"?"☀️":"🌙"}
+            {theme==="dark"?<Sun size={15} strokeWidth={1.5}/>:<Moon size={15} strokeWidth={1.5}/>}
           </button>
         </div>
 
@@ -3953,7 +3961,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
         <button className="gbtn" onClick={()=>{setUser(GUEST_USER);try{localStorage.setItem("k8s_guest_session","1")}catch{}}}
           style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
-          {t("startPlaying")}
+          <span style={{display:"inline-flex",alignItems:"center",gap:6}}><Zap size={18} strokeWidth={2} /> {t("startPlaying")}</span>
         </button>
         <p style={{textAlign:"center",color:"var(--code-text)",opacity:0.75,fontSize:12,margin:"0 0 26px"}}>{t("noRegNoPass")}</p>
 
@@ -4325,7 +4333,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:dir,overflowX:"hidden"}}><div style={{position:"relative",marginBottom:20,flexShrink:0}}><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{position:"absolute",top:0,left:0,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",padding:0,lineHeight:1}}>✕</button><div style={{textAlign:"right",direction:"rtl"}}><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",gap:8,direction:"rtl"}}><Trophy size={20} strokeWidth={1.5} style={{opacity:0.7,color:"#F59E0B"}}/>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:dir,overflowX:"hidden"}}><div style={{position:"relative",marginBottom:20,flexShrink:0}}><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{position:"absolute",top:0,left:0,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",padding:0,lineHeight:1}}>✕</button><div style={{textAlign:"right",direction:"rtl"}}><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",gap:8,direction:"rtl"}}><Trophy size={20} strokeWidth={1.5} style={{opacity:0.7,color:"#F59E0B"}}/>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:i<3?medalColors[i]:"var(--text-dim)"}}>{i<3?<><Trophy size={14} strokeWidth={1.5} color={medalColors[i]} /></>:`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:6}}>{rTier.key==="master"?<Crown size={14} strokeWidth={1.5} color={rTier.color} />:<Trophy size={14} strokeWidth={1.5} color={rTier.color} />}<span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
@@ -4526,10 +4534,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {/* ── Divider + System ── */}
           <div style={{borderTop:"1px solid var(--glass-6)",marginTop:4,paddingTop:4}}>
             <button className="menu-item" onClick={()=>{handleResetProgress();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"#EF4444",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
-              <span aria-hidden="true">🗑</span>{t("resetProgress")}
+              <Trash2 size={15} strokeWidth={1.5} color="#EF4444" style={{flexShrink:0}} />{t("resetProgress")}
             </button>
             <button className="menu-item" onClick={()=>{handleLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
-              <span aria-hidden="true">🚪</span>{t("logout")}
+              <LockIcon size={15} strokeWidth={1.5} color="var(--text-secondary)" style={{flexShrink:0}} />{t("logout")}
             </button>
           </div>
         </div>
@@ -4649,7 +4657,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{fontSize:13,color:"var(--text-muted)",fontWeight:700,letterSpacing:0.5,marginBottom:8,direction:dir}}>
                   {allDone ? t("heroAllDone") : `${t("heroStage")} ${currentStageIdx} ${t("heroStageOf")} ${AVAILABLE_TOPICS.length}`}
                 </div>
-                {nextTopic && <div style={{fontSize:17,fontWeight:800,color:"var(--text-primary)",marginBottom:6,direction:dir}}>{nextTopic.icon} {nextTopic.name}</div>}
+                {nextTopic && <div style={{fontSize:17,fontWeight:800,color:"var(--text-primary)",marginBottom:6,direction:dir}}>{nextTopic.name}</div>}
                 {/* Progress bar */}
                 <div style={{marginTop:12,marginBottom:18}}>
                   <div style={{height:8,borderRadius:8,background:theme==="light"?"#E2E8F0":"rgba(255,255,255,0.06)",overflow:"hidden"}}>
@@ -4688,26 +4696,26 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               const accTrendArrow=accDiff>0?"\u2191":accDiff<0?"\u2193":"";
               const accTrendText=accDiff!==0?`${accTrendArrow} ${Math.abs(accDiff)}%`:null;
               return[
-              {label:t("score"),value:stats.total_score,icon:"\u2B50",color:_lt?"#D97706":"#F59E0B",glow:_lt?"rgba(217,119,6,0.15)":"rgba(250,204,21,0.25)"},
-              {label:t("accuracy"),value:`${accuracy}%`,icon:"\uD83C\uDFAF",color:_lt?"#059669":"#10B981",glow:_lt?"rgba(5,150,105,0.15)":"rgba(34,197,94,0.25)",accTrend:accTrendText,accTrendColor},
-              {label:t("rank"),value:isGuest?"\uD83D\uDD12":(userRank?`#${userRank.rank}`:"-"),icon:"\uD83C\uDFC6",color:_lt?"#7C3AED":"#A855F7",glow:_lt?"rgba(124,58,237,0.15)":"rgba(168,85,247,0.25)",sub:isGuest?t("rankUnlockHint"):(userRank?`Top ${rankTopPct}%`:""),isRank:true,locked:isGuest,rankBar:{progress:rankProgress,xpToNext,locked:isGuest},rankTier},
-              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"\uD83D\uDD25",color:_lt?"#EA580C":"#FF6B35",glow:_lt?"rgba(234,88,12,0.15)":"rgba(249,115,22,0.25)"},
+              {label:t("score"),value:stats.total_score,icon:"star",color:_lt?"#D97706":"#F59E0B",glow:_lt?"rgba(217,119,6,0.15)":"rgba(250,204,21,0.25)"},
+              {label:t("accuracy"),value:`${accuracy}%`,icon:"target",color:_lt?"#059669":"#10B981",glow:_lt?"rgba(5,150,105,0.15)":"rgba(34,197,94,0.25)",accTrend:accTrendText,accTrendColor},
+              {label:t("rank"),value:isGuest?null:(userRank?`#${userRank.rank}`:"-"),icon:"trophy",color:_lt?"#7C3AED":"#A855F7",glow:_lt?"rgba(124,58,237,0.15)":"rgba(168,85,247,0.25)",sub:isGuest?t("rankUnlockHint"):(userRank?`Top ${rankTopPct}%`:""),isRank:true,locked:isGuest,rankBar:{progress:rankProgress,xpToNext,locked:isGuest},rankTier},
+              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"flame",color:_lt?"#EA580C":"#FF6B35",glow:_lt?"rgba(234,88,12,0.15)":"rgba(249,115,22,0.25)"},
             ];})().map((s,i)=>(
               <div key={i} className="stats-cell" onClick={s.isRank?()=>{if(isGuest){try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);}else{loadLeaderboard();setShowLeaderboard(true);}}:undefined} style={{background:_lt?"#FFFFFF":`linear-gradient(135deg,${s.color}08,transparent)`,border:_lt?"1px solid #CBD5E1":"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"12px 10px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,cursor:s.isRank?"pointer":"default",opacity:s.locked?0.6:1,transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=_lt?`0 4px 12px ${s.glow}`:`0 4px 20px ${s.glow}`;}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
                 {s.isRank?(s.locked?(<>
                   <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
                   <div style={{display:"flex",alignItems:"center",gap:5,marginTop:6}}>
-                    <span style={{fontSize:15}}>{"\uD83D\uDD12"}</span>
+                    <LockIcon size={15} strokeWidth={1.5} color="var(--text-dim)" />
                     <span style={{fontSize:10,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.4)",lineHeight:1.3,textAlign:"center"}}>{s.sub}</span>
                   </div>
                 </>):(<>
                   <div style={{display:"flex",alignItems:"center",gap:4}}>
-                    <span style={{fontSize:14,lineHeight:1}}>{"\uD83C\uDFC6"}</span>
+                    <Trophy size={14} strokeWidth={1.5} color={s.color} />
                     <span style={{fontSize:24,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:_lt?"none":`0 0 10px ${s.glow}`}}>{s.value}</span>
                   </div>
                   {s.sub&&<div style={{fontSize:10,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.45)",lineHeight:1,marginTop:2}}>{s.sub}</div>}
                   {s.rankTier&&<div style={{display:"inline-flex",alignItems:"center",gap:3,marginTop:3,padding:"2px 7px",borderRadius:6,background:`${s.rankTier.color}18`}}>
-                    <span style={{fontSize:10,lineHeight:1}}>{s.rankTier.icon}</span>
+                    <StatIcon name={s.rankTier.icon === "master" ? "trophy" : s.rankTier.icon === "platinum" ? "star" : s.rankTier.icon === "gold" ? "trophy" : "star"} size={10} color={s.rankTier.color} />
                     <span style={{fontSize:9,fontWeight:700,color:s.rankTier.color,letterSpacing:0.3}}>{t(`rankTier_${s.rankTier.key}`)}</span>
                   </div>}
                   <div style={{width:"85%",marginTop:4}}>
@@ -4717,9 +4725,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     {s.rankBar.xpToNext>0&&<div style={{fontSize:8,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.35)",textAlign:"center",marginTop:2,lineHeight:1}}>{s.rankBar.xpToNext} XP {t("xpToNextRank")}</div>}
                   </div>
                 </>)):(<>
-                  <div style={{fontSize:15,lineHeight:1}}>{s.icon}</div>
-                  <div style={{fontSize:26,fontWeight:800,color:s.locked?"var(--text-dim)":s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:s.locked||_lt?"none":`0 0 8px ${s.glow}`}}>{s.displayValue||s.value}</div>
-                  <div style={{fontSize:10,fontWeight:600,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
+                  <div style={{lineHeight:1,display:"flex",justifyContent:"center"}}><StatIcon name={s.icon} size={15} color={s.color} /></div>
+                  <div style={{fontSize:24,fontWeight:700,color:s.locked?"var(--text-dim)":s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr"}}>{s.displayValue||s.value}</div>
+                  <div style={{fontSize:10,fontWeight:500,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
                   {s.accTrend&&<div style={{fontSize:9,color:s.accTrendColor,lineHeight:1,fontWeight:600,marginTop:1}}>{s.accTrend}</div>}
                   {s.sub&&<div style={{fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1,textAlign:"center",marginTop:1}}>{s.sub}</div>}
                 </>)}
@@ -4815,12 +4823,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           background:locked?"var(--glass-1)":done?`${cfg.color}12`:"var(--glass-3)",
                           border:`1px solid ${locked?"var(--glass-4)":done?cfg.color+"44":"var(--glass-7)"}`,
                           borderRadius:10,textAlign:"center",opacity:locked?0.45:1,cursor:locked?"not-allowed":"pointer"}}>
-                        <div style={{fontSize:16}} aria-hidden="true">{locked?"🔒":cfg.icon}</div>
-                        <div style={{fontSize:12,fontWeight:700,color:locked?"#334155":done?cfg.color:"var(--text-muted)"}}>{getLocalizedField(cfg, "label", lang)}</div>
+                        <div aria-hidden="true" style={{display:"flex",justifyContent:"center"}}>{locked?<LockIcon size={14} strokeWidth={1.5} color="var(--text-disabled)" />:<LevelIcon name={cfg.icon} size={14} color={done?cfg.color:"var(--text-muted)"} />}</div>
+                        <div style={{fontSize:12,fontWeight:700,color:locked?"var(--text-disabled)":done?cfg.color:"var(--text-muted)"}}>{getLocalizedField(cfg, "label", lang)}</div>
                         {done&&!locked&&<div style={{fontSize:10,color:done.correct>0?cfg.color:"#EF4444"}} aria-hidden="true">
                           {done.correct>0?"✓":""} {done.correct}/{done.total}
                         </div>}
-                        <div style={{fontSize:10,color:locked?"#1e293b":"var(--text-dim)"}} aria-hidden="true">+{cfg.points}{t("pts")}</div>
+                        <div style={{fontSize:10,color:locked?"var(--text-dim)":"var(--text-dim)"}} aria-hidden="true">+{cfg.points}{t("pts")}</div>
                         {locked&&<div style={{fontSize:10,color:"var(--text-muted)",marginTop:2,lineHeight:1.2}}>{t("completePrevLevel")}</div>}
                       </button>
                     );
@@ -4840,7 +4848,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="search"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
           <input type="search" autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
@@ -4897,7 +4905,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         return (
           <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
             <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
-              {dir==="rtl"?"→ חזרה":"← Return"}
+              {dir==="rtl"?"→":"←"}
             </button>
             <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:4}}>{t("mistakesBtn")}</h2>
             <p style={{color:"var(--text-muted)",fontSize:13,marginBottom:20}}>{t("mistakesHint")}</p>
@@ -5018,7 +5026,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     transition:"all 0.15s ease"}}>
                   <span style={{color:open?section.color:"var(--text-dim)",fontSize:14,flexShrink:0,
                     transition:"transform 0.2s",transform:open?"rotate(90deg)":"rotate(0deg)",lineHeight:1}}>&#9656;</span>
-                  <span style={{fontSize:16,flexShrink:0}}>{section.icon}</span>
+                  <CheatIcon name={section.icon} size={16} color={open?section.color:"var(--text-dim)"} />
                   <span style={{flex:1,color:"var(--text-primary)",fontSize:14,fontWeight:600,textAlign:"left"}}>{section.title}</span>
                   <span style={{color:"var(--text-dim)",fontSize:11,flexShrink:0}}>{cmdCount}</span>
                 </button>
@@ -5041,10 +5049,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="privacy"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
-            <div style={{fontSize:40,marginBottom:8}}>🔒</div>
+            <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><Shield size={80} strokeWidth={1} color="var(--text-dim)" /></div>
             <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Privacy Policy":"מדיניות פרטיות"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עדכון אחרון: מרץ 2026"}</p>
           </div>
@@ -5090,10 +5098,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="terms"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
-            <div style={{fontSize:40,marginBottom:8}}>📄</div>
+            <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><FileText size={80} strokeWidth={1} color="var(--text-dim)" /></div>
             <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Terms of Service":"תנאי שימוש"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עודכן לאחרונה: מרץ 2026"}</p>
           </div>
@@ -5137,7 +5145,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="about"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,marginBottom:28}}>
             <svg width="64" height="64" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{filter:"drop-shadow(0 0 14px rgba(0,212,255,0.4))"}}>
@@ -5213,7 +5221,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{marginBottom:8,flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",direction:dir,marginBottom:4}}>
               <button onClick={()=>setScreen("home")} aria-label={t("back")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
-              <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel]?.color,background:`${LEVEL_CONFIG[selectedLevel]?.color||"#888"}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap",flexShrink:0}}>{LEVEL_CONFIG[selectedLevel]?.icon} {levelLabel(selectedLevel)}</span>
+              <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel]?.color,background:`${LEVEL_CONFIG[selectedLevel]?.color||"#888"}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap",flexShrink:0,display:"inline-flex",alignItems:"center",gap:4}}><LevelIcon name={LEVEL_CONFIG[selectedLevel]?.icon} size={12} color={LEVEL_CONFIG[selectedLevel]?.color} /> {levelLabel(selectedLevel)}</span>
             </div>
             <h2 style={{margin:0,color:selectedTopic.color,fontSize:17,fontWeight:800,textAlign:"center"}}>{selectedTopic.name}</h2>
           </div>
@@ -5260,7 +5268,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   <span aria-live="polite" aria-atomic="true" style={{color:"var(--text-primary)",fontSize:14,fontWeight:700}}>
                     {t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}
                   </span>
-                  {selectedLevel==="mixed"&&currentQuestions[questionIndex]?.level&&<span style={{fontSize:11,color:LEVEL_CONFIG[currentQuestions[questionIndex].level]?.color||"var(--text-dim)",fontWeight:700,background:`${LEVEL_CONFIG[currentQuestions[questionIndex].level]?.color||"#888"}18`,padding:"2px 8px",borderRadius:6}}>{LEVEL_CONFIG[currentQuestions[questionIndex].level]?.icon} {lang==="he"?LEVEL_CONFIG[currentQuestions[questionIndex].level]?.label:LEVEL_CONFIG[currentQuestions[questionIndex].level]?.labelEn}</span>}
+                  {selectedLevel==="mixed"&&currentQuestions[questionIndex]?.level&&(()=>{const _lvl=currentQuestions[questionIndex].level;const _cfg=LEVEL_CONFIG[_lvl];return<span style={{fontSize:11,color:_cfg?.color||"var(--text-dim)",fontWeight:700,background:`${_cfg?.color||"#888"}18`,padding:"2px 8px",borderRadius:6,display:"inline-flex",alignItems:"center",gap:3}}><LevelIcon name={_cfg?.icon} size={11} color={_cfg?.color} />{lang==="he"?_cfg?.label:_cfg?.labelEn}</span>})()}
                   {isInHistoryMode && !tryAgainActive && <span style={{fontSize:11,color:"#A855F7",fontWeight:700,background:"rgba(168,85,247,0.12)",padding:"2px 8px",borderRadius:6}}>{t("reviewing")}</span>}
                   {tryAgainActive && <span style={{fontSize:11,color:"#F59E0B",fontWeight:700,background:"rgba(245,158,11,0.12)",padding:"2px 8px",borderRadius:6}}>{t("tryAgainBadge")}</span>}
                 </div>
@@ -5277,7 +5285,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                        sessionScore (+X) tracks this-quiz-only earnings to distinguish from the cumulative total.
                        In free mode, total_score is NOT incremented - only sessionScore shows session earnings. */}
                   {!isInHistoryMode&&<span aria-label={`${stats.total_score||0} ${t("pts")}${sessionScore>0?`, +${sessionScore} ${t("completionAdded")}`:""}`} style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
-                    <span aria-hidden="true">⭐ {stats.total_score||0} {t("pts")}</span>
+                    <span aria-hidden="true" style={{display:"inline-flex",alignItems:"center",gap:3}}><Star size={12} strokeWidth={1.5} color="#A855F7" /> {stats.total_score||0} {t("pts")}</span>
                     {sessionScore>0&&<span style={{color:"#00D4FF",fontSize:10,fontWeight:600,marginLeft:4,opacity:0.8}}>(+{sessionScore})</span>}
                   </span>}
                   {!isInHistoryMode&&isFreeMode(selectedTopic?.id)&&<span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,opacity:0.6,background:"var(--glass-4)",padding:"2px 6px",borderRadius:4}}>{t("freeModeBadge")}</span>}
@@ -5861,7 +5869,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           {/* Header */}
           <div style={{marginBottom:32}}>
-            <h2 style={{margin:0,color:"var(--text-bright)",fontSize:28,fontWeight:900,lineHeight:1.3,display:"flex",alignItems:"center",gap:10,direction:dir}}><Siren size={26} strokeWidth={1.5} style={{opacity:0.6}} />{t("incidentModeBtn")}</h2>
+            <h2 style={{margin:0,color:"var(--text-bright)",fontSize:32,fontWeight:900,lineHeight:1.3,display:"flex",alignItems:"center",gap:10,direction:dir}}><Siren size={30} strokeWidth={1.5} style={{opacity:0.7}} />{t("incidentModeBtn")}</h2>
             <p style={{margin:"6px 0 0",color:"var(--text-secondary)",fontSize:14,lineHeight:1.6}}>{t("incidentHeaderSub")}</p>
             {/* Progress */}
             <div style={{marginTop:16}}>
@@ -5952,7 +5960,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <span style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-muted)",letterSpacing:0.5,direction:"ltr",unicodeBidi:"isolate"}}>{incident.incidentCode||""}</span>
                       <span style={{marginInlineStart:"auto",flexShrink:0}}>
                         {completed&&<span style={{width:24,height:24,display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(16,185,129,0.12)",borderRadius:20,color:"#10B981",fontSize:12,fontWeight:700}}>✓</span>}
-                        {locked&&<span style={{fontSize:16,opacity:0.6}}>🔒</span>}
+                        {locked&&<LockIcon size={14} strokeWidth={1.5} color="var(--text-disabled)" style={{opacity:0.6}} />}
                         {!completed&&!locked&&<span style={{fontSize:16,opacity:0.5}}>{incident.icon}</span>}
                       </span>
                     </div>

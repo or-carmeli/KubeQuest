@@ -6,7 +6,7 @@
 export const CHEATSHEET = [
   // ── 1. Inspect Resources ──────────────────────────────────────────────────
   {
-    id: "inspect", icon: "🔎", color: "#00D4FF",
+    id: "inspect", icon: "search", color: "#00D4FF",
     title: "Inspect Resources", titleHe: "בדיקת משאבים",
     commands: [
       { cmd: "kubectl get pods -A", desc: "Show pods across all namespaces", descHe: "הצגת Pods בכל ה-namespaces" },
@@ -22,7 +22,7 @@ export const CHEATSHEET = [
 
   // ── 2. Namespaces ─────────────────────────────────────────────────────────
   {
-    id: "namespaces", icon: "📂", color: "#A855F7",
+    id: "namespaces", icon: "folder", color: "#A855F7",
     title: "Namespaces", titleHe: "Namespaces",
     commands: [
       { cmd: "kubectl get ns", desc: "List all namespaces", descHe: "רשימת כל ה-namespaces" },
@@ -35,7 +35,7 @@ export const CHEATSHEET = [
 
   // ── 3. Debugging ──────────────────────────────────────────────────────────
   {
-    id: "debugging", icon: "🐛", color: "#FF6B35",
+    id: "debugging", icon: "bug", color: "#FF6B35",
     title: "Debugging", titleHe: "דיבוג",
     commands: [
       { cmd: "kubectl describe pod <pod> -n <ns>", desc: "Check events and error reasons for a pod", descHe: "בדיקת אירועים וסיבות שגיאה של Pod" },
@@ -49,7 +49,7 @@ export const CHEATSHEET = [
 
   // ── 4. Logs ───────────────────────────────────────────────────────────────
   {
-    id: "logs", icon: "📜", color: "#10B981",
+    id: "logs", icon: "scroll-text", color: "#10B981",
     title: "Logs", titleHe: "לוגים",
     commands: [
       { cmd: "kubectl logs <pod> -n <ns>", desc: "Show logs for a pod", descHe: "הצגת לוגים של Pod" },
@@ -63,7 +63,7 @@ export const CHEATSHEET = [
 
   // ── 5. Exec & Port-Forward ────────────────────────────────────────────────
   {
-    id: "exec", icon: "💻", color: "#7dd3fc",
+    id: "exec", icon: "terminal", color: "#7dd3fc",
     title: "Exec & Port-Forward", titleHe: "Exec ו-Port-Forward",
     commands: [
       { cmd: "kubectl exec -it <pod> -- sh", desc: "Open a shell inside a pod", descHe: "פתיחת shell בתוך Pod" },
@@ -77,7 +77,7 @@ export const CHEATSHEET = [
 
   // ── 6. Networking ─────────────────────────────────────────────────────────
   {
-    id: "networking", icon: "🌐", color: "#F59E0B",
+    id: "networking", icon: "globe", color: "#F59E0B",
     title: "Networking", titleHe: "רשת",
     commands: [
       { cmd: "kubectl get svc -A", desc: "List all services across namespaces", descHe: "רשימת כל ה-Services בכל ה-namespaces" },
@@ -91,7 +91,7 @@ export const CHEATSHEET = [
 
   // ── 7. Deployments & Rollouts ─────────────────────────────────────────────
   {
-    id: "deployments", icon: "⚙️", color: "#6366F1",
+    id: "deployments", icon: "settings", color: "#6366F1",
     title: "Deployments & Rollouts", titleHe: "Deployments ו-Rollouts",
     commands: [
       { cmd: "kubectl rollout status deploy/<name> -n <ns>", desc: "Watch a deployment rollout progress", descHe: "מעקב אחרי התקדמות rollout" },
@@ -106,7 +106,7 @@ export const CHEATSHEET = [
 
   // ── 8. Scaling ────────────────────────────────────────────────────────────
   {
-    id: "scaling", icon: "📈", color: "#10B981",
+    id: "scaling", icon: "trending-up", color: "#10B981",
     title: "Scaling", titleHe: "סקיילינג",
     commands: [
       { cmd: "kubectl scale deploy/<name> --replicas=3 -n <ns>", desc: "Scale a deployment to 3 replicas", descHe: "שינוי מספר הרפליקות ל-3" },
@@ -118,7 +118,7 @@ export const CHEATSHEET = [
 
   // ── 9. Cleanup ────────────────────────────────────────────────────────────
   {
-    id: "cleanup", icon: "🧹", color: "#EF4444",
+    id: "cleanup", icon: "trash", color: "#EF4444",
     title: "Cleanup", titleHe: "ניקוי",
     commands: [
       { cmd: "kubectl delete pod <pod> -n <ns>", desc: "Delete a specific pod", descHe: "מחיקת Pod ספציפי" },
