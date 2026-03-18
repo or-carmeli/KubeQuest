@@ -26,6 +26,16 @@ import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, 
 import StatusView from "./components/StatusView";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
+import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
+import TopicIcon from "./components/TopicIcon";
+import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon } from "lucide-react";
+import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon } from "lucide-react";
+const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: FlameIcon, mixed: ShuffleIcon, daily: CalendarIcon };
+const CHEAT_ICON_MAP = { search: SearchIcon, folder: FolderOpen, bug: Bug, "scroll-text": ScrollText, terminal: Terminal, globe: GlobeIcon, settings: SettingsIcon, "trending-up": TrendingUp, trash: TrashIcon };
+function CheatIcon({ name, size = 16, color }) { const C = CHEAT_ICON_MAP[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
+function LevelIcon({ name, size = 13, color }) { const C = LEVEL_ICON_MAP[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
+const STAT_ICONS = { star: Star, target: Target, trophy: Trophy, flame: FlameIcon };
+function StatIcon({ name, size = 15, color }) { const C = STAT_ICONS[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
 
 // Feature flag: Architecture Scenarios (dev only for now)
 const ARCHITECTURE_ENABLED = !import.meta.env.PROD;
@@ -100,11 +110,11 @@ console.info("[KubeQuest:boot] App.jsx module-level init complete");
 const GUEST_USER = { id: "guest", email: "guest", user_metadata: { username: "Guest" } };
 
 const LEVEL_CONFIG = {
-  easy:   { label: "קל",        labelEn: "Easy",             icon: "⚡", color: "#10B981", points: 10 },
-  medium: { label: "בינוני",    labelEn: "Medium",           icon: "🔶", color: "#F59E0B", points: 20 },
-  hard:   { label: "קשה",      labelEn: "Hard",             icon: "🔥", color: "#EF4444", points: 30 },
-  mixed:  { label: "מיקס",     labelEn: "Mixed",            icon: "🎲", color: "#A855F7", points: 15 },
-  daily:  { label: "אתגר יומי", labelEn: "Daily Challenge",  icon: "🔥", color: "#F59E0B", points: 15 },
+  easy:   { label: "קל",        labelEn: "Easy",             icon: "easy",   color: "#10B981", points: 10 },
+  medium: { label: "בינוני",    labelEn: "Medium",           icon: "medium", color: "#F59E0B", points: 20 },
+  hard:   { label: "קשה",      labelEn: "Hard",             icon: "hard",   color: "#EF4444", points: 30 },
+  mixed:  { label: "מיקס",     labelEn: "Mixed",            icon: "mixed",  color: "#A855F7", points: 15 },
+  daily:  { label: "אתגר יומי", labelEn: "Daily Challenge",  icon: "daily",  color: "#F59E0B", points: 15 },
 };
 
 const LEVEL_ORDER = ["easy", "medium", "hard"];
@@ -130,9 +140,9 @@ const RESUME_SESSION_KEY  = "resumeModalSeen";       // sessionStorage: shown on
 const RESUME_DISMISS_KEY  = "resumeDismissedAt";     // localStorage: legacy (kept for cleanup)
 const RESUME_MIN_PROGRESS = 0;                        // any answered question → offer resume
 
-const MIXED_TOPIC     = { id: "mixed",     icon: "🎲", name: "Mixed Quiz",        color: "#A855F7", levels: {} };
-const DAILY_TOPIC     = { id: "daily",     icon: "🔥", name: "Daily Challenge",    color: "#F59E0B", levels: {} };
-const BOOKMARKS_TOPIC = { id: "bookmarks", icon: "🔖", name: "Saved Questions",    color: "#A855F7", levels: {} };
+const MIXED_TOPIC     = { id: "mixed",     icon: "mixed", name: "Mixed Quiz",        color: "#A855F7", levels: {} };
+const DAILY_TOPIC     = { id: "daily",     icon: "daily", name: "Daily Challenge",    color: "#F59E0B", levels: {} };
+const BOOKMARKS_TOPIC = { id: "bookmarks", icon: "bookmarks", name: "Saved Questions",    color: "#A855F7", levels: {} };
 
 // Centralized resume progress calculation.
 // quizHistory tracks answered questions even if the user leaves before clicking Next.
@@ -170,11 +180,11 @@ function mulberry32(seed) {
 const TRANSLATIONS = {
   he: {
     tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying: "⚡ התחילי לשחק עכשיו",
+    startPlaying: "התחילי לשחק עכשיו",
     noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
     saveProgress: "רוצה לשמור את ההתקדמות?",
     username: "שם משתמש", email: "אימייל", password: "סיסמה",
-    loginTab: "התחברות", signupTab: "הרשמה",
+    loginTab: "התחברות", signupTab: "הרשמה", authCta: "התחבר / הירשם", authLogin: "התחבר", authSignup: "הירשם",
     loginBtn: "התחברי", signupBtn: "הירשמי", loading: "⏳ רגע...",
     emailAlreadySent: "✅ אימייל אימות כבר נשלח! בדקי את תיבת הדואר שלך.",
     emailSent: "✅ נשלח אימייל אימות! בדקי את תיבת הדואר.",
@@ -196,7 +206,7 @@ const TRANSLATIONS = {
     emailAlreadyExists: "כבר קיים חשבון עם אימייל זה. נסי להתחבר.",
     setNewPasswordTitle: "הגדרת סיסמה חדשה",
     greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
-    leaderboardBtn: "🏆 דירוג", logout: "יציאה",
+    leaderboardBtn: "דירוג", logout: "יציאה",
     guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow: "הירשמי", loginNow: "התחברי", alreadyHaveAccount: "יש לך חשבון?",
     score: "XP", accuracy: "דיוק", streak: "Combo", completed: "הושלמו",
@@ -208,8 +218,8 @@ const TRANSLATIONS = {
     freeModeBadge: "סבב בונוס: צוברים נקודות!", freeModeTag: "בונוס",
     pts: "נק׳",
     achievementsTitle: "🏅 הישגים",
-    leaderboardTitle: "🏆 לוח תוצאות", noData: "אין נתונים עדיין", anonymous: "אנונימי",
-    back: "→ חזרה", theory: "📖 תיאוריה",
+    leaderboardTitle: "לוח תוצאות", noData: "אין נתונים עדיין", anonymous: "אנונימי",
+    back: "→", theory: "תיאוריה",
     startQuiz: "🎯 התחילי חידון!", ptsPerQ: "נק׳ לשאלה",
     question: "שאלה", of: "מתוך", streakLabel: "רצף",
     answerPrompt: "מה נכון לעשות?",
@@ -219,8 +229,8 @@ const TRANSLATIONS = {
     correctCount: "נכון", perfect: "מושלם!", points: "נקודות",
     guestSaveHint: "💡 הירשמי כדי לשמור את הניקוד!", signupLink: "הירשמי עכשיו",
     tryAgain: "נסי שוב", restartFullQuiz: "🔄 שחקי מחדש את כל החידון", backToTopics: "חזרי לנושאים",
-    nextLevelBtn: "המשיכי לרמה הבאה", locked: "🔒 נעול", completePrevLevel: "סיימו את הרמה הקודמת",
-    skipTheory: "⚡ דלגי לחידון",
+    nextLevelBtn: "המשיכי לרמה הבאה", locked: "נעול", completePrevLevel: "סיימו את הרמה הקודמת",
+    skipTheory: "דלגי לחידון",
     timerOn: "⏱ כבי טיימר", timerOff: "⏱ הפעילי טיימר", timeUp: "⏰ הזמן נגמר!",
     reviewBtn: "צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
@@ -235,9 +245,9 @@ const TRANSLATIONS = {
     optionLabels: ["א","ב","ג","ד"], guestName: "אורחת",
     resetProgress: "אפסי התקדמות", resetConfirm: "האם את בטוחה? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
     resetTopic: "אפסי נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
-    mixedQuizBtn: "🎲 חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
-    tabTopics: "📚 נושאים", tabRoadmap: "🗺️ מסלול",
-    interviewMode: "🎯 מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה", interviewModeActive: "מצב ראיון פעיל · טיימר פעיל · רמזים כבויים",
+    mixedQuizBtn: "חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
+    tabTopics: "נושאים", tabRoadmap: "מסלול",
+    interviewMode: "מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה", interviewModeActive: "מצב ראיון פעיל · טיימר פעיל · רמזים כבויים",
     dailyChallengeTitle: "אתגר יומי", dailyChallengeNew: "חדש היום",
     dailyChallengeDesc: "5 שאלות מכל הנושאים · מתחלף כל יום",
     heroStage: "שלב", heroStageOf: "מתוך", heroStartTrack: "התחל את המסלול", heroContinueTrack: "המשך למשימה הבאה", heroAllDone: "כל הנושאים הושלמו!",
@@ -249,10 +259,10 @@ const TRANSLATIONS = {
     roadmapStart: "🗺️ התחילי את המסלול",
     roadmapStartHere: "התחילי כאן",
     roadmapContinue: "▶ המשיכי לשלב הבא",
-    roadmapLocked: "🔒 נפתח אחרי השלמת השלב הקודם",
-    roadmapDone: "✅ הושלם",
+    roadmapLocked: "נפתח אחרי השלמת השלב הקודם",
+    roadmapDone: "הושלם",
     roadmapContinueHere: "המשיכי מכאן",
-    weakAreaTitle: "📉 האזור החלש שלך",
+    weakAreaTitle: "האזור החלש שלך",
     weakAreaEmpty: "עדיין אין מספיק נתונים, התחילי לענות כדי שנמליץ מה לחזק.",
     allPerfectTitle: "🔥 הכל בשליטה",
     allPerfectMsg: "כל הנושאים עם דיוק מלא. רוצי להמשיך לאתגר הבא?",
@@ -268,7 +278,7 @@ const TRANSLATIONS = {
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
     tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying_m: "⚡ התחל לשחק עכשיו",
+    startPlaying_m: "התחל לשחק עכשיו",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
     otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
@@ -282,14 +292,14 @@ const TRANSLATIONS = {
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow_m: "הרשם", loginNow_m: "התחבר", alreadyHaveAccount_m: "יש לך חשבון?",
-    back_m: "→ חזרה",
+    back_m: "→",
     startQuiz_m: "🎯 התחל חידון!",
     confirmAnswer_m: "✔ אשר תשובה",
     finishTopic_m: "🎉 סיים נושא!",
     guestSaveHint_m: "💡 הרשם כדי לשמור את הניקוד!", signupLink_m: "הרשם עכשיו",
     tryAgain_m: "נסה שוב", restartFullQuiz_m: "🔄 שחק מחדש את כל החידון", backToTopics_m: "חזור לנושאים",
     nextLevelBtn_m: "המשך לרמה הבאה",
-    skipTheory_m: "⚡ דלג לחידון",
+    skipTheory_m: "דלג לחידון",
     timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
     reviewBtn_m: "צפה בסקירה", hideReview_m: "הסתר סקירה",
     saveErrorText_m: "⚠️ הנתונים לא נשמרו - בדוק חיבור לאינטרנט",
@@ -324,8 +334,8 @@ const TRANSLATIONS = {
     tryAgainCorrect: "✅ נכון! כל הכבוד",
     tryAgainWrong: "❌ לא נכון",
     exitTryAgain: "חזרי לסקירה", exitTryAgain_m: "חזור לסקירה",
-    incidentModeBtn: "🚨 חדר מצב", incidentModeDesc: "הדמיית אירועי Kubernetes אמיתיים",
-    incidentModeBtn_m: "🚨 חדר מצב",
+    incidentModeBtn: "חדר מצב", incidentModeDesc: "הדמיית אירועי Kubernetes אמיתיים",
+    incidentModeBtn_m: "חדר מצב",
     incidentListTitle: "בחר אירוע",
     incidentDifficulty: "רמה", incidentSteps: "שלבים", incidentEstTime: "זמן משוער",
     incidentStep: "שלב", incidentScore: "ניקוד", incidentMistakes: "שגיאות", incidentTime: "זמן",
@@ -370,7 +380,7 @@ const TRANSLATIONS = {
     incidentLocked: "נעול",
     incidentCompleted: "הושלם",
     incidentProgress: "{done} מתוך {total} תרחישים הושלמו",
-    warRoomNotification: "🚨 תקלה חדשה זמינה בחדר מצב",
+    warRoomNotification: "תקלה חדשה זמינה בחדר מצב",
     reportBtn: "⚑ דווחי על שגיאה", reportBtn_m: "⚑ דווח על שגיאה",
     reportTitle: "דיווח על שגיאה בשאלה",
     reportType1: "התשובה הנכונה שגויה", reportType2: "השאלה לא ברורה",
@@ -379,18 +389,18 @@ const TRANSLATIONS = {
     reportSend: "שלחי דיווח", reportSend_m: "שלח דיווח",
     reportThanks: "✓ תודה! הדיווח נשלח.",
     reportCancel: "ביטול",
-    savedQuestions: "📌 שאלות שמורות", savedQuestionsTitle: "שאלות שמורות",
+    savedQuestions: "שאלות שמורות", savedQuestionsTitle: "שאלות שמורות",
     noBookmarks: "עוד לא שמרת שאלות. לחצי על ☆ בזמן חידון כדי לשמור.",
     noBookmarks_m: "עוד לא שמרת שאלות. לחץ על ☆ בזמן חידון כדי לשמור.",
     startSavedQuiz: "▶ תרגלי שאלות שמורות", startSavedQuiz_m: "▶ תרגל שאלות שמורות",
     removeBookmark: "הסרי", removeBookmark_m: "הסר",
     bookmark: "☆ שמרי", bookmarkActive: "★ שמורה",
     bookmark_m: "☆ שמור", bookmarkActive_m: "★ שמור",
-    searchBtn: "🔎 חיפוש שאלה", searchPlaceholder: "חפשי לפי מילת מפתח...", searchNoResults: "לא נמצאו תוצאות",
-    mistakesBtn: "❌ תרגול טעויות", mistakesEmpty: "אין טעויות! כל הכבוד 🎉", mistakesHint: "שאלות שטעית בהן",
-    guideBtn: "📘 פקודות", guideSub: "פקודות kubectl מוכנות להעתקה. לחצו לפתיחה", aboutBtn: "ℹ️ אודות האפליקציה",
-    privacyBtn: "🔒 מדיניות פרטיות", termsBtn: "📄 תנאי שימוש",
-    shareBtn: "📤 שתפי עם חבר", shareBtn_m: "📤 שתף עם חבר",
+    searchBtn: "חיפוש שאלה", searchPlaceholder: "חפשי לפי מילת מפתח...", searchNoResults: "לא נמצאו תוצאות",
+    mistakesBtn: "תרגול טעויות", mistakesEmpty: "אין טעויות! כל הכבוד", mistakesHint: "שאלות שטעית בהן",
+    guideBtn: "פקודות", guideSub: "פקודות kubectl מוכנות להעתקה. לחצו לפתיחה", aboutBtn: "אודות האפליקציה",
+    privacyBtn: "מדיניות פרטיות", termsBtn: "תנאי שימוש",
+    shareBtn: "שתפי עם חבר", shareBtn_m: "שתף עם חבר",
     dailyStreak: "ימים ברצף",
     statsTitle: "הסטטיסטיקות שלי",
     statsOverview: "סקירה כללית",
@@ -415,7 +425,7 @@ const TRANSLATIONS = {
     statsTo: "ל-",
     statsAllPerfect: "כל הנושאים ב-100%!",
     statsXpMilestone: "אבן דרך הבאה",
-    installApp: "📲 התקנה לנייד",
+    installApp: "התקנה לנייד",
     installTitle: "התקנת האפליקציה",
     installDesc: "ניתן להוסיף את KubeQuest למסך הבית ולהשתמש בה כמו אפליקציה רגילה.",
     installNow: "התקיני עכשיו", installNow_m: "התקן עכשיו",
@@ -438,11 +448,11 @@ const TRANSLATIONS = {
   },
   en: {
     tagline: "Learn Kubernetes in a fun and interactive way",
-    startPlaying: "⚡ Start Playing Now",
+    startPlaying: "Start Playing Now",
     noRegNoPass: "No registration · No password · Instant",
     saveProgress: "Want to save your progress?",
     username: "Username", email: "Email", password: "Password",
-    loginTab: "Login", signupTab: "Sign Up",
+    loginTab: "Login", signupTab: "Sign Up", authCta: "Log in / Sign up", authLogin: "Log in", authSignup: "Sign up",
     loginBtn: "Sign In", signupBtn: "Register", loading: "⏳ Loading...",
     emailAlreadySent: "✅ Verification email already sent! Check your inbox.",
     emailSent: "✅ Verification email sent! Check your inbox.",
@@ -464,7 +474,7 @@ const TRANSLATIONS = {
     emailAlreadyExists: "An account with this email already exists. Try logging in.",
     setNewPasswordTitle: "Set New Password",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
-    leaderboardBtn: "🏆 Leaderboard", logout: "Logout",
+    leaderboardBtn: "Leaderboard", logout: "Logout",
     guestBanner: "💡 Sign up to save progress and appear on the leaderboard",
     signupNow: "Sign Up", loginNow: "Log In", alreadyHaveAccount: "Have an account?",
     score: "XP", accuracy: "Accuracy", streak: "Combo", completed: "Completed",
@@ -476,8 +486,8 @@ const TRANSLATIONS = {
     freeModeBadge: "Bonus round: earns points!", freeModeTag: "Bonus",
     pts: "pts",
     achievementsTitle: "🏅 Achievements",
-    leaderboardTitle: "🏆 Leaderboard", noData: "No data yet", anonymous: "Anonymous",
-    back: "← Return", theory: "📖 Theory",
+    leaderboardTitle: "Leaderboard", noData: "No data yet", anonymous: "Anonymous",
+    back: "←", theory: "Theory",
     startQuiz: "🎯 Start Quiz!", ptsPerQ: "pts per question",
     question: "Question", of: "of", streakLabel: "Streak",
     answerPrompt: "What should you do?",
@@ -487,8 +497,8 @@ const TRANSLATIONS = {
     correctCount: "correct", perfect: "Perfect!", points: "points",
     guestSaveHint: "💡 Sign up to save your score!", signupLink: "Sign up now",
     tryAgain: "Try Again", restartFullQuiz: "Restart Full Quiz", backToTopics: "Back to Topics",
-    nextLevelBtn: "Next Level", locked: "🔒 Locked", completePrevLevel: "Complete previous level",
-    skipTheory: "⚡ Skip to Quiz",
+    nextLevelBtn: "Next Level", locked: "Locked", completePrevLevel: "Complete previous level",
+    skipTheory: "Skip to Quiz",
     timerOn: "⏱ Timer On", timerOff: "⏱ Timer Off", timeUp: "⏰ Time's Up!",
     reviewBtn: "View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
     loadingText: "Loading...",
@@ -503,7 +513,7 @@ const TRANSLATIONS = {
     optionLabels: ["A","B","C","D"], guestName: "Guest",
     resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
     resetTopic: "Reset Topic", resetTopicConfirm: "Reset progress for this topic?",
-    mixedQuizBtn: "🎲 Mixed Quiz", mixedQuizDesc: "10 random questions from all topics",
+    mixedQuizBtn: "Mixed Quiz", mixedQuizDesc: "10 random questions from all topics",
     heroStage: "Stage", heroStageOf: "of", heroStartTrack: "Start the Track", heroContinueTrack: "Continue to Next Task", heroAllDone: "All topics completed!",
     trackProgressTitle: "Track Progress", trackCompleted: "completed", rankUnlockHint: "Log in to join ranking",
     roadmapTitle: "Roadmap Progress",
@@ -513,18 +523,18 @@ const TRANSLATIONS = {
     roadmapStart: "▶ Start Roadmap",
     roadmapStartHere: "Start here",
     roadmapContinue: "▶ Continue to Next Stage",
-    roadmapLocked: "🔒 Unlocks after completing the previous stage",
-    roadmapDone: "✅ Completed",
+    roadmapLocked: "Unlocks after completing the previous stage",
+    roadmapDone: "Completed",
     roadmapContinueHere: "Continue from here",
-    weakAreaTitle: "📉 Your Weak Area",
+    weakAreaTitle: "Your Weak Area",
     weakAreaEmpty: "Not enough data yet, start answering to get recommendations.",
     allPerfectTitle: "🔥 All Under Control",
     allPerfectMsg: "All topics at 100% accuracy. Ready for the next challenge?",
     advancedPractice: "Advanced Practice",
     accuracyLabel: "accuracy",
     goBackToTopic: "Go back to this topic",
-    tabTopics: "📚 Topics", tabRoadmap: "🗺️ Roadmap",
-    interviewMode: "🎯 Interview Mode", interviewModeHint: "Hints off, timer on for every question", interviewModeActive: "Interview mode active · Timer on · Hints off",
+    tabTopics: "Topics", tabRoadmap: "Roadmap",
+    interviewMode: "Interview Mode", interviewModeHint: "Hints off, timer on for every question", interviewModeActive: "Interview mode active · Timer on · Hints off",
     dailyChallengeTitle: "Daily Challenge", dailyChallengeNew: "NEW DAILY",
     dailyChallengeDesc: "5 mixed questions · resets every day",
     a11yTitle: "♿ Accessibility", a11yFontSize: "Text Size", a11yReduceMotion: "Reduce Motion", a11yHighContrast: "High Contrast",
@@ -545,7 +555,7 @@ const TRANSLATIONS = {
     tryAgainCorrect: "✅ Correct! Well done",
     tryAgainWrong: "❌ Incorrect",
     exitTryAgain: "Back to Review",
-    incidentModeBtn: "🚨 War Room", incidentModeDesc: "Simulate real K8s production incidents",
+    incidentModeBtn: "War Room", incidentModeDesc: "Simulate real K8s production incidents",
     incidentListTitle: "Choose an Incident",
     incidentDifficulty: "Difficulty", incidentSteps: "steps", incidentEstTime: "Est. time",
     incidentStep: "Step", incidentScore: "Score", incidentMistakes: "Mistakes", incidentTime: "Time",
@@ -586,7 +596,7 @@ const TRANSLATIONS = {
     incidentLocked: "Locked",
     incidentCompleted: "Completed",
     incidentProgress: "{done} of {total} scenarios completed",
-    warRoomNotification: "🚨 New incident available in the War Room",
+    warRoomNotification: "New incident available in the War Room",
     reportBtn: "⚑ Report an error",
     reportTitle: "Report a question error",
     reportType1: "Wrong answer marked correct", reportType2: "Question is unclear",
@@ -595,16 +605,16 @@ const TRANSLATIONS = {
     reportSend: "Send report",
     reportThanks: "✓ Thanks! Report sent.",
     reportCancel: "Cancel",
-    savedQuestions: "📌 Saved Questions", savedQuestionsTitle: "Saved Questions",
+    savedQuestions: "Saved Questions", savedQuestionsTitle: "Saved Questions",
     noBookmarks: "No saved questions yet. Tap ☆ during a quiz to save one.",
     startSavedQuiz: "▶ Practice Saved Questions",
     removeBookmark: "Remove",
     bookmark: "☆ Save", bookmarkActive: "★ Saved",
-    searchBtn: "🔎 Search Question", searchPlaceholder: "Search by keyword...", searchNoResults: "No results found",
-    mistakesBtn: "❌ My Mistakes", mistakesEmpty: "No mistakes! Great job 🎉", mistakesHint: "Questions you answered incorrectly",
-    guideBtn: "📘 Commands", guideSub: "Copy-ready kubectl commands. Tap to expand", aboutBtn: "ℹ️ About the App",
-    privacyBtn: "🔒 Privacy Policy", termsBtn: "📄 Terms of Service",
-    shareBtn: "📤 Share with a Friend",
+    searchBtn: "Search Question", searchPlaceholder: "Search by keyword...", searchNoResults: "No results found",
+    mistakesBtn: "My Mistakes", mistakesEmpty: "No mistakes! Great job 🎉", mistakesHint: "Questions you answered incorrectly",
+    guideBtn: "Commands", guideSub: "Copy-ready kubectl commands. Tap to expand", aboutBtn: "About the App",
+    privacyBtn: "Privacy Policy", termsBtn: "Terms of Service",
+    shareBtn: "Share with a Friend",
     dailyStreak: "day streak",
     statsTitle: "My Statistics",
     statsOverview: "Overview",
@@ -629,7 +639,7 @@ const TRANSLATIONS = {
     statsTo: "to",
     statsAllPerfect: "All topics at 100%!",
     statsXpMilestone: "Next Milestone",
-    installApp: "📲 Install App",
+    installApp: "Install App",
     installTitle: "Install the App",
     installDesc: "Add KubeQuest to your home screen and use it like a regular app.",
     installNow: "Install Now",
@@ -1092,7 +1102,7 @@ function Footer({ lang, onPrivacy, onTerms }) {
         </a>
         {dot}
         <a href="https://buymeacoffee.com/ocarmeli7n" target="_blank" rel="noopener noreferrer" style={linkStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
-          {lang==="en"?"Support ☕":"תמיכה ☕"}
+          <span style={{display:"inline-flex",alignItems:"center",gap:3}}>{lang==="en"?"Support":"תמיכה"} <Coffee size={11} strokeWidth={1.5} /></span>
         </a>
       </div>
     </footer>
@@ -3921,7 +3931,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (!user && !isStatusDomain) return (
     <div data-kq-rendered="auth" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}.menu-item{transition:background 0.2s,color 0.2s,padding-inline-start 0.2s}.menu-item:hover{background:rgba(0,212,255,0.07)!important;color:#00D4FF!important}.hero-card{transition:transform 0.2s,box-shadow 0.2s}.hero-card:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(0,212,255,0.12),0 4px 16px rgba(0,0,0,0.2)!important}.topic-card-section{transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}.topic-card-section:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.18)!important}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}.menu-item{transition:background 0.18s,color 0.18s,border-color 0.18s;border-inline-end:2px solid transparent}.menu-item:hover{background:rgba(0,212,255,0.05)!important;color:var(--text-primary)!important;border-inline-end-color:rgba(0,212,255,0.4)}.menu-item:active{background:rgba(0,212,255,0.08)!important}.hero-card{transition:transform 0.2s,box-shadow 0.2s}.hero-card:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(0,212,255,0.12),0 4px 16px rgba(0,0,0,0.2)!important}.topic-card-section{transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}.topic-card-section:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.18)!important}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher + theme toggle */}
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:12,gap:8}}>
@@ -3929,7 +3939,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <LangSwitcher lang={lang} setLang={setLang}/>
           <button onClick={toggleTheme} aria-label={theme==="dark"?"Switch to light mode":"Switch to dark mode"}
             style={{background:"var(--glass-4)",border:"1px solid var(--glass-12)",borderRadius:8,color:"var(--text-secondary)",padding:"6px 10px",fontSize:13,cursor:"pointer"}}>
-            {theme==="dark"?"☀️":"🌙"}
+            {theme==="dark"?<Sun size={15} strokeWidth={1.5}/>:<Moon size={15} strokeWidth={1.5}/>}
           </button>
         </div>
 
@@ -3951,7 +3961,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
         <button className="gbtn" onClick={()=>{setUser(GUEST_USER);try{localStorage.setItem("k8s_guest_session","1")}catch{}}}
           style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
-          {t("startPlaying")}
+          <span style={{display:"inline-flex",alignItems:"center",gap:6}}><Zap size={18} strokeWidth={2} /> {t("startPlaying")}</span>
         </button>
         <p style={{textAlign:"center",color:"var(--code-text)",opacity:0.75,fontSize:12,margin:"0 0 26px"}}>{t("noRegNoPass")}</p>
 
@@ -4125,7 +4135,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .stats-cell{padding:8px 4px!important}
 .hero-card{padding:16px 12px 12px!important;margin-bottom:16px!important}
 .action-card{padding:11px 10px!important}
-}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .hero-card{margin-bottom:28px!important}.home-screen .stats-grid{margin-bottom:24px!important;gap:14px!important}.home-screen .action-card{margin-bottom:10px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.03)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284C7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.1)}[data-theme="light"] .topic-next{border-color:#0EA5E9!important;box-shadow:0 0 0 1px rgba(14,165,233,0.12),0 2px 8px rgba(14,165,233,0.06)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)!important}[data-theme="light"] .topic-card-section:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04)!important;border-color:#CBD5E1!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .stats-cell:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important;border-color:#CBD5E1!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn:hover{border-color:#0EA5E9!important;box-shadow:0 2px 8px rgba(14,165,233,0.1)!important}[data-theme="light"] .opt-cmd-scroll{background:rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12)}[data-theme="light"] .opt-cmd-scroll{scrollbar-color:rgba(0,0,0,0.12) transparent}[data-theme="light"] .hero-card{background:linear-gradient(135deg,rgba(14,165,233,0.04),rgba(139,92,246,0.03))!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .hero-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)!important}[data-theme="light"] .gbtn{background:#FFFFFF!important;border-color:#0EA5E9!important;color:#0369A1!important;box-shadow:0 1px 3px rgba(14,165,233,0.1)!important}[data-theme="light"] .gbtn:hover{background:rgba(14,165,233,0.04)!important;border-color:#0284C7!important;box-shadow:0 4px 12px rgba(14,165,233,0.12)!important;color:#0284C7!important}[data-theme="light"] .menu-item:hover{background:rgba(14,165,233,0.06)!important;color:#0369A1!important}[data-theme="light"] input{background:#FFFFFF!important;border-color:#CBD5E1!important}[data-theme="light"] input:focus{border-color:#0EA5E9!important;box-shadow:0 0 0 3px rgba(14,165,233,0.1)!important;outline:none}`}</style>
+}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .hero-card{margin-bottom:28px!important}.home-screen .stats-grid{margin-bottom:24px!important;gap:14px!important}.home-screen .action-card{margin-bottom:10px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.03)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284C7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.1)}[data-theme="light"] .topic-next{border-color:#0EA5E9!important;box-shadow:0 0 0 1px rgba(14,165,233,0.12),0 2px 8px rgba(14,165,233,0.06)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)!important}[data-theme="light"] .topic-card-section:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04)!important;border-color:#CBD5E1!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .stats-cell:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important;border-color:#CBD5E1!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn:hover{border-color:#0EA5E9!important;box-shadow:0 2px 8px rgba(14,165,233,0.1)!important}[data-theme="light"] .opt-cmd-scroll{background:rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12)}[data-theme="light"] .opt-cmd-scroll{scrollbar-color:rgba(0,0,0,0.12) transparent}[data-theme="light"] .hero-card{background:linear-gradient(135deg,rgba(14,165,233,0.04),rgba(139,92,246,0.03))!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .hero-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)!important}[data-theme="light"] .gbtn{background:#FFFFFF!important;border-color:#0EA5E9!important;color:#0369A1!important;box-shadow:0 1px 3px rgba(14,165,233,0.1)!important}[data-theme="light"] .gbtn:hover{background:rgba(14,165,233,0.04)!important;border-color:#0284C7!important;box-shadow:0 4px 12px rgba(14,165,233,0.12)!important;color:#0284C7!important}[data-theme="light"] .menu-item:hover{background:rgba(14,165,233,0.05)!important;color:#111827!important;border-inline-end-color:rgba(14,165,233,0.4)}[data-theme="light"] .menu-item:active{background:rgba(14,165,233,0.08)!important}[data-theme="light"] input{background:#FFFFFF!important;border-color:#CBD5E1!important}[data-theme="light"] input:focus{border-color:#0EA5E9!important;box-shadow:0 0 0 3px rgba(14,165,233,0.1)!important;outline:none}`}</style>
       {!isStatusDomain && <>
       {theme==="dark"&&<><div style={{position:"fixed",top:0,left:0,right:0,height:"55vh",pointerEvents:"none",background:"radial-gradient(ellipse 90% 55% at 50% 0%,rgba(0,212,255,0.05) 0%,transparent 70%)"}}/>
       <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
@@ -4323,7 +4333,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:"ltr",overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800}}>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer"}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,textAlign:"center",fontSize:i<3?16:13,fontWeight:i<3?400:700,color:i<3?"inherit":"var(--text-dim)"}}>{["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"][i]||`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:dir,overflowX:"hidden"}}><div style={{position:"relative",marginBottom:20,flexShrink:0}}><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{position:"absolute",top:0,left:0,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",padding:0,lineHeight:1}}>✕</button><div style={{textAlign:"right",direction:"rtl"}}><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",gap:8,direction:"rtl"}}><Trophy size={20} strokeWidth={1.5} style={{opacity:0.7,color:"#F59E0B"}}/>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#F59E0B","#94A3B8","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:i<3?medalColors[i]:"var(--text-dim)"}}>{i<3?<><Trophy size={14} strokeWidth={1.5} color={medalColors[i]} /></>:`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:6}}>{rTier.key==="master"?<Crown size={14} strokeWidth={1.5} color={rTier.color} />:<Trophy size={14} strokeWidth={1.5} color={rTier.color} />}<span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span><span style={{fontSize:10,color:"var(--text-dim)"}}>- Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
@@ -4362,7 +4372,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Dropdown menu - rendered outside <main> so CSS zoom never affects it */}
       {showMenu&&(()=>{const _br=burgerRef.current?.getBoundingClientRect();const _menuRight=_br?Math.max(8,window.innerWidth-_br.right):8;return(<>
         <div onClick={()=>setShowMenu(false)} style={{position:"fixed",inset:0,zIndex:199}}/>
-        <div style={{position:"fixed",top:82,right:_menuRight,background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:14,padding:"8px 0",zIndex:200,minWidth:234,boxShadow:"var(--shadow-heavy)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100dvh - 110px)"}}>
+        <div style={{position:"fixed",top:82,right:_menuRight,background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:14,padding:"6px 0",zIndex:200,minWidth:240,boxShadow:"0 8px 32px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.2)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100dvh - 110px)"}}>
 
           {/* Language + Gender */}
           <div style={{padding:"8px 14px 10px",borderBottom:"1px solid var(--glass-6)",display:"flex",gap:8,alignItems:"center",justifyContent:"center"}}>
@@ -4371,75 +4381,91 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {/* ── 0. Architecture Scenarios (Advanced) ── */}
-          {ARCHITECTURE_ENABLED&&<button onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"linear-gradient(135deg,rgba(124,58,237,0.06),rgba(168,85,247,0.03))",border:"none",borderBottom:"1px solid var(--glass-6)",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
-            🧠 {lang==="en"?"Architecture Scenarios":"תרחישי ארכיטקטורה"}
-            <span style={{background:"linear-gradient(135deg,rgba(124,58,237,0.2),rgba(168,85,247,0.15))",color:"#C084FC",fontSize:9,fontWeight:800,padding:"2px 8px",borderRadius:4,marginInlineStart:"auto",flexShrink:0,lineHeight:1.5,letterSpacing:0.8,textTransform:"uppercase",border:"1px solid rgba(168,85,247,0.2)"}}>{lang==="en"?"ADVANCED":"מתקדם"}</span>
+          {ARCHITECTURE_ENABLED&&<button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:screen==="architecture"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
+            <Brain size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"Architecture Scenarios":"תרחישי ארכיטקטורה"}
+            <span style={{background:"rgba(168,85,247,0.12)",color:"#C084FC",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:4,marginInlineStart:"auto",flexShrink:0,lineHeight:1.5,letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"ADV":"מתקדם"}</span>
           </button>}
 
           {/* ── 1. Practice ── */}
-          <div style={{padding:"10px 16px 4px"}}>
-            <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"PRACTICE":"תרגול"}</span>
+          <div style={{padding:"12px 16px 5px"}}>
+            <span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",direction:dir}}>{lang==="en"?"PRACTICE":"תרגול"}</span>
           </div>
-          <button className="menu-item" onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:import.meta.env.PROD?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
-            🚨 {lang==="en"?"War Room":"חדר מצב"}
-            {import.meta.env.PROD&&<span style={{background:"rgba(120,140,255,0.15)",color:"#9fb3ff",fontSize:11,fontWeight:600,padding:"2px 8px",borderRadius:999,marginInlineStart:8,flexShrink:0,lineHeight:1.4}}>Coming Soon</span>}
+          <button className="menu-item" onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:import.meta.env.PROD?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <Siren size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"War Room":"חדר מצב"}
+            {import.meta.env.PROD&&<span style={{background:"rgba(120,140,255,0.1)",color:"#9fb3ff",fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:999,marginInlineStart:"auto",flexShrink:0,lineHeight:1.4}}>Soon</span>}
           </button>
-          <button className="menu-item" onClick={()=>{tryStartQuiz(startMixedQuiz,"mixed");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{tryStartQuiz(startMixedQuiz,"mixed");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <Shuffle size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("mixedQuizBtn")}
           </button>
-          <button className="menu-item" onClick={()=>{tryStartQuiz(startDailyChallenge,"daily");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
-            🔥 {t("dailyChallengeTitle")}
+          <button className="menu-item" onClick={()=>{tryStartQuiz(startDailyChallenge,"daily");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <CalendarDays size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {t("dailyChallengeTitle")}
           </button>
-          <button className="menu-item" onClick={()=>{setIsInterviewMode(p=>!p);}} aria-pressed={isInterviewMode} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:isInterviewMode?"#A855F7":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:isInterviewMode?700:400,direction:dir}}>
-            {t("interviewMode")}{isInterviewMode&&<span aria-hidden="true" style={{marginInlineStart:"auto",fontSize:10,color:"#A855F7"}}>ON</span>}
+          <button className="menu-item" onClick={()=>{setIsInterviewMode(p=>!p);}} aria-pressed={isInterviewMode} style={{width:"100%",padding:"9px 16px",background:isInterviewMode?"rgba(168,85,247,0.06)":"none",border:"none",color:isInterviewMode?"#A855F7":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:isInterviewMode?600:400,direction:dir}}>
+            <Target size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:isInterviewMode?0.8:0.5}} />
+            {t("interviewMode")}{isInterviewMode&&<span aria-hidden="true" style={{marginInlineStart:"auto",fontSize:9,color:"#A855F7",fontWeight:700,background:"rgba(168,85,247,0.12)",padding:"1px 6px",borderRadius:4}}>ON</span>}
           </button>
 
           {/* ── 2. Progress ── */}
-          <div style={{padding:"10px 16px 4px",borderTop:"1px solid var(--glass-6)",marginTop:4}}>
-            <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"PROGRESS":"התקדמות"}</span>
+          <div style={{padding:"12px 16px 5px",borderTop:"1px solid var(--glass-4)",marginTop:2}}>
+            <span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",direction:dir}}>{lang==="en"?"PROGRESS":"התקדמות"}</span>
           </div>
-          <button className="menu-item" onClick={()=>{setScreen("stats");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
-            ⭐ {lang==="en"?"My Stats":"הסטטיסטיקות שלי"}
+          <button className="menu-item" onClick={()=>{setScreen("stats");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="stats"?"var(--glass-3)":"none",border:"none",color:screen==="stats"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="stats"?600:400,direction:dir}}>
+            <BarChart3 size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"My Stats":"הסטטיסטיקות שלי"}
           </button>
-          <button className="menu-item" onClick={()=>{setScreen("mistakes");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("mistakes");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="mistakes"?"var(--glass-3)":"none",border:"none",color:screen==="mistakes"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="mistakes"?600:400,direction:dir}}>
+            <XCircle size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("mistakesBtn")}
           </button>
-          <button className="menu-item" onClick={()=>{loadLeaderboard();setShowLeaderboard(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{loadLeaderboard();setShowLeaderboard(true);setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <Trophy size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("leaderboardBtn")}
           </button>
-          <button className="menu-item" onClick={()=>{setShowBookmarks(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,direction:dir}}>
-            <span>{t("savedQuestions")}</span>
-            {bookmarks.length>0&&<span style={{background:"rgba(168,85,247,0.2)",color:"#A855F7",fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:10}}>{bookmarks.length}</span>}
+          <button className="menu-item" onClick={()=>{setShowBookmarks(true);setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <Bookmark size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {t("savedQuestions")}
+            {bookmarks.length>0&&<span style={{background:"rgba(168,85,247,0.15)",color:"#A855F7",fontSize:10,fontWeight:700,padding:"1px 6px",borderRadius:8,marginInlineStart:"auto"}}>{bookmarks.length}</span>}
           </button>
 
           {/* ── 3. Learning ── */}
-          <div style={{padding:"10px 16px 4px",borderTop:"1px solid var(--glass-6)",marginTop:4}}>
-            <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"LEARNING":"למידה"}</span>
+          <div style={{padding:"12px 16px 5px",borderTop:"1px solid var(--glass-4)",marginTop:2}}>
+            <span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",direction:dir}}>{lang==="en"?"LEARNING":"למידה"}</span>
           </div>
-          <button className="menu-item" onClick={()=>{setExpandedGuideSection(null);setScreen("guide");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setExpandedGuideSection(null);setScreen("guide");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="guide"?"var(--glass-3)":"none",border:"none",color:screen==="guide"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="guide"?600:400,direction:dir}}>
+            <BookOpen size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("guideBtn")}
           </button>
-          <button className="menu-item" onClick={()=>{setSearchQuery("");setScreen("search");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setSearchQuery("");setScreen("search");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="search"?"var(--glass-3)":"none",border:"none",color:screen==="search"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="search"?600:400,direction:dir}}>
+            <Search size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("searchBtn")}
           </button>
 
           {/* ── 4. Application ── */}
-          <div style={{padding:"10px 16px 4px",borderTop:"1px solid var(--glass-6)",marginTop:4}}>
-            <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"APPLICATION":"האפליקציה"}</span>
+          <div style={{padding:"12px 16px 5px",borderTop:"1px solid var(--glass-4)",marginTop:2}}>
+            <span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",direction:dir}}>{lang==="en"?"APPLICATION":"האפליקציה"}</span>
           </div>
-          <button className="menu-item" onClick={()=>{setShowInstall(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setShowInstall(true);setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <Download size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("installApp")}
           </button>
-          <button className="menu-item" onClick={()=>{setScreen("status");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
-            🟢 {lang==="en"?"System Status":"סטטוס מערכת"}
+          <button className="menu-item" onClick={()=>{setScreen("status");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="status"?"var(--glass-3)":"none",border:"none",color:screen==="status"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="status"?600:400,direction:dir}}>
+            <Activity size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"System Status":"סטטוס מערכת"}
           </button>
-          <button className="menu-item" onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="about"?"var(--glass-3)":"none",border:"none",color:screen==="about"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="about"?600:400,direction:dir}}>
+            <Info size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("aboutBtn")}
           </button>
-          <button className="menu-item" onClick={()=>{setScreen("privacy");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("privacy");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <Shield size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("privacyBtn")}
           </button>
-          <button className="menu-item" onClick={()=>{setScreen("terms");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("terms");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <FileText size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("termsBtn")}
           </button>
           <button className="menu-item" onClick={()=>{
@@ -4448,16 +4474,18 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             if(navigator.share){navigator.share({title:"KubeQuest",text,url}).catch(()=>{});}
             else{navigator.clipboard?.writeText(url);}
             setShowMenu(false);
-          }} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          }} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            <Share2 size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("shareBtn")}
           </button>
-          <a className="menu-item" href="mailto:contact@kubequest.online?subject=KubeQuest%20Support" style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,textDecoration:"none",direction:dir}}>
-            <span>✉️</span>{lang==="en"?"Contact":"צור קשר"}
+          <a className="menu-item" href="mailto:contact@kubequest.online?subject=KubeQuest%20Support" style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,textDecoration:"none",direction:dir}}>
+            <Mail size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"Contact":"צור קשר"}
           </a>
 
           {/* ── 5. Accessibility ── */}
-          <div style={{padding:"10px 16px 4px",borderTop:"1px solid var(--glass-6)",marginTop:4}}>
-            <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"ACCESSIBILITY":"נגישות"}</span>
+          <div style={{padding:"12px 16px 5px",borderTop:"1px solid var(--glass-4)",marginTop:2}}>
+            <span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",direction:dir}}>{lang==="en"?"ACCESSIBILITY":"נגישות"}</span>
           </div>
           <div style={{padding:"4px 14px 10px"}}>
             <div style={{display:"flex",gap:4}}>
@@ -4506,10 +4534,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {/* ── Divider + System ── */}
           <div style={{borderTop:"1px solid var(--glass-6)",marginTop:4,paddingTop:4}}>
             <button className="menu-item" onClick={()=>{handleResetProgress();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"#EF4444",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
-              <span aria-hidden="true">🗑</span>{t("resetProgress")}
+              <Trash2 size={15} strokeWidth={1.5} color="#EF4444" style={{flexShrink:0}} />{t("resetProgress")}
             </button>
             <button className="menu-item" onClick={()=>{handleLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
-              <span aria-hidden="true">🚪</span>{t("logout")}
+              <LockIcon size={15} strokeWidth={1.5} color="var(--text-secondary)" style={{flexShrink:0}} />{t("logout")}
             </button>
           </div>
         </div>
@@ -4578,7 +4606,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               return (
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",direction:"ltr"}}>
-                  {logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{homeBtn}{burgerBtn}</div>
+                  {logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{burgerBtn}</div>
                 </div>
               );
             })()}
@@ -4591,6 +4619,23 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {isInterviewMode && (
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginTop:6}}>
                 <span style={{fontSize:11,color:"rgba(180,210,255,0.75)",fontWeight:400,direction:dir,lineHeight:1}}>{t("interviewModeActive")}</span>
+              </div>
+            )}
+            {isGuest && (
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:0,marginTop:6,direction:dir}}>
+                <span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"header"})}catch{}}}
+                  style={{fontSize:11,fontWeight:500,color:"rgba(180,210,255,0.85)",cursor:"pointer",transition:"all 0.15s",textDecoration:"none",lineHeight:1}}
+                  onMouseEnter={e=>{e.currentTarget.style.textDecoration="underline";e.currentTarget.style.color="rgba(180,210,255,1)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.textDecoration="none";e.currentTarget.style.color="rgba(180,210,255,0.85)";}}>
+                  {t("authLogin")}
+                </span>
+                <span style={{fontSize:11,color:"rgba(180,210,255,0.35)",userSelect:"none",lineHeight:1,pointerEvents:"none"}} aria-hidden="true">/</span>
+                <span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"header"})}catch{}}}
+                  style={{fontSize:11,fontWeight:500,color:"rgba(180,210,255,0.85)",cursor:"pointer",transition:"all 0.15s",textDecoration:"none",lineHeight:1}}
+                  onMouseEnter={e=>{e.currentTarget.style.textDecoration="underline";e.currentTarget.style.color="rgba(180,210,255,1)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.textDecoration="none";e.currentTarget.style.color="rgba(180,210,255,0.85)";}}>
+                  {t("authSignup")}
+                </span>
               </div>
             )}
           </div>
@@ -4612,7 +4657,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{fontSize:13,color:"var(--text-muted)",fontWeight:700,letterSpacing:0.5,marginBottom:8,direction:dir}}>
                   {allDone ? t("heroAllDone") : `${t("heroStage")} ${currentStageIdx} ${t("heroStageOf")} ${AVAILABLE_TOPICS.length}`}
                 </div>
-                {nextTopic && <div style={{fontSize:17,fontWeight:800,color:"var(--text-primary)",marginBottom:6,direction:dir}}>{nextTopic.icon} {nextTopic.name}</div>}
+                {nextTopic && <div style={{fontSize:17,fontWeight:800,color:"var(--text-primary)",marginBottom:6,direction:dir}}>{nextTopic.name}</div>}
                 {/* Progress bar */}
                 <div style={{marginTop:12,marginBottom:18}}>
                   <div style={{height:8,borderRadius:8,background:theme==="light"?"#E2E8F0":"rgba(255,255,255,0.06)",overflow:"hidden"}}>
@@ -4651,26 +4696,26 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               const accTrendArrow=accDiff>0?"\u2191":accDiff<0?"\u2193":"";
               const accTrendText=accDiff!==0?`${accTrendArrow} ${Math.abs(accDiff)}%`:null;
               return[
-              {label:t("score"),value:stats.total_score,icon:"\u2B50",color:_lt?"#D97706":"#F59E0B",glow:_lt?"rgba(217,119,6,0.15)":"rgba(250,204,21,0.25)"},
-              {label:t("accuracy"),value:`${accuracy}%`,icon:"\uD83C\uDFAF",color:_lt?"#059669":"#10B981",glow:_lt?"rgba(5,150,105,0.15)":"rgba(34,197,94,0.25)",accTrend:accTrendText,accTrendColor},
-              {label:t("rank"),value:isGuest?"\uD83D\uDD12":(userRank?`#${userRank.rank}`:"-"),icon:"\uD83C\uDFC6",color:_lt?"#7C3AED":"#A855F7",glow:_lt?"rgba(124,58,237,0.15)":"rgba(168,85,247,0.25)",sub:isGuest?t("rankUnlockHint"):(userRank?`Top ${rankTopPct}%`:""),isRank:true,locked:isGuest,rankBar:{progress:rankProgress,xpToNext,locked:isGuest},rankTier},
-              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"\uD83D\uDD25",color:_lt?"#EA580C":"#FF6B35",glow:_lt?"rgba(234,88,12,0.15)":"rgba(249,115,22,0.25)"},
+              {label:t("score"),value:stats.total_score,icon:"star",color:_lt?"#D97706":"#F59E0B",glow:_lt?"rgba(217,119,6,0.15)":"rgba(250,204,21,0.25)"},
+              {label:t("accuracy"),value:`${accuracy}%`,icon:"target",color:_lt?"#059669":"#10B981",glow:_lt?"rgba(5,150,105,0.15)":"rgba(34,197,94,0.25)",accTrend:accTrendText,accTrendColor},
+              {label:t("rank"),value:isGuest?null:(userRank?`#${userRank.rank}`:"-"),icon:"trophy",color:_lt?"#7C3AED":"#A855F7",glow:_lt?"rgba(124,58,237,0.15)":"rgba(168,85,247,0.25)",sub:isGuest?t("rankUnlockHint"):(userRank?`Top ${rankTopPct}%`:""),isRank:true,locked:isGuest,rankBar:{progress:rankProgress,xpToNext,locked:isGuest},rankTier},
+              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"flame",color:_lt?"#EA580C":"#FF6B35",glow:_lt?"rgba(234,88,12,0.15)":"rgba(249,115,22,0.25)"},
             ];})().map((s,i)=>(
               <div key={i} className="stats-cell" onClick={s.isRank?()=>{if(isGuest){try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);}else{loadLeaderboard();setShowLeaderboard(true);}}:undefined} style={{background:_lt?"#FFFFFF":`linear-gradient(135deg,${s.color}08,transparent)`,border:_lt?"1px solid #CBD5E1":"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"12px 10px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,cursor:s.isRank?"pointer":"default",opacity:s.locked?0.6:1,transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=_lt?`0 4px 12px ${s.glow}`:`0 4px 20px ${s.glow}`;}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
                 {s.isRank?(s.locked?(<>
                   <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
                   <div style={{display:"flex",alignItems:"center",gap:5,marginTop:6}}>
-                    <span style={{fontSize:15}}>{"\uD83D\uDD12"}</span>
+                    <LockIcon size={15} strokeWidth={1.5} color="var(--text-dim)" />
                     <span style={{fontSize:10,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.4)",lineHeight:1.3,textAlign:"center"}}>{s.sub}</span>
                   </div>
                 </>):(<>
                   <div style={{display:"flex",alignItems:"center",gap:4}}>
-                    <span style={{fontSize:14,lineHeight:1}}>{"\uD83C\uDFC6"}</span>
+                    <Trophy size={14} strokeWidth={1.5} color={s.color} />
                     <span style={{fontSize:24,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:_lt?"none":`0 0 10px ${s.glow}`}}>{s.value}</span>
                   </div>
                   {s.sub&&<div style={{fontSize:10,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.45)",lineHeight:1,marginTop:2}}>{s.sub}</div>}
                   {s.rankTier&&<div style={{display:"inline-flex",alignItems:"center",gap:3,marginTop:3,padding:"2px 7px",borderRadius:6,background:`${s.rankTier.color}18`}}>
-                    <span style={{fontSize:10,lineHeight:1}}>{s.rankTier.icon}</span>
+                    <StatIcon name={s.rankTier.icon === "master" ? "trophy" : s.rankTier.icon === "platinum" ? "star" : s.rankTier.icon === "gold" ? "trophy" : "star"} size={10} color={s.rankTier.color} />
                     <span style={{fontSize:9,fontWeight:700,color:s.rankTier.color,letterSpacing:0.3}}>{t(`rankTier_${s.rankTier.key}`)}</span>
                   </div>}
                   <div style={{width:"85%",marginTop:4}}>
@@ -4680,9 +4725,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     {s.rankBar.xpToNext>0&&<div style={{fontSize:8,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.35)",textAlign:"center",marginTop:2,lineHeight:1}}>{s.rankBar.xpToNext} XP {t("xpToNextRank")}</div>}
                   </div>
                 </>)):(<>
-                  <div style={{fontSize:15,lineHeight:1}}>{s.icon}</div>
-                  <div style={{fontSize:26,fontWeight:800,color:s.locked?"var(--text-dim)":s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:s.locked||_lt?"none":`0 0 8px ${s.glow}`}}>{s.displayValue||s.value}</div>
-                  <div style={{fontSize:10,fontWeight:600,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
+                  <div style={{lineHeight:1,display:"flex",justifyContent:"center"}}><StatIcon name={s.icon} size={15} color={s.color} /></div>
+                  <div style={{fontSize:24,fontWeight:700,color:s.locked?"var(--text-dim)":s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr"}}>{s.displayValue||s.value}</div>
+                  <div style={{fontSize:10,fontWeight:500,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
                   {s.accTrend&&<div style={{fontSize:9,color:s.accTrendColor,lineHeight:1,fontWeight:600,marginTop:1}}>{s.accTrend}</div>}
                   {s.sub&&<div style={{fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1,textAlign:"center",marginTop:1}}>{s.sub}</div>}
                 </>)}
@@ -4753,7 +4798,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               return(
               <section key={topic.id} id={`topic-card-${topic.id}`} aria-label={topic.name} className={`topic-card-section${highlightTopic===topic.id?" pulseHighlight":""}${topic.id===nextTopicId?" topic-next":""}${computeTopicProgress(topic.id)>=100?" topic-done":""}`} style={{background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,padding:"16px 18px",opacity:comingSoon?0.55:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
-                  <div aria-hidden="true" style={{fontSize:24,width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>{topic.icon}</div>
+                  <div aria-hidden="true" style={{width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}><TopicIcon name={topic.icon} size={22} color={topic.color} /></div>
                   <div style={{flex:1}}>
                     <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>{topic.name}{topic.isComingSoon&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(234,179,8,0.25)"}}>COMING SOON</span>}{topic.isNew&&!topic.isComingSoon&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}</h3>
                     <div style={{color:"var(--text-dim)",fontSize:12}}>{getLocalizedField(topic, "description", lang)}</div>
@@ -4778,12 +4823,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           background:locked?"var(--glass-1)":done?`${cfg.color}12`:"var(--glass-3)",
                           border:`1px solid ${locked?"var(--glass-4)":done?cfg.color+"44":"var(--glass-7)"}`,
                           borderRadius:10,textAlign:"center",opacity:locked?0.45:1,cursor:locked?"not-allowed":"pointer"}}>
-                        <div style={{fontSize:16}} aria-hidden="true">{locked?"🔒":cfg.icon}</div>
-                        <div style={{fontSize:12,fontWeight:700,color:locked?"#334155":done?cfg.color:"var(--text-muted)"}}>{getLocalizedField(cfg, "label", lang)}</div>
+                        <div aria-hidden="true" style={{display:"flex",justifyContent:"center"}}>{locked?<LockIcon size={14} strokeWidth={1.5} color="var(--text-disabled)" />:<LevelIcon name={cfg.icon} size={14} color={done?cfg.color:"var(--text-muted)"} />}</div>
+                        <div style={{fontSize:12,fontWeight:700,color:locked?"var(--text-disabled)":done?cfg.color:"var(--text-muted)"}}>{getLocalizedField(cfg, "label", lang)}</div>
                         {done&&!locked&&<div style={{fontSize:10,color:done.correct>0?cfg.color:"#EF4444"}} aria-hidden="true">
                           {done.correct>0?"✓":""} {done.correct}/{done.total}
                         </div>}
-                        <div style={{fontSize:10,color:locked?"#1e293b":"var(--text-dim)"}} aria-hidden="true">+{cfg.points}{t("pts")}</div>
+                        <div style={{fontSize:10,color:locked?"var(--text-dim)":"var(--text-dim)"}} aria-hidden="true">+{cfg.points}{t("pts")}</div>
                         {locked&&<div style={{fontSize:10,color:"var(--text-muted)",marginTop:2,lineHeight:1.2}}>{t("completePrevLevel")}</div>}
                       </button>
                     );
@@ -4792,8 +4837,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </section>
             );})}
           </div>);})()}
-          {/* ── Guest signup card (after topics) ── */}
-          {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10}}><span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span><button className="guest-banner-btn" onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"quiz_game"})}catch{}}} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button><span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"quiz_game"})}catch{}}} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span></div>}
           {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><span>{a.icon}</span>{getLocalizedField(a, "name", lang)}</div>)}</div></div>}
           </>)}
           {homeTab==="roadmap"&&<RoadmapView topics={TOPICS.filter(t=>!t.devOnly||!import.meta.env.PROD)} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir} isGuest={isGuest} onSignup={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"roadmap"})}catch{}}} onLogin={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"roadmap"})}catch{}}}/>}
@@ -4805,7 +4848,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="search"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
           <input type="search" autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
@@ -4828,7 +4871,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               {capped.map(({topic,level,question},i)=>(
                 <div key={i} style={{background:"var(--glass-3)",border:`1px solid ${topic.color}22`,borderRadius:12,padding:"12px 14px",marginBottom:10}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,direction:"ltr"}}>
-                    <span style={{fontSize:16}}>{topic.icon}</span>
+                    <TopicIcon name={topic.icon} size={16} color={topic.color} />
                     <span style={{color:topic.color,fontSize:12,fontWeight:700}}>{topic.name}</span>
                     <span style={{marginLeft:"auto",background:`${LEVEL_CONFIG[level]?.color}22`,color:LEVEL_CONFIG[level]?.color,fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6}}>{levelLabel(level)}</span>
                   </div>
@@ -4862,7 +4905,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         return (
           <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
             <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
-              {dir==="rtl"?"→ חזרה":"← Return"}
+              {dir==="rtl"?"→":"←"}
             </button>
             <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:4}}>{t("mistakesBtn")}</h2>
             <p style={{color:"var(--text-muted)",fontSize:13,marginBottom:20}}>{t("mistakesHint")}</p>
@@ -4875,7 +4918,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   legacy?(
                     <div key={i} style={{background:"var(--glass-3)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:12,padding:"14px 16px",marginBottom:10}}>
                       <div style={{display:"flex",alignItems:"center",gap:14}}>
-                        <span style={{fontSize:26,flexShrink:0}}>{topic.icon}</span>
+                        <TopicIcon name={topic.icon} size={24} color={topic.color} />
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14}}>{topic.name}</div>
                           <div style={{color:"var(--text-muted)",fontSize:12,marginTop:2,display:"flex",alignItems:"center",gap:8,direction:"ltr"}}>
@@ -4895,7 +4938,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   ):(
                     <div key={i} style={{background:"var(--glass-3)",border:"1px solid rgba(239,68,68,0.12)",borderRadius:12,padding:"14px 16px",marginBottom:10}}>
                       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,direction:"ltr",flexWrap:"wrap"}}>
-                        <span style={{fontSize:15}}>{topic.icon}</span>
+                        <TopicIcon name={topic.icon} size={15} color={topic.color} />
                         <span style={{color:"var(--text-secondary)",fontSize:12,fontWeight:600}}>{topic.name}</span>
                         <span style={{color:LEVEL_CONFIG[level]?.color,fontSize:11,fontWeight:700,background:`${LEVEL_CONFIG[level]?.color}18`,border:`1px solid ${LEVEL_CONFIG[level]?.color}44`,borderRadius:6,padding:"2px 6px"}}>
                           {levelLabel(level)}
@@ -4983,7 +5026,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     transition:"all 0.15s ease"}}>
                   <span style={{color:open?section.color:"var(--text-dim)",fontSize:14,flexShrink:0,
                     transition:"transform 0.2s",transform:open?"rotate(90deg)":"rotate(0deg)",lineHeight:1}}>&#9656;</span>
-                  <span style={{fontSize:16,flexShrink:0}}>{section.icon}</span>
+                  <CheatIcon name={section.icon} size={16} color={open?section.color:"var(--text-dim)"} />
                   <span style={{flex:1,color:"var(--text-primary)",fontSize:14,fontWeight:600,textAlign:"left"}}>{section.title}</span>
                   <span style={{color:"var(--text-dim)",fontSize:11,flexShrink:0}}>{cmdCount}</span>
                 </button>
@@ -5006,36 +5049,36 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="privacy"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
-            <div style={{fontSize:40,marginBottom:8}}>🔒</div>
+            <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><Shield size={80} strokeWidth={1} color="var(--text-dim)" /></div>
             <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Privacy Policy":"מדיניות פרטיות"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עדכון אחרון: מרץ 2026"}</p>
           </div>
           {(lang==="en"?[
-            {icon:"📋",title:"Introduction",body:<>KubeQuest is a free, open-source interactive platform for learning and practicing Kubernetes through questions and real-world troubleshooting scenarios. Your privacy is important to us. This policy explains what data we collect, how we use it, and your rights regarding your information.</>},
-            {icon:"📊",title:"Information We Collect",body:<>We collect only the minimum information needed to provide the service.<br/><br/><span style={{fontWeight:600}}>Account Data (optional)</span><br/>If you sign up via Supabase Auth, we store your email address and a unique user ID for authentication purposes. No sensitive personal information is collected.<br/><br/><span style={{fontWeight:600}}>Progress Data</span><br/>Quiz scores, accuracy, streaks, completed topics, and achievements. This data is stored locally in your browser and optionally synced to our database if you create an account.<br/><br/><span style={{fontWeight:600}}>Technical Data</span><br/>We do not collect IP addresses, device fingerprints, or browsing history. No analytics or tracking scripts are used.</>},
-            {icon:"🎯",title:"How We Use Information",body:<>• Saving and displaying your learning progress<br/>• Powering the global leaderboard (username and score only)<br/>• Syncing progress across devices when signed in<br/><br/>We do not use your data for advertising, profiling, or any purpose beyond the app's core functionality. We do not use advertising trackers and we do not sell user data.</>},
-            {icon:"🍪",title:"Cookies and Local Storage",body:<>KubeQuest does not use cookies for tracking. We use browser localStorage only to save user preferences and practice progress:<br/><br/>• Quiz progress and scores<br/>• Theme preference (dark/light)<br/>• Accessibility settings<br/>• Language preference<br/><br/>This data never leaves your browser unless you create an account to sync it.</>},
-            {icon:"🔗",title:"Third-Party Services",body:<><span style={{fontWeight:600}}>Supabase</span><br/>Used for authentication and database storage. Supabase processes data under their <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Privacy Policy</a>.<br/><br/><span style={{fontWeight:600}}>Vercel</span><br/>Used for hosting. Vercel processes data under their <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Privacy Policy</a>.<br/><br/>No other third-party services, analytics, or advertising networks are used.</>},
-            {icon:"🛡️",title:"Data Protection",body:<>• All data is transmitted over HTTPS<br/>• Database access is protected by Row Level Security (RLS). Users can only access their own data<br/>• No sensitive personal information is collected<br/>• Guest mode requires no personal data at all</>},
-            {icon:"🤝",title:"Data Sharing",body:<>We do not sell, trade, or share your personal data with any third parties. The only publicly visible data is your username and score on the leaderboard, which is opt-in through account creation.</>},
-            {icon:"🗑️",title:"Data Deletion",body:<>You can request deletion of all data associated with your account at any time by contacting us. Guest mode data is stored only in your browser and can be cleared at any time through your browser settings.</>},
-            {icon:"✉️",title:"Contact",body:<>If you have questions about this privacy policy or requests related to your data, contact us at:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Privacy" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
+            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"Introduction",body:<>KubeQuest is a free, open-source interactive platform for learning and practicing Kubernetes through questions and real-world troubleshooting scenarios. Your privacy is important to us. This policy explains what data we collect, how we use it, and your rights regarding your information.</>},
+            {icon:<BarChart3 size={18} strokeWidth={1.5}/>,title:"Information We Collect",body:<>We collect only the minimum information needed to provide the service.<br/><br/><span style={{fontWeight:600}}>Account Data (optional)</span><br/>If you sign up via Supabase Auth, we store your email address and a unique user ID for authentication purposes. No sensitive personal information is collected.<br/><br/><span style={{fontWeight:600}}>Progress Data</span><br/>Quiz scores, accuracy, streaks, completed topics, and achievements. This data is stored locally in your browser and optionally synced to our database if you create an account.<br/><br/><span style={{fontWeight:600}}>Technical Data</span><br/>We do not collect IP addresses, device fingerprints, or browsing history. No analytics or tracking scripts are used.</>},
+            {icon:<Target size={18} strokeWidth={1.5}/>,title:"How We Use Information",body:<>• Saving and displaying your learning progress<br/>• Powering the global leaderboard (username and score only)<br/>• Syncing progress across devices when signed in<br/><br/>We do not use your data for advertising, profiling, or any purpose beyond the app's core functionality. We do not use advertising trackers and we do not sell user data.</>},
+            {icon:<Cookie size={18} strokeWidth={1.5}/>,title:"Cookies and Local Storage",body:<>KubeQuest does not use cookies for tracking. We use browser localStorage only to save user preferences and practice progress:<br/><br/>• Quiz progress and scores<br/>• Theme preference (dark/light)<br/>• Accessibility settings<br/>• Language preference<br/><br/>This data never leaves your browser unless you create an account to sync it.</>},
+            {icon:<Share2 size={18} strokeWidth={1.5}/>,title:"Third-Party Services",body:<><span style={{fontWeight:600}}>Supabase</span><br/>Used for authentication and database storage. Supabase processes data under their <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Privacy Policy</a>.<br/><br/><span style={{fontWeight:600}}>Vercel</span><br/>Used for hosting. Vercel processes data under their <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>Privacy Policy</a>.<br/><br/>No other third-party services, analytics, or advertising networks are used.</>},
+            {icon:<Shield size={18} strokeWidth={1.5}/>,title:"Data Protection",body:<>• All data is transmitted over HTTPS<br/>• Database access is protected by Row Level Security (RLS). Users can only access their own data<br/>• No sensitive personal information is collected<br/>• Guest mode requires no personal data at all</>},
+            {icon:<Handshake size={18} strokeWidth={1.5}/>,title:"Data Sharing",body:<>We do not sell, trade, or share your personal data with any third parties. The only publicly visible data is your username and score on the leaderboard, which is opt-in through account creation.</>},
+            {icon:<Trash2 size={18} strokeWidth={1.5}/>,title:"Data Deletion",body:<>You can request deletion of all data associated with your account at any time by contacting us. Guest mode data is stored only in your browser and can be cleared at any time through your browser settings.</>},
+            {icon:<Mail size={18} strokeWidth={1.5}/>,title:"Contact",body:<>If you have questions about this privacy policy or requests related to your data, contact us at:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Privacy" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
           ]:[
-            {icon:"📋",title:"מבוא",body:<>KubeQuest היא פלטפורמה אינטראקטיבית ללימוד ותרגול Kubernetes באמצעות שאלות ותרחישי troubleshooting. הפרטיות שלכם חשובה לנו. מדיניות זו מסבירה אילו נתונים אנחנו אוספים, כיצד אנחנו משתמשים בהם ומהן הזכויות שלכם.</>},
-            {icon:"📊",title:"מידע שאנו אוספים",body:<>אנו אוספים רק את המידע המינימלי הנדרש לפעולת השירות. לא נאסף מידע אישי רגיש.<br/><br/><span style={{fontWeight:600}}>נתוני חשבון (אופציונלי)</span><br/>אם נרשמתם דרך Supabase Auth, אנחנו שומרים את כתובת האימייל ומזהה ייחודי לצורך אימות.<br/><br/><span style={{fontWeight:600}}>נתוני התקדמות</span><br/>ציונים, דיוק, רצפים, נושאים שהושלמו והישגים. המידע נשמר מקומית בדפדפן ומסונכרן לבסיס הנתונים רק אם יצרתם חשבון.<br/><br/><span style={{fontWeight:600}}>נתונים טכניים</span><br/>איננו אוספים כתובות IP, טביעות אצבע של מכשירים או היסטוריית גלישה. לא נעשה שימוש בכלי מעקב או אנליטיקה.</>},
-            {icon:"🎯",title:"כיצד אנחנו משתמשים במידע",body:<>• שמירה והצגה של התקדמות הלמידה שלכם<br/>• הפעלת לוח המובילים הגלובלי (שם משתמש וציון בלבד)<br/>• סנכרון התקדמות בין מכשירים כשאתם מחוברים<br/><br/>איננו משתמשים במידע שלכם לפרסום, יצירת פרופילים או כל מטרה מעבר לפונקציונליות הליבה של האפליקציה.<br/><br/>אנחנו לא משתמשים בכלי פרסום או מעקב ואיננו מוכרים מידע אישי.</>},
-            {icon:"🍪",title:"עוגיות ואחסון מקומי",body:<>KubeQuest אינה משתמשת בעוגיות למעקב. אנו משתמשים ב-localStorage בדפדפן רק לשמירת העדפות משתמש והתקדמות בתרגול:<br/><br/>• התקדמות וציונים בחידונים<br/>• העדפת ערכת נושא (כהה/בהיר)<br/>• הגדרות נגישות<br/>• העדפת שפה<br/><br/>מידע זה לעולם לא יוצא מהדפדפן שלכם אלא אם יצרתם חשבון לסנכרון.</>},
-            {icon:"🔗",title:"שירותי צד שלישי",body:<><span style={{fontWeight:600}}>Supabase</span><br/>משמש לאימות ואחסון בבסיס נתונים. Supabase מעבדת נתונים בהתאם ל<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>מדיניות הפרטיות</a> שלהם.<br/><br/><span style={{fontWeight:600}}>Vercel</span><br/>משמש לאירוח. Vercel מעבדת נתונים בהתאם ל<a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>מדיניות הפרטיות</a> שלהם.<br/><br/>לא נעשה שימוש בשירותי צד שלישי, אנליטיקה או רשתות פרסום נוספים.</>},
-            {icon:"🛡️",title:"הגנה על נתונים",body:<>• כל המידע מועבר דרך HTTPS<br/>• הגישה לבסיס הנתונים מוגנת באמצעות Row Level Security. משתמשים יכולים לגשת רק לנתונים שלהם<br/>• לא נאסף מידע אישי רגיש<br/>• מצב אורח לא דורש מידע אישי כלל</>},
-            {icon:"🤝",title:"שיתוף מידע",body:<>איננו מוכרים, סוחרים או משתפים את המידע האישי שלכם עם צד שלישי. המידע הציבורי היחיד הוא שם המשתמש והציון בלוח המובילים, שהוא בהסכמה בלבד דרך יצירת חשבון.</>},
-            {icon:"🗑️",title:"מחיקת מידע",body:<>משתמשים יכולים לבקש מחיקה של המידע המשויך לחשבונם בכל עת באמצעות יצירת קשר. מידע במצב אורח נשמר רק בדפדפן שלכם וניתן למחיקה בכל עת דרך הגדרות הדפדפן.</>},
-            {icon:"✉️",title:"יצירת קשר",body:<>אם יש לכם שאלות לגבי פרטיות או בקשות הקשורות למידע שלכם, ניתן ליצור קשר בכתובת:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Privacy" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
+            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"מבוא",body:<>KubeQuest היא פלטפורמה אינטראקטיבית ללימוד ותרגול Kubernetes באמצעות שאלות ותרחישי troubleshooting. הפרטיות שלכם חשובה לנו. מדיניות זו מסבירה אילו נתונים אנחנו אוספים, כיצד אנחנו משתמשים בהם ומהן הזכויות שלכם.</>},
+            {icon:<BarChart3 size={18} strokeWidth={1.5}/>,title:"מידע שאנו אוספים",body:<>אנו אוספים רק את המידע המינימלי הנדרש לפעולת השירות. לא נאסף מידע אישי רגיש.<br/><br/><span style={{fontWeight:600}}>נתוני חשבון (אופציונלי)</span><br/>אם נרשמתם דרך Supabase Auth, אנחנו שומרים את כתובת האימייל ומזהה ייחודי לצורך אימות.<br/><br/><span style={{fontWeight:600}}>נתוני התקדמות</span><br/>ציונים, דיוק, רצפים, נושאים שהושלמו והישגים. המידע נשמר מקומית בדפדפן ומסונכרן לבסיס הנתונים רק אם יצרתם חשבון.<br/><br/><span style={{fontWeight:600}}>נתונים טכניים</span><br/>איננו אוספים כתובות IP, טביעות אצבע של מכשירים או היסטוריית גלישה. לא נעשה שימוש בכלי מעקב או אנליטיקה.</>},
+            {icon:<Target size={18} strokeWidth={1.5}/>,title:"כיצד אנחנו משתמשים במידע",body:<>• שמירה והצגה של התקדמות הלמידה שלכם<br/>• הפעלת לוח המובילים הגלובלי (שם משתמש וציון בלבד)<br/>• סנכרון התקדמות בין מכשירים כשאתם מחוברים<br/><br/>איננו משתמשים במידע שלכם לפרסום, יצירת פרופילים או כל מטרה מעבר לפונקציונליות הליבה של האפליקציה.<br/><br/>אנחנו לא משתמשים בכלי פרסום או מעקב ואיננו מוכרים מידע אישי.</>},
+            {icon:<Cookie size={18} strokeWidth={1.5}/>,title:"עוגיות ואחסון מקומי",body:<>KubeQuest אינה משתמשת בעוגיות למעקב. אנו משתמשים ב-localStorage בדפדפן רק לשמירת העדפות משתמש והתקדמות בתרגול:<br/><br/>• התקדמות וציונים בחידונים<br/>• העדפת ערכת נושא (כהה/בהיר)<br/>• הגדרות נגישות<br/>• העדפת שפה<br/><br/>מידע זה לעולם לא יוצא מהדפדפן שלכם אלא אם יצרתם חשבון לסנכרון.</>},
+            {icon:<Share2 size={18} strokeWidth={1.5}/>,title:"שירותי צד שלישי",body:<><span style={{fontWeight:600}}>Supabase</span><br/>משמש לאימות ואחסון בבסיס נתונים. Supabase מעבדת נתונים בהתאם ל<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>מדיניות הפרטיות</a> שלהם.<br/><br/><span style={{fontWeight:600}}>Vercel</span><br/>משמש לאירוח. Vercel מעבדת נתונים בהתאם ל<a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>מדיניות הפרטיות</a> שלהם.<br/><br/>לא נעשה שימוש בשירותי צד שלישי, אנליטיקה או רשתות פרסום נוספים.</>},
+            {icon:<Shield size={18} strokeWidth={1.5}/>,title:"הגנה על נתונים",body:<>• כל המידע מועבר דרך HTTPS<br/>• הגישה לבסיס הנתונים מוגנת באמצעות Row Level Security. משתמשים יכולים לגשת רק לנתונים שלהם<br/>• לא נאסף מידע אישי רגיש<br/>• מצב אורח לא דורש מידע אישי כלל</>},
+            {icon:<Handshake size={18} strokeWidth={1.5}/>,title:"שיתוף מידע",body:<>איננו מוכרים, סוחרים או משתפים את המידע האישי שלכם עם צד שלישי. המידע הציבורי היחיד הוא שם המשתמש והציון בלוח המובילים, שהוא בהסכמה בלבד דרך יצירת חשבון.</>},
+            {icon:<Trash2 size={18} strokeWidth={1.5}/>,title:"מחיקת מידע",body:<>משתמשים יכולים לבקש מחיקה של המידע המשויך לחשבונם בכל עת באמצעות יצירת קשר. מידע במצב אורח נשמר רק בדפדפן שלכם וניתן למחיקה בכל עת דרך הגדרות הדפדפן.</>},
+            {icon:<Mail size={18} strokeWidth={1.5}/>,title:"יצירת קשר",body:<>אם יש לכם שאלות לגבי פרטיות או בקשות הקשורות למידע שלכם, ניתן ליצור קשר בכתובת:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Privacy" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
           ]).map(({icon,title,body},i)=>(
             <div key={i} style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"10px 16px",marginBottom:8,display:"flex",gap:14,alignItems:"flex-start"}}>
-              <span style={{fontSize:22,flexShrink:0,marginTop:1}}>{icon}</span>
+              <span style={{flexShrink:0,marginTop:2,color:"var(--text-dim)",display:"flex"}}>{icon}</span>
               <div>
                 <div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,marginBottom:4}}>{title}</div>
                 <div style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,direction:dir}}>{body}</div>
@@ -5055,34 +5098,34 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="terms"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
-            <div style={{fontSize:40,marginBottom:8}}>📄</div>
+            <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><FileText size={80} strokeWidth={1} color="var(--text-dim)" /></div>
             <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Terms of Service":"תנאי שימוש"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עודכן לאחרונה: מרץ 2026"}</p>
           </div>
           {(lang==="en"?[
-            {icon:"📋",title:"Introduction",body:<>KubeQuest is an interactive educational platform for learning and practicing Kubernetes through questions and real-world troubleshooting scenarios. By using the platform, you agree to these terms of service.</>},
-            {icon:"🎓",title:"Use of the Platform",body:<>The service is intended for educational and personal development purposes only. The content provided is designed to help users learn Kubernetes concepts and prepare for professional certifications.</>},
-            {icon:"👤",title:"User Accounts",body:<>Account creation is optional. If you create an account, you are responsible for all activity that occurs under it. Keep your login credentials secure. Guest mode is available without registration.</>},
-            {icon:"📝",title:"Content Accuracy",body:<>We make every effort to provide accurate and up-to-date content. However, we cannot guarantee that all questions, answers, and explanations are completely error-free. The content is for educational purposes and should not be treated as official documentation.</>},
-            {icon:"⚖️",title:"Fair Use",body:<>Users must not:<br/><br/>• Attempt to exploit vulnerabilities in the platform<br/>• Disrupt or interfere with the service<br/>• Use automated tools to scrape content<br/>• Misrepresent their identity or affiliation<br/><br/>We reserve the right to restrict access for users who violate these terms.</>},
-            {icon:"🔄",title:"Changes to the Service",body:<>KubeQuest may update, modify, or discontinue any part of the platform or its content at any time without prior notice. We are not obligated to maintain any specific feature or content.</>},
-            {icon:"⚠️",title:"Limitation of Liability",body:<>The platform is provided "as is" without warranties of any kind, express or implied. KubeQuest is not liable for any damages arising from the use of the platform, including but not limited to errors in content, service interruptions, or data loss.</>},
-            {icon:"✉️",title:"Contact",body:<>For questions regarding these terms of service, contact us at:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Terms" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
+            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"Introduction",body:<>KubeQuest is an interactive educational platform for learning and practicing Kubernetes through questions and real-world troubleshooting scenarios. By using the platform, you agree to these terms of service.</>},
+            {icon:<GraduationCap size={18} strokeWidth={1.5}/>,title:"Use of the Platform",body:<>The service is intended for educational and personal development purposes only. The content provided is designed to help users learn Kubernetes concepts and prepare for professional certifications.</>},
+            {icon:<User size={18} strokeWidth={1.5}/>,title:"User Accounts",body:<>Account creation is optional. If you create an account, you are responsible for all activity that occurs under it. Keep your login credentials secure. Guest mode is available without registration.</>},
+            {icon:<PenLine size={18} strokeWidth={1.5}/>,title:"Content Accuracy",body:<>We make every effort to provide accurate and up-to-date content. However, we cannot guarantee that all questions, answers, and explanations are completely error-free. The content is for educational purposes and should not be treated as official documentation.</>},
+            {icon:<Scale size={18} strokeWidth={1.5}/>,title:"Fair Use",body:<>Users must not:<br/><br/>• Attempt to exploit vulnerabilities in the platform<br/>• Disrupt or interfere with the service<br/>• Use automated tools to scrape content<br/>• Misrepresent their identity or affiliation<br/><br/>We reserve the right to restrict access for users who violate these terms.</>},
+            {icon:<RefreshCw size={18} strokeWidth={1.5}/>,title:"Changes to the Service",body:<>KubeQuest may update, modify, or discontinue any part of the platform or its content at any time without prior notice. We are not obligated to maintain any specific feature or content.</>},
+            {icon:<AlertTriangle size={18} strokeWidth={1.5}/>,title:"Limitation of Liability",body:<>The platform is provided "as is" without warranties of any kind, express or implied. KubeQuest is not liable for any damages arising from the use of the platform, including but not limited to errors in content, service interruptions, or data loss.</>},
+            {icon:<Mail size={18} strokeWidth={1.5}/>,title:"Contact",body:<>For questions regarding these terms of service, contact us at:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Terms" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
           ]:[
-            {icon:"📋",title:"מבוא",body:<>KubeQuest היא פלטפורמה חינוכית אינטראקטיבית ללימוד ותרגול Kubernetes באמצעות שאלות ותרחישי troubleshooting מהעולם האמיתי. השימוש בפלטפורמה מהווה הסכמה לתנאי שימוש אלו.</>},
-            {icon:"🎓",title:"שימוש בפלטפורמה",body:<>השירות מיועד למטרות לימוד והתפתחות מקצועית בלבד. התוכן שמוצג נועד לסייע למשתמשים ללמוד מושגי Kubernetes ולהתכונן להסמכות מקצועיות.</>},
-            {icon:"👤",title:"חשבונות משתמש",body:<>יצירת חשבון היא אופציונלית. אם יצרתם חשבון, אתם אחראים על כל הפעילות המתבצעת תחתיו. שמרו על פרטי ההתחברות שלכם מאובטחים. מצב אורח זמין ללא הרשמה.</>},
-            {icon:"📝",title:"דיוק המידע",body:<>אנו משקיעים מאמצים רבים בכתיבת תוכן מדויק ועדכני. עם זאת, לא ניתן להבטיח שכל השאלות, התשובות וההסברים חפים לחלוטין משגיאות. התוכן מיועד ללמידה ואינו מהווה תחליף לתיעוד רשמי.</>},
-            {icon:"⚖️",title:"שימוש הוגן",body:<>אין לבצע את הפעולות הבאות:<br/><br/>• ניסיון לנצל חולשות או פרצות בפלטפורמה<br/>• שיבוש או הפרעה לשירות<br/>• שימוש בכלים אוטומטיים לשאיבת תוכן<br/>• התחזות או הצגה כוזבת של זהות<br/><br/>אנו שומרים לעצמנו את הזכות להגביל גישה למשתמשים שמפרים תנאים אלו.</>},
-            {icon:"🔄",title:"שינויים בשירות",body:<>KubeQuest עשויה לעדכן, לשנות או להפסיק כל חלק מהפלטפורמה או מהתוכן בכל עת ללא הודעה מוקדמת. איננו מחויבים לשמור על תכונה או תוכן ספציפי.</>},
-            {icon:"⚠️",title:"הגבלת אחריות",body:<>הפלטפורמה מסופקת "כמות שהיא" (as is) ללא אחריות מכל סוג, מפורשת או משתמעת. KubeQuest אינה אחראית לכל נזק הנובע מהשימוש בפלטפורמה, לרבות שגיאות בתוכן, הפסקות שירות או אובדן מידע.</>},
-            {icon:"✉️",title:"יצירת קשר",body:<>לשאלות בנוגע לתנאי שימוש אלו, ניתן ליצור קשר בכתובת:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Terms" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
+            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"מבוא",body:<>KubeQuest היא פלטפורמה חינוכית אינטראקטיבית ללימוד ותרגול Kubernetes באמצעות שאלות ותרחישי troubleshooting מהעולם האמיתי. השימוש בפלטפורמה מהווה הסכמה לתנאי שימוש אלו.</>},
+            {icon:<GraduationCap size={18} strokeWidth={1.5}/>,title:"שימוש בפלטפורמה",body:<>השירות מיועד למטרות לימוד והתפתחות מקצועית בלבד. התוכן שמוצג נועד לסייע למשתמשים ללמוד מושגי Kubernetes ולהתכונן להסמכות מקצועיות.</>},
+            {icon:<User size={18} strokeWidth={1.5}/>,title:"חשבונות משתמש",body:<>יצירת חשבון היא אופציונלית. אם יצרתם חשבון, אתם אחראים על כל הפעילות המתבצעת תחתיו. שמרו על פרטי ההתחברות שלכם מאובטחים. מצב אורח זמין ללא הרשמה.</>},
+            {icon:<PenLine size={18} strokeWidth={1.5}/>,title:"דיוק המידע",body:<>אנו משקיעים מאמצים רבים בכתיבת תוכן מדויק ועדכני. עם זאת, לא ניתן להבטיח שכל השאלות, התשובות וההסברים חפים לחלוטין משגיאות. התוכן מיועד ללמידה ואינו מהווה תחליף לתיעוד רשמי.</>},
+            {icon:<Scale size={18} strokeWidth={1.5}/>,title:"שימוש הוגן",body:<>אין לבצע את הפעולות הבאות:<br/><br/>• ניסיון לנצל חולשות או פרצות בפלטפורמה<br/>• שיבוש או הפרעה לשירות<br/>• שימוש בכלים אוטומטיים לשאיבת תוכן<br/>• התחזות או הצגה כוזבת של זהות<br/><br/>אנו שומרים לעצמנו את הזכות להגביל גישה למשתמשים שמפרים תנאים אלו.</>},
+            {icon:<RefreshCw size={18} strokeWidth={1.5}/>,title:"שינויים בשירות",body:<>KubeQuest עשויה לעדכן, לשנות או להפסיק כל חלק מהפלטפורמה או מהתוכן בכל עת ללא הודעה מוקדמת. איננו מחויבים לשמור על תכונה או תוכן ספציפי.</>},
+            {icon:<AlertTriangle size={18} strokeWidth={1.5}/>,title:"הגבלת אחריות",body:<>הפלטפורמה מסופקת "כמות שהיא" (as is) ללא אחריות מכל סוג, מפורשת או משתמעת. KubeQuest אינה אחראית לכל נזק הנובע מהשימוש בפלטפורמה, לרבות שגיאות בתוכן, הפסקות שירות או אובדן מידע.</>},
+            {icon:<Mail size={18} strokeWidth={1.5}/>,title:"יצירת קשר",body:<>לשאלות בנוגע לתנאי שימוש אלו, ניתן ליצור קשר בכתובת:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Terms" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
           ]).map(({icon,title,body},i)=>(
             <div key={i} style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"10px 16px",marginBottom:8,display:"flex",gap:14,alignItems:"flex-start"}}>
-              <span style={{fontSize:22,flexShrink:0,marginTop:1}}>{icon}</span>
+              <span style={{flexShrink:0,marginTop:2,color:"var(--text-dim)",display:"flex"}}>{icon}</span>
               <div>
                 <div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,marginBottom:4}}>{title}</div>
                 <div style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,direction:dir}}>{body}</div>
@@ -5102,7 +5145,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="about"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
-            {dir==="rtl"?"→ חזרה":"← Return"}
+            {dir==="rtl"?"→":"←"}
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,marginBottom:28}}>
             <svg width="64" height="64" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{filter:"drop-shadow(0 0 14px rgba(0,212,255,0.4))"}}>
@@ -5125,13 +5168,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
           </div>
           {[
-            {icon:"📚",title:lang==="en"?"What is this?":"מה זה?",body:lang==="en"?<>KubeQuest is an interactive app for practicing Kubernetes through questions and real troubleshooting scenarios.<br/><br/>The goal is not just memorizing commands, but understanding how to diagnose real cluster issues.<br/><br/>Topics include:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>:<>KubeQuest היא אפליקציה לתרגול Kubernetes דרך שאלות ותרחישי תקלות.<br/><br/>המטרה היא לא רק לזכור פקודות, אלא להבין איך לאבחן בעיות אמיתיות בקלאסטר Kubernetes.<br/><br/>נושאים לדוגמה:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>},
-            {icon:"⚙️",title:lang==="en"?"How it works":"איך זה עובד",body:lang==="en"?<>The app includes several practice modes:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>Practice questions by topic.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>Daily challenge with random questions.<br/><br/><span style={{fontWeight:600}}>War Room</span><br/>Troubleshooting scenarios that simulate real Kubernetes cluster issues.</>:<>האפליקציה כוללת כמה מצבי תרגול:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>תרגול שאלות לפי נושאים שונים.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>אתגר יומי עם שאלות אקראיות.<br/><br/><span style={{fontWeight:600}}>חדר מצב</span><br/>תרחישי תקלות המדמים בעיות אמיתיות בקלאסטר.</>},
-            {icon:"🎯",title:lang==="en"?"Who is it for":"למי זה מיועד",body:lang==="en"?<>• DevOps Engineers<br/>• SRE Engineers<br/>• Developers working with Kubernetes<br/>• Anyone preparing for CKA or CKAD certifications</>:<>האפליקציה מיועדת ל:<br/><br/>• DevOps Engineers<br/>• SRE Engineers<br/>• מפתחים שעובדים עם Kubernetes<br/>• אנשים שמתכוננים להסמכות CKA או CKAD</>},
-            {icon:"👨‍💻",title:lang==="en"?"Built by":"פותח על ידי",body:<span>Or Carmeli<br/><span style={{color:"var(--text-dim)",fontSize:12}}>DevOps Engineer</span><br/><br/><a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>LinkedIn</a>{" · "}<a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer" style={{color:"var(--text-primary)",textDecoration:"none",fontWeight:600}}>GitHub</a></span>},
+            {icon:<BookOpen size={18} strokeWidth={1.5}/>,title:lang==="en"?"What is this?":"מה זה?",body:lang==="en"?<>KubeQuest is an interactive app for practicing Kubernetes through questions and real troubleshooting scenarios.<br/><br/>The goal is not just memorizing commands, but understanding how to diagnose real cluster issues.<br/><br/>Topics include:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>:<>KubeQuest היא אפליקציה לתרגול Kubernetes דרך שאלות ותרחישי תקלות.<br/><br/>המטרה היא לא רק לזכור פקודות, אלא להבין איך לאבחן בעיות אמיתיות בקלאסטר Kubernetes.<br/><br/>נושאים לדוגמה:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>},
+            {icon:<Activity size={18} strokeWidth={1.5}/>,title:lang==="en"?"How it works":"איך זה עובד",body:lang==="en"?<>The app includes several practice modes:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>Practice questions by topic.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>Daily challenge with random questions.<br/><br/><span style={{fontWeight:600}}>War Room</span><br/>Troubleshooting scenarios that simulate real Kubernetes cluster issues.</>:<>האפליקציה כוללת כמה מצבי תרגול:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>תרגול שאלות לפי נושאים שונים.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>אתגר יומי עם שאלות אקראיות.<br/><br/><span style={{fontWeight:600}}>חדר מצב</span><br/>תרחישי תקלות המדמים בעיות אמיתיות בקלאסטר.</>},
+            {icon:<Target size={18} strokeWidth={1.5}/>,title:lang==="en"?"Who is it for":"למי זה מיועד",body:lang==="en"?<>• DevOps Engineers<br/>• SRE Engineers<br/>• Developers working with Kubernetes<br/>• Anyone preparing for CKA or CKAD certifications</>:<>האפליקציה מיועדת ל:<br/><br/>• DevOps Engineers<br/>• SRE Engineers<br/>• מפתחים שעובדים עם Kubernetes<br/>• אנשים שמתכוננים להסמכות CKA או CKAD</>},
+            {icon:<User size={18} strokeWidth={1.5}/>,title:lang==="en"?"Built by":"פותח על ידי",body:<span>Or Carmeli<br/><span style={{color:"var(--text-dim)",fontSize:12}}>DevOps Engineer</span><br/><br/><a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>LinkedIn</a>{" · "}<a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer" style={{color:"var(--text-primary)",textDecoration:"none",fontWeight:600}}>GitHub</a></span>},
           ].map(({icon,title,body},i)=>(
             <div key={i} style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"10px 16px",marginBottom:8,display:"flex",gap:14,alignItems:"flex-start"}}>
-              <span style={{fontSize:22,flexShrink:0,marginTop:1}}>{icon}</span>
+              <span style={{flexShrink:0,marginTop:2,color:"var(--text-dim)",display:"flex"}}>{icon}</span>
               <div>
                 <div style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,marginBottom:4}}>{title}</div>
                 <div style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,direction:dir}}>{body}</div>
@@ -5178,7 +5221,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{marginBottom:8,flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",direction:dir,marginBottom:4}}>
               <button onClick={()=>setScreen("home")} aria-label={t("back")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
-              <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel]?.color,background:`${LEVEL_CONFIG[selectedLevel]?.color||"#888"}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap",flexShrink:0}}>{LEVEL_CONFIG[selectedLevel]?.icon} {levelLabel(selectedLevel)}</span>
+              <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel]?.color,background:`${LEVEL_CONFIG[selectedLevel]?.color||"#888"}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap",flexShrink:0,display:"inline-flex",alignItems:"center",gap:4}}><LevelIcon name={LEVEL_CONFIG[selectedLevel]?.icon} size={12} color={LEVEL_CONFIG[selectedLevel]?.color} /> {levelLabel(selectedLevel)}</span>
             </div>
             <h2 style={{margin:0,color:selectedTopic.color,fontSize:17,fontWeight:800,textAlign:"center"}}>{selectedTopic.name}</h2>
           </div>
@@ -5225,7 +5268,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   <span aria-live="polite" aria-atomic="true" style={{color:"var(--text-primary)",fontSize:14,fontWeight:700}}>
                     {t("question")} {questionIndex+1} {t("of")} {currentQuestions.length}
                   </span>
-                  {selectedLevel==="mixed"&&currentQuestions[questionIndex]?.level&&<span style={{fontSize:11,color:LEVEL_CONFIG[currentQuestions[questionIndex].level]?.color||"var(--text-dim)",fontWeight:700,background:`${LEVEL_CONFIG[currentQuestions[questionIndex].level]?.color||"#888"}18`,padding:"2px 8px",borderRadius:6}}>{LEVEL_CONFIG[currentQuestions[questionIndex].level]?.icon} {lang==="he"?LEVEL_CONFIG[currentQuestions[questionIndex].level]?.label:LEVEL_CONFIG[currentQuestions[questionIndex].level]?.labelEn}</span>}
+                  {selectedLevel==="mixed"&&currentQuestions[questionIndex]?.level&&(()=>{const _lvl=currentQuestions[questionIndex].level;const _cfg=LEVEL_CONFIG[_lvl];return<span style={{fontSize:11,color:_cfg?.color||"var(--text-dim)",fontWeight:700,background:`${_cfg?.color||"#888"}18`,padding:"2px 8px",borderRadius:6,display:"inline-flex",alignItems:"center",gap:3}}><LevelIcon name={_cfg?.icon} size={11} color={_cfg?.color} />{lang==="he"?_cfg?.label:_cfg?.labelEn}</span>})()}
                   {isInHistoryMode && !tryAgainActive && <span style={{fontSize:11,color:"#A855F7",fontWeight:700,background:"rgba(168,85,247,0.12)",padding:"2px 8px",borderRadius:6}}>{t("reviewing")}</span>}
                   {tryAgainActive && <span style={{fontSize:11,color:"#F59E0B",fontWeight:700,background:"rgba(245,158,11,0.12)",padding:"2px 8px",borderRadius:6}}>{t("tryAgainBadge")}</span>}
                 </div>
@@ -5242,7 +5285,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                        sessionScore (+X) tracks this-quiz-only earnings to distinguish from the cumulative total.
                        In free mode, total_score is NOT incremented - only sessionScore shows session earnings. */}
                   {!isInHistoryMode&&<span aria-label={`${stats.total_score||0} ${t("pts")}${sessionScore>0?`, +${sessionScore} ${t("completionAdded")}`:""}`} style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
-                    <span aria-hidden="true">⭐ {stats.total_score||0} {t("pts")}</span>
+                    <span aria-hidden="true" style={{display:"inline-flex",alignItems:"center",gap:3}}><Star size={12} strokeWidth={1.5} color="#A855F7" /> {stats.total_score||0} {t("pts")}</span>
                     {sessionScore>0&&<span style={{color:"#00D4FF",fontSize:10,fontWeight:600,marginLeft:4,opacity:0.8}}>(+{sessionScore})</span>}
                   </span>}
                   {!isInHistoryMode&&isFreeMode(selectedTopic?.id)&&<span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,opacity:0.6,background:"var(--glass-4)",padding:"2px 6px",borderRadius:4}}>{t("freeModeBadge")}</span>}
@@ -5826,7 +5869,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           {/* Header */}
           <div style={{marginBottom:32}}>
-            <h2 style={{margin:0,color:"var(--text-bright)",fontSize:28,fontWeight:900,lineHeight:1.3}}>{t("incidentModeBtn")}</h2>
+            <h2 style={{margin:0,color:"var(--text-bright)",fontSize:32,fontWeight:900,lineHeight:1.3,display:"flex",alignItems:"center",gap:10,direction:dir}}><Siren size={30} strokeWidth={1.5} style={{opacity:0.7}} />{t("incidentModeBtn")}</h2>
             <p style={{margin:"6px 0 0",color:"var(--text-secondary)",fontSize:14,lineHeight:1.6}}>{t("incidentHeaderSub")}</p>
             {/* Progress */}
             <div style={{marginTop:16}}>
@@ -5917,7 +5960,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <span style={{fontSize:11,fontFamily:"'SF Mono','Fira Code',monospace",color:"var(--text-muted)",letterSpacing:0.5,direction:"ltr",unicodeBidi:"isolate"}}>{incident.incidentCode||""}</span>
                       <span style={{marginInlineStart:"auto",flexShrink:0}}>
                         {completed&&<span style={{width:24,height:24,display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(16,185,129,0.12)",borderRadius:20,color:"#10B981",fontSize:12,fontWeight:700}}>✓</span>}
-                        {locked&&<span style={{fontSize:16,opacity:0.6}}>🔒</span>}
+                        {locked&&<LockIcon size={14} strokeWidth={1.5} color="var(--text-disabled)" style={{opacity:0.6}} />}
                         {!completed&&!locked&&<span style={{fontSize:16,opacity:0.5}}>{incident.icon}</span>}
                       </span>
                     </div>

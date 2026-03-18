@@ -46,7 +46,7 @@ export const ACHIEVEMENTS = [
 export const TOPICS = [
   {
     id: "workloads",
-    icon: "⚙️",
+    icon: "workloads",
     name: "Workloads & Pods",
     color: "#00D4FF",
     description: "Pods · Deployments · Jobs · Scheduling",
@@ -656,7 +656,7 @@ export const TOPICS = [
   },
   {
     id: "networking",
-    icon: "🌐",
+    icon: "networking",
     name: "Networking & Services",
     color: "#A855F7",
     description: "Services · Ingress · DNS · NetworkPolicy",
@@ -1266,7 +1266,7 @@ export const TOPICS = [
   },
   {
     id: "config",
-    icon: "🔐",
+    icon: "config",
     name: "Config & Secrets",
     color: "#F59E0B",
     description: "ConfigMaps · Secrets · RBAC · SA",
@@ -1876,7 +1876,7 @@ export const TOPICS = [
   },
   {
     id: "storage",
-    icon: "💾",
+    icon: "storage",
     name: "Storage & Helm",
     color: "#10B981",
     description: "PV · StorageClass · Helm · Operators",
@@ -2486,7 +2486,7 @@ export const TOPICS = [
   },
   {
     id: "troubleshooting",
-    icon: "🔧",
+    icon: "troubleshooting",
     name: "Troubleshooting & Debugging",
     color: "#F97316",
     description: "Logs · Events · Probes · Observability",
@@ -3096,7 +3096,7 @@ export const TOPICS = [
   },
   {
     id: "linux",
-    icon: "🖥️",
+    icon: "linux",
     name: "OS & Linux Deep Dive",
     color: "#6366F1",
     description: "Processes · Memory · CPU · Networking",
@@ -3659,7 +3659,7 @@ export const TOPICS = [
   },
   {
     id: "argo",
-    icon: "🔄",
+    icon: "argo",
     name: "Argo & GitOps",
     color: "#EF7B45",
     description: "ArgoCD · Workflows · ApplicationSets · Rollouts",

@@ -9,7 +9,7 @@ export default function SupportSection() {
         onMouseEnter={e=>{e.currentTarget.style.color="var(--text-muted)";}}
         onMouseLeave={e=>{e.currentTarget.style.color="var(--text-dim)";}}
       >
-        Enjoying KubeQuest?<br/>Support the project ☕
+        Enjoying KubeQuest?<br/>Support the project
       </a>
     </div>
   );

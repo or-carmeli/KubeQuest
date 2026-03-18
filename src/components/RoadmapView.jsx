@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { getLocalizedField } from "../utils/i18n";
+import TopicIcon from "./TopicIcon";
+import { Lock, CheckCircle2 } from "lucide-react";
 
 const STAGE_SUBTITLES = {
   workloads:       "Pods · Deployments · Jobs · Scheduling",
@@ -111,7 +113,7 @@ export default function RoadmapView({
           // Node visuals
           const nodeBorder = locked ? "2px solid var(--text-faint)" : completed ? "2px solid #10B981" : isCurrent ? `2px solid ${topic.color}` : "2px solid var(--text-disabled)";
           const nodeGlow   = isCurrent && !locked ? `0 0 24px ${topic.color}88` : "none";
-          const nodeLabel  = completed ? "✓" : locked ? "🔒" : String(idx + 1);
+          const nodeLabel  = completed ? "✓" : locked ? null : String(idx + 1);
           const nodeFg     = locked ? "var(--text-disabled)" : completed ? "#10B981" : isCurrent ? topic.color : "var(--text-dim)";
 
           // Connector line color
@@ -140,7 +142,7 @@ export default function RoadmapView({
                   animation:isCurrent&&!locked?`nodePulse 2.5s ease-in-out infinite`:undefined,
                   ["--nc"]:topic.color,
                 }}>
-                  {nodeLabel}
+                  {nodeLabel === null ? <Lock size={13} strokeWidth={1.5} color={nodeFg} /> : nodeLabel}
                 </div>
                 {/* Connector line */}
                 {!isLast&&(
@@ -175,8 +177,8 @@ export default function RoadmapView({
                   style={{cursor:locked?"default":"pointer",display:"flex",flexDirection:rowDir,alignItems:"center",gap:8,marginBottom:8,width:"100%",background:"none",border:"none",padding:0,textAlign:"center"}}>
 
                   {/* Icon */}
-                  <div className="roadmap-icon" style={{fontSize:18,width:32,height:32,borderRadius:8,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>
-                    {topic.icon}
+                  <div className="roadmap-icon" style={{width:32,height:32,borderRadius:8,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>
+                    <TopicIcon name={topic.icon} size={16} color={topic.color} />
                   </div>
 
                   {/* Text - takes remaining space, clips instead of wrapping */}
@@ -185,7 +187,7 @@ export default function RoadmapView({
                       {topic.isComingSoon&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(234,179,8,0.25)"}}>COMING SOON</span>}
                       {topic.isNew&&!completed&&!topic.isComingSoon&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}
                       <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topic.name}</span>
-                      {completed&&<span style={{flexShrink:0}}>✅</span>}
+                      {completed&&<CheckCircle2 size={14} strokeWidth={1.5} color="#10B981" style={{flexShrink:0}} />}
                     </div>
                     <div className="roadmap-subtitle" style={{color:"var(--text-muted)",fontSize:11,marginTop:1,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",lineHeight:1.4,textAlign:"center"}}>
                       {STAGE_SUBTITLES[topic.id]}
@@ -240,7 +242,7 @@ export default function RoadmapView({
                           disabled={lvlLocked}
                           aria-label={`${getLocalizedField(cfg, "label", lang)}${done?` - ${done.correct}/${done.total}`:""}${lvlLocked?" (locked)":""}`}
                           style={{padding:"10px 8px",background:lvlLocked?"var(--glass-1)":done?`${cfg.color}12`:"var(--glass-3)",border:`1px solid ${lvlLocked?"var(--glass-4)":done?cfg.color+"44":"var(--glass-7)"}`,borderRadius:10,textAlign:"center",opacity:lvlLocked?0.45:1,cursor:lvlLocked?"not-allowed":"pointer"}}>
-                          <div aria-hidden="true" style={{fontSize:16}}>{lvlLocked?"🔒":cfg.icon}</div>
+                          <div aria-hidden="true" style={{display:"flex",justifyContent:"center"}}>{lvlLocked?<Lock size={14} strokeWidth={1.5} color="var(--text-disabled)" />:<span style={{fontSize:16}}>{cfg.icon}</span>}</div>
                           <div style={{fontSize:12,fontWeight:700,color:lvlLocked?"var(--text-disabled)":done?cfg.color:"var(--text-muted)"}}>
                             {getLocalizedField(cfg, "label", lang)}
                           </div>
@@ -258,12 +260,6 @@ export default function RoadmapView({
         })}
       </div>
 
-      {/* ── Guest signup card ── */}
-      {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10,direction:dir}}>
-        <span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span>
-        <button className="guest-banner-btn" onClick={onSignup} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button>
-        <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={onLogin} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span>
-      </div>}
     </div>
   );
 }

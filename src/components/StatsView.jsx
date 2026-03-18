@@ -1,6 +1,20 @@
 import { getLocalizedField } from "../utils/i18n";
 // eslint-disable-next-line no-unused-vars
 import { loadArchitectureProgress, getArchitectureStats, getRank } from "../utils/architectureLogic";
+import TopicIcon from "./TopicIcon";
+import { BarChart3, Target, Flame, CheckCircle2, Lock, AlertTriangle, Brain, Zap, DollarSign, Shield, Trophy, Star, Award, Triangle, Shuffle, CalendarDays } from "lucide-react";
+
+const ACHIEVEMENT_ICONS = { flame: Flame, award: Award, star: Star, trophy: Trophy };
+function AchievementIcon({ name, size = 16, color }) {
+  const C = ACHIEVEMENT_ICONS[name];
+  return C ? <C size={size} strokeWidth={1.5} color={color} style={{ flexShrink: 0 }} /> : null;
+}
+
+const LEVEL_ICONS = { "⚡": Zap, "🔶": Triangle, "🔥": Flame, "🎲": Shuffle, easy: Zap, medium: Triangle, hard: Flame, mixed: Shuffle, daily: CalendarDays };
+function LevelIcon({ icon, size = 13, color }) {
+  const C = LEVEL_ICONS[icon];
+  return C ? <C size={size} strokeWidth={1.5} color={color} style={{ flexShrink: 0 }} /> : null;
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -132,7 +146,7 @@ export default function StatsView({
           {t("statsTitle")}
         </h2>
         <div style={{ textAlign: "center", padding: "60px 20px" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+          <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}><BarChart3 size={56} strokeWidth={1.25} color="var(--text-dim)" /></div>
           <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
             {t("statsEmptyTitle")}
           </div>
@@ -240,10 +254,10 @@ export default function StatsView({
       <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap", justifyContent: "center" }}>
         <Badge text={`${completedLevelCount}/${totalLevels} ${t("statsCompletedLevels")}`} />
         {dailyStreak && dailyStreak.streak > 0 && (
-          <Badge text={`🔥 ${dailyStreak.streak} ${t("dailyStreak")}`} accent />
+          <Badge icon={<Flame size={11} strokeWidth={1.5} color="#F59E0B" />} text={`${dailyStreak.streak} ${t("dailyStreak")}`} accent />
         )}
         {!isGuest && userRank && (
-          <Badge text={`${rankTier ? rankTier.icon : "🏆"} #${userRank.rank} - Top ${rankTopPct}%`} />
+          <Badge icon={<Trophy size={11} strokeWidth={1.5} color="var(--text-muted)" />} text={`#${userRank.rank} - Top ${rankTopPct}%`} />
         )}
       </div>
 
@@ -259,7 +273,7 @@ export default function StatsView({
           marginBottom: 24,
           display: "flex", alignItems: "center", gap: 12,
         }}>
-          <div style={{ fontSize: 22, flexShrink: 0 }}>🎯</div>
+          <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><Target size={20} strokeWidth={1.5} color="#E879F9" /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#00D4FF", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{t("statsNextGoal")}</div>
             <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600 }}>
@@ -285,7 +299,7 @@ export default function StatsView({
           borderRadius: 14, padding: "14px 16px", marginBottom: 24,
           display: "flex", alignItems: "center", gap: 12,
         }}>
-          <div style={{ fontSize: 22 }}>🎉</div>
+          <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><CheckCircle2 size={20} strokeWidth={1.5} color="#10B981" /></div>
           <div style={{ fontSize: 13, color: "#10B981", fontWeight: 700 }}>{t("statsAllPerfect")}</div>
         </div>
       )}
@@ -331,7 +345,7 @@ export default function StatsView({
                   border: `1px solid ${topic.color}22`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0,
-                }}>{topic.icon}</div>
+                }}><TopicIcon name={topic.icon} size={18} color={topic.color} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{topic.name}</div>
                   {isActive && (
@@ -387,7 +401,7 @@ export default function StatsView({
                       color: done ? cfg.color : attempted ? "var(--text-secondary)" : "var(--text-dim)",
                       fontWeight: done ? 700 : 400,
                     }}>
-                      <div style={{ fontSize: 13, marginBottom: 1 }}>{done ? "✓" : cfg.icon}</div>
+                      <div style={{ marginBottom: 1, display: "flex", justifyContent: "center" }}>{done ? <span style={{ fontSize: 13 }}>✓</span> : <LevelIcon icon={cfg.icon} size={13} color={attempted ? "var(--text-secondary)" : "var(--text-dim)"} />}</div>
                       {getLocalizedField(cfg, "label", lang)}
                       {attempted && r.total > 0 && (
                         <div style={{ fontSize: 9, opacity: 0.7, marginTop: 1 }}>{r.correct}/{r.total}</div>
@@ -433,13 +447,13 @@ export default function StatsView({
               borderRadius: 10, marginBottom: 3,
               opacity: unlocked ? 1 : 0.35,
             }}>
-              <span style={{ fontSize: 18, flexShrink: 0, filter: unlocked ? "none" : "grayscale(1)" }}>{ach.icon}</span>
+              <span style={{ flexShrink: 0, display: "flex", alignItems: "center", opacity: unlocked ? 1 : 0.4 }}><AchievementIcon name={ach.icon} size={16} color={unlocked ? "var(--text-secondary)" : "var(--text-dim)"} /></span>
               <span style={{ flex: 1, fontSize: 12, fontWeight: unlocked ? 600 : 400, color: unlocked ? "var(--text-primary)" : "var(--text-dim)" }}>
                 {getLocalizedField(ach, "name", lang)}
               </span>
               {unlocked
                 ? <span style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>✓</span>
-                : <span style={{ fontSize: 10, color: "var(--text-disabled)" }}>🔒</span>
+                : <Lock size={12} strokeWidth={1.5} color="var(--text-disabled)" />
               }
             </div>
           );
@@ -461,7 +475,7 @@ export default function StatsView({
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-                🚨 {t("statsIncidents")}
+                <AlertTriangle size={14} strokeWidth={1.5} color="var(--text-secondary)" style={{flexShrink:0}} /> {t("statsIncidents")}
               </span>
               <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
                 {doneIncidents}/{totalIncidents}
@@ -505,7 +519,7 @@ export default function StatsView({
         const archStats = getArchitectureStats(archProgress);
         if (archStats.completed === 0) return null;
         const bestRank = getRank(archStats.bestScore);
-        const metricIcons = { performance: "⚡", cost: "💰", reliability: "🛡️" };
+        const MetricIcon = ({name}) => { const M = {performance:Zap,cost:DollarSign,reliability:Shield}[name]; return M ? <M size={12} strokeWidth={1.5} color="var(--text-muted)" style={{flexShrink:0}} /> : null; };
         const metricNames = { performance: { en: "Performance", he: "ביצועים" }, cost: { en: "Cost", he: "עלות" }, reliability: { en: "Reliability", he: "אמינות" } };
         const sm = archStats.strongestMetric;
         return (
@@ -517,7 +531,7 @@ export default function StatsView({
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-                  🧠 {lang === "he" ? "תרחישי ארכיטקטורה" : "Architecture Scenarios"}
+                  <Brain size={14} strokeWidth={1.5} color="var(--text-secondary)" style={{flexShrink:0}} /> {lang === "he" ? "תרחישי ארכיטקטורה" : "Architecture Scenarios"}
                 </span>
                 <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
                   {archStats.completed}/3 {lang === "he" ? "הושלמו" : "completed"}
@@ -533,7 +547,7 @@ export default function StatsView({
                   <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>{lang === "he" ? "שיא" : "Best"}</div>
                 </div>
                 <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--glass-3)", borderRadius: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{bestRank.icon} {lang === "he" ? bestRank.labelHe : bestRank.label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><AchievementIcon name={bestRank.icon === "beginner" ? "star" : bestRank.icon === "operator" ? "flame" : bestRank.icon === "engineer" ? "flame" : bestRank.icon === "architect" ? "trophy" : "trophy"} size={13} color="var(--text-primary)" /> {lang === "he" ? bestRank.labelHe : bestRank.label}</div>
                   <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>{lang === "he" ? "דרגה" : "Rank"}</div>
                 </div>
                 <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--glass-3)", borderRadius: 8 }}>
@@ -542,8 +556,8 @@ export default function StatsView({
                 </div>
               </div>
               {sm && (
-                <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>
-                  {metricIcons[sm]} {lang === "he" ? "מדד חזק:" : "Strongest:"}{" "}
+                <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                  <MetricIcon name={sm} /> {lang === "he" ? "מדד חזק:" : "Strongest:"}{" "}
                   <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>{lang === "he" ? metricNames[sm].he : metricNames[sm].en}</span>
                 </div>
               )}
@@ -570,7 +584,7 @@ function SectionLabel({ text }) {
   );
 }
 
-function Badge({ text, accent }) {
+function Badge({ text, accent, icon }) {
   return (
     <span style={{
       fontSize: 11, fontWeight: accent ? 700 : 500,
@@ -583,7 +597,7 @@ function Badge({ text, accent }) {
       alignItems: "center",
       gap: 4,
     }}>
-      {text}
+      {icon}{text}
     </span>
   );
 }
