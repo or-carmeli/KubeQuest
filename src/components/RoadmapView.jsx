@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getLocalizedField } from "../utils/i18n";
+import TopicIcon from "./TopicIcon";
 
 const STAGE_SUBTITLES = {
   workloads:       "Pods · Deployments · Jobs · Scheduling",
@@ -175,8 +176,8 @@ export default function RoadmapView({
                   style={{cursor:locked?"default":"pointer",display:"flex",flexDirection:rowDir,alignItems:"center",gap:8,marginBottom:8,width:"100%",background:"none",border:"none",padding:0,textAlign:"center"}}>
 
                   {/* Icon */}
-                  <div className="roadmap-icon" style={{fontSize:18,width:32,height:32,borderRadius:8,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>
-                    {topic.icon}
+                  <div className="roadmap-icon" style={{width:32,height:32,borderRadius:8,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}>
+                    <TopicIcon name={topic.icon} size={16} color={topic.color} />
                   </div>
 
                   {/* Text - takes remaining space, clips instead of wrapping */}
@@ -258,12 +259,6 @@ export default function RoadmapView({
         })}
       </div>
 
-      {/* ── Guest signup card ── */}
-      {isGuest&&<div className="guest-banner" style={{background:"rgba(0,212,255,0.05)",border:"1px solid rgba(0,212,255,0.15)",borderRadius:14,padding:"16px",marginTop:24,display:"flex",flexDirection:"column",alignItems:"center",gap:10,direction:dir}}>
-        <span style={{color:"#4a9aba",fontSize:13,textAlign:"center"}}>{t("guestBanner")}</span>
-        <button className="guest-banner-btn" onClick={onSignup} style={{width:"100%",padding:"10px 14px",background:"rgba(0,212,255,0.12)",border:"1px solid rgba(0,212,255,0.3)",borderRadius:10,color:"#00D4FF",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center"}}>{t("signupNow")}</button>
-        <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:-2,textAlign:"center",width:"100%"}}>{t("alreadyHaveAccount")}{" "}<span onClick={onLogin} style={{color:"#00D4FF",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>{t("loginNow")}</span></span>
-      </div>}
     </div>
   );
 }

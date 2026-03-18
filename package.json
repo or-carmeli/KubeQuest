@@ -34,6 +34,7 @@
     "@supabase/supabase-js": "^2.98.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^2.0.0",
+    "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "web-vitals": "^5.1.0"
