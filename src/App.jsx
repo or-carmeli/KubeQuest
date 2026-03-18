@@ -29,7 +29,7 @@ import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
 import TopicIcon from "./components/TopicIcon";
 import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon } from "lucide-react";
-import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon, ArrowLeft, ArrowRight } from "lucide-react";
+import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon, ArrowLeft, ArrowRight, CheckCircle, XOctagon, Lightbulb, PartyPopper, Clock } from "lucide-react";
 const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: FlameIcon, mixed: ShuffleIcon, daily: CalendarIcon };
 const CHEAT_ICON_MAP = { search: SearchIcon, folder: FolderOpen, bug: Bug, "scroll-text": ScrollText, terminal: Terminal, globe: GlobeIcon, settings: SettingsIcon, "trending-up": TrendingUp, trash: TrashIcon };
 function CheatIcon({ name, size = 16, color }) { const C = CHEAT_ICON_MAP[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
@@ -186,18 +186,18 @@ const TRANSLATIONS = {
     saveProgress_m: "התחבר / הירשם כדי לשמור התקדמות",
     username: "שם משתמש", email: "אימייל", password: "סיסמה",
     loginTab: "התחברות", signupTab: "הרשמה", authCta: "התחבר / הירשם", authLogin: "התחבר", authSignup: "הירשם",
-    loginBtn: "התחברי", signupBtn: "הירשמי", loading: "⏳ רגע...",
-    emailAlreadySent: "✅ אימייל אימות כבר נשלח! בדקי את תיבת הדואר שלך.",
-    emailSent: "✅ נשלח אימייל אימות! בדקי את תיבת הדואר.",
-    otpExpired: "❌ קישור האימות פג תוקף. אנא הירשמי שוב כדי לקבל קישור חדש.",
+    loginBtn: "התחברי", signupBtn: "הירשמי", loading: "רגע...",
+    emailAlreadySent: "אימייל אימות כבר נשלח! בדקי את תיבת הדואר שלך.",
+    emailSent: "נשלח אימייל אימות! בדקי את תיבת הדואר.",
+    otpExpired: "קישור האימות פג תוקף. אנא הירשמי שוב כדי לקבל קישור חדש.",
     wrongCredentials: "אימייל או סיסמה שגויים",
     serviceUnavailable: "השירות אינו זמין כרגע. נסו שוב מאוחר יותר.",
     didntReceive: "לא קיבלת את המייל?", resendBtn: "שלח שוב",
-    resendSuccess: "✅ אימייל חדש נשלח! בדקי את תיבת הדואר.",
-    resendError: "❌ שגיאה בשליחה מחדש. נסי שוב.",
+    resendSuccess: "אימייל חדש נשלח! בדקי את תיבת הדואר.",
+    resendError: "שגיאה בשליחה מחדש. נסי שוב.",
     forgotPassword: "שכחת סיסמה?",
-    resetEmailSent: "✅ נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
-    resetEmailError: "❌ שגיאה בשליחת קישור איפוס. נסי שוב.",
+    resetEmailSent: "נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
+    resetEmailError: "שגיאה בשליחת קישור איפוס. נסי שוב.",
     resetLinkWrongBrowser: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקשי קישור חדש.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
@@ -208,7 +208,7 @@ const TRANSLATIONS = {
     setNewPasswordTitle: "הגדרת סיסמה חדשה",
     greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
     leaderboardBtn: "דירוג", logout: "יציאה",
-    guestBanner: "💡 הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
+    guestBanner: "הירשמי כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow: "הירשמי", loginNow: "התחברי", alreadyHaveAccount: "יש לך חשבון?",
     score: "XP", accuracy: "דיוק", streak: "Combo", completed: "הושלמו",
     rank: "דירוג", rankGuestSub: "הרשם כדי לראות דירוג", xpToNextRank: "לדירוג הבא",
@@ -218,30 +218,30 @@ const TRANSLATIONS = {
     completionNoImprovement: "התוצאה הטובה שלך בנושא הזה כבר גבוהה יותר", completionAdded: "נוספו לסך שלך",
     freeModeBadge: "סבב בונוס: צוברים נקודות!", freeModeTag: "בונוס",
     pts: "נק׳",
-    achievementsTitle: "🏅 הישגים",
+    achievementsTitle: "הישגים",
     leaderboardTitle: "לוח תוצאות", noData: "אין נתונים עדיין", anonymous: "אנונימי",
     back: "→", theory: "תיאוריה",
-    startQuiz: "🎯 התחילי חידון!", ptsPerQ: "נק׳ לשאלה",
+    startQuiz: "התחילי חידון!", ptsPerQ: "נק׳ לשאלה",
     question: "שאלה", of: "מתוך", streakLabel: "רצף",
     answerPrompt: "מה נכון לעשות?",
     confirmAnswer: "✔ אשרי תשובה",
-    correct: "✅ נכון!", incorrect: "❌ לא נכון",
-    finishTopic: "🎉 סיימי נושא!", nextQuestion: "שאלה הבאה ←",
+    correct: "נכון!", incorrect: "לא נכון",
+    finishTopic: "סיימי נושא!", nextQuestion: "שאלה הבאה ←",
     correctCount: "נכון", perfect: "מושלם!", points: "נקודות",
-    guestSaveHint: "💡 הירשמי כדי לשמור את הניקוד!", signupLink: "הירשמי עכשיו",
-    tryAgain: "נסי שוב", restartFullQuiz: "🔄 שחקי מחדש את כל החידון", backToTopics: "חזרי לנושאים",
+    guestSaveHint: "הירשמי כדי לשמור את הניקוד!", signupLink: "הירשמי עכשיו",
+    tryAgain: "נסי שוב", restartFullQuiz: "שחקי מחדש את כל החידון", backToTopics: "חזרי לנושאים",
     nextLevelBtn: "המשיכי לרמה הבאה", locked: "נעול", completePrevLevel: "סיימו את הרמה הקודמת",
     skipTheory: "דלגי לחידון",
-    timerOn: "⏱ כבי טיימר", timerOff: "⏱ הפעילי טיימר", timeUp: "⏰ הזמן נגמר!",
+    timerOn: "כבי טיימר", timerOff: "הפעילי טיימר", timeUp: "הזמן נגמר!",
     reviewBtn: "צפי בסקירה", hideReview: "הסתירי סקירה", reviewTitle: "סקירת שאלות",
     loadingText: "טוען...",
-    saveErrorText: "⚠️ הנתונים לא נשמרו - בדקי חיבור לאינטרנט",
-    saveErrorNetwork: "⚠️ לא ניתן לשמור את ההתקדמות. בדקי חיבור לאינטרנט.",
-    saveErrorAuth: "⚠️ פג תוקף ההתחברות. יש להתחבר מחדש.",
-    saveErrorServer: "⚠️ אירעה שגיאה בשמירת ההתקדמות. נסי שוב בעוד רגע.",
-    saveErrorTimeout: "⚠️ הבקשה לקחה יותר מדי זמן. נסי שוב.",
-    saveErrorUnknown: "⚠️ אירעה שגיאה בלתי צפויה.",
-    loadDataError: "⚠️ טעינת הנתונים נכשלה - משתמשת בנתונים מקומיים",
+    saveErrorText: "הנתונים לא נשמרו - בדקי חיבור לאינטרנט",
+    saveErrorNetwork: "לא ניתן לשמור את ההתקדמות. בדקי חיבור לאינטרנט.",
+    saveErrorAuth: "פג תוקף ההתחברות. יש להתחבר מחדש.",
+    saveErrorServer: "אירעה שגיאה בשמירת ההתקדמות. נסי שוב בעוד רגע.",
+    saveErrorTimeout: "הבקשה לקחה יותר מדי זמן. נסי שוב.",
+    saveErrorUnknown: "אירעה שגיאה בלתי צפויה.",
+    loadDataError: "טעינת הנתונים נכשלה - משתמשת בנתונים מקומיים",
     newAchievement: "הישג חדש!", allRightsReserved: "כל הזכויות שמורות ל",
     optionLabels: ["א","ב","ג","ד"], guestName: "אורחת",
     resetProgress: "אפסי התקדמות", resetConfirm: "האם את בטוחה? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
@@ -254,10 +254,10 @@ const TRANSLATIONS = {
     heroStage: "שלב", heroStageOf: "מתוך", heroStartTrack: "התחל את המסלול", heroContinueTrack: "המשך למשימה הבאה", heroAllDone: "כל הנושאים הושלמו!",
     trackProgressTitle: "התקדמות במסלול", trackCompleted: "הושלם", rankUnlockHint: "התחבר כדי להצטרף לדירוג",
     roadmapTitle: "ההתקדמות במסלול",
-    roadmapAllDone: "🎉 השלמת את כל השלבים!",
+    roadmapAllDone: "השלמת את כל השלבים!",
     roadmapStage: "את בשלב", roadmapStageOf: "מתוך",
     roadmapCompletedPct: "הושלם",
-    roadmapStart: "🗺️ התחילי את המסלול",
+    roadmapStart: "התחילי את המסלול",
     roadmapStartHere: "התחילי כאן",
     roadmapContinue: "▶ המשיכי לשלב הבא",
     roadmapLocked: "נפתח אחרי השלמת השלב הקודם",
@@ -265,51 +265,51 @@ const TRANSLATIONS = {
     roadmapContinueHere: "המשיכי מכאן",
     weakAreaTitle: "האזור החלש שלך",
     weakAreaEmpty: "עדיין אין מספיק נתונים, התחילי לענות כדי שנמליץ מה לחזק.",
-    allPerfectTitle: "🔥 הכל בשליטה",
+    allPerfectTitle: "הכל בשליטה",
     allPerfectMsg: "כל הנושאים עם דיוק מלא. רוצי להמשיך לאתגר הבא?",
     advancedPractice: "לתרגול מתקדם",
     accuracyLabel: "דיוק",
     goBackToTopic: "חזרי לנושא הזה",
-    a11yTitle: "♿ נגישות", a11yFontSize: "גודל טקסט", a11yReduceMotion: "הפחת תנועה", a11yHighContrast: "ניגודיות גבוהה",
-    readQuestion: "🔊 קראי שאלה", stopSpeech: "⏹ עצרי", autoRead: "קריאה אוטומטית",
-    hint: "💡 רמז", eliminate: "❌ הסרי תשובה שגויה",
+    a11yTitle: "נגישות", a11yFontSize: "גודל טקסט", a11yReduceMotion: "הפחת תנועה", a11yHighContrast: "ניגודיות גבוהה",
+    readQuestion: "קראי שאלה", stopSpeech: "עצרי", autoRead: "קריאה אוטומטית",
+    hint: "רמז", eliminate: "הסרי תשובה שגויה",
     shareResult: "שתפי תוצאה",
-    readQuestion_m: "🔊 קרא שאלה", stopSpeech_m: "⏹ עצור", autoRead_m: "קריאה אוטומטית",
-    hint_m: "💡 רמז", eliminate_m: "❌ הסר תשובה שגויה",
+    readQuestion_m: "קרא שאלה", stopSpeech_m: "עצור", autoRead_m: "קריאה אוטומטית",
+    hint_m: "רמז", eliminate_m: "הסר תשובה שגויה",
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
     tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
     startPlaying_m: "התחל לשחק כאורח",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
-    emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
-    otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
-    resendSuccess_m: "✅ אימייל חדש נשלח! בדוק את תיבת הדואר.",
-    resendError_m: "❌ שגיאה בשליחה מחדש. נסה שוב.",
+    emailAlreadySent_m: "אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
+    otpExpired_m: "קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
+    resendSuccess_m: "אימייל חדש נשלח! בדוק את תיבת הדואר.",
+    resendError_m: "שגיאה בשליחה מחדש. נסה שוב.",
     sendResetLink_m: "שלח קישור איפוס",
-    resetEmailSent_m: "✅ נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
-    resetEmailError_m: "❌ שגיאה בשליחת קישור איפוס. נסה שוב.",
+    resetEmailSent_m: "נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
+    resetEmailError_m: "שגיאה בשליחת קישור איפוס. נסה שוב.",
     resetLinkWrongBrowser_m: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקש קישור חדש.",
     saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
-    guestBanner_m: "💡 הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
+    guestBanner_m: "הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
     signupNow_m: "הרשם", loginNow_m: "התחבר", alreadyHaveAccount_m: "יש לך חשבון?",
     back_m: "→",
-    startQuiz_m: "🎯 התחל חידון!",
+    startQuiz_m: "התחל חידון!",
     confirmAnswer_m: "✔ אשר תשובה",
-    finishTopic_m: "🎉 סיים נושא!",
-    guestSaveHint_m: "💡 הרשם כדי לשמור את הניקוד!", signupLink_m: "הרשם עכשיו",
-    tryAgain_m: "נסה שוב", restartFullQuiz_m: "🔄 שחק מחדש את כל החידון", backToTopics_m: "חזור לנושאים",
+    finishTopic_m: "סיים נושא!",
+    guestSaveHint_m: "הרשם כדי לשמור את הניקוד!", signupLink_m: "הרשם עכשיו",
+    tryAgain_m: "נסה שוב", restartFullQuiz_m: "שחק מחדש את כל החידון", backToTopics_m: "חזור לנושאים",
     nextLevelBtn_m: "המשך לרמה הבאה",
     skipTheory_m: "דלג לחידון",
-    timerOn_m: "⏱ כבה טיימר", timerOff_m: "⏱ הפעל טיימר",
+    timerOn_m: "כבה טיימר", timerOff_m: "הפעל טיימר",
     reviewBtn_m: "צפה בסקירה", hideReview_m: "הסתר סקירה",
-    saveErrorText_m: "⚠️ הנתונים לא נשמרו - בדוק חיבור לאינטרנט",
-    saveErrorNetwork_m: "⚠️ לא ניתן לשמור את ההתקדמות. בדוק חיבור לאינטרנט.",
-    saveErrorAuth_m: "⚠️ פג תוקף ההתחברות. יש להתחבר מחדש.",
-    saveErrorServer_m: "⚠️ אירעה שגיאה בשמירת ההתקדמות. נסה שוב בעוד רגע.",
-    saveErrorTimeout_m: "⚠️ הבקשה לקחה יותר מדי זמן. נסה שוב.",
-    saveErrorUnknown_m: "⚠️ אירעה שגיאה בלתי צפויה.",
-    loadDataError_m: "⚠️ טעינת הנתונים נכשלה - משתמש בנתונים מקומיים",
+    saveErrorText_m: "הנתונים לא נשמרו - בדוק חיבור לאינטרנט",
+    saveErrorNetwork_m: "לא ניתן לשמור את ההתקדמות. בדוק חיבור לאינטרנט.",
+    saveErrorAuth_m: "פג תוקף ההתחברות. יש להתחבר מחדש.",
+    saveErrorServer_m: "אירעה שגיאה בשמירת ההתקדמות. נסה שוב בעוד רגע.",
+    saveErrorTimeout_m: "הבקשה לקחה יותר מדי זמן. נסה שוב.",
+    saveErrorUnknown_m: "אירעה שגיאה בלתי צפויה.",
+    loadDataError_m: "טעינת הנתונים נכשלה - משתמש בנתונים מקומיים",
     guestName_m: "אורח",
     resetProgress_m: "אפס התקדמות", resetConfirm_m: "האם אתה בטוח? פעולה זו תמחק את כל ההתקדמות ולא ניתן לבטלה.",
     resetTopic_m: "אפס נושא",
@@ -332,8 +332,8 @@ const TRANSLATIONS = {
     reviewing: "📖 סקירה",
     tryAgainBtn: "🔁 נסי שוב", tryAgainBtn_m: "🔁 נסה שוב",
     tryAgainBadge: "לא נספר לניקוד",
-    tryAgainCorrect: "✅ נכון! כל הכבוד",
-    tryAgainWrong: "❌ לא נכון",
+    tryAgainCorrect: "נכון! כל הכבוד",
+    tryAgainWrong: "לא נכון",
     exitTryAgain: "חזרי לסקירה", exitTryAgain_m: "חזור לסקירה",
     incidentModeBtn: "חדר מצב", incidentModeDesc: "הדמיית אירועי Kubernetes אמיתיים",
     incidentModeBtn_m: "חדר מצב",
@@ -454,18 +454,18 @@ const TRANSLATIONS = {
     saveProgress: "Log in / Sign up to save your progress",
     username: "Username", email: "Email", password: "Password",
     loginTab: "Login", signupTab: "Sign Up", authCta: "Log in / Sign up", authLogin: "Log in", authSignup: "Sign up",
-    loginBtn: "Sign In", signupBtn: "Register", loading: "⏳ Loading...",
-    emailAlreadySent: "✅ Verification email already sent! Check your inbox.",
-    emailSent: "✅ Verification email sent! Check your inbox.",
-    otpExpired: "❌ Verification link has expired. Please sign up again to receive a new link.",
+    loginBtn: "Sign In", signupBtn: "Register", loading: "Loading...",
+    emailAlreadySent: "Verification email already sent! Check your inbox.",
+    emailSent: "Verification email sent! Check your inbox.",
+    otpExpired: "Verification link has expired. Please sign up again to receive a new link.",
     wrongCredentials: "Incorrect email or password",
     serviceUnavailable: "Service temporarily unavailable. Please try again later.",
     didntReceive: "Didn't receive the email?", resendBtn: "Resend",
-    resendSuccess: "✅ New email sent! Check your inbox.",
-    resendError: "❌ Failed to resend. Please try again.",
+    resendSuccess: "New email sent! Check your inbox.",
+    resendError: "Failed to resend. Please try again.",
     forgotPassword: "Forgot password?",
-    resetEmailSent: "✅ Password reset link sent! Check your inbox.",
-    resetEmailError: "❌ Failed to send reset link. Please try again.",
+    resetEmailSent: "Password reset link sent! Check your inbox.",
+    resetEmailError: "Failed to send reset link. Please try again.",
     resetLinkWrongBrowser: "This reset link must be opened in the same browser where you requested it. Please request a new link.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
@@ -476,7 +476,7 @@ const TRANSLATIONS = {
     setNewPasswordTitle: "Set New Password",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
     leaderboardBtn: "Leaderboard", logout: "Logout",
-    guestBanner: "💡 Sign up to save progress and appear on the leaderboard",
+    guestBanner: "Sign up to save progress and appear on the leaderboard",
     signupNow: "Sign Up", loginNow: "Log In", alreadyHaveAccount: "Have an account?",
     score: "XP", accuracy: "Accuracy", streak: "Combo", completed: "Completed",
     rank: "Rank", rankGuestSub: "Log in to see rank", xpToNextRank: "to next rank",
@@ -486,30 +486,30 @@ const TRANSLATIONS = {
     completionNoImprovement: "Your best result for this topic was already higher", completionAdded: "added to your total",
     freeModeBadge: "Bonus round: earns points!", freeModeTag: "Bonus",
     pts: "pts",
-    achievementsTitle: "🏅 Achievements",
+    achievementsTitle: "Achievements",
     leaderboardTitle: "Leaderboard", noData: "No data yet", anonymous: "Anonymous",
     back: "←", theory: "Theory",
-    startQuiz: "🎯 Start Quiz!", ptsPerQ: "pts per question",
+    startQuiz: "Start Quiz!", ptsPerQ: "pts per question",
     question: "Question", of: "of", streakLabel: "Streak",
     answerPrompt: "What should you do?",
     confirmAnswer: "✔ Confirm Answer",
-    correct: "✅ Correct!", incorrect: "❌ Incorrect",
-    finishTopic: "🎉 Finish Topic!", nextQuestion: "Next Question →",
+    correct: "Correct!", incorrect: "Incorrect",
+    finishTopic: "Finish Topic!", nextQuestion: "Next Question →",
     correctCount: "correct", perfect: "Perfect!", points: "points",
-    guestSaveHint: "💡 Sign up to save your score!", signupLink: "Sign up now",
+    guestSaveHint: "Sign up to save your score!", signupLink: "Sign up now",
     tryAgain: "Try Again", restartFullQuiz: "Restart Full Quiz", backToTopics: "Back to Topics",
     nextLevelBtn: "Next Level", locked: "Locked", completePrevLevel: "Complete previous level",
     skipTheory: "Skip to Quiz",
-    timerOn: "⏱ Timer On", timerOff: "⏱ Timer Off", timeUp: "⏰ Time's Up!",
+    timerOn: "Timer On", timerOff: "Timer Off", timeUp: "Time's Up!",
     reviewBtn: "View Review", hideReview: "Hide Review", reviewTitle: "Question Review",
     loadingText: "Loading...",
-    saveErrorText: "⚠️ Data not saved - check your internet connection",
-    saveErrorNetwork: "⚠️ Could not save progress. Check your internet connection.",
-    saveErrorAuth: "⚠️ Session expired. Please sign in again.",
-    saveErrorServer: "⚠️ Error saving progress. Try again in a moment.",
-    saveErrorTimeout: "⚠️ Request took too long. Try again.",
-    saveErrorUnknown: "⚠️ An unexpected error occurred.",
-    loadDataError: "⚠️ Failed to load your data - using cached progress",
+    saveErrorText: "Data not saved - check your internet connection",
+    saveErrorNetwork: "Could not save progress. Check your internet connection.",
+    saveErrorAuth: "Session expired. Please sign in again.",
+    saveErrorServer: "Error saving progress. Try again in a moment.",
+    saveErrorTimeout: "Request took too long. Try again.",
+    saveErrorUnknown: "An unexpected error occurred.",
+    loadDataError: "Failed to load your data - using cached progress",
     newAchievement: "New Achievement!", allRightsReserved: "All rights reserved to",
     optionLabels: ["A","B","C","D"], guestName: "Guest",
     resetProgress: "Reset Progress", resetConfirm: "Are you sure? This will erase all your progress and cannot be undone.",
@@ -518,7 +518,7 @@ const TRANSLATIONS = {
     heroStage: "Stage", heroStageOf: "of", heroStartTrack: "Start the Track", heroContinueTrack: "Continue to Next Task", heroAllDone: "All topics completed!",
     trackProgressTitle: "Track Progress", trackCompleted: "completed", rankUnlockHint: "Log in to join ranking",
     roadmapTitle: "Roadmap Progress",
-    roadmapAllDone: "🎉 You completed all stages!",
+    roadmapAllDone: "You completed all stages!",
     roadmapStage: "You're on stage", roadmapStageOf: "of",
     roadmapCompletedPct: "completed",
     roadmapStart: "▶ Start Roadmap",
@@ -529,7 +529,7 @@ const TRANSLATIONS = {
     roadmapContinueHere: "Continue from here",
     weakAreaTitle: "Your Weak Area",
     weakAreaEmpty: "Not enough data yet, start answering to get recommendations.",
-    allPerfectTitle: "🔥 All Under Control",
+    allPerfectTitle: "All Under Control",
     allPerfectMsg: "All topics at 100% accuracy. Ready for the next challenge?",
     advancedPractice: "Advanced Practice",
     accuracyLabel: "accuracy",
@@ -538,9 +538,9 @@ const TRANSLATIONS = {
     interviewMode: "Interview Mode", interviewModeHint: "Hints off, timer on for every question", interviewModeActive: "Interview mode active · Timer on · Hints off",
     dailyChallengeTitle: "Daily Challenge", dailyChallengeNew: "NEW DAILY",
     dailyChallengeDesc: "5 mixed questions · resets every day",
-    a11yTitle: "♿ Accessibility", a11yFontSize: "Text Size", a11yReduceMotion: "Reduce Motion", a11yHighContrast: "High Contrast",
-    readQuestion: "🔊 Read Question", stopSpeech: "⏹ Stop", autoRead: "Auto Read",
-    hint: "💡 Hint", eliminate: "❌ Eliminate Wrong",
+    a11yTitle: "Accessibility", a11yFontSize: "Text Size", a11yReduceMotion: "Reduce Motion", a11yHighContrast: "High Contrast",
+    readQuestion: "Read Question", stopSpeech: "Stop", autoRead: "Auto Read",
+    hint: "Hint", eliminate: "Eliminate Wrong",
     shareResult: "Share Result",
     resumeTitle: "Resume Quiz",
     resumeBody: "",
@@ -553,8 +553,8 @@ const TRANSLATIONS = {
     reviewing: "📖 Review",
     tryAgainBtn: "🔁 Try Again",
     tryAgainBadge: "Won't count toward score",
-    tryAgainCorrect: "✅ Correct! Well done",
-    tryAgainWrong: "❌ Incorrect",
+    tryAgainCorrect: "Correct! Well done",
+    tryAgainWrong: "Incorrect",
     exitTryAgain: "Back to Review",
     incidentModeBtn: "War Room", incidentModeDesc: "Simulate real K8s production incidents",
     incidentListTitle: "Choose an Incident",
@@ -612,7 +612,7 @@ const TRANSLATIONS = {
     removeBookmark: "Remove",
     bookmark: "☆ Save", bookmarkActive: "★ Saved",
     searchBtn: "Search Question", searchPlaceholder: "Search by keyword...", searchNoResults: "No results found",
-    mistakesBtn: "My Mistakes", mistakesEmpty: "No mistakes! Great job 🎉", mistakesHint: "Questions you answered incorrectly",
+    mistakesBtn: "My Mistakes", mistakesEmpty: "No mistakes! Great job", mistakesHint: "Questions you answered incorrectly",
     guideBtn: "Commands", guideSub: "Copy-ready kubectl commands. Tap to expand", aboutBtn: "About the App",
     privacyBtn: "Privacy Policy", termsBtn: "Terms of Service",
     shareBtn: "Share with a Friend",
@@ -1132,6 +1132,7 @@ export default function K8sQuestApp() {
   const authFormRef                       = useRef(null);
   const [authLoading, setAuthLoading]     = useState(false);
   const [authError, setAuthError]         = useState("");
+  const [authIsSuccess, setAuthIsSuccess] = useState(false);
   const [saveError, setSaveError]         = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail]       = useState("");
@@ -1580,7 +1581,7 @@ export default function K8sQuestApp() {
       const params = new URLSearchParams(hash.slice(1));
       const code = params.get("error_code");
       if (code === "otp_expired" || code === "access_denied") {
-        setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired);
+        setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired); setAuthIsSuccess(false);
         setAuthScreen("signup");
       }
       window.history.replaceState(null, "", window.location.pathname);
@@ -1658,7 +1659,7 @@ export default function K8sQuestApp() {
             sessionStorage.removeItem("kq_recovery_pending");
             // Strip the unconsumed ?code= from the URL
             try { window.history.replaceState(null, "", window.location.pathname); } catch {}
-            setAuthError(t("resetLinkWrongBrowser"));
+            setAuthError(t("resetLinkWrongBrowser")); setAuthIsSuccess(false);
             setShowResetModal(true);
           } else if (safeGetItem("k8s_guest_session")) {
             // Restore guest session if user previously chose guest mode
@@ -2310,8 +2311,8 @@ export default function K8sQuestApp() {
   };
 
   const handleSignUp = async () => {
-    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); return; }
-    setAuthLoading(true); setAuthError("");
+    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthIsSuccess(false); return; }
+    setAuthLoading(true); setAuthError(""); setAuthIsSuccess(false);
     const { emailVal, passwordVal, usernameVal } = getFormValues();
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -2323,36 +2324,36 @@ export default function K8sQuestApp() {
       if (error) {
         const msg = error.message.toLowerCase();
         if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
-          setAuthError(t("emailAlreadySent"));
+          { setAuthError(t("emailAlreadySent")); setAuthIsSuccess(true); }
         else {
-          setAuthError(error.message);
+          setAuthError(error.message); setAuthIsSuccess(false);
           captureError(error, { flow: "signup", extra: { error_code: error.code || error.status } });
         }
       } else if (!data.user?.identities?.length) {
         // Supabase returns fake success (empty identities) when email already exists (confirmed)
-        setAuthError(t("emailAlreadyExists"));
+        setAuthError(t("emailAlreadyExists")); setAuthIsSuccess(false);
         setAuthScreen("login");
       } else if (data.user?.created_at &&
                  (Date.now() - new Date(data.user.created_at).getTime() > 30_000)) {
         // User was created more than 30s ago - re-signup of an unconfirmed account.
         // Supabase re-sent the confirmation email but the account already existed.
-        setAuthError(t("emailAlreadySent"));
-      } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
+        setAuthError(t("emailAlreadySent")); setAuthIsSuccess(true);
+      } else { setAuthError(t("emailSent")); setAuthIsSuccess(true); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
     } catch (err) {
       console.error("[KubeQuest] signUp error:", err.message || "unknown");
-      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
+      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthIsSuccess(false);
     }
     setAuthLoading(false);
   };
 
   const handleLogin = async () => {
-    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); return; }
-    setAuthLoading(true); setAuthError("");
+    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthIsSuccess(false); return; }
+    setAuthLoading(true); setAuthError(""); setAuthIsSuccess(false);
     const { emailVal, passwordVal } = getFormValues();
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
       if (error) {
-        setAuthError(t("wrongCredentials"));
+        setAuthError(t("wrongCredentials")); setAuthIsSuccess(false);
         if (error.status >= 500) captureError(error, { flow: "login", extra: { error_code: error.code || error.status } });
       } else if (window.PasswordCredential) {
         try {
@@ -2362,7 +2363,7 @@ export default function K8sQuestApp() {
       }
     } catch (err) {
       console.error("[KubeQuest] login error:", err.message || "unknown");
-      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
+      setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthIsSuccess(false);
     }
     setAuthLoading(false);
   };
@@ -2370,7 +2371,7 @@ export default function K8sQuestApp() {
   const handleResend = async () => {
     setAuthLoading(true);
     const { emailVal } = getFormValues();
-    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthLoading(false); return; }
+    if (!supabase) { setAuthError(t("serviceUnavailable") || "Service temporarily unavailable"); setAuthIsSuccess(false); setAuthLoading(false); return; }
     try {
       const { error } = await supabase.auth.resend({
         type: "signup",
@@ -2378,10 +2379,10 @@ export default function K8sQuestApp() {
         options: { emailRedirectTo: window.location.origin },
       });
       if (error) captureError(error, { flow: "resend_confirmation", extra: { error_code: error.code || error.status } });
-      setAuthError(error ? t("resendError") : t("resendSuccess"));
+      setAuthError(error ? t("resendError") : t("resendSuccess")); setAuthIsSuccess(!error);
     } catch (err) {
       console.error("[KubeQuest] resend error:", err.message || "unknown");
-      setAuthError(t("resendError"));
+      setAuthError(t("resendError")); setAuthIsSuccess(false);
     }
     setAuthLoading(false);
   };
@@ -2420,7 +2421,7 @@ export default function K8sQuestApp() {
       setConfirmPassword("");
       await supabase.auth.signOut();
       setUser(null);
-      setAuthError("\u2705 " + t("passwordUpdatedSuccess"));
+      setAuthError(t("passwordUpdatedSuccess")); setAuthIsSuccess(true);
       setAuthScreen("login");
     } catch (err) {
       console.error("[KubeQuest] updatePassword error:", err.message || "unknown");
@@ -3981,7 +3982,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{display:"flex",marginBottom:16,background:theme==="light"?"#F1F5F9":"var(--glass-4)",borderRadius:9,padding:3}}>
             {["login","signup"].map(s=>(
               <button key={s}
-                onClick={()=>{ setAuthScreen(s); setAuthError(""); }}
+                onClick={()=>{ setAuthScreen(s); setAuthError(""); setAuthIsSuccess(false); }}
                 style={{flex:1,padding:"7px",border:"none",borderRadius:7,cursor:"pointer",fontSize:13,fontWeight:700,
                   background:authScreen===s?(theme==="light"?"#FFFFFF":"rgba(0,212,255,0.12)"):"transparent",
                   color:authScreen===s?(theme==="light"?"#0369A1":"#00D4FF"):"var(--text-dim)",
@@ -4018,8 +4019,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
           )}
           {authError&&<div style={{marginBottom:12}}>
-            <div role="alert" aria-live="assertive" style={{color:authError.startsWith("✅")?"#10B981":"#EF4444",fontSize:12,padding:"8px 12px",background:authError.startsWith("✅")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",borderRadius:8}}>{authError}</div>
-            {authScreen==="signup"&&authError.startsWith("✅")&&<div style={{textAlign:"center",marginTop:8,fontSize:12,color:"var(--text-dim)"}}>
+            <div role="alert" aria-live="assertive" style={{color:authIsSuccess?"#10B981":"#EF4444",fontSize:12,padding:"8px 12px",background:authIsSuccess?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)",borderRadius:8,display:"flex",alignItems:"center",gap:6}}>{authIsSuccess?<CheckCircle size={14} strokeWidth={2} style={{flexShrink:0}} />:<XCircle size={14} strokeWidth={2} style={{flexShrink:0}} />}{authError}</div>
+            {authScreen==="signup"&&authIsSuccess&&<div style={{textAlign:"center",marginTop:8,fontSize:12,color:"var(--text-dim)"}}>
               {t("didntReceive")}{" "}
               <button type="button" onClick={handleResend} disabled={authLoading}
                 style={{background:"none",border:"none",color:"#00D4FF",fontWeight:700,cursor:"pointer",fontSize:12,padding:0,textDecoration:"underline"}}>
@@ -4553,7 +4554,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!isStatusDomain && <>
       {/* HOME */}
       {screen==="home"&&(
-        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"16px 12px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
+        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"32px 12px 16px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
           {/* ── Hero - centered, matches loading screen composition ── */}
           <div className="home-hero" style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",marginBottom:16}}>
             {/* Header row: logo+title on one side, burger on the other */}
@@ -4572,7 +4573,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </svg>
               );
               const logoText=(
-                <h1 className="home-title-text" style={{fontSize:18,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.3,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
+                <h1 className="home-title-text" style={{fontSize:26,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.3,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
               );
               const logoGroup=(
                 <div style={{display:"flex",alignItems:"center",gap:14}}>
@@ -4594,7 +4595,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               const burgerBtn=(
                 <button ref={burgerRef} onClick={()=>setShowMenu(p=>!p)} aria-label={lang==="en"?"Open menu":"פתח תפריט"} aria-expanded={showMenu} aria-haspopup="menu" title={lang==="en"?"Menu":"תפריט"}
-                  style={{flexShrink:0,width:34,height:34,
+                  style={{flexShrink:0,width:42,height:42,
                     background:showMenu?(theme==="light"?"rgba(14,165,233,0.06)":"rgba(0,212,255,0.1)"):(theme==="light"?"#FFFFFF":"var(--glass-4)"),
                     border:`1px solid ${showMenu?(theme==="light"?"#0EA5E9":"rgba(0,212,255,0.3)"):(theme==="light"?"#E2E8F0":"var(--glass-10)")}`,
                     borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,
@@ -4602,11 +4603,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     boxShadow:showMenu?(theme==="light"?"0 2px 8px rgba(14,165,233,0.15)":"0 0 12px rgba(0,212,255,0.5), 0 0 24px rgba(0,212,255,0.2)"):(theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"0 0 8px rgba(0,212,255,0.15)")}}
                   onMouseEnter={e=>{if(!showMenu){if(theme==="light"){e.currentTarget.style.background="#F8FAFC";e.currentTarget.style.borderColor="#0EA5E9";e.currentTarget.style.boxShadow="0 2px 8px rgba(14,165,233,0.12)";e.currentTarget.style.transform="scale(1.05)";}else{e.currentTarget.style.background="rgba(0,212,255,0.1)";e.currentTarget.style.borderColor="rgba(0,212,255,0.3)";e.currentTarget.style.boxShadow="0 0 12px rgba(0,212,255,0.35)";e.currentTarget.style.transform="scale(1.05)";}}}}
                   onMouseLeave={e=>{if(!showMenu){if(theme==="light"){e.currentTarget.style.background="#FFFFFF";e.currentTarget.style.borderColor="#E2E8F0";e.currentTarget.style.boxShadow="0 1px 3px rgba(0,0,0,0.06)";e.currentTarget.style.transform="scale(1)";}else{e.currentTarget.style.background="var(--glass-4)";e.currentTarget.style.borderColor="var(--glass-10)";e.currentTarget.style.boxShadow="0 0 8px rgba(0,212,255,0.15)";e.currentTarget.style.transform="scale(1)";}}}}>
-                  {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:20,height:2,borderRadius:2,background:showMenu?(theme==="light"?"#0EA5E9":"#00D4FF"):"var(--text-secondary)",transition:"background 0.2s"}}/>)}
+                  {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:22,height:2.5,borderRadius:2,background:showMenu?(theme==="light"?"#0EA5E9":"#00D4FF"):"var(--text-secondary)",transition:"background 0.2s"}}/>)}
                 </button>
               );
               return (
-                <div style={{display:"flex",alignItems:"center",width:"100%",direction:"ltr",position:"relative"}}>
+                <div style={{display:"flex",alignItems:"center",width:"100%",direction:"ltr",position:"relative",padding:"0 8px"}}>
                   <div style={{position:"absolute",[dir==="rtl"?"right":"left"]:0,top:"50%",transform:"translateY(-50%)"}}>
                     {burgerBtn}
                   </div>
@@ -4614,7 +4615,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     {logoText}
                   </div>
                   <div style={{position:"absolute",[dir==="rtl"?"left":"right"]:0,top:"50%",transform:"translateY(-50%)"}}>
-                    <button onClick={()=>{setSearchQuery("");setScreen("search");}} aria-label={lang==="en"?"Search":"חיפוש"} style={{flexShrink:0,width:34,height:34,background:theme==="light"?"#FFFFFF":"var(--glass-4)",border:theme==="light"?"1px solid #E2E8F0":"1px solid var(--glass-10)",borderRadius:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}><Search size={16} strokeWidth={1.5} color="var(--text-secondary)" /></button>
+                    <button onClick={()=>{setSearchQuery("");setScreen("search");}} aria-label={lang==="en"?"Search":"חיפוש"} style={{flexShrink:0,width:42,height:42,background:theme==="light"?"#FFFFFF":"var(--glass-4)",border:theme==="light"?"1px solid #E2E8F0":"1px solid var(--glass-10)",borderRadius:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"0 0 8px rgba(0,212,255,0.15)"}}
+                      onMouseEnter={e=>{if(theme==="light"){e.currentTarget.style.background="#F8FAFC";e.currentTarget.style.borderColor="#0EA5E9";e.currentTarget.style.boxShadow="0 2px 8px rgba(14,165,233,0.12)";e.currentTarget.style.transform="scale(1.05)";}else{e.currentTarget.style.background="rgba(0,212,255,0.1)";e.currentTarget.style.borderColor="rgba(0,212,255,0.3)";e.currentTarget.style.boxShadow="0 0 12px rgba(0,212,255,0.35)";e.currentTarget.style.transform="scale(1.05)";}}}
+                      onMouseLeave={e=>{if(theme==="light"){e.currentTarget.style.background="#FFFFFF";e.currentTarget.style.borderColor="#E2E8F0";e.currentTarget.style.boxShadow="0 1px 3px rgba(0,0,0,0.06)";e.currentTarget.style.transform="scale(1)";}else{e.currentTarget.style.background="var(--glass-4)";e.currentTarget.style.borderColor="var(--glass-10)";e.currentTarget.style.boxShadow="0 0 8px rgba(0,212,255,0.15)";e.currentTarget.style.transform="scale(1)";}}}
+                    ><Search size={20} strokeWidth={1.5} color="var(--text-secondary)" /></button>
                   </div>
                 </div>
               );
@@ -4682,7 +4686,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     {completedCount > 0 ? t("heroContinueTrack") : t("heroStartTrack")}
                   </button>
                 ) : (
-                  <div style={{textAlign:"center",padding:"8px 0",color:"#10B981",fontWeight:700,fontSize:14}}>🎉 {t("heroAllDone")}</div>
+                  <div style={{textAlign:"center",padding:"8px 0",color:"#10B981",fontWeight:700,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><PartyPopper size={16} color="#10B981" /> {t("heroAllDone")}</div>
                 )}
               </div>
             </div>
@@ -4760,7 +4764,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <button onClick={()=>tryStartQuiz(startDailyChallenge,"daily")} className="action-card" style={{width:"100%",marginBottom:12,padding:"14px 18px",background:"linear-gradient(135deg,rgba(245,158,11,0.10),rgba(239,68,68,0.05))",border:"1px solid rgba(245,158,11,0.3)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"transform 0.2s,box-shadow 0.2s"}}
             onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 4px 16px rgba(245,158,11,0.12)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
             <div className="action-card-inner" style={{display:"flex",alignItems:"center",gap:12,minWidth:0,flex:1}}>
-              <span className="action-emoji" style={{fontSize:24,flexShrink:0}}>🔥</span>
+              <span className="action-emoji" style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}><FlameIcon size={24} color="#F59E0B" /></span>
               <div className="action-text" style={{textAlign:"start",minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                   <span style={{color:"#F59E0B",fontWeight:800,fontSize:14}}>{t("dailyChallengeTitle")}</span>
@@ -4918,7 +4922,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:4}}>{t("mistakesBtn")}</h2>
             <p style={{color:"var(--text-muted)",fontSize:13,marginBottom:20}}>{t("mistakesHint")}</p>
             {!anyTopicCompleted&&<div style={{background:"rgba(0,212,255,0.06)",border:"1px solid rgba(0,212,255,0.2)",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,color:"var(--text-secondary)",direction:dir}}>
-              {lang==="en"?"💡 Mistakes are only tracked for individual topic quizzes (Easy / Medium / Hard). Mixed Quiz and Daily Challenge are not tracked here.":"💡 טעויות נשמרות רק בחידוני נושא רגילים (קל / בינוני / קשה). חידון מיקס ואתגר יומי לא נשמרים כאן."}
+              <span style={{display:"flex",alignItems:"flex-start",gap:8}}><Lightbulb size={16} color="var(--text-secondary)" style={{flexShrink:0,marginTop:1}} />{lang==="en"?"Mistakes are only tracked for individual topic quizzes (Easy / Medium / Hard). Mixed Quiz and Daily Challenge are not tracked here.":"טעויות נשמרות רק בחידוני נושא רגילים (קל / בינוני / קשה). חידון מיקס ואתגר יומי לא נשמרים כאן."}</span>
             </div>}
             {wrongItems.length===0
               ? <div style={{textAlign:"center",padding:"40px 0",color:"#10B981",fontSize:16,fontWeight:700}}>{t("mistakesEmpty")}</div>
@@ -5256,7 +5260,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             // Fail-safe: if quiz state is invalid (no questions or index out of bounds), recover gracefully
             currentQuestions.length === 0 || questionIndex < 0 || questionIndex >= currentQuestions.length || !currentQuestions[questionIndex] ? (
               <div style={{textAlign:"center",padding:"40px 20px"}}>
-                <div style={{fontSize:36,marginBottom:12}}>⚠️</div>
+                <div style={{marginBottom:12,display:"flex",justifyContent:"center"}}><AlertTriangle size={36} color="#F59E0B" /></div>
                 <p style={{color:"var(--text-secondary)",fontSize:14,marginBottom:16}}>{lang==="en"?"Quiz state is invalid. Returning to topics.":"מצב החידון לא תקין. חוזר לנושאים."}</p>
                 <button onClick={()=>{clearQuizState();setScreen("home");}} style={{padding:"12px 28px",background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                   {t("backToTopics")}
@@ -5282,12 +5286,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
                 {/* Row 2: stats bar - timer, streak, score */}
                 <div className="quiz-bar-right" style={{display:"flex",gap:10,alignItems:"center",justifyContent:"center",marginBottom:8,direction:"ltr"}}>
-                  {!isInHistoryMode&&(timerEnabled||isInterviewMode)&&<span aria-live="off" aria-label={`${timeLeft} ${lang==="en"?"seconds":"שניות"}`} style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}><span aria-hidden="true">⏱ {timeLeft}</span></span>}
+                  {!isInHistoryMode&&(timerEnabled||isInterviewMode)&&<span aria-live="off" aria-label={`${timeLeft} ${lang==="en"?"seconds":"שניות"}`} style={{display:"inline-block",color:(!isInterviewMode&&timeLeft<=10)?"#EF4444":"#F59E0B",fontSize:13,fontWeight:(isInterviewMode&&timeLeft<=5)?900:800,transform:(isInterviewMode&&timeLeft<=5)?"scale(1.05)":"none",transition:"transform 0.3s ease",minWidth:28,textAlign:"center",direction:"ltr"}}><span aria-hidden="true" style={{display:"inline-flex",alignItems:"center",gap:3}}><Clock size={13} /> {timeLeft}</span></span>}
                   {!isInHistoryMode&&!isInterviewMode&&<button onClick={()=>setTimerEnabled(p=>!p)} aria-pressed={timerEnabled} style={{background:"none",border:"none",color:timerEnabled?"#F59E0B":"var(--text-dim)",fontSize:12,cursor:"pointer",fontWeight:timerEnabled?700:400,padding:0}}>
                     {timerEnabled?t("timerOn"):t("timerOff")}
                   </button>}
                   {!isInHistoryMode&&<span aria-label={`${stats.current_streak||0} ${t("streakLabel")}`} style={{color:(stats.current_streak||0)>0?"#FF6B35":"var(--text-dim)",fontSize:12,fontWeight:700}}>
-                    <span aria-hidden="true">🔥 {stats.current_streak||0} {t("streakLabel")}</span>
+                    <span aria-hidden="true" style={{display:"inline-flex",alignItems:"center",gap:3}}><FlameIcon size={13} color={(stats.current_streak||0)>0?"#FF6B35":"var(--text-dim)"} /> {stats.current_streak||0} {t("streakLabel")}</span>
                   </span>}
                   {/* total_score shown live because it increments on every correct answer (immediate feedback).
                        sessionScore (+X) tracks this-quiz-only earnings to distinguish from the cumulative total.
@@ -5729,7 +5733,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       <li key={i} aria-label={`${t("question")} ${i+1}: ${wasCorrect?(lang==="en"?"correct":"נכון"):(lang==="en"?"incorrect":"לא נכון")}`}
                         style={{background:wasCorrect?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)",border:`1px solid ${wasCorrect?"#10B98130":"#EF444430"}`,borderRadius:12,padding:"12px 14px"}}>
                         <div style={{fontWeight:700,fontSize:13,color:wasCorrect?"#10B981":"#EF4444",marginBottom:4}}>
-                          <span aria-hidden="true">{wasCorrect?"✅":"❌"} </span>{t("question")} {i+1}
+                          <span aria-hidden="true" style={{display:"inline-flex",alignItems:"center",verticalAlign:"middle",marginInlineEnd:4}}>{wasCorrect?<CheckCircle size={14} color="#10B981" />:<XCircle size={14} color="#EF4444" />}</span>{t("question")} {i+1}
                         </div>
                         <div style={{color:"var(--text-primary)",fontSize:13,marginBottom:6}}>{renderBidiBlock(h.q,lang)}</div>
                         {timedOut?<div style={{fontSize:13,color:"#F59E0B"}}>{t("timeUp")}</div>:(
