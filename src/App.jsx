@@ -1,3 +1,4 @@
+/* KubeQuest App */
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
