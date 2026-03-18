@@ -41,6 +41,7 @@ const KQ_STORAGE_KEYS = [
   "incident_completed_v1",
   "k8s_quiz_inprogress_v1",
   "resumeDismissedAt",
+  "kq_reset_epoch",
 ];
 
 // Keys safe to clear on version mismatch - transient/reconstructible data only.
