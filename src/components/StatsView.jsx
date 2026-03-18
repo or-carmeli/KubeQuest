@@ -1,4 +1,6 @@
 import { getLocalizedField } from "../utils/i18n";
+import { loadArchitectureProgress, getArchitectureStats, getRank } from "../utils/architectureLogic";
+import Icon from "./Icon";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -494,6 +496,61 @@ export default function StatsView({
           </div>
         </>
       )}
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          6. ARCHITECTURE SCENARIOS
+      ══════════════════════════════════════════════════════════════════════════ */}
+      {(() => {
+        const archProgress = loadArchitectureProgress();
+        const archStats = getArchitectureStats(archProgress);
+        if (archStats.completed === 0) return null;
+        const bestRank = getRank(archStats.bestScore);
+        const metricIcons = { performance: "⚡", cost: "💰", reliability: "🛡️" };
+        const metricNames = { performance: { en: "Performance", he: "ביצועים" }, cost: { en: "Cost", he: "עלות" }, reliability: { en: "Reliability", he: "אמינות" } };
+        const sm = archStats.strongestMetric;
+        return (
+          <>
+            <SectionLabel text={lang === "he" ? "תרחישי ארכיטקטורה" : "Architecture Scenarios"} />
+            <div style={{
+              background: "var(--glass-2)", border: "1px solid var(--glass-6)",
+              borderRadius: 14, padding: "14px 16px", marginBottom: 28,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                  🧠 {lang === "he" ? "תרחישי ארכיטקטורה" : "Architecture Scenarios"}
+                </span>
+                <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
+                  {archStats.completed}/3 {lang === "he" ? "הושלמו" : "completed"}
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: sm ? 8 : 0 }}>
+                <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--glass-3)", borderRadius: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{archStats.avgScore}</div>
+                  <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>{lang === "he" ? "ממוצע" : "Avg"}</div>
+                </div>
+                <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--glass-3)", borderRadius: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{archStats.bestScore}</div>
+                  <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>{lang === "he" ? "שיא" : "Best"}</div>
+                </div>
+                <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--glass-3)", borderRadius: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{bestRank.icon} {lang === "he" ? bestRank.labelHe : bestRank.label}</div>
+                  <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>{lang === "he" ? "דרגה" : "Rank"}</div>
+                </div>
+                <div style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--glass-3)", borderRadius: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{archStats.totalAttempts}</div>
+                  <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>{lang === "he" ? "ניסיונות" : "Runs"}</div>
+                </div>
+              </div>
+              {sm && (
+                <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>
+                  {metricIcons[sm]} {lang === "he" ? "מדד חזק:" : "Strongest:"}{" "}
+                  <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>{lang === "he" ? metricNames[sm].he : metricNames[sm].en}</span>
+                </div>
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       <div style={{ height: 40 }} />
     </div>

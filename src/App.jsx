@@ -23,6 +23,11 @@ import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBi
 import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } from "./components/CodeBlocks";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress } from "./api/quiz";
 import StatusView from "./components/StatusView";
+// eslint-disable-next-line no-unused-vars
+import ArchitectureView from "./components/architecture/ArchitectureView";
+
+// Feature flag: Architecture Scenarios (dev only for now)
+const ARCHITECTURE_ENABLED = !import.meta.env.PROD;
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -1140,7 +1145,7 @@ export default function K8sQuestApp() {
       console.info("[KubeQuest:boot] Screen was", s, "- falling back to home (transient state lost on refresh)");
       return "home";
     }
-    if (s && ["home","incidentList","incident","privacy","terms"].includes(s)) return s;
+    if (s && ["home","incidentList","incident","privacy","terms",...(ARCHITECTURE_ENABLED?["architecture"]:[])].includes(s)) return s;
     return "home";
   });
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -3871,7 +3876,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (showPasswordReset) return (
     <div data-kq-rendered="password-reset" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}button,input{font-family:inherit}button:focus-visible,input:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}button,input{font-family:inherit}button:focus-visible,input:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         <div style={{textAlign:"center",marginBottom:34}}>
           <svg width="64" height="64" viewBox="0 0 100 100" style={{marginBottom:10,filter:"drop-shadow(0 0 18px rgba(0,212,255,0.45))"}} xmlns="http://www.w3.org/2000/svg">
@@ -4360,6 +4365,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {lang==="he"&&<GenderToggle gender={gender} setGender={handleSetGender}/>}
             <LangSwitcher lang={lang} setLang={setLang}/>
           </div>
+
+          {/* ── 0. Architecture Scenarios (Advanced) ── */}
+          {ARCHITECTURE_ENABLED&&<button onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"12px 16px",background:"linear-gradient(135deg,rgba(124,58,237,0.06),rgba(168,85,247,0.03))",border:"none",borderBottom:"1px solid var(--glass-6)",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+            🧠 {lang==="en"?"Architecture Scenarios":"תרחישי ארכיטקטורה"}
+            <span style={{background:"linear-gradient(135deg,rgba(124,58,237,0.2),rgba(168,85,247,0.15))",color:"#C084FC",fontSize:9,fontWeight:800,padding:"2px 8px",borderRadius:4,marginInlineStart:"auto",flexShrink:0,lineHeight:1.5,letterSpacing:0.8,textTransform:"uppercase",border:"1px solid rgba(168,85,247,0.2)"}}>{lang==="en"?"ADVANCED":"מתקדם"}</span>
+          </button>}
 
           {/* ── 1. Practice ── */}
           <div style={{padding:"10px 16px 4px"}}>
@@ -5117,6 +5128,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <p style={{color:"var(--text-dim)",fontSize:11,lineHeight:1.6,margin:0}}>{lang==="en"?"KubeQuest is an independent learning project and is not affiliated with, sponsored by, or endorsed by any company. Kubernetes is a registered trademark of the Cloud Native Computing Foundation.":"KubeQuest הוא פרויקט לימודי עצמאי ואינו קשור, ממומן או מאושר על ידי כל חברה. Kubernetes הוא סימן מסחרי רשום של Cloud Native Computing Foundation."}</p>
           </div>
         </div>
+      )}
+
+      {/* ARCHITECTURE SCENARIOS */}
+      {ARCHITECTURE_ENABLED&&screen==="architecture"&&(
+        <ArchitectureView lang={lang} onBack={()=>setScreen("home")} />
       )}
 
       {/* STATS */}
