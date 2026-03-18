@@ -4610,8 +4610,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   <div style={{position:"absolute",[dir==="rtl"?"right":"left"]:0,top:"50%",transform:"translateY(-50%)"}}>
                     {burgerBtn}
                   </div>
-                  <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
-                    {logoIcon}{logoText}
+                  <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    {logoText}
                   </div>
                   <div style={{position:"absolute",[dir==="rtl"?"left":"right"]:0,top:"50%",transform:"translateY(-50%)"}}>
                     <button onClick={()=>{setSearchQuery("");setScreen("search");}} aria-label={lang==="en"?"Search":"חיפוש"} style={{flexShrink:0,width:34,height:34,background:theme==="light"?"#FFFFFF":"var(--glass-4)",border:theme==="light"?"1px solid #E2E8F0":"1px solid var(--glass-10)",borderRadius:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}><Search size={16} strokeWidth={1.5} color="var(--text-secondary)" /></button>
@@ -4623,7 +4623,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:8,flexWrap:"nowrap",maxWidth:"100%",overflow:"hidden"}}>
               <span style={{color:"var(--text-muted)",fontSize:12,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
               <span style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
-              {dailyStreak.streak > 0 && <span style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:10,padding:"2px 8px",fontSize:11,color:"#F59E0B",fontWeight:700,flexShrink:0}}>🔥 {dailyStreak.streak}</span>}
             </div>
             {isInterviewMode && (
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginTop:6}}>
