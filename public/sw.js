@@ -12,6 +12,18 @@ const SHELL_ASSETS = [
   "/icon-512.png"
 ];
 
+// Purge all caches and notify clients to reload (one-time recovery)
+function triggerStaleRecovery() {
+  caches.keys().then(keys =>
+    Promise.all(keys.map(k => caches.delete(k)))
+  );
+  self.clients.matchAll({ type: "window" }).then(clients => {
+    clients.forEach(client =>
+      client.postMessage({ type: "STALE_ASSET_RECOVERY" })
+    );
+  });
+}
+
 // Install - pre-cache shell assets and activate immediately
 self.addEventListener("install", e => {
   e.waitUntil(
@@ -82,7 +94,9 @@ self.addEventListener("fetch", e => {
         return fetch(e.request).then(res => {
           // Check for stale-hash mismatch: if the request expects a script
           // or stylesheet but the response is HTML, Vercel has served the
-          // index.html fallback instead of the real asset.
+          // index.html fallback instead of the real asset.  Also catch 404s
+          // (Vercel will now 404 for missing assets instead of serving HTML,
+          // thanks to the rewrite exclusion in vercel.json).
           const isAssetReq =
             e.request.destination === "script" ||
             e.request.destination === "style" ||
@@ -94,28 +108,17 @@ self.addEventListener("fetch", e => {
             const expectsJS = e.request.destination === "script" || url.pathname.endsWith(".js");
             const expectsCSS = e.request.destination === "style" || url.pathname.endsWith(".css");
             const isMismatch =
+              !res.ok ||
               ct.includes("text/html") ||
               (expectsJS && !ct.includes("javascript")) ||
               (expectsCSS && !ct.includes("css"));
 
             if (isMismatch) {
               console.warn(
-                `[SW] Stale asset hash detected: ${url.pathname} returned content-type "${ct}". ` +
-                "This usually means a new deployment invalidated this hashed filename. " +
+                `[SW] Stale asset detected: ${url.pathname} status=${res.status} content-type="${ct}". ` +
                 "Purging caches and notifying clients to reload."
               );
-              // Purge all app caches so the next load starts clean
-              caches.keys().then(keys =>
-                Promise.all(keys.map(k => caches.delete(k)))
-              );
-              // Notify all clients to perform a one-time reload
-              self.clients.matchAll({ type: "window" }).then(clients => {
-                clients.forEach(client =>
-                  client.postMessage({ type: "STALE_ASSET_RECOVERY" })
-                );
-              });
-              // Return a synthetic error response so the browser doesn't try
-              // to evaluate HTML as JavaScript/CSS
+              triggerStaleRecovery();
               return new Response("/* asset unavailable after deploy - reloading */", {
                 status: 503,
                 headers: { "Content-Type": expectsJS ? "application/javascript" : "text/css" }
@@ -128,6 +131,15 @@ self.addEventListener("fetch", e => {
             caches.open(CACHE).then(c => c.put(e.request, clone));
           }
           return res;
+        }).catch(() => {
+          // Network failure for an asset - trigger recovery
+          console.warn(`[SW] Network failure for asset: ${url.pathname}`);
+          const expectsJS = e.request.destination === "script" || url.pathname.endsWith(".js");
+          triggerStaleRecovery();
+          return new Response("/* asset unavailable - reloading */", {
+            status: 503,
+            headers: { "Content-Type": expectsJS ? "application/javascript" : "text/css" }
+          });
         });
       })
     );
