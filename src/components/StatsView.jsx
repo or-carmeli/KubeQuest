@@ -275,7 +275,7 @@ export default function StatsView({
           </div>
         </div>
       )}
-      {!goal && stats.total_answered > 0 && (
+      {!goal && stats.total_answered > 0 && topics.every(tp => getTopicStatus(tp.id, completedTopics) !== "not_started") && (
         <div style={{
           background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
           border: "1px solid rgba(16,185,129,0.2)",
