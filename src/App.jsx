@@ -3340,7 +3340,7 @@ export default function K8sQuestApp() {
     const totalSteps = incidentSteps?.length || selectedIncident.steps.length;
     const maxScore = totalSteps * 10;
     const time = formatIncidentTime(incidentElapsed);
-    return `KubeQuest Incident\n${selectedIncident.title}\nScore: ${incidentScore}/${maxScore} · Time: ${time}\n\nhttps://kubequest.online`;
+    return `Master Kubernetes through real-world scenarios\nTry KubeQuest: https://kubequest.online/\n\n${selectedIncident.title}\nScore: ${incidentScore}/${maxScore} · Time: ${time}`;
   };
 
   const handleIncidentShare = () => {
@@ -4429,7 +4429,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           <button onClick={()=>{
             const url="https://kubequest.online";
-            const text=lang==="en"?"KubeQuest - Practice Kubernetes Through Real DevOps Scenarios":"מצאתי דרך נחמדה לתרגל Kubernetes. משחק עם שאלות DevOps ותרחישי troubleshooting אמיתיים";
+            const text="Master Kubernetes through real-world scenarios\nTry KubeQuest: https://kubequest.online/";
             if(navigator.share){navigator.share({title:"KubeQuest",text,url}).catch(()=>{});}
             else{navigator.clipboard?.writeText(url);}
             setShowMenu(false);
@@ -5599,7 +5599,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 const isDaily = selectedTopic.id === "daily";
                 const dateStr = new Date().toLocaleDateString(lang==="en"?"en-US":"he-IL",{month:"short",day:"numeric"});
                 const topicName = isDaily ? `Daily Challenge (${dateStr})` : selectedTopic.name;
-                const msg = `KubeQuest Challenge\n\n${topicName}\n${isDaily ? "" : lvlLabel + "\n"}\nScore: ${result?.correct}/${result?.total}\n\nCan you beat this?\n\nhttps://kubequest.online`;
+                const msg = `Master Kubernetes through real-world scenarios\nTry KubeQuest: https://kubequest.online/\n\n${topicName}\n${isDaily ? "" : lvlLabel + "\n"}\nScore: ${result?.correct}/${result?.total}`;
                 const handleShare = async () => {
                   // Mobile: use native share sheet (works with LinkedIn, WhatsApp, etc.)
                   if (navigator.share) {
