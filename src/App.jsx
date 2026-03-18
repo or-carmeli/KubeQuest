@@ -29,7 +29,7 @@ import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
 import TopicIcon from "./components/TopicIcon";
 import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon } from "lucide-react";
-import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon } from "lucide-react";
+import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon, ArrowLeft, ArrowRight } from "lucide-react";
 const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: FlameIcon, mixed: ShuffleIcon, daily: CalendarIcon };
 const CHEAT_ICON_MAP = { search: SearchIcon, folder: FolderOpen, bug: Bug, "scroll-text": ScrollText, terminal: Terminal, globe: GlobeIcon, settings: SettingsIcon, "trending-up": TrendingUp, trash: TrashIcon };
 function CheatIcon({ name, size = 16, color }) { const C = CHEAT_ICON_MAP[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
@@ -1514,8 +1514,8 @@ export default function K8sQuestApp() {
     const gateActive = !authChecked || !minLoadElapsed || (!!user && !isGuest && !dataLoaded);
     if (!gateActive) return;
     const iv = setInterval(() => setBootElapsed(s => s + 1), 1000);
-    // Query Navigator Locks to diagnose stuck Supabase auth locks
-    if (navigator.locks?.query) {
+    // Query Navigator Locks to diagnose stuck Supabase auth locks (dev only)
+    if (!import.meta.env.PROD && navigator.locks?.query) {
       navigator.locks.query().then(({ held, pending }) => {
         const sbLocks = [...(held || []), ...(pending || [])].filter(l => l.name?.includes("auth-token"));
         setLockInfo(sbLocks.length ? `locks: ${sbLocks.map(l => `${l.mode}${held?.includes(l) ? "(held)" : "(pending)"}`).join(",")}` : "locks: none");
@@ -2174,7 +2174,7 @@ export default function K8sQuestApp() {
             updated_at: new Date().toISOString(),
           });
         } catch (insertErr) {
-          console.error("[KubeQuest:boot] user_stats INSERT failed:", insertErr);
+          console.error("[KubeQuest:boot] user_stats INSERT failed:", insertErr.message || insertErr.code || "unknown");
         }
       }
 
@@ -2184,7 +2184,7 @@ export default function K8sQuestApp() {
       setDataLoaded(true);
     } catch (err) {
       // Network error or unexpected failure - unblock the UI and surface the error
-      console.error("[KubeQuest:boot] loadUserData failed:", err);
+      console.error("[KubeQuest:boot] loadUserData failed:", err.message || err.code || "unknown");
       captureError(err, { flow: "loadUserData", screen, isGuest });
       clearTimeout(dataTimeout);
       loadingDataRef.current = false;
@@ -2339,7 +2339,7 @@ export default function K8sQuestApp() {
         setAuthError(t("emailAlreadySent"));
       } else { setAuthError(t("emailSent")); window.va?.track?.("signup_completed", { source: "quiz_game" }); }
     } catch (err) {
-      console.error("[KubeQuest] signUp error:", err);
+      console.error("[KubeQuest] signUp error:", err.message || "unknown");
       setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
     }
     setAuthLoading(false);
@@ -2361,7 +2361,7 @@ export default function K8sQuestApp() {
         } catch {}
       }
     } catch (err) {
-      console.error("[KubeQuest] login error:", err);
+      console.error("[KubeQuest] login error:", err.message || "unknown");
       setAuthError(t("serviceUnavailable") || "Service temporarily unavailable");
     }
     setAuthLoading(false);
@@ -2380,7 +2380,7 @@ export default function K8sQuestApp() {
       if (error) captureError(error, { flow: "resend_confirmation", extra: { error_code: error.code || error.status } });
       setAuthError(error ? t("resendError") : t("resendSuccess"));
     } catch (err) {
-      console.error("[KubeQuest] resend error:", err);
+      console.error("[KubeQuest] resend error:", err.message || "unknown");
       setAuthError(t("resendError"));
     }
     setAuthLoading(false);
@@ -2398,7 +2398,7 @@ export default function K8sQuestApp() {
       if (error) captureError(error, { flow: "password_reset", extra: { error_code: error.code || error.status } });
       setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
     } catch (err) {
-      console.error("[KubeQuest] resetPassword error:", err);
+      console.error("[KubeQuest] resetPassword error:", err.message || "unknown");
       setResetStatus(t("resetEmailError"));
     }
     setResetLoading(false);
@@ -2423,7 +2423,7 @@ export default function K8sQuestApp() {
       setAuthError("\u2705 " + t("passwordUpdatedSuccess"));
       setAuthScreen("login");
     } catch (err) {
-      console.error("[KubeQuest] updatePassword error:", err);
+      console.error("[KubeQuest] updatePassword error:", err.message || "unknown");
       setPasswordResetError(t("serviceUnavailable") || "Service temporarily unavailable");
     }
     setPasswordResetLoading(false);
@@ -2453,7 +2453,7 @@ export default function K8sQuestApp() {
     try {
       if (supabase) await supabase.auth.signOut();
     } catch (err) {
-      console.error("[KubeQuest] signOut error:", err);
+      console.error("[KubeQuest] signOut error:", err.message || "unknown");
     }
     setUser(null);
     setStats({ total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 });
@@ -2877,7 +2877,7 @@ export default function K8sQuestApp() {
     if (!correct) window.va?.track?.("question_failed", { questionNumber: questionIndex + 1, topic: selectedTopic?.name || selectedTopic?.id });
     if (correct && stats.current_streak === 0) window.va?.track?.("streak_started", { topic: selectedTopic?.name || selectedTopic?.id });
     } catch (err) {
-      console.error("handleSubmit error:", err);
+      console.error("handleSubmit error:", err.message || "unknown");
       captureError(err, { flow: "handleSubmit", screen, isGuest, extra: { topic: selectedTopic?.id, level: selectedLevel, questionIndex } });
       submittingRef.current = false;
       setCheckingAnswer(false);
@@ -3866,8 +3866,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         {/* ── Loading text ── */}
         <div style={{color:"var(--text-dim)",fontSize:13,letterSpacing:0.5}}>{t("loadingText")}</div>
 
-        {/* ── Debug panel (visible after 2 s) ── */}
-        {bootElapsed >= 2 && (
+        {/* ── Debug panel (dev only, visible after 2 s) ── */}
+        {!import.meta.env.PROD && bootElapsed >= 2 && (
           <div style={{marginTop:20,fontFamily:"monospace",fontSize:10,color:"var(--text-dim)",textAlign:"left",background:"var(--glass-20)",padding:8,borderRadius:6,lineHeight:1.6}}>
             <div>boot: {bootElapsed}s | gate: auth={String(authChecked)} data={String(dataLoaded)} min={String(minLoadElapsed)}</div>
             <div>user: {user ? (isGuest ? "guest" : user.id?.slice(0,8)) : "null"} | supabase: {supabase ? "ok" : "none"}</div>
@@ -3875,8 +3875,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
         )}
 
-        {/* ── Recovery buttons (visible after 3 s) ── */}
-        {bootElapsed >= 3 && (
+        {/* ── Recovery buttons (visible after 10 s) ── */}
+        {bootElapsed >= 10 && (
           <div style={{marginTop:12,display:"flex",gap:10,justifyContent:"center"}}>
             <button onClick={() => { setAuthChecked(true); setDataLoaded(true); setUser(null); loadingDataRef.current = false; }}
               style={{padding:"6px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:"#94a3b8",fontSize:11,cursor:"pointer"}}>
@@ -5648,7 +5648,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 setScreen("topic");
                 window.va?.track?.("retry_quiz", { topic: selectedTopic?.name || selectedTopic?.id });
                 console.debug("[RETRY] screen set to topic");
-                } catch (err) { console.error("[RETRY] failed:", err); }
+                } catch (err) { console.error("[RETRY] failed:", err.message || "unknown"); }
               }}
                 style={{width:"100%",padding:13,marginBottom:16,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:12,color:"#EF4444",fontSize:14,fontWeight:700,cursor:"pointer",animation:"retryPulse 2s ease-in-out infinite"}}>
                 {lang==="en"?`Retry ${wrongQs.length} wrong answer${wrongQs.length>1?"s":""}`:`תרגלי ${wrongQs.length} ${wrongQs.length>1?"שאלות":"שאלה"} שגויות`}
@@ -5777,7 +5777,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     supabase?.rpc("get_war_room_interest_count").then(({data})=>{if(data?.count!=null)setWarRoomInterestCount(data.count);});
                   };
                   const onError=(err)=>{
-                    console.error("[KubeQuest:warroom] Registration failed:",err);
+                    console.error("[KubeQuest:warroom] Registration failed:", err.message || "unknown");
                     setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
                     setTimeout(()=>setWarRoomNotifyToast(null),4000);
                   };
@@ -5840,13 +5840,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       setTimeout(()=>setWarRoomNotifyToast(null),3000);
                       supabase.rpc("get_war_room_interest_count").then(({data:d})=>{if(d?.count!=null)setWarRoomInterestCount(d.count);});
                     }else{
-                      console.error("[KubeQuest] War Room email registration failed:",error);
+                      console.error("[KubeQuest] War Room email registration failed:", error?.message || "unknown");
                       setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
                       setTimeout(()=>setWarRoomNotifyToast(null),4000);
                     }
                   }).catch(err=>{
                     setWarRoomEmailSending(false);
-                    console.error("[KubeQuest] War Room email registration error:",err);
+                    console.error("[KubeQuest] War Room email registration error:", err.message || "unknown");
                     setWarRoomNotifyToast({msg:lang==="en"?"Registration failed - try again":"ההרשמה נכשלה - נסו שוב",isError:true});
                     setTimeout(()=>setWarRoomNotifyToast(null),4000);
                   });

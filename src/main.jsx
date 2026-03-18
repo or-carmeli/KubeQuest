@@ -41,7 +41,7 @@ try {
   );
   console.info("[KubeQuest:boot] render() called - React is mounting");
 } catch (err) {
-  console.error("[KubeQuest:boot] FATAL bootstrap error:", err);
+  console.error("[KubeQuest:boot] FATAL bootstrap error:", err.message || "unknown");
   captureError(err, { flow: "bootstrap" });
   const el = document.getElementById('root');
   if (el) {
