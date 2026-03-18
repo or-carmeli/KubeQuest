@@ -110,11 +110,12 @@ export default function StatsView({
   const accuracy = stats.total_answered > 0
     ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
   const wrongCount = stats.total_answered - stats.total_correct;
+  const availableIds = new Set(topics.map(t => t.id));
   const completedLevelCount = Object.keys(completedTopics)
     .filter(k => {
       const parts = k.split("_");
       const topicId = parts.slice(0, -1).join("_");
-      return !isFreeMode(topicId);
+      return !isFreeMode(topicId) && availableIds.has(topicId);
     }).length;
   const totalLevels = topics.length * levelOrder.length;
 
@@ -275,7 +276,7 @@ export default function StatsView({
           </div>
         </div>
       )}
-      {!goal && stats.total_answered > 0 && topics.every(tp => getTopicStatus(tp.id, completedTopics) !== "not_started") && (
+      {!goal && stats.total_answered > 0 && topics.every(tp => isTopicCompleted(tp.id, completedTopics)) && (
         <div style={{
           background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))",
           border: "1px solid rgba(16,185,129,0.2)",

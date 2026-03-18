@@ -37,14 +37,14 @@ export const ACHIEVEMENTS = [
     icon: "⭐",
     name: "כל הנושאים ברמה קלה",
     nameEn: "All topics on easy",
-    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_easy")).length >= 6,
+    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_easy")).length >= AVAILABLE_TOPIC_COUNT,
   },
   {
     id: "master",
     icon: "🏆",
     name: "מאסטר K8s",
     nameEn: "K8s Master",
-    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_hard")).length >= 6,
+    condition: (s, c) => Object.keys(c).filter((k) => k.endsWith("_hard")).length >= AVAILABLE_TOPIC_COUNT,
   },
 ];
 
@@ -111,3 +111,6 @@ export const TOPIC_META = [
     isComingSoon: true,
   },
 ];
+
+/** Number of available (non-comingSoon) topics. Used by achievements. */
+export const AVAILABLE_TOPIC_COUNT = TOPIC_META.filter(t => !t.isComingSoon).length;

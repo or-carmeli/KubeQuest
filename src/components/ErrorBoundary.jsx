@@ -34,7 +34,7 @@ export default class ErrorBoundary extends Component {
 
   handleClearAndReload = async () => {
     await clearAppData();
-    setTimeout(() => window.location.reload(), 3000);
+    // clearAppData() calls window.location.reload() at the end
   };
 
   render() {

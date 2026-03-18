@@ -8,6 +8,10 @@ import RoadmapView from "./components/RoadmapView";
 import StatsView from "./components/StatsView";
 import { ACHIEVEMENTS } from "./topicMeta";
 import { TOPICS } from "./content/topics";
+/** Topics available for progress, quizzes, and stats (excludes comingSoon). */
+const AVAILABLE_TOPICS = TOPICS.filter(t => !t.isComingSoon);
+/** IDs of comingSoon topics — used to filter stale localStorage entries. */
+const COMING_SOON_IDS = new Set(TOPICS.filter(t => t.isComingSoon).map(t => t.id));
 import { DAILY_QUESTIONS } from "./content/dailyQuestions";
 import { INCIDENTS } from "./content/incidents";
 import { CHEATSHEET } from "./content/cheatsheet";
@@ -1093,7 +1097,7 @@ export default function K8sQuestApp() {
   const [lang, setLangRaw]                 = useState(() => safeGetItem("lang_v1", "he"));
   const setLang = (l) => { setLangRaw(l); try { localStorage.setItem("lang_v1", l); } catch {} };
   const [gender, setGender]               = useState(() => safeGetItem("gender_v1", "m"));
-  const handleSetGender = (g) => { setGender(g); localStorage.setItem("gender_v1", g); };
+  const handleSetGender = (g) => { setGender(g); try { localStorage.setItem("gender_v1", g); } catch {} };
   const t = (key) => {
     if (lang === "he" && gender === "m" && TRANSLATIONS.he[key + "_m"]) return TRANSLATIONS.he[key + "_m"];
     return TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS.he[key] ?? key;
@@ -1319,9 +1323,80 @@ export default function K8sQuestApp() {
   };
 
   const isFreeMode = (id) => id === "mixed" || id === "daily" || id === "bookmarks";
+
+  // Remove orphaned inProgress entries from completedTopics that have no matching saved quiz.
+  // These occur when the user exits mid-quiz before completion persists the final result.
+  // On error: returns original input unchanged rather than crashing the boot sequence.
+  const cleanOrphanedInProgress = (ct) => {
+    try {
+      if (!ct || typeof ct !== "object") return ct || {};
+      const saved = loadQuizState();
+      const activeKey = saved ? `${saved.topicId}_${saved.level}` : null;
+      let cleaned = false;
+      const result = { ...ct };
+      Object.keys(result).forEach(k => {
+        if (result[k]?.inProgress && k !== activeKey) {
+          delete result[k];
+          cleaned = true;
+        }
+      });
+      return cleaned ? result : ct;
+    } catch (err) {
+      console.error("[KubeQuest] cleanOrphanedInProgress failed, returning input unchanged:", err.message);
+      return ct || {};
+    }
+  };
+
   const getGameMode = (topic, level) =>
     topic?.id === "mixed" ? "mixed" : topic?.id === "daily" ? "daily"
     : topic?.id === "bookmarks" ? "bookmarks" : isInterviewMode ? "interview" : level || "unknown";
+
+  // Lightweight integrity check: verify stats don't contradict completedTopics/topicStats.
+  // Returns a corrected stats object, or the original if no issues found.
+  // On severe corruption (NaN, missing fields, thrown errors): returns safe defaults rather
+  // than crashing. This is the last line of defense before state hits the UI.
+  const EMPTY_STATS = { total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 };
+  const checkStatsIntegrity = (s, ct, ts) => {
+    try {
+      if (!s || typeof s !== "object") return { ...EMPTY_STATS };
+      const fixes = {};
+      // Ensure all numeric fields exist and are finite
+      for (const key of Object.keys(EMPTY_STATS)) {
+        if (typeof s[key] !== "number" || !Number.isFinite(s[key])) {
+          console.warn("[KubeQuest:integrity] non-numeric", key, "=", s[key], "→ 0");
+          fixes[key] = 0;
+        } else if (s[key] < 0) {
+          console.warn("[KubeQuest:integrity] negative", key, "=", s[key], "→ 0");
+          fixes[key] = 0;
+        }
+      }
+      const merged = { ...s, ...fixes };
+      // total_correct can't exceed total_answered
+      if (merged.total_correct > merged.total_answered) {
+        console.warn("[KubeQuest:integrity] total_correct > total_answered, clamping");
+        fixes.total_correct = merged.total_answered;
+      }
+      // best_score must match completedTopics - recompute if it doesn't
+      if (ct && Object.keys(ct).length > 0) {
+        const expected = computeScore(ct);
+        if (merged.best_score !== expected) {
+          console.warn("[KubeQuest:integrity] best_score mismatch:", merged.best_score, "→", expected);
+          fixes.best_score = expected;
+        }
+      }
+      // topicStats total should not exceed stats total (log-only, no auto-fix - approximate)
+      if (ts && Object.keys(ts).length > 0) {
+        const tsTotal = Object.values(ts).reduce((sum, v) => sum + (v.answered || 0), 0);
+        if (tsTotal > merged.total_answered + 20) {
+          console.warn("[KubeQuest:integrity] topicStats total", tsTotal, "exceeds stats.total_answered", merged.total_answered);
+        }
+      }
+      return Object.keys(fixes).length > 0 ? { ...s, ...fixes } : s;
+    } catch (err) {
+      console.error("[KubeQuest:integrity] check failed, returning safe defaults:", err.message);
+      return { ...EMPTY_STATS };
+    }
+  };
 
   // Weighted progress % for a single topic - matches Roadmap's stageProgress logic.
   const computeTopicProgress = (topicId) => {
@@ -1344,7 +1419,7 @@ export default function K8sQuestApp() {
     Object.entries(completed).reduce((sum, [key, res]) => {
       const parts = key.split("_");
       const topicId = parts.slice(0, -1).join("_");
-      if (isFreeMode(topicId)) return sum;               // BUG-E fix: skip mixed/daily
+      if (isFreeMode(topicId) || COMING_SOON_IDS.has(topicId)) return sum;
       const lvl = parts[parts.length - 1];
       return sum + ((res.correct ?? 0) * (LEVEL_CONFIG[lvl]?.points ?? 0));
     }, 0);
@@ -1456,10 +1531,10 @@ export default function K8sQuestApp() {
   // Restore progress from local cache immediately on mount (before auth/Supabase resolves)
   useEffect(() => {
     const cached = safeGetJSON("k8s_progress_v2");
-    if (!cached) return;
+    if (!cached || !cached.userId) return;
     console.info("[KubeQuest] Restoring progress from local cache");
     if (cached?.completedTopics && typeof cached.completedTopics === "object" && Object.keys(cached.completedTopics).length > 0) {
-      setCompletedTopics(cached.completedTopics);
+      setCompletedTopics(cleanOrphanedInProgress(cached.completedTopics));
     }
     if (cached?.stats && typeof cached.stats === "object") {
       const s = cached.stats;
@@ -1656,6 +1731,19 @@ export default function K8sQuestApp() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [selectedTopic]);
 
+  // Cross-tab reset detection: when another tab resets progress, this tab reloads
+  // to prevent stale in-memory state from being written back to localStorage/server.
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "kq_reset_epoch" && e.newValue) {
+        console.warn("[KubeQuest] Reset detected in another tab - reloading");
+        window.location.reload();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   useEffect(() => {
     if (!achievementsLoaded.current) return;
     const newOnes = ACHIEVEMENTS.filter(
@@ -1676,18 +1764,20 @@ export default function K8sQuestApp() {
     if (guestData) {
       console.info("[KubeQuest] Restoring guest progress from localStorage");
       const { stats: s, completedTopics: c, unlockedAchievements: u } = guestData;
-      if (c) setCompletedTopics(c);
+      const cleanC = c ? cleanOrphanedInProgress(c) : {};
+      const checkedS = s ? checkStatsIntegrity(s, cleanC, safeGetJSON("topicStats_v1", {})) : {};
+      if (c) setCompletedTopics(cleanC);
       if (s) {
-        setStats(s);
-        if (initialAccuracyRef.current === null && s.total_answered > 0) {
-          initialAccuracyRef.current = Math.round(s.total_correct / s.total_answered * 100);
+        setStats(checkedS);
+        if (initialAccuracyRef.current === null && checkedS.total_answered > 0) {
+          initialAccuracyRef.current = Math.round(checkedS.total_correct / checkedS.total_answered * 100);
         }
       }
-      // Backfill achievements that should be unlocked based on stored stats
+      // Backfill achievements that should be unlocked based on corrected stats
       const savedU = u || [];
       const backfilledU = [
         ...savedU,
-        ...ACHIEVEMENTS.filter(a => !savedU.includes(a.id) && a.condition(s || {}, c || {})).map(a => a.id),
+        ...ACHIEVEMENTS.filter(a => !savedU.includes(a.id) && a.condition(checkedS, cleanC)).map(a => a.id),
       ];
       setUnlockedAchievements(backfilledU);
     }
@@ -1707,12 +1797,14 @@ export default function K8sQuestApp() {
     } catch {}
   }, [stats, completedTopics, unlockedAchievements]);
 
-  // Universal progress cache: persist for ALL users (guest + auth) as local safety net
+  // Universal progress cache: persist for ALL users (guest + auth) as local safety net.
+  // savedAt lets reconciliation compare freshness against server updated_at.
   useEffect(() => {
     if (!user) return;
     try {
       localStorage.setItem("k8s_progress_v2", JSON.stringify({
         userId: user.id, stats, completedTopics, achievements: unlockedAchievements,
+        savedAt: new Date().toISOString(),
       }));
     } catch {}
   }, [user, stats, completedTopics, unlockedAchievements]);
@@ -1761,6 +1853,9 @@ export default function K8sQuestApp() {
   useEffect(() => {
     if (screen !== "topic" || topicScreen !== "quiz") return;
     if (!selectedTopic || !selectedLevel || !quizRunIdRef.current) return;
+    if (!user) return; // logout in progress — don't persist orphaned state
+    // Don't re-save after the quiz is fully answered (prevents zombie save after clearQuizState in nextQuestion)
+    if (quizHistory.length >= currentQuestions.length && currentQuestions.length > 0) return;
     const isFree = isFreeMode(selectedTopic.id);
     const isRetry = isRetryRef.current;
     saveQuizState({
@@ -1802,11 +1897,12 @@ export default function K8sQuestApp() {
         maxStreak:      stats.max_streak,
       },
     });
-  }, [screen, topicScreen, questionIndex, submitted, selectedAnswer, quizHistory]);
+  }, [screen, topicScreen, questionIndex, submitted, selectedAnswer, quizHistory, answerResult]);
 
   // Persist in-progress incident state on screen entry and step changes
   useEffect(() => {
     if (screen !== "incident" || !selectedIncident) return;
+    if (!user) return; // logout in progress — don't persist orphaned state
     saveIncidentProgress(
       selectedIncident, incidentStepIndex, incidentScore,
       incidentMistakes, incidentElapsed, incidentHistory
@@ -1881,7 +1977,8 @@ export default function K8sQuestApp() {
     if (screen === "incident" && !selectedIncident) {
       try {
         const saved = safeGetJSON(INCIDENT_SAVE_KEY);
-        if (saved?.incidentId) {
+        const currentUserId = user?.id || "guest";
+        if (saved?.incidentId && (!saved.userId || saved.userId === currentUserId)) {
           const incident = INCIDENTS.find(i => i.id === saved.incidentId);
           if (incident) {
             setSelectedIncident(incident);
@@ -1908,9 +2005,10 @@ export default function K8sQuestApp() {
   // Check for a saved in-progress incident whenever we land on home or incident list
   useEffect(() => {
     if (screen !== "home" && screen !== "incidentList") return;
+    const currentUserId = user?.id || "guest";
     try {
       const saved = safeGetJSON(INCIDENT_SAVE_KEY);
-      if (saved?.incidentId) {
+      if (saved?.incidentId && (!saved.userId || saved.userId === currentUserId)) {
         const incident = INCIDENTS.find(i => i.id === saved.incidentId);
         if (incident) { setIncidentResume({ ...saved, incident }); return; }
       }
@@ -1965,7 +2063,7 @@ export default function K8sQuestApp() {
           mergedCompleted[key] = val;
       });
 
-      const mergedStats = {
+      let mergedStats = {
         total_answered: (base.total_answered || 0) + (gs.total_answered || 0),
         total_correct:  (base.total_correct  || 0) + (gs.total_correct  || 0),
         total_score:    (base.total_score    || 0) + (gs.total_score    || 0),
@@ -1982,11 +2080,19 @@ export default function K8sQuestApp() {
         ...ACHIEVEMENTS.filter(a => !savedAch.includes(a.id) && a.condition(mergedStats, mergedCompleted)).map(a => a.id),
       ];
 
+      // Clean orphaned mid-quiz entries before applying state
+      const cleanedCompleted = cleanOrphanedInProgress(mergedCompleted);
+      if (cleanedCompleted !== mergedCompleted) mergedStats = { ...mergedStats, best_score: computeScore(cleanedCompleted) };
+
+      // Integrity check: clamp impossible values and recompute derived fields
+      const serverTs = data?.topic_stats || safeGetJSON("topicStats_v1", {});
+      mergedStats = checkStatsIntegrity(mergedStats, cleanedCompleted, serverTs);
+
       setStats(mergedStats);
       if (initialAccuracyRef.current === null && mergedStats.total_answered > 0) {
         initialAccuracyRef.current = Math.round(mergedStats.total_correct / mergedStats.total_answered * 100);
       }
-      setCompletedTopics(mergedCompleted);
+      setCompletedTopics(cleanedCompleted);
       setUnlockedAchievements(mergedAch);
 
       if (data) {
@@ -1994,6 +2100,43 @@ export default function K8sQuestApp() {
         if (data.topic_stats && Object.keys(data.topic_stats).length > 0) {
           setTopicStats(data.topic_stats);
           try { localStorage.setItem("topicStats_v1", JSON.stringify(data.topic_stats)); } catch {}
+        }
+
+        // Reconcile: if localStorage cache has completedTopics entries the server is missing
+        // (e.g. saveUserData failed during a previous session), merge them back and re-save.
+        // Safety: only reconcile if the local cache is newer than the server's last write.
+        // This prevents resurrecting data that was deliberately deleted on another device.
+        // Wrapped in try/catch: if anything throws, server state (already applied above) stands.
+        try {
+          const cached = safeGetJSON("k8s_progress_v2");
+          if (cached && cached.userId === userId && cached.completedTopics) {
+            const cacheTime = cached.savedAt ? new Date(cached.savedAt).getTime() : 0;
+            const serverTime = data.updated_at ? new Date(data.updated_at).getTime() : 0;
+            if (cacheTime > serverTime) {
+              const serverKeys = new Set(Object.keys(data.completed_topics || {}));
+              const localExtra = Object.entries(cached.completedTopics).filter(
+                ([k, v]) => !serverKeys.has(k) && !isFreeMode(k.split("_")[0]) && !v.inProgress
+              );
+              if (localExtra.length > 0) {
+                console.info("[KubeQuest:boot] reconciling", localExtra.length, "cached entries (cache:", cached.savedAt, "server:", data.updated_at, ")");
+                const reconciled = { ...cleanedCompleted };
+                localExtra.forEach(([k, v]) => {
+                  if (!reconciled[k] || v.correct > reconciled[k].correct) reconciled[k] = v;
+                });
+                const reconciledStats = { ...mergedStats, best_score: computeScore(reconciled) };
+                setCompletedTopics(reconciled);
+                setStats(reconciledStats);
+                saveUserData(reconciledStats, reconciled, mergedAch).catch(e =>
+                  console.error("[KubeQuest:boot] reconciliation save failed:", e.message)
+                );
+              }
+            } else {
+              console.info("[KubeQuest:boot] skipping reconciliation - server is newer (cache:", cached.savedAt, "server:", data.updated_at, ")");
+            }
+          }
+        } catch (reconErr) {
+          console.error("[KubeQuest:boot] reconciliation error - falling back to server state:", reconErr.message);
+          captureError(reconErr, { flow: "reconciliation", screen, isGuest });
         }
       } else {
         // BUG-B fix: use INSERT (not upsert) for new accounts to guarantee one row per user
@@ -2079,12 +2222,14 @@ export default function K8sQuestApp() {
   // total_score - it is managed exclusively by the answer-check RPCs
   // (server-authoritative scoring). best_score is recomputed by the caller
   // via computeScore() and passed through.
-  const saveUserData = async (ns, nc, na) => {
+  const saveUserData = async (ns, nc, na, ts) => {
     if (!user || isGuest || !supabase) return;
     setSaveError("");
-    // BUG-E fix: strip free-mode entries - they are session-only and must not persist
+    // BUG-E fix: strip free-mode entries - they are session-only and must not persist.
+    // Also strip inProgress entries - they are mid-quiz partial writes not yet finalized.
     const cleanNc = Object.fromEntries(
-      Object.entries(nc).filter(([k]) => !isFreeMode(k.split("_")[0]))
+      Object.entries(nc)
+        .filter(([k, v]) => !isFreeMode(k.split("_")[0]) && !v.inProgress)
     );
     try {
       await saveUserProgress(supabase, {
@@ -2096,11 +2241,11 @@ export default function K8sQuestApp() {
         currentStreak: ns.current_streak || 0,
         completedTopics: cleanNc,
         achievements: na,
-        topicStats: topicStats,
+        topicStats: ts ?? topicStats,
       });
     } catch (err) {
-      console.error("[KubeQuest] saveUserData failed:", err);
-      captureError(err, { flow: "saveUserData", screen, isGuest });
+      console.error("[KubeQuest] saveUserData failed:", err.message, { userId: user?.id, topics: Object.keys(cleanNc).length, code: err?.code, status: err?.status });
+      captureError(err, { flow: "saveUserData", screen, isGuest, topicCount: Object.keys(cleanNc).length });
       const errorKey = classifySaveError(err);
       const errorMsg = t(errorKey);
       setSaveError(errorMsg);
@@ -2262,6 +2407,16 @@ export default function K8sQuestApp() {
 
   const handleLogout = async () => {
     try { localStorage.removeItem("k8s_guest_session"); } catch {}
+    // Clear user-specific persistence to prevent cross-account leakage
+    clearQuizState();
+    try { localStorage.removeItem(INCIDENT_SAVE_KEY); } catch {}
+    try { localStorage.removeItem("k8s_progress_v2"); } catch {}
+    setResumeData(null);
+    setIncidentResume(null);
+    autoResumeAttempted.current = false;
+    // Force to home before clearing user — prevents quiz/incident persistence
+    // effects from re-saving with userId "guest" during the teardown render.
+    setScreen("home");
     if (isGuest) {
       setUser(null);
       setStats({ total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 });
@@ -2286,6 +2441,8 @@ export default function K8sQuestApp() {
 
   const handleResetProgress = async () => {
     if (!window.confirm(t("resetConfirm"))) return;
+    // Signal other tabs to reload (storage event fires cross-tab, not same-tab)
+    try { localStorage.setItem("kq_reset_epoch", String(Date.now())); } catch {}
     const emptyStats = { total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 };
     setStats(emptyStats);
     setCompletedTopics({});
@@ -2312,14 +2469,24 @@ export default function K8sQuestApp() {
 
   const handleResetTopic = async (topicId) => {
     if (!window.confirm(t("resetTopicConfirm"))) return;
+    // Signal other tabs to reload so they don't re-save stale data for this topic
+    try { localStorage.setItem("kq_reset_epoch", String(Date.now())); } catch {}
     const newCompleted = { ...completedTopics };
-    // Subtract previously-counted questions so resetting then replaying doesn't double-count
+    // Subtract previously-counted questions so resetting then replaying doesn't double-count.
+    // Prefer topicStats (tracks cumulative per-answer counts) over completedTopics (tracks
+    // best-attempt only). Fall back to completedTopics sum for accounts without topicStats.
+    const ts = topicStats[topicId];
     let removedAnswered = 0, removedCorrect = 0;
-    LEVEL_ORDER.forEach(lvl => {
-      const r = newCompleted[`${topicId}_${lvl}`];
-      if (r) { removedAnswered += r.total || 0; removedCorrect += r.correct || 0; }
-      delete newCompleted[`${topicId}_${lvl}`];
-    });
+    if (ts && ts.answered > 0) {
+      removedAnswered = ts.answered;
+      removedCorrect  = ts.correct;
+    } else {
+      LEVEL_ORDER.forEach(lvl => {
+        const r = newCompleted[`${topicId}_${lvl}`];
+        if (r) { removedAnswered += r.total || 0; removedCorrect += r.correct || 0; }
+      });
+    }
+    LEVEL_ORDER.forEach(lvl => { delete newCompleted[`${topicId}_${lvl}`]; });
     const newStats = {
       ...stats,
       // total_score is accumulated and permanent - never deducted on reset
@@ -2337,7 +2504,7 @@ export default function K8sQuestApp() {
     setStats(newStats);
     setTopicStats(newTopicStats);
     if (!isGuest && user) {
-      await saveUserData(newStats, newCompleted, unlockedAchievements);
+      await saveUserData(newStats, newCompleted, unlockedAchievements, newTopicStats);
     }
   };
 
@@ -2470,6 +2637,8 @@ export default function K8sQuestApp() {
   const handleResumeDismiss = () => {
     setShowResumeModal(false);
     pendingQuizStartRef.current = null;
+    // Set session gate so the modal isn't re-shown on the next quiz start attempt
+    try { sessionStorage.setItem(RESUME_SESSION_KEY, "true"); } catch {}
   };
 
   const updateA11y = (key, val) => setA11y(prev => {
@@ -2580,8 +2749,10 @@ export default function K8sQuestApp() {
           : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId);
         try {
           rpcResult = await callRpc();
-        } catch {
-          try { rpcResult = await callRpc(); } catch { /* give up */ }
+        } catch (e1) {
+          try { rpcResult = await callRpc(); } catch (e2) {
+            console.error("[KubeQuest] answer RPC failed after retry:", e2.message, { topic: selectedTopic?.id, questionIndex });
+          }
         }
       }
       if (rpcResult) {
@@ -2642,11 +2813,11 @@ export default function K8sQuestApp() {
       const key = `${selectedTopic.id}_${selectedLevel}`;
       setCompletedTopics(prev => {
         const existing = prev[key] || { correct: 0, total: 0, wrongIndices: [] };
-        return { ...prev, [key]: { ...existing, wrongIndices: [...(existing.wrongIndices || []), questionIndex] } };
+        return { ...prev, [key]: { ...existing, inProgress: true, wrongIndices: [...(existing.wrongIndices || []), questionIndex] } };
       });
     }
     // Single atomic setStats call - prevents React batching from clobbering streak
-    // total_score accumulates on every correct answer (all modes). It never snaps back.
+    // total_score accumulates on every correct answer (non-free modes only).
     // best_score (canonical) is computed separately at quiz completion.
     setStats(prev => {
       if (isRetryRef.current) return prev;
@@ -2660,7 +2831,7 @@ export default function K8sQuestApp() {
         max_streak:     isFree ? prev.max_streak     : Math.max(prev.max_streak, streak),
         total_answered: isFree ? prev.total_answered : prev.total_answered + 1,
         total_correct:  isFree ? prev.total_correct  : (correct ? prev.total_correct + 1 : prev.total_correct),
-        total_score:    prev.total_score + points,
+        total_score:    prev.total_score + (isFree ? 0 : points),
       };
     });
     if (!isRetryRef.current && !isFree) {
@@ -2704,7 +2875,17 @@ export default function K8sQuestApp() {
           const key = `${selectedTopic.id}_${selectedLevel}`;
           const prevResult = completedTopics[key];
           if (prevResult) {
-            const newCompleted = { ...completedTopics, [key]: { ...prevResult, correct: prevResult.total, retryComplete: true, wrongIndices: [], wrongQuestions: [] } };
+            const { inProgress: _ip, ...cleanPrev } = prevResult;
+            const newCompleted = { ...completedTopics, [key]: { ...cleanPrev, correct: cleanPrev.total, retryComplete: true, wrongIndices: [], wrongQuestions: [] } };
+            // Atomic cache write before React state update
+            if (user) {
+              try {
+                localStorage.setItem("k8s_progress_v2", JSON.stringify({
+                  userId: user.id, stats, completedTopics: newCompleted,
+                  achievements: unlockedAchievements, savedAt: new Date().toISOString(),
+                }));
+              } catch {}
+            }
             setCompletedTopics(newCompleted);
             const retryAch = [
               ...unlockedAchievements,
@@ -2745,6 +2926,17 @@ export default function K8sQuestApp() {
       submittingRef.current = false;
       lastSessionScoreRef.current = sessionScore;
       setSessionScore(0);
+      // Atomic cache write: persist stats+completedTopics together BEFORE the React
+      // state updates, so a crash between setCompletedTopics and setStats can't leave
+      // the localStorage cache with mismatched data.
+      if (user) {
+        try {
+          localStorage.setItem("k8s_progress_v2", JSON.stringify({
+            userId: user.id, stats: newStats, completedTopics: newCompleted,
+            achievements: newAch, savedAt: new Date().toISOString(),
+          }));
+        } catch {}
+      }
       setCompletedTopics(newCompleted); setStats(newStats); setUnlockedAchievements(newAch);
       if (!isFreeMode(selectedTopic.id)) {
         try { await saveUserData(newStats, newCompleted, newAch); } catch (e) { console.error("[FINISH_DEBUG] saveUserData error:", e.message); }
@@ -2847,7 +3039,7 @@ export default function K8sQuestApp() {
       } catch (err) {
         captureError(err, { flow: "fetchMixedQuestions", screen, isGuest });
         const all = [];
-        TOPICS.forEach(topic => {
+        AVAILABLE_TOPICS.forEach(topic => {
           LEVEL_ORDER.forEach(level => {
             const qs = getLocalizedField(topic.levels[level], "questions", lang);
             qs.forEach(q => all.push(q));
@@ -2862,7 +3054,7 @@ export default function K8sQuestApp() {
       setLoadingQuestions(false);
     } else {
       const all = [];
-      TOPICS.forEach(topic => {
+      AVAILABLE_TOPICS.forEach(topic => {
         LEVEL_ORDER.forEach(level => {
           const qs = getLocalizedField(topic.levels[level], "questions", lang);
           qs.forEach(q => all.push(q));
@@ -3016,6 +3208,7 @@ export default function K8sQuestApp() {
     try {
       localStorage.setItem(INCIDENT_SAVE_KEY, JSON.stringify({
         incidentId: incident.id, stepIndex, score, mistakes, elapsed, history,
+        userId: user?.id || "guest",
       }));
     } catch {}
   };
@@ -3127,6 +3320,7 @@ export default function K8sQuestApp() {
   const resumeIncident = () => {
     if (!incidentResume) return;
     const { incident, stepIndex, score, mistakes, elapsed, history } = incidentResume;
+    setIncidentSteps(null); // clear stale steps so the fetch effect re-fetches for this incident
     setSelectedIncident(incident);
     setIncidentStepIndex(stepIndex);
     setIncidentScore(score);
@@ -3143,7 +3337,8 @@ export default function K8sQuestApp() {
 
   const buildIncidentShareMsg = () => {
     if (!selectedIncident) return "";
-    const maxScore = selectedIncident.steps.length * 10;
+    const totalSteps = incidentSteps?.length || selectedIncident.steps.length;
+    const maxScore = totalSteps * 10;
     const time = formatIncidentTime(incidentElapsed);
     return `KubeQuest Incident\n${selectedIncident.title}\nScore: ${incidentScore}/${maxScore} · Time: ${time}\n\nhttps://kubequest.online`;
   };
@@ -3189,43 +3384,57 @@ export default function K8sQuestApp() {
     submittingRef.current = true;
     setSubmitted(true);
 
-    // Fetch correct answer from server (online) or use local field (offline)
+    // Capture values needed by the async flow (avoids stale closure reads)
+    const capturedIsRetry = isRetryRef.current;
+    const capturedIsFree = isFreeMode(selectedTopic?.id);
+    const capturedTopicId = selectedTopic?.id;
+
+    // Fetch correct answer from server (online) or use local field (offline).
+    // Stats are updated atomically with quizHistory inside the async flow
+    // so they cannot get out of sync if the user navigates away mid-RPC.
+    let cancelled = false;
     (async () => {
       let result;
-      if (supabase && q.id) {
-        try {
-          const isDaily = selectedTopic?.id === "daily";
-          const rpcResult = isDaily
-            ? await checkDailyAnswer(supabase, q.id, 0)
-            : await checkQuizAnswer(supabase, q.id, 0);
-          const correctIndex = q._optionMap ? q._optionMap.indexOf(rpcResult.correct_answer) : rpcResult.correct_answer;
-          result = { correct: false, correctIndex, explanation: rpcResult.explanation };
-        } catch {
+      try {
+        if (supabase && q.id) {
+          try {
+            const isDaily = capturedTopicId === "daily";
+            const rpcResult = isDaily
+              ? await checkDailyAnswer(supabase, q.id, 0)
+              : await checkQuizAnswer(supabase, q.id, 0);
+            const correctIndex = q._optionMap ? q._optionMap.indexOf(rpcResult.correct_answer) : rpcResult.correct_answer;
+            result = { correct: false, correctIndex, explanation: rpcResult.explanation };
+          } catch {
+            result = { correct: false, correctIndex: q.answer ?? 0, explanation: q.explanation || "" };
+          }
+        } else {
           result = { correct: false, correctIndex: q.answer ?? 0, explanation: q.explanation || "" };
         }
-      } else {
-        result = { correct: false, correctIndex: q.answer ?? 0, explanation: q.explanation || "" };
+        if (cancelled) return;
+        setAnswerResult(result);
+        setShowExplanation(true);
+        setQuizHistory(prev => [...prev, { q: q.q, options: q.options, answer: result.correctIndex, chosen: -1, explanation: result.explanation }]);
+        // Stats update is inside the async flow so it stays atomic with quizHistory.
+        // If cancelled (user navigated away), neither history nor stats are touched.
+        if (!capturedIsRetry) {
+          setStats(prev => ({
+            ...prev,
+            total_answered: capturedIsFree ? prev.total_answered : prev.total_answered + 1,
+            current_streak: capturedIsFree ? prev.current_streak : 0,
+          }));
+          if (!capturedIsFree && capturedTopicId) {
+            setTopicStats(prev => {
+              const curr = prev[capturedTopicId] || { answered: 0, correct: 0 };
+              return { ...prev, [capturedTopicId]: { answered: curr.answered + 1, correct: curr.correct } };
+            });
+          }
+        }
+      } finally {
+        submittingRef.current = false;
       }
-      setAnswerResult(result);
-      setShowExplanation(true);
-      setQuizHistory(prev => [...prev, { q: q.q, options: q.options, answer: result.correctIndex, chosen: -1, explanation: result.explanation }]);
     })();
 
-    if (!isRetryRef.current) {
-      const isFree = isFreeMode(selectedTopic?.id);
-      setStats(prev => ({
-        ...prev,
-        total_answered: isFree ? prev.total_answered : prev.total_answered + 1,
-        // Free-mode timer expiry must NOT reset persistent streak
-        current_streak: isFree ? prev.current_streak : 0,
-      }));
-      if (!isFree) {
-        setTopicStats(prev => {
-          const curr = prev[selectedTopic.id] || { answered: 0, correct: 0 };
-          return { ...prev, [selectedTopic.id]: { answered: curr.answered + 1, correct: curr.correct } };
-        });
-      }
-    }
+    return () => { cancelled = true; };
   }, [timeLeft]);
 
   // Fetch online incident steps after auto-resume (incidentSteps is null on page load)
@@ -4359,11 +4568,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
           {/* ── 1. HERO SECTION - Main action card ── */}
           {(()=>{
-            const completedCount = TOPICS.reduce((sum, tp) => sum + LEVEL_ORDER.filter(lvl => completedTopics[`${tp.id}_${lvl}`]).length, 0);
-            const totalLevels = TOPICS.length * LEVEL_ORDER.length;
+            const completedCount = AVAILABLE_TOPICS.reduce((sum, tp) => sum + LEVEL_ORDER.filter(lvl => completedTopics[`${tp.id}_${lvl}`]).length, 0);
+            const totalLevels = AVAILABLE_TOPICS.length * LEVEL_ORDER.length;
             const overallPct = totalLevels > 0 ? Math.round((completedCount / totalLevels) * 100) : 0;
-            const nextTopic = TOPICS.find(tp => computeTopicProgress(tp.id) < 100);
-            const currentStageIdx = nextTopic ? TOPICS.indexOf(nextTopic) + 1 : TOPICS.length;
+            const nextTopic = AVAILABLE_TOPICS.find(tp => computeTopicProgress(tp.id) < 100);
+            const currentStageIdx = nextTopic ? AVAILABLE_TOPICS.indexOf(nextTopic) + 1 : AVAILABLE_TOPICS.length;
             const allDone = !nextTopic;
             const nextLevel = nextTopic ? LEVEL_ORDER.find(lvl => !completedTopics[`${nextTopic.id}_${lvl}`]) || "easy" : "easy";
             return (
@@ -4372,7 +4581,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <div style={{position:"absolute",top:"-50%",right:"-20%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(0,212,255,0.06),transparent 70%)",pointerEvents:"none"}}/>
               <div style={{position:"relative"}}>
                 <div style={{fontSize:13,color:"var(--text-muted)",fontWeight:700,letterSpacing:0.5,marginBottom:8,direction:dir}}>
-                  {allDone ? t("heroAllDone") : `${t("heroStage")} ${currentStageIdx} ${t("heroStageOf")} ${TOPICS.length}`}
+                  {allDone ? t("heroAllDone") : `${t("heroStage")} ${currentStageIdx} ${t("heroStageOf")} ${AVAILABLE_TOPICS.length}`}
                 </div>
                 {nextTopic && <div style={{fontSize:17,fontWeight:800,color:"var(--text-primary)",marginBottom:6,direction:dir}}>{nextTopic.icon} {nextTopic.name}</div>}
                 {/* Progress bar */}
@@ -4506,7 +4715,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
             <span dir="ltr" style={{color:"#EF4444",fontSize:16,flexShrink:0,opacity:0.5,unicodeBidi:"isolate"}}>{dir==="rtl"?"\u2039":"\u203A"}</span>
           </button>
-          {(()=>{const nextTopicId=TOPICS.find(t=>computeTopicProgress(t.id)<100)?.id;return(
+          {(()=>{const nextTopicId=AVAILABLE_TOPICS.find(t=>computeTopicProgress(t.id)<100)?.id;return(
           <div className="topic-list" style={{display:"flex",flexDirection:"column",gap:12}}>
             {TOPICS.filter(t=>!t.devOnly||!import.meta.env.PROD).map(topic=>{
               const comingSoon=topic.isComingSoon&&import.meta.env.PROD;
@@ -4575,7 +4784,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {searchQuery.trim().length>=2&&(()=>{
             const q=searchQuery.toLowerCase();
             const results=[];
-            TOPICS.forEach(topic=>(['easy','medium','hard']).forEach(lvl=>{
+            AVAILABLE_TOPICS.forEach(topic=>(['easy','medium','hard']).forEach(lvl=>{
               const qs=getLocalizedField(topic.levels?.[lvl], "questions", lang);
               (qs||[]).forEach(question=>{
                 if(question.q.toLowerCase().includes(q)) results.push({topic,level:lvl,question});
@@ -4606,7 +4815,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* ── MISTAKES ── */}
       {screen==="mistakes"&&(()=>{
         const wrongItems=[];
-        TOPICS.forEach(topic=>(['easy','medium','hard']).forEach(lvl=>{
+        AVAILABLE_TOPICS.forEach(topic=>(['easy','medium','hard']).forEach(lvl=>{
           const r=completedTopics[`${topic.id}_${lvl}`];
           if(!r) return;
           if(r.wrongIndices&&r.wrongIndices.length>0){
@@ -4618,7 +4827,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             wrongItems.push({topic,level:lvl,legacy:true,correct:r.correct,total:r.total});
           }
         }));
-        const anyTopicCompleted=TOPICS.some(topic=>(['easy','medium','hard']).some(lvl=>completedTopics[`${topic.id}_${lvl}`]));
+        const anyTopicCompleted=AVAILABLE_TOPICS.some(topic=>(['easy','medium','hard']).some(lvl=>completedTopics[`${topic.id}_${lvl}`]));
         return (
           <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
             <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
@@ -4914,7 +5123,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="stats"&&(
         <StatsView
           stats={stats} completedTopics={completedTopics} topicStats={topicStats}
-          topics={TOPICS} achievements={ACHIEVEMENTS} unlockedAchievements={unlockedAchievements}
+          topics={AVAILABLE_TOPICS} achievements={ACHIEVEMENTS} unlockedAchievements={unlockedAchievements}
           completedIncidentIds={completedIncidentIds} incidents={INCIDENTS}
           dailyStreak={dailyStreak} levelOrder={LEVEL_ORDER} levelConfig={LEVEL_CONFIG}
           userRank={userRank} isGuest={isGuest} getRankTier={getRankTier}
@@ -4995,7 +5204,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </span>}
                   {/* total_score shown live because it increments on every correct answer (immediate feedback).
                        sessionScore (+X) tracks this-quiz-only earnings to distinguish from the cumulative total.
-                       In free mode, points go to total_score in-memory but are NOT persisted to Supabase. */}
+                       In free mode, total_score is NOT incremented - only sessionScore shows session earnings. */}
                   {!isInHistoryMode&&<span aria-label={`${stats.total_score||0} ${t("pts")}${sessionScore>0?`, +${sessionScore} ${t("completionAdded")}`:""}`} style={{color:"#A855F7",fontSize:12,fontWeight:700,direction:"ltr"}}>
                     <span aria-hidden="true">⭐ {stats.total_score||0} {t("pts")}</span>
                     {sessionScore>0&&<span style={{color:"#00D4FF",fontSize:10,fontWeight:600,marginLeft:4,opacity:0.8}}>(+{sessionScore})</span>}
@@ -5288,7 +5497,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const wrongQs = quizHistory.filter(h=>h.chosen!==h.answer);
         // Next topic: show after finishing any level of this topic
         const nextTopicIdx = selectedTopic.id!=="mixed"&&selectedTopic.id!=="daily"
-          ? TOPICS.findIndex(t=>t.id===selectedTopic.id)+1
+          ? AVAILABLE_TOPICS.findIndex(t=>t.id===selectedTopic.id)+1
           : -1;
         return(
           <div style={{maxWidth:480,margin:"0 auto",padding:"clamp(48px, 8vh, 80px) 14px 0",textAlign:"center",animation:"fadeIn 0.5s ease"}}>
@@ -5363,8 +5572,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {/* Next topic button - only shown when ALL levels of current topic are mastered */}
-              {nextTopicIdx>0&&nextTopicIdx<TOPICS.length&&effectivelyComplete&&LEVEL_ORDER.every(lvl=>{if(lvl===selectedLevel) return effectivelyComplete; const r=completedTopics[`${selectedTopic.id}_${lvl}`]; return r&&(r.correct===r.total||r.retryComplete);})&&(()=>{
-                const nt=TOPICS[nextTopicIdx];
+              {nextTopicIdx>0&&nextTopicIdx<AVAILABLE_TOPICS.length&&effectivelyComplete&&LEVEL_ORDER.every(lvl=>{if(lvl===selectedLevel) return effectivelyComplete; const r=completedTopics[`${selectedTopic.id}_${lvl}`]; return r&&(r.correct===r.total||r.retryComplete);})&&(()=>{
+                const nt=AVAILABLE_TOPICS[nextTopicIdx];
                 return<button onClick={()=>startTopic(nt,"easy")}
                   style={{padding:14,background:`linear-gradient(135deg,${nt.color}ee,${nt.color}88)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 20px ${nt.color}55`}}>
                   {lang==="en"?"Next Topic":"נושא הבא"}: {nt.icon} {nt.name}
