@@ -1456,7 +1456,7 @@ export default function K8sQuestApp() {
   // Restore progress from local cache immediately on mount (before auth/Supabase resolves)
   useEffect(() => {
     const cached = safeGetJSON("k8s_progress_v2");
-    if (!cached) return;
+    if (!cached || !cached.userId) return;
     console.info("[KubeQuest] Restoring progress from local cache");
     if (cached?.completedTopics && typeof cached.completedTopics === "object" && Object.keys(cached.completedTopics).length > 0) {
       setCompletedTopics(cached.completedTopics);
@@ -1762,6 +1762,8 @@ export default function K8sQuestApp() {
     if (screen !== "topic" || topicScreen !== "quiz") return;
     if (!selectedTopic || !selectedLevel || !quizRunIdRef.current) return;
     if (!user) return; // logout in progress — don't persist orphaned state
+    // Don't re-save after the quiz is fully answered (prevents zombie save after clearQuizState in nextQuestion)
+    if (quizHistory.length >= currentQuestions.length && currentQuestions.length > 0) return;
     const isFree = isFreeMode(selectedTopic.id);
     const isRetry = isRetryRef.current;
     saveQuizState({
@@ -1803,7 +1805,7 @@ export default function K8sQuestApp() {
         maxStreak:      stats.max_streak,
       },
     });
-  }, [screen, topicScreen, questionIndex, submitted, selectedAnswer, quizHistory]);
+  }, [screen, topicScreen, questionIndex, submitted, selectedAnswer, quizHistory, answerResult]);
 
   // Persist in-progress incident state on screen entry and step changes
   useEffect(() => {
@@ -1883,7 +1885,8 @@ export default function K8sQuestApp() {
     if (screen === "incident" && !selectedIncident) {
       try {
         const saved = safeGetJSON(INCIDENT_SAVE_KEY);
-        if (saved?.incidentId) {
+        const currentUserId = user?.id || "guest";
+        if (saved?.incidentId && (!saved.userId || saved.userId === currentUserId)) {
           const incident = INCIDENTS.find(i => i.id === saved.incidentId);
           if (incident) {
             setSelectedIncident(incident);
@@ -1910,9 +1913,10 @@ export default function K8sQuestApp() {
   // Check for a saved in-progress incident whenever we land on home or incident list
   useEffect(() => {
     if (screen !== "home" && screen !== "incidentList") return;
+    const currentUserId = user?.id || "guest";
     try {
       const saved = safeGetJSON(INCIDENT_SAVE_KEY);
-      if (saved?.incidentId) {
+      if (saved?.incidentId && (!saved.userId || saved.userId === currentUserId)) {
         const incident = INCIDENTS.find(i => i.id === saved.incidentId);
         if (incident) { setIncidentResume({ ...saved, incident }); return; }
       }
@@ -2270,6 +2274,7 @@ export default function K8sQuestApp() {
     try { localStorage.removeItem("k8s_progress_v2"); } catch {}
     setResumeData(null);
     setIncidentResume(null);
+    autoResumeAttempted.current = false;
     // Force to home before clearing user — prevents quiz/incident persistence
     // effects from re-saving with userId "guest" during the teardown render.
     setScreen("home");
@@ -2481,6 +2486,8 @@ export default function K8sQuestApp() {
   const handleResumeDismiss = () => {
     setShowResumeModal(false);
     pendingQuizStartRef.current = null;
+    // Set session gate so the modal isn't re-shown on the next quiz start attempt
+    try { sessionStorage.setItem(RESUME_SESSION_KEY, "true"); } catch {}
   };
 
   const updateA11y = (key, val) => setA11y(prev => {
@@ -3027,6 +3034,7 @@ export default function K8sQuestApp() {
     try {
       localStorage.setItem(INCIDENT_SAVE_KEY, JSON.stringify({
         incidentId: incident.id, stepIndex, score, mistakes, elapsed, history,
+        userId: user?.id || "guest",
       }));
     } catch {}
   };
@@ -3138,6 +3146,7 @@ export default function K8sQuestApp() {
   const resumeIncident = () => {
     if (!incidentResume) return;
     const { incident, stepIndex, score, mistakes, elapsed, history } = incidentResume;
+    setIncidentSteps(null); // clear stale steps so the fetch effect re-fetches for this incident
     setSelectedIncident(incident);
     setIncidentStepIndex(stepIndex);
     setIncidentScore(score);
