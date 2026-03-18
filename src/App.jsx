@@ -4104,7 +4104,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .roadmap-card-header{gap:6px!important}
 }
 @media(max-width:430px){
-.home-logo{width:46px!important;height:46px!important}
+.home-logo{width:20px!important;height:20px!important}
 .guest-banner{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
 .guest-banner-btn{width:100%!important;text-align:center!important}
 .action-card{padding:13px 14px!important}
@@ -4118,7 +4118,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .opt-btn{padding:9px 10px!important;font-size:13px!important;gap:7px!important;border-radius:9px!important;min-height:44px!important}
 }
 @media(max-width:390px){
-.home-logo{width:40px!important;height:40px!important}
+.home-logo{width:18px!important;height:18px!important}
 .home-screen{padding:10px 10px!important}
 .page-pad{padding:10px 12px!important}
 .topic-card-section{padding:11px 12px!important}
@@ -4133,7 +4133,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .roadmap-node-circle{width:24px!important;height:24px!important;font-size:10px!important}
 }
 @media(max-width:360px){
-.home-logo{width:34px!important;height:34px!important}
+.home-logo{width:16px!important;height:16px!important}
 .home-screen{padding:8px 8px!important}
 .page-pad{padding:8px 10px!important}
 .topic-card-section{padding:10px 10px!important}
