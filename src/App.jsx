@@ -2323,8 +2323,10 @@ export default function K8sQuestApp() {
         const msg = error.message.toLowerCase();
         if (msg.includes("invalid") || msg.includes("already registered") || msg.includes("already been registered"))
           setAuthError(t("emailAlreadySent"));
-        else
+        else {
           setAuthError(error.message);
+          captureError(error, { flow: "signup", extra: { error_code: error.code || error.status } });
+        }
       } else if (!data.user?.identities?.length) {
         // Supabase returns fake success (empty identities) when email already exists (confirmed)
         setAuthError(t("emailAlreadyExists"));
@@ -2350,6 +2352,7 @@ export default function K8sQuestApp() {
       const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password: passwordVal });
       if (error) {
         setAuthError(t("wrongCredentials"));
+        if (error.status >= 500) captureError(error, { flow: "login", extra: { error_code: error.code || error.status } });
       } else if (window.PasswordCredential) {
         try {
           const cred = new window.PasswordCredential({ id: emailVal, password: passwordVal });
@@ -2373,6 +2376,7 @@ export default function K8sQuestApp() {
         email: emailVal,
         options: { emailRedirectTo: window.location.origin },
       });
+      if (error) captureError(error, { flow: "resend_confirmation", extra: { error_code: error.code || error.status } });
       setAuthError(error ? t("resendError") : t("resendSuccess"));
     } catch (err) {
       console.error("[KubeQuest] resend error:", err);
@@ -2390,6 +2394,7 @@ export default function K8sQuestApp() {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: window.location.origin,
       });
+      if (error) captureError(error, { flow: "password_reset", extra: { error_code: error.code || error.status } });
       setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
     } catch (err) {
       console.error("[KubeQuest] resetPassword error:", err);
