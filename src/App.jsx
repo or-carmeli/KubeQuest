@@ -24,6 +24,8 @@ import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } 
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress } from "./api/quiz";
 import StatusView from "./components/StatusView";
 
+
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -3614,7 +3616,7 @@ export default function K8sQuestApp() {
       if (isNewSection) {
         // Section divider (not before first section)
         if (sectionIdx > 0) {
-          elements.push(<div key={`div-${i}`} style={{height:1,background:"rgba(255,255,255,0.06)",margin:"18px 0 16px"}}/>);
+          elements.push(<div key={`div-${i}`} style={{height:1,background:"rgba(255,255,255,0.06)",margin:"14px 0 12px"}}/>);
         }
         sectionIdx++;
         isNewSection = false;
@@ -3871,7 +3873,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (showPasswordReset) return (
     <div data-kq-rendered="password-reset" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}button,input{font-family:inherit}button:focus-visible,input:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}button,input{font-family:inherit}button:focus-visible,input:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         <div style={{textAlign:"center",marginBottom:34}}>
           <svg width="64" height="64" viewBox="0 0 100 100" style={{marginBottom:10,filter:"drop-shadow(0 0 18px rgba(0,212,255,0.45))"}} xmlns="http://www.w3.org/2000/svg">
@@ -3913,7 +3915,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
   if (!user && !isStatusDomain) return (
     <div data-kq-rendered="auth" style={{minHeight:"100vh",background:"var(--gradient-body-simple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Segoe UI, system-ui, sans-serif",direction:dir,padding:"20px"}}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.2)}70%{box-shadow:0 0 0 14px rgba(0,212,255,0)}}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF;outline-offset:2px;border-radius:4px}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px)}.menu-item{transition:background 0.2s,color 0.2s,padding-inline-start 0.2s}.menu-item:hover{background:rgba(0,212,255,0.07)!important;color:#00D4FF!important}.hero-card{transition:transform 0.2s,box-shadow 0.2s}.hero-card:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(0,212,255,0.12),0 4px 16px rgba(0,0,0,0.2)!important}.topic-card-section{transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}.topic-card-section:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.18)!important}`}</style>
       <div style={{width:"100%",maxWidth:400,animation:"fadeIn 0.4s ease"}}>
         {/* Language switcher + theme toggle */}
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",direction:"ltr",marginBottom:12,gap:8}}>
@@ -3953,14 +3955,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{flex:1,height:1,background:"var(--glass-10)"}}/>
         </div>
 
-        <div style={{background:"var(--glass-5)",border:"1px solid var(--glass-12)",borderRadius:14,padding:"18px 20px"}}>
-          <div style={{display:"flex",marginBottom:16,background:"var(--glass-4)",borderRadius:9,padding:3}}>
+        <div style={{background:theme==="light"?"#FFFFFF":"var(--glass-5)",border:theme==="light"?"1px solid #CBD5E1":"1px solid var(--glass-12)",borderRadius:14,padding:"18px 20px",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)":"none"}}>
+          <div style={{display:"flex",marginBottom:16,background:theme==="light"?"#F1F5F9":"var(--glass-4)",borderRadius:9,padding:3}}>
             {["login","signup"].map(s=>(
               <button key={s}
                 onClick={()=>{ setAuthScreen(s); setAuthError(""); }}
                 style={{flex:1,padding:"7px",border:"none",borderRadius:7,cursor:"pointer",fontSize:13,fontWeight:700,
-                  background:authScreen===s?"rgba(0,212,255,0.12)":"transparent",
-                  color:authScreen===s?"#00D4FF":"var(--text-dim)",transition:"all 0.2s"}}>
+                  background:authScreen===s?(theme==="light"?"#FFFFFF":"rgba(0,212,255,0.12)"):"transparent",
+                  color:authScreen===s?(theme==="light"?"#0369A1":"#00D4FF"):"var(--text-dim)",
+                  boxShadow:authScreen===s&&theme==="light"?"0 1px 3px rgba(0,0,0,0.08)":"none",
+                  transition:"all 0.2s"}}>
                 {s==="login"?t("loginTab"):t("signupTab")}
               </button>
             ))}
@@ -4002,7 +4006,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>}
           </div>}
           <button type="submit" disabled={authLoading}
-            style={{width:"100%",padding:"14px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",opacity:authLoading?0.7:1}}>
+            style={{width:"100%",padding:"14px",background:theme==="light"?"linear-gradient(135deg,#0EA5E9,#7C3AED)":"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",opacity:authLoading?0.7:1,boxShadow:theme==="light"?"0 2px 8px rgba(14,165,233,0.25)":"none",transition:"all 0.2s"}}>
             {authLoading?t("loading"):authScreen==="login"?t("loginBtn"):t("signupBtn")}
           </button>
           </form>
@@ -4115,9 +4119,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .stats-cell{padding:8px 4px!important}
 .hero-card{padding:16px 12px 12px!important;margin-bottom:16px!important}
 .action-card{padding:11px 10px!important}
-}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .hero-card{margin-bottom:28px!important}.home-screen .stats-grid{margin-bottom:24px!important;gap:14px!important}.home-screen .action-card{margin-bottom:10px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.04)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284c7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.12)}[data-theme="light"] .topic-next{border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.08)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E5E7EB;box-shadow:0 1px 2px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#E5E7EB!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#E5E7EB!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#E5E7EB!important}[data-theme="light"] .opt-cmd-scroll{background:rgba(0,0,0,0.06)!important}[data-theme="light"] .opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15)}[data-theme="light"] .opt-cmd-scroll{scrollbar-color:rgba(0,0,0,0.15) transparent}`}</style>
+}@media(min-width:900px){.page-pad,.home-screen{max-width:1200px!important;padding-left:24px!important;padding-right:24px!important}.topic-card-section{transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s}.topic-next{border-color:rgba(0,212,255,0.22)!important;box-shadow:0 2px 20px rgba(0,212,255,0.07)!important}.topic-done{opacity:0.78}.home-hero{margin-bottom:10px!important}.home-screen .hero-card{margin-bottom:28px!important}.home-screen .stats-grid{margin-bottom:24px!important;gap:14px!important}.home-screen .action-card{margin-bottom:10px!important}.topic-list{gap:10px!important}}[data-theme="light"] .cli-command{background:rgba(0,0,0,0.03)}[data-theme="light"] button:focus-visible,[data-theme="light"] input:focus-visible,[data-theme="light"] a:focus-visible{outline-color:#0284C7!important}[data-theme="light"] .cbr-copy.copied{background:rgba(16,185,129,0.1)}[data-theme="light"] .topic-next{border-color:#0EA5E9!important;box-shadow:0 0 0 1px rgba(14,165,233,0.12),0 2px 8px rgba(14,165,233,0.06)!important}[data-theme="light"] .topic-card-section{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)!important}[data-theme="light"] .topic-card-section:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04)!important;border-color:#CBD5E1!important}[data-theme="light"] .stats-cell{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .stats-cell:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important}[data-theme="light"] .action-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .action-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)!important;border-color:#CBD5E1!important}[data-theme="light"] .home-header{background:#FFFFFF;border-bottom:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}[data-theme="light"] .roadmap-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .explanation-card{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn{background:#FFFFFF!important;border-color:#CBD5E1!important;box-shadow:0 1px 2px rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-btn:hover{border-color:#0EA5E9!important;box-shadow:0 2px 8px rgba(14,165,233,0.1)!important}[data-theme="light"] .opt-cmd-scroll{background:rgba(0,0,0,0.04)!important}[data-theme="light"] .opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12)}[data-theme="light"] .opt-cmd-scroll{scrollbar-color:rgba(0,0,0,0.12) transparent}[data-theme="light"] .hero-card{background:linear-gradient(135deg,rgba(14,165,233,0.04),rgba(139,92,246,0.03))!important;border-color:#CBD5E1!important;box-shadow:0 1px 3px rgba(0,0,0,0.06)!important}[data-theme="light"] .hero-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)!important}[data-theme="light"] .gbtn{background:#FFFFFF!important;border-color:#0EA5E9!important;color:#0369A1!important;box-shadow:0 1px 3px rgba(14,165,233,0.1)!important}[data-theme="light"] .gbtn:hover{background:rgba(14,165,233,0.04)!important;border-color:#0284C7!important;box-shadow:0 4px 12px rgba(14,165,233,0.12)!important;color:#0284C7!important}[data-theme="light"] .menu-item:hover{background:rgba(14,165,233,0.06)!important;color:#0369A1!important}[data-theme="light"] input{background:#FFFFFF!important;border-color:#CBD5E1!important}[data-theme="light"] input:focus{border-color:#0EA5E9!important;box-shadow:0 0 0 3px rgba(14,165,233,0.1)!important;outline:none}`}</style>
       {!isStatusDomain && <>
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",backgroundImage:"linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)",backgroundSize:"48px 48px"}}/>
       {theme==="dark"&&<><div style={{position:"fixed",top:0,left:0,right:0,height:"55vh",pointerEvents:"none",background:"radial-gradient(ellipse 90% 55% at 50% 0%,rgba(0,212,255,0.05) 0%,transparent 70%)"}}/>
       <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
@@ -4361,21 +4364,23 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <LangSwitcher lang={lang} setLang={setLang}/>
           </div>
 
+
+
           {/* ── 1. Practice ── */}
           <div style={{padding:"10px 16px 4px"}}>
             <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"PRACTICE":"תרגול"}</span>
           </div>
-          <button onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:import.meta.env.PROD?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:import.meta.env.PROD?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             🚨 {lang==="en"?"War Room":"חדר מצב"}
             {import.meta.env.PROD&&<span style={{background:"rgba(120,140,255,0.15)",color:"#9fb3ff",fontSize:11,fontWeight:600,padding:"2px 8px",borderRadius:999,marginInlineStart:8,flexShrink:0,lineHeight:1.4}}>Coming Soon</span>}
           </button>
-          <button onClick={()=>{tryStartQuiz(startMixedQuiz,"mixed");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{tryStartQuiz(startMixedQuiz,"mixed");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("mixedQuizBtn")}
           </button>
-          <button onClick={()=>{tryStartQuiz(startDailyChallenge,"daily");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{tryStartQuiz(startDailyChallenge,"daily");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             🔥 {t("dailyChallengeTitle")}
           </button>
-          <button onClick={()=>{setIsInterviewMode(p=>!p);}} aria-pressed={isInterviewMode} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:isInterviewMode?"#A855F7":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:isInterviewMode?700:400,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setIsInterviewMode(p=>!p);}} aria-pressed={isInterviewMode} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:isInterviewMode?"#A855F7":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:isInterviewMode?700:400,direction:dir}}>
             {t("interviewMode")}{isInterviewMode&&<span aria-hidden="true" style={{marginInlineStart:"auto",fontSize:10,color:"#A855F7"}}>ON</span>}
           </button>
 
@@ -4383,16 +4388,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{padding:"10px 16px 4px",borderTop:"1px solid var(--glass-6)",marginTop:4}}>
             <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"PROGRESS":"התקדמות"}</span>
           </div>
-          <button onClick={()=>{setScreen("stats");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("stats");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             ⭐ {lang==="en"?"My Stats":"הסטטיסטיקות שלי"}
           </button>
-          <button onClick={()=>{setScreen("mistakes");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("mistakes");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("mistakesBtn")}
           </button>
-          <button onClick={()=>{loadLeaderboard();setShowLeaderboard(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{loadLeaderboard();setShowLeaderboard(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("leaderboardBtn")}
           </button>
-          <button onClick={()=>{setShowBookmarks(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setShowBookmarks(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,direction:dir}}>
             <span>{t("savedQuestions")}</span>
             {bookmarks.length>0&&<span style={{background:"rgba(168,85,247,0.2)",color:"#A855F7",fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:10}}>{bookmarks.length}</span>}
           </button>
@@ -4401,10 +4406,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{padding:"10px 16px 4px",borderTop:"1px solid var(--glass-6)",marginTop:4}}>
             <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"LEARNING":"למידה"}</span>
           </div>
-          <button onClick={()=>{setExpandedGuideSection(null);setScreen("guide");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setExpandedGuideSection(null);setScreen("guide");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("guideBtn")}
           </button>
-          <button onClick={()=>{setSearchQuery("");setScreen("search");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setSearchQuery("");setScreen("search");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("searchBtn")}
           </button>
 
@@ -4412,22 +4417,22 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{padding:"10px 16px 4px",borderTop:"1px solid var(--glass-6)",marginTop:4}}>
             <span style={{fontSize:10,color:"var(--text-disabled)",fontWeight:700,letterSpacing:1,direction:dir}}>{lang==="en"?"APPLICATION":"האפליקציה"}</span>
           </div>
-          <button onClick={()=>{setShowInstall(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setShowInstall(true);setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("installApp")}
           </button>
-          <button onClick={()=>{setScreen("status");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("status");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             🟢 {lang==="en"?"System Status":"סטטוס מערכת"}
           </button>
-          <button onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("aboutBtn")}
           </button>
-          <button onClick={()=>{setScreen("privacy");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("privacy");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("privacyBtn")}
           </button>
-          <button onClick={()=>{setScreen("terms");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("terms");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("termsBtn")}
           </button>
-          <button onClick={()=>{
+          <button className="menu-item" onClick={()=>{
             const url="https://kubequest.online";
             const text="Master Kubernetes through real-world scenarios\nTry KubeQuest: https://kubequest.online/";
             if(navigator.share){navigator.share({title:"KubeQuest",text,url}).catch(()=>{});}
@@ -4436,7 +4441,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           }} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             {t("shareBtn")}
           </button>
-          <a href="mailto:contact@kubequest.online?subject=KubeQuest%20Support" style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,textDecoration:"none",direction:dir}}>
+          <a className="menu-item" href="mailto:contact@kubequest.online?subject=KubeQuest%20Support" style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,textDecoration:"none",direction:dir}}>
             <span>✉️</span>{lang==="en"?"Contact":"צור קשר"}
           </a>
 
@@ -4490,10 +4495,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
           {/* ── Divider + System ── */}
           <div style={{borderTop:"1px solid var(--glass-6)",marginTop:4,paddingTop:4}}>
-            <button onClick={()=>{handleResetProgress();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"#EF4444",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
+            <button className="menu-item" onClick={()=>{handleResetProgress();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"#EF4444",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
               <span aria-hidden="true">🗑</span>{t("resetProgress")}
             </button>
-            <button onClick={()=>{handleLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
+            <button className="menu-item" onClick={()=>{handleLogout();setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10}}>
               <span aria-hidden="true">🚪</span>{t("logout")}
             </button>
           </div>
@@ -4524,10 +4529,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               const logoText=(
                 <div style={{textAlign:"left"}}>
-                  <div style={{display:"inline-flex",alignItems:"center",gap:6}}><h1 className="home-title-text" style={{fontSize:28,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.5,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><span style={{fontSize:11,padding:"2px 6px",borderRadius:6,background:"var(--glass-8)",color:"var(--text-muted)",fontWeight:600,letterSpacing:0.3,lineHeight:1,flexShrink:0}}>Beta</span></div>
-                  <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}>
+                  <div style={{display:"inline-flex",alignItems:"center",gap:6}}><h1 className="home-title-text" style={{fontSize:28,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.5,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,flexShrink:0}}><span style={{fontSize:11,padding:"2px 6px",borderRadius:6,background:"var(--glass-8)",color:"var(--text-muted)",fontWeight:600,letterSpacing:0.3,lineHeight:1}}>Beta</span><span style={{fontSize:10,color:"var(--text-dim)",fontWeight:500,letterSpacing:0.2,lineHeight:1,opacity:0.55}}>v{APP_VERSION}</span></div></div>
+                  <div style={{marginTop:4}}>
                     <span style={{fontSize:12,color:"var(--text-muted)",letterSpacing:0.3}}>Train Your Kubernetes Skills</span>
-                    <span style={{fontSize:9,color:"var(--text-dim)",background:"var(--glass-5)",borderRadius:4,padding:"1px 5px",fontWeight:600,letterSpacing:0.3}}>v{APP_VERSION}</span>
                   </div>
                 </div>
               );
@@ -4536,20 +4540,35 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   {logoIcon}{logoText}
                 </div>
               );
-              const burgerBtn=(
-                <button ref={burgerRef} onClick={()=>setShowMenu(p=>!p)} aria-label={lang==="en"?"Open menu":"פתח תפריט"} aria-expanded={showMenu} aria-haspopup="menu"
+              const homeBtn=(
+                <button onClick={()=>{handleLogout();setShowMenu(false);}} aria-label="Home" title="Home"
                   style={{flexShrink:0,width:46,height:46,
-                    background:showMenu?"rgba(0,212,255,0.1)":"var(--glass-4)",
-                    border:`1px solid ${showMenu?"rgba(0,212,255,0.3)":"var(--glass-10)"}`,
+                    background:theme==="light"?"#FFFFFF":"var(--glass-4)",
+                    border:theme==="light"?"1px solid #CBD5E1":"1px solid var(--glass-10)",
+                    borderRadius:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+                    transition:"all 0.2s",
+                    boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"0 0 8px rgba(0,212,255,0.15)"}}
+                  onMouseEnter={e=>{if(theme==="light"){e.currentTarget.style.background="#F8FAFC";e.currentTarget.style.borderColor="#0EA5E9";e.currentTarget.style.boxShadow="0 2px 8px rgba(14,165,233,0.12)";e.currentTarget.style.transform="scale(1.05)";}else{e.currentTarget.style.background="rgba(0,212,255,0.1)";e.currentTarget.style.borderColor="rgba(0,212,255,0.3)";e.currentTarget.style.boxShadow="0 0 12px rgba(0,212,255,0.35)";e.currentTarget.style.transform="scale(1.05)";}}}
+                  onMouseLeave={e=>{if(theme==="light"){e.currentTarget.style.background="#FFFFFF";e.currentTarget.style.borderColor="#E2E8F0";e.currentTarget.style.boxShadow="0 1px 3px rgba(0,0,0,0.06)";e.currentTarget.style.transform="scale(1)";}else{e.currentTarget.style.background="var(--glass-4)";e.currentTarget.style.borderColor="var(--glass-10)";e.currentTarget.style.boxShadow="0 0 8px rgba(0,212,255,0.15)";e.currentTarget.style.transform="scale(1)";}}}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10L10 3.5L17 10M5 8.5V16A1 1 0 006 17H8.5V12.5A1 1 0 019.5 11.5H10.5A1 1 0 0111.5 12.5V17H14A1 1 0 0015 16V8.5" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              );
+              const burgerBtn=(
+                <button ref={burgerRef} onClick={()=>setShowMenu(p=>!p)} aria-label={lang==="en"?"Open menu":"פתח תפריט"} aria-expanded={showMenu} aria-haspopup="menu" title={lang==="en"?"Menu":"תפריט"}
+                  style={{flexShrink:0,width:46,height:46,
+                    background:showMenu?(theme==="light"?"rgba(14,165,233,0.06)":"rgba(0,212,255,0.1)"):(theme==="light"?"#FFFFFF":"var(--glass-4)"),
+                    border:`1px solid ${showMenu?(theme==="light"?"#0EA5E9":"rgba(0,212,255,0.3)"):(theme==="light"?"#E2E8F0":"var(--glass-10)")}`,
                     borderRadius:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,
                     transition:"all 0.2s",
-                    boxShadow:showMenu?"0 0 12px rgba(0,212,255,0.5), 0 0 24px rgba(0,212,255,0.2)":"0 0 8px rgba(0,212,255,0.15)"}}>
-                  {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:20,height:2,borderRadius:2,background:showMenu?"#00D4FF":"var(--text-secondary)",transition:"background 0.2s"}}/>)}
+                    boxShadow:showMenu?(theme==="light"?"0 2px 8px rgba(14,165,233,0.15)":"0 0 12px rgba(0,212,255,0.5), 0 0 24px rgba(0,212,255,0.2)"):(theme==="light"?"0 1px 3px rgba(0,0,0,0.06)":"0 0 8px rgba(0,212,255,0.15)")}}
+                  onMouseEnter={e=>{if(!showMenu){if(theme==="light"){e.currentTarget.style.background="#F8FAFC";e.currentTarget.style.borderColor="#0EA5E9";e.currentTarget.style.boxShadow="0 2px 8px rgba(14,165,233,0.12)";e.currentTarget.style.transform="scale(1.05)";}else{e.currentTarget.style.background="rgba(0,212,255,0.1)";e.currentTarget.style.borderColor="rgba(0,212,255,0.3)";e.currentTarget.style.boxShadow="0 0 12px rgba(0,212,255,0.35)";e.currentTarget.style.transform="scale(1.05)";}}}}
+                  onMouseLeave={e=>{if(!showMenu){if(theme==="light"){e.currentTarget.style.background="#FFFFFF";e.currentTarget.style.borderColor="#E2E8F0";e.currentTarget.style.boxShadow="0 1px 3px rgba(0,0,0,0.06)";e.currentTarget.style.transform="scale(1)";}else{e.currentTarget.style.background="var(--glass-4)";e.currentTarget.style.borderColor="var(--glass-10)";e.currentTarget.style.boxShadow="0 0 8px rgba(0,212,255,0.15)";e.currentTarget.style.transform="scale(1)";}}}}>
+                  {[0,1,2].map(i=><span key={i} aria-hidden="true" style={{display:"block",width:20,height:2,borderRadius:2,background:showMenu?(theme==="light"?"#0EA5E9":"#00D4FF"):"var(--text-secondary)",transition:"background 0.2s"}}/>)}
                 </button>
               );
               return (
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",direction:"ltr"}}>
-                  {logoGroup}{burgerBtn}
+                  {logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{homeBtn}{burgerBtn}</div>
                 </div>
               );
             })()}
@@ -4576,9 +4595,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             const allDone = !nextTopic;
             const nextLevel = nextTopic ? LEVEL_ORDER.find(lvl => !completedTopics[`${nextTopic.id}_${lvl}`]) || "easy" : "easy";
             return (
-            <div className="hero-card" style={{background:"linear-gradient(135deg,rgba(0,212,255,0.10),rgba(168,85,247,0.07),rgba(255,107,53,0.04))",border:"1px solid rgba(0,212,255,0.18)",borderRadius:18,padding:"24px 20px 20px",marginBottom:28,boxShadow:"0 0 30px rgba(0,212,255,0.08),0 2px 12px rgba(0,0,0,0.15)",position:"relative",overflow:"hidden"}}>
+            <div className="hero-card" style={{background:theme==="light"?"#FFFFFF":"linear-gradient(135deg,rgba(0,212,255,0.10),rgba(168,85,247,0.07),rgba(255,107,53,0.04))",border:theme==="light"?"1px solid #CBD5E1":"1px solid rgba(0,212,255,0.18)",borderRadius:18,padding:"24px 20px 20px",marginBottom:28,boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)":"0 0 30px rgba(0,212,255,0.08),0 2px 12px rgba(0,0,0,0.15)",position:"relative",overflow:"hidden"}}>
               {/* Subtle background glow */}
-              <div style={{position:"absolute",top:"-50%",right:"-20%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(0,212,255,0.06),transparent 70%)",pointerEvents:"none"}}/>
+              {theme==="dark"&&<div style={{position:"absolute",top:"-50%",right:"-20%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(0,212,255,0.06),transparent 70%)",pointerEvents:"none"}}/>}
               <div style={{position:"relative"}}>
                 <div style={{fontSize:13,color:"var(--text-muted)",fontWeight:700,letterSpacing:0.5,marginBottom:8,direction:dir}}>
                   {allDone ? t("heroAllDone") : `${t("heroStage")} ${currentStageIdx} ${t("heroStageOf")} ${AVAILABLE_TOPICS.length}`}
@@ -4586,17 +4605,17 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 {nextTopic && <div style={{fontSize:17,fontWeight:800,color:"var(--text-primary)",marginBottom:6,direction:dir}}>{nextTopic.icon} {nextTopic.name}</div>}
                 {/* Progress bar */}
                 <div style={{marginTop:12,marginBottom:18}}>
-                  <div style={{height:8,borderRadius:8,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
-                    <div style={{height:"100%",borderRadius:8,width:`${overallPct}%`,background:"linear-gradient(90deg,#00D4FF,#A855F7)",transition:"width 0.5s ease",boxShadow:"0 0 8px rgba(0,212,255,0.3)"}}/>
+                  <div style={{height:8,borderRadius:8,background:theme==="light"?"#E2E8F0":"rgba(255,255,255,0.06)",overflow:"hidden"}}>
+                    <div style={{height:"100%",borderRadius:8,width:`${overallPct}%`,background:theme==="light"?"linear-gradient(90deg,#0EA5E9,#7C3AED)":"linear-gradient(90deg,#00D4FF,#A855F7)",transition:"width 0.5s ease",boxShadow:theme==="light"?"none":"0 0 8px rgba(0,212,255,0.3)"}}/>
                   </div>
                   <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
                     <span style={{fontSize:11,color:"var(--text-dim)"}}>{completedCount}/{totalLevels} {t("trackCompleted")}</span>
-                    <span style={{fontSize:11,color:"#00D4FF",fontWeight:700}}>{overallPct}%</span>
+                    <span style={{fontSize:11,color:theme==="light"?"#0369A1":"#00D4FF",fontWeight:700}}>{overallPct}%</span>
                   </div>
                 </div>
                 {/* CTA button */}
                 {!allDone ? (
-                  <button onClick={()=>tryStartQuiz(()=>startTopic(nextTopic,nextLevel),"topic")} style={{width:"100%",height:52,padding:"0 20px",background:"linear-gradient(135deg,#00D4FF,#A855F7)",border:"none",borderRadius:14,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",letterSpacing:0.3,boxShadow:"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)",transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 28px rgba(0,212,255,0.4),0 0 50px rgba(0,212,255,0.15)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)";}}>
+                  <button onClick={()=>tryStartQuiz(()=>startTopic(nextTopic,nextLevel),"topic")} style={{width:"100%",height:52,padding:"0 20px",background:theme==="light"?"linear-gradient(135deg,#0EA5E9,#7C3AED)":"linear-gradient(135deg,#00D4FF,#A855F7)",border:"none",borderRadius:14,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",letterSpacing:0.3,boxShadow:theme==="light"?"0 2px 8px rgba(14,165,233,0.25)":"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)",transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=theme==="light"?"0 4px 16px rgba(14,165,233,0.3)":"0 6px 28px rgba(0,212,255,0.4),0 0 50px rgba(0,212,255,0.15)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow=theme==="light"?"0 2px 8px rgba(14,165,233,0.25)":"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)";}}>
                     {completedCount > 0 ? t("heroContinueTrack") : t("heroStartTrack")}
                   </button>
                 ) : (
@@ -4608,6 +4627,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           })()}
 
           {/* ── 2. STATS GRID - Lighter 2x2 cards ── */}
+          {(()=>{const _lt=theme==="light";return(
           <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:28}}>
             {(()=>{
               const rankPercentile=userRank?(userRank.percentile||0):0;
@@ -4621,37 +4641,37 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               const accTrendArrow=accDiff>0?"\u2191":accDiff<0?"\u2193":"";
               const accTrendText=accDiff!==0?`${accTrendArrow} ${Math.abs(accDiff)}%`:null;
               return[
-              {label:t("score"),value:stats.total_score,icon:"\u2B50",color:"#F59E0B",glow:"rgba(250,204,21,0.25)"},
-              {label:t("accuracy"),value:`${accuracy}%`,icon:"\uD83C\uDFAF",color:"#10B981",glow:"rgba(34,197,94,0.25)",accTrend:accTrendText,accTrendColor},
-              {label:t("rank"),value:isGuest?"\uD83D\uDD12":(userRank?`#${userRank.rank}`:"-"),icon:"\uD83C\uDFC6",color:"#A855F7",glow:"rgba(168,85,247,0.25)",sub:isGuest?t("rankUnlockHint"):(userRank?`Top ${rankTopPct}%`:""),isRank:true,locked:isGuest,rankBar:{progress:rankProgress,xpToNext,locked:isGuest},rankTier},
-              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"\uD83D\uDD25",color:"#FF6B35",glow:"rgba(249,115,22,0.25)"},
+              {label:t("score"),value:stats.total_score,icon:"\u2B50",color:_lt?"#D97706":"#F59E0B",glow:_lt?"rgba(217,119,6,0.15)":"rgba(250,204,21,0.25)"},
+              {label:t("accuracy"),value:`${accuracy}%`,icon:"\uD83C\uDFAF",color:_lt?"#059669":"#10B981",glow:_lt?"rgba(5,150,105,0.15)":"rgba(34,197,94,0.25)",accTrend:accTrendText,accTrendColor},
+              {label:t("rank"),value:isGuest?"\uD83D\uDD12":(userRank?`#${userRank.rank}`:"-"),icon:"\uD83C\uDFC6",color:_lt?"#7C3AED":"#A855F7",glow:_lt?"rgba(124,58,237,0.15)":"rgba(168,85,247,0.25)",sub:isGuest?t("rankUnlockHint"):(userRank?`Top ${rankTopPct}%`:""),isRank:true,locked:isGuest,rankBar:{progress:rankProgress,xpToNext,locked:isGuest},rankTier},
+              {label:t("streak"),value:stats.current_streak,displayValue:`x${stats.current_streak}`,icon:"\uD83D\uDD25",color:_lt?"#EA580C":"#FF6B35",glow:_lt?"rgba(234,88,12,0.15)":"rgba(249,115,22,0.25)"},
             ];})().map((s,i)=>(
-              <div key={i} className="stats-cell" onClick={s.isRank?()=>{if(isGuest){try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);}else{loadLeaderboard();setShowLeaderboard(true);}}:undefined} style={{background:`linear-gradient(135deg,${s.color}08,transparent)`,border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"12px 10px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,cursor:s.isRank?"pointer":"default",opacity:s.locked?0.6:1,transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 4px 20px ${s.glow}`;}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
+              <div key={i} className="stats-cell" onClick={s.isRank?()=>{if(isGuest){try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);}else{loadLeaderboard();setShowLeaderboard(true);}}:undefined} style={{background:_lt?"#FFFFFF":`linear-gradient(135deg,${s.color}08,transparent)`,border:_lt?"1px solid #CBD5E1":"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"12px 10px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,cursor:s.isRank?"pointer":"default",opacity:s.locked?0.6:1,transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=_lt?`0 4px 12px ${s.glow}`:`0 4px 20px ${s.glow}`;}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
                 {s.isRank?(s.locked?(<>
                   <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
                   <div style={{display:"flex",alignItems:"center",gap:5,marginTop:6}}>
                     <span style={{fontSize:15}}>{"\uD83D\uDD12"}</span>
-                    <span style={{fontSize:10,color:"rgba(255,255,255,0.4)",lineHeight:1.3,textAlign:"center"}}>{s.sub}</span>
+                    <span style={{fontSize:10,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.4)",lineHeight:1.3,textAlign:"center"}}>{s.sub}</span>
                   </div>
                 </>):(<>
                   <div style={{display:"flex",alignItems:"center",gap:4}}>
                     <span style={{fontSize:14,lineHeight:1}}>{"\uD83C\uDFC6"}</span>
-                    <span style={{fontSize:24,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:`0 0 10px ${s.glow}`}}>{s.value}</span>
+                    <span style={{fontSize:24,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:_lt?"none":`0 0 10px ${s.glow}`}}>{s.value}</span>
                   </div>
-                  {s.sub&&<div style={{fontSize:10,color:"rgba(255,255,255,0.45)",lineHeight:1,marginTop:2}}>{s.sub}</div>}
+                  {s.sub&&<div style={{fontSize:10,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.45)",lineHeight:1,marginTop:2}}>{s.sub}</div>}
                   {s.rankTier&&<div style={{display:"inline-flex",alignItems:"center",gap:3,marginTop:3,padding:"2px 7px",borderRadius:6,background:`${s.rankTier.color}18`}}>
                     <span style={{fontSize:10,lineHeight:1}}>{s.rankTier.icon}</span>
                     <span style={{fontSize:9,fontWeight:700,color:s.rankTier.color,letterSpacing:0.3}}>{t(`rankTier_${s.rankTier.key}`)}</span>
                   </div>}
                   <div style={{width:"85%",marginTop:4}}>
-                    <div style={{height:6,borderRadius:6,background:"rgba(255,255,255,0.08)",overflow:"hidden"}}>
-                      <div style={{height:"100%",borderRadius:6,width:`${s.rankBar.progress}%`,background:"linear-gradient(90deg,#A855F7,#7C3AED)",transition:"width 200ms ease",boxShadow:"0 0 6px rgba(168,85,247,0.35)"}}/>
+                    <div style={{height:6,borderRadius:6,background:_lt?"#E2E8F0":"rgba(255,255,255,0.08)",overflow:"hidden"}}>
+                      <div style={{height:"100%",borderRadius:6,width:`${s.rankBar.progress}%`,background:"linear-gradient(90deg,#A855F7,#7C3AED)",transition:"width 200ms ease",boxShadow:_lt?"none":"0 0 6px rgba(168,85,247,0.35)"}}/>
                     </div>
-                    {s.rankBar.xpToNext>0&&<div style={{fontSize:8,color:"rgba(255,255,255,0.35)",textAlign:"center",marginTop:2,lineHeight:1}}>{s.rankBar.xpToNext} XP {t("xpToNextRank")}</div>}
+                    {s.rankBar.xpToNext>0&&<div style={{fontSize:8,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.35)",textAlign:"center",marginTop:2,lineHeight:1}}>{s.rankBar.xpToNext} XP {t("xpToNextRank")}</div>}
                   </div>
                 </>)):(<>
                   <div style={{fontSize:15,lineHeight:1}}>{s.icon}</div>
-                  <div style={{fontSize:26,fontWeight:800,color:s.locked?"var(--text-dim)":s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:s.locked?"none":`0 0 8px ${s.glow}`}}>{s.displayValue||s.value}</div>
+                  <div style={{fontSize:26,fontWeight:800,color:s.locked?"var(--text-dim)":s.color,lineHeight:1,letterSpacing:-0.5,direction:"ltr",textShadow:s.locked||_lt?"none":`0 0 8px ${s.glow}`}}>{s.displayValue||s.value}</div>
                   <div style={{fontSize:10,fontWeight:600,color:"var(--text-muted)",lineHeight:1,letterSpacing:0.3}}>{s.label}</div>
                   {s.accTrend&&<div style={{fontSize:9,color:s.accTrendColor,lineHeight:1,fontWeight:600,marginTop:1}}>{s.accTrend}</div>}
                   {s.sub&&<div style={{fontSize:9,color:"rgba(255,255,255,0.4)",lineHeight:1,textAlign:"center",marginTop:1}}>{s.sub}</div>}
@@ -4659,6 +4679,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             ))}
           </div>
+          );})()}
 
           {/* ── Tab selector ── */}
           <div style={{display:"flex",gap:6,marginBottom:28,background:"var(--glass-3)",borderRadius:10,padding:3,direction:"ltr"}}>
@@ -5119,6 +5140,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         </div>
       )}
 
+
       {/* STATS */}
       {screen==="stats"&&(
         <StatsView
@@ -5138,9 +5160,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!isStatusDomain && <>
       {/* TOPIC */}
       {screen==="topic"&&selectedTopic&&selectedLevel&&(
-        <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease"}}>
-          <div style={{marginBottom:14}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",direction:dir,marginBottom:6}}>
+        <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"12px 14px",animation:"fadeIn 0.3s ease",display:"flex",flexDirection:"column",minHeight:"calc(100dvh - 24px)"}}>
+          <div style={{marginBottom:8,flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",direction:dir,marginBottom:4}}>
               <button onClick={()=>setScreen("home")} aria-label={t("back")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
               <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel]?.color,background:`${LEVEL_CONFIG[selectedLevel]?.color||"#888"}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap",flexShrink:0}}>{LEVEL_CONFIG[selectedLevel]?.icon} {levelLabel(selectedLevel)}</span>
             </div>
@@ -5148,13 +5170,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {topicScreen==="theory"?(
-            <div>
-              <div style={{background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,padding:"14px 16px",marginBottom:10,overflowWrap:"break-word"}}>
-                <div style={{fontSize:11,color:selectedTopic.color,fontWeight:800,marginBottom:16,letterSpacing:1}}>{t("theory")}</div>
-                <div dir={dir} style={{background:"var(--code-bg-light)",borderRadius:10,padding:"16px 20px",direction:dir,unicodeBidi:"isolate"}}>{renderTheory(theoryContent || currentLevelData?.theory)}</div>
+            <div style={{display:"flex",flexDirection:"column",flex:1,minHeight:0}}>
+              <div className="theory-card" style={{background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,padding:"14px 16px",marginBottom:10,overflowWrap:"break-word",flex:1,minHeight:0,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+                <div style={{fontSize:11,color:selectedTopic.color,fontWeight:800,marginBottom:12,letterSpacing:1}}>{t("theory")}</div>
+                <div className="theory-body" dir={dir} style={{background:"var(--code-bg-light)",borderRadius:10,padding:"14px 16px",direction:dir,unicodeBidi:"isolate"}}>{renderTheory(theoryContent || currentLevelData?.theory)}</div>
               </div>
-              <div style={{display:"flex",gap:8,marginBottom:0}}>
-                <button onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));}} style={{flex:1,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`,lineHeight:1.4}}>
+              <div style={{display:"flex",gap:8,flexShrink:0,paddingBottom:8}}>
+                <button className="theory-start-btn" onClick={()=>{setTopicScreen("quiz");if(timerEnabled||isInterviewMode)setTimeLeft(isInterviewMode?(INTERVIEW_DURATIONS[selectedLevel]||25):(TIMER_DURATIONS[selectedLevel]||30));}} style={{flex:1,padding:15,background:`linear-gradient(135deg,${selectedTopic.color}dd,${selectedTopic.color}77)`,border:"none",borderRadius:12,color:"#fff",fontWeight:800,cursor:"pointer",boxShadow:`0 6px 24px ${selectedTopic.color}44`,lineHeight:1.4}}>
                   <div style={{fontSize:15}}>{t("startQuiz")}</div>
                   <div style={{fontSize:12,opacity:0.85,fontWeight:600}}>(+{LEVEL_CONFIG[selectedLevel]?.points ?? 0} {t("ptsPerQ")})</div>
                 </button>
