@@ -1094,7 +1094,7 @@ function Footer({ lang, onPrivacy, onTerms }) {
 export default function K8sQuestApp() {
   console.info("[KubeQuest:boot] K8sQuestApp render");
   const { theme, toggleTheme } = useTheme();
-  const [lang, setLangRaw]                 = useState(() => safeGetItem("lang_v1", "he"));
+  const [lang, setLangRaw]                 = useState(() => safeGetItem("lang_v1", "en"));
   const setLang = (l) => { setLangRaw(l); try { localStorage.setItem("lang_v1", l); } catch {} };
   const [gender, setGender]               = useState(() => safeGetItem("gender_v1", "m"));
   const handleSetGender = (g) => { setGender(g); try { localStorage.setItem("gender_v1", g); } catch {} };
