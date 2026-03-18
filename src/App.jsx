@@ -1093,7 +1093,7 @@ export default function K8sQuestApp() {
   const [lang, setLangRaw]                 = useState(() => safeGetItem("lang_v1", "he"));
   const setLang = (l) => { setLangRaw(l); try { localStorage.setItem("lang_v1", l); } catch {} };
   const [gender, setGender]               = useState(() => safeGetItem("gender_v1", "m"));
-  const handleSetGender = (g) => { setGender(g); localStorage.setItem("gender_v1", g); };
+  const handleSetGender = (g) => { setGender(g); try { localStorage.setItem("gender_v1", g); } catch {} };
   const t = (key) => {
     if (lang === "he" && gender === "m" && TRANSLATIONS.he[key + "_m"]) return TRANSLATIONS.he[key + "_m"];
     return TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS.he[key] ?? key;
@@ -1761,6 +1761,7 @@ export default function K8sQuestApp() {
   useEffect(() => {
     if (screen !== "topic" || topicScreen !== "quiz") return;
     if (!selectedTopic || !selectedLevel || !quizRunIdRef.current) return;
+    if (!user) return; // logout in progress — don't persist orphaned state
     const isFree = isFreeMode(selectedTopic.id);
     const isRetry = isRetryRef.current;
     saveQuizState({
@@ -1807,6 +1808,7 @@ export default function K8sQuestApp() {
   // Persist in-progress incident state on screen entry and step changes
   useEffect(() => {
     if (screen !== "incident" || !selectedIncident) return;
+    if (!user) return; // logout in progress — don't persist orphaned state
     saveIncidentProgress(
       selectedIncident, incidentStepIndex, incidentScore,
       incidentMistakes, incidentElapsed, incidentHistory
@@ -2262,6 +2264,15 @@ export default function K8sQuestApp() {
 
   const handleLogout = async () => {
     try { localStorage.removeItem("k8s_guest_session"); } catch {}
+    // Clear user-specific persistence to prevent cross-account leakage
+    clearQuizState();
+    try { localStorage.removeItem(INCIDENT_SAVE_KEY); } catch {}
+    try { localStorage.removeItem("k8s_progress_v2"); } catch {}
+    setResumeData(null);
+    setIncidentResume(null);
+    // Force to home before clearing user — prevents quiz/incident persistence
+    // effects from re-saving with userId "guest" during the teardown render.
+    setScreen("home");
     if (isGuest) {
       setUser(null);
       setStats({ total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 });
@@ -3143,7 +3154,8 @@ export default function K8sQuestApp() {
 
   const buildIncidentShareMsg = () => {
     if (!selectedIncident) return "";
-    const maxScore = selectedIncident.steps.length * 10;
+    const totalSteps = incidentSteps?.length || selectedIncident.steps.length;
+    const maxScore = totalSteps * 10;
     const time = formatIncidentTime(incidentElapsed);
     return `KubeQuest Incident\n${selectedIncident.title}\nScore: ${incidentScore}/${maxScore} · Time: ${time}\n\nhttps://kubequest.online`;
   };
@@ -3189,43 +3201,57 @@ export default function K8sQuestApp() {
     submittingRef.current = true;
     setSubmitted(true);
 
-    // Fetch correct answer from server (online) or use local field (offline)
+    // Capture values needed by the async flow (avoids stale closure reads)
+    const capturedIsRetry = isRetryRef.current;
+    const capturedIsFree = isFreeMode(selectedTopic?.id);
+    const capturedTopicId = selectedTopic?.id;
+
+    // Fetch correct answer from server (online) or use local field (offline).
+    // Stats are updated atomically with quizHistory inside the async flow
+    // so they cannot get out of sync if the user navigates away mid-RPC.
+    let cancelled = false;
     (async () => {
       let result;
-      if (supabase && q.id) {
-        try {
-          const isDaily = selectedTopic?.id === "daily";
-          const rpcResult = isDaily
-            ? await checkDailyAnswer(supabase, q.id, 0)
-            : await checkQuizAnswer(supabase, q.id, 0);
-          const correctIndex = q._optionMap ? q._optionMap.indexOf(rpcResult.correct_answer) : rpcResult.correct_answer;
-          result = { correct: false, correctIndex, explanation: rpcResult.explanation };
-        } catch {
+      try {
+        if (supabase && q.id) {
+          try {
+            const isDaily = capturedTopicId === "daily";
+            const rpcResult = isDaily
+              ? await checkDailyAnswer(supabase, q.id, 0)
+              : await checkQuizAnswer(supabase, q.id, 0);
+            const correctIndex = q._optionMap ? q._optionMap.indexOf(rpcResult.correct_answer) : rpcResult.correct_answer;
+            result = { correct: false, correctIndex, explanation: rpcResult.explanation };
+          } catch {
+            result = { correct: false, correctIndex: q.answer ?? 0, explanation: q.explanation || "" };
+          }
+        } else {
           result = { correct: false, correctIndex: q.answer ?? 0, explanation: q.explanation || "" };
         }
-      } else {
-        result = { correct: false, correctIndex: q.answer ?? 0, explanation: q.explanation || "" };
+        if (cancelled) return;
+        setAnswerResult(result);
+        setShowExplanation(true);
+        setQuizHistory(prev => [...prev, { q: q.q, options: q.options, answer: result.correctIndex, chosen: -1, explanation: result.explanation }]);
+        // Stats update is inside the async flow so it stays atomic with quizHistory.
+        // If cancelled (user navigated away), neither history nor stats are touched.
+        if (!capturedIsRetry) {
+          setStats(prev => ({
+            ...prev,
+            total_answered: capturedIsFree ? prev.total_answered : prev.total_answered + 1,
+            current_streak: capturedIsFree ? prev.current_streak : 0,
+          }));
+          if (!capturedIsFree && capturedTopicId) {
+            setTopicStats(prev => {
+              const curr = prev[capturedTopicId] || { answered: 0, correct: 0 };
+              return { ...prev, [capturedTopicId]: { answered: curr.answered + 1, correct: curr.correct } };
+            });
+          }
+        }
+      } finally {
+        submittingRef.current = false;
       }
-      setAnswerResult(result);
-      setShowExplanation(true);
-      setQuizHistory(prev => [...prev, { q: q.q, options: q.options, answer: result.correctIndex, chosen: -1, explanation: result.explanation }]);
     })();
 
-    if (!isRetryRef.current) {
-      const isFree = isFreeMode(selectedTopic?.id);
-      setStats(prev => ({
-        ...prev,
-        total_answered: isFree ? prev.total_answered : prev.total_answered + 1,
-        // Free-mode timer expiry must NOT reset persistent streak
-        current_streak: isFree ? prev.current_streak : 0,
-      }));
-      if (!isFree) {
-        setTopicStats(prev => {
-          const curr = prev[selectedTopic.id] || { answered: 0, correct: 0 };
-          return { ...prev, [selectedTopic.id]: { answered: curr.answered + 1, correct: curr.correct } };
-        });
-      }
-    }
+    return () => { cancelled = true; };
   }, [timeLeft]);
 
   // Fetch online incident steps after auto-resume (incidentSteps is null on page load)

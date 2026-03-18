@@ -52,13 +52,14 @@ try {
           <h1 style="color:#e2e8f0;font-size:20px;font-weight:700;margin:0 0 8px">Failed to start</h1>
           <p style="color:#94a3b8;font-size:14px;margin:0 0 20px;line-height:1.5">
             The application could not initialize.<br/>
-            <span style="font-size:12px;color:#64748b">${String(err).slice(0, 200)}</span>
+            <span id="kq-fatal-msg" style="font-size:12px;color:#64748b"></span>
           </p>
           <button id="kq-fatal-clear" style="padding:10px 22px;background:linear-gradient(135deg,rgba(0,212,255,0.18),rgba(168,85,247,0.18));border:1px solid rgba(0,212,255,0.45);border-radius:10px;color:#00D4FF;font-size:14px;font-weight:700;cursor:pointer">
             Clear Data &amp; Reload
           </button>
         </div>
       </div>`;
+    document.getElementById("kq-fatal-msg").textContent = String(err).slice(0, 200);
     document.getElementById("kq-fatal-clear").addEventListener("click", function () {
       localStorage.clear();
       sessionStorage.clear();
