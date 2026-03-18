@@ -162,15 +162,14 @@ export function TerminalBlock({ children, variant, label, animate }) {
           {headerLabel}
         </div>
       )}
-      <div style={{ padding: "10px 14px" }}>
+      <div style={{ padding: "10px 14px", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         <pre
           style={{
             margin: 0,
             fontFamily: MONO_FONT,
             fontSize: 12.5,
             lineHeight: 1.7,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
+            whiteSpace: "pre",
             textAlign: "left",
             color: TERM_TEXT,
           }}
