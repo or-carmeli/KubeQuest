@@ -4,6 +4,18 @@
 // ── Boot timestamp ──
 window.__KQ_BOOT_TIME__ = Date.now();
 
+// ── Vite preload error recovery ──
+// When Vite's module loader fails to fetch a chunk (e.g. old hash after deploy),
+// it fires this event. This is the primary defense when the SW isn't active yet.
+// sessionStorage guard prevents infinite reload loops.
+window.addEventListener("vite:preloadError", function (evt) {
+  evt.preventDefault(); // suppress the default error
+  if (sessionStorage.getItem("kq-preload-recovery")) return;
+  sessionStorage.setItem("kq-preload-recovery", "1");
+  console.warn("[KubeQuest] Vite preload error - reloading for new assets", evt.payload);
+  location.reload();
+});
+
 // ── Blank-screen safety net ──
 // If React never renders visible content within 8 s, show recovery UI.
 setTimeout(function () {
