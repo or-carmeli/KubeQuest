@@ -110,11 +110,12 @@ export default function StatsView({
   const accuracy = stats.total_answered > 0
     ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
   const wrongCount = stats.total_answered - stats.total_correct;
+  const availableIds = new Set(topics.map(t => t.id));
   const completedLevelCount = Object.keys(completedTopics)
     .filter(k => {
       const parts = k.split("_");
       const topicId = parts.slice(0, -1).join("_");
-      return !isFreeMode(topicId);
+      return !isFreeMode(topicId) && availableIds.has(topicId);
     }).length;
   const totalLevels = topics.length * levelOrder.length;
 

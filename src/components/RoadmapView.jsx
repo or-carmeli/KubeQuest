@@ -57,17 +57,20 @@ export default function RoadmapView({
     idx > 0 && !isStageCompleted(topics[idx - 1].id, completedTopics);
 
   const currentStageIdx = topics.findIndex(
-    (topic, idx) => !isRoadmapStageLocked(idx) && !isStageCompleted(topic.id, completedTopics)
+    (topic, idx) => !topic.isComingSoon && !isRoadmapStageLocked(idx) && !isStageCompleted(topic.id, completedTopics)
   );
   const allDone = currentStageIdx === -1;
-  const currentStageNum = allDone ? topics.length : currentStageIdx + 1;
+  const currentStageNum = allDone ? topics.filter(t => !t.isComingSoon).length : currentStageIdx + 1;
 
-  // Overall path progress = completed difficulty levels / total levels (5 topics × 3 levels = 15)
+  // Available topics (excludes comingSoon) for progress calculations
+  const availableTopics = topics.filter(t => !t.isComingSoon);
+
+  // Overall path progress = completed difficulty levels / total levels
   const overallProgress = (() => {
-    const totalUnits = topics.length * LVL_ORDER.length;
+    const totalUnits = availableTopics.length * LVL_ORDER.length;
     if (totalUnits === 0) return 0;
     let done = 0;
-    topics.forEach(topic => {
+    availableTopics.forEach(topic => {
       LVL_ORDER.forEach(lvl => {
         const r = completedTopics[`${topic.id}_${lvl}`];
         if (r && r.total && (r.correct === r.total || r.retryComplete)) done++;
@@ -85,7 +88,7 @@ export default function RoadmapView({
         <div style={{color:"var(--text-secondary)",fontSize:13,marginBottom:10}}>
           {allDone
             ? t("roadmapAllDone")
-            : `${t("roadmapStage")} ${currentStageNum} ${t("roadmapStageOf")} ${topics.length}`}
+            : `${t("roadmapStage")} ${currentStageNum} ${t("roadmapStageOf")} ${availableTopics.length}`}
         </div>
         <div style={{height:8,background:"var(--glass-6)",borderRadius:4,marginBottom:6,direction:"ltr",transform:dir==="rtl"?"scaleX(-1)":undefined}}>
           <div style={{height:"100%",borderRadius:4,width:`${overallProgress}%`,background:"linear-gradient(90deg,#00D4FF,#A855F7)",transition:"width 0.5s ease"}}/>
@@ -96,8 +99,9 @@ export default function RoadmapView({
       {/* ── Roadmap path ── */}
       <div style={{display:"flex",flexDirection:"column"}}>
         {topics.map((topic, idx) => {
-          const locked    = isRoadmapStageLocked(idx);
-          const completed = isStageCompleted(topic.id, completedTopics);
+          const comingSoon = !!topic.isComingSoon;
+          const locked    = comingSoon || isRoadmapStageLocked(idx);
+          const completed = !comingSoon && isStageCompleted(topic.id, completedTopics);
           const isCurrent = idx === currentStageIdx;
           const isLast    = idx === topics.length - 1;
           const progress  = stageProgress(topic.id, completedTopics);

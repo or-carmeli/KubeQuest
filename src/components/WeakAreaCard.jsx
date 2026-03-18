@@ -1,12 +1,10 @@
-const TOPIC_NAMES = {
-  workloads:       "Workloads & Pods",
-  networking:      "Networking & Services",
-  config:          "Config & Secrets",
-  storage:         "Storage & Helm",
-  troubleshooting: "Troubleshooting & Debugging",
-  linux:           "OS & Linux Deep Dive",
-  argo:            "Argo & GitOps",
-};
+import { TOPIC_META } from "../topicMeta";
+
+// Derive available topic names from TOPIC_META, excluding comingSoon topics.
+// When a comingSoon topic is released, it is automatically included here.
+const TOPIC_NAMES = Object.fromEntries(
+  TOPIC_META.filter(t => !t.isComingSoon).map(t => [t.id, t.name])
+);
 
 // Returns the hex color for the side-bar indicator based on accuracy (0-100).
 function indicatorColor(accuracy) {
