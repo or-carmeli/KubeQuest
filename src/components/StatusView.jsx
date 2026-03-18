@@ -227,7 +227,8 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
     const resolved = inc.resolved_at ? new Date(inc.resolved_at) : null;
     const durationMs = resolved ? resolved - started : Date.now() - started;
     const durationHrs = durationMs / 3600000;
-    const durationStr = durationHrs >= 1 ? `~${Math.round(durationHrs)} hr${Math.round(durationHrs)>1?"s":""}` : `~${Math.round(durationMs/60000)} min`;
+    const durationDays = durationHrs / 24;
+    const durationStr = durationDays >= 1 ? `~${Math.round(durationDays)} day${Math.round(durationDays)>1?"s":""}` : durationHrs >= 1 ? `~${Math.round(durationHrs)} hr${Math.round(durationHrs)>1?"s":""}` : `~${Math.round(durationMs/60000)} min`;
     return (
       <div key={inc.id} dir="ltr" style={{background:"var(--glass-2)",border:"1px solid var(--glass-6)",borderRadius:10,padding:"12px 16px",textAlign:"left",marginBottom:8}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
