@@ -180,9 +180,10 @@ function mulberry32(seed) {
 const TRANSLATIONS = {
   he: {
     tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying: "התחילי לשחק עכשיו",
-    noRegNoPass: "ללא הרשמה · ללא סיסמה · מיידי",
-    saveProgress: "רוצה לשמור את ההתקדמות?",
+    startPlaying: "התחילי לשחק כאורחת",
+    noRegNoPass: "או",
+    saveProgress: "התחברי / הירשמי כדי לשמור התקדמות",
+    saveProgress_m: "התחבר / הירשם כדי לשמור התקדמות",
     username: "שם משתמש", email: "אימייל", password: "סיסמה",
     loginTab: "התחברות", signupTab: "הרשמה", authCta: "התחבר / הירשם", authLogin: "התחבר", authSignup: "הירשם",
     loginBtn: "התחברי", signupBtn: "הירשמי", loading: "⏳ רגע...",
@@ -278,7 +279,7 @@ const TRANSLATIONS = {
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
     tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
-    startPlaying_m: "התחל לשחק עכשיו",
+    startPlaying_m: "התחל לשחק כאורח",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "✅ אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
     otpExpired_m: "❌ קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
@@ -448,9 +449,9 @@ const TRANSLATIONS = {
   },
   en: {
     tagline: "Learn Kubernetes in a fun and interactive way",
-    startPlaying: "Start Playing Now",
-    noRegNoPass: "No registration · No password · Instant",
-    saveProgress: "Want to save your progress?",
+    startPlaying: "Start Playing as Guest",
+    noRegNoPass: "or",
+    saveProgress: "Log in / Sign up to save your progress",
     username: "Username", email: "Email", password: "Password",
     loginTab: "Login", signupTab: "Sign Up", authCta: "Log in / Sign up", authLogin: "Log in", authSignup: "Sign up",
     loginBtn: "Sign In", signupBtn: "Register", loading: "⏳ Loading...",
@@ -3968,13 +3969,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           style={{width:"100%",padding:"18px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:17,fontWeight:800,cursor:"pointer",marginBottom:6,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
           <span style={{display:"inline-flex",alignItems:"center",gap:6}}><Zap size={18} strokeWidth={2} /> {t("startPlaying")}</span>
         </button>
-        <p style={{textAlign:"center",color:"var(--code-text)",opacity:0.75,fontSize:12,margin:"0 0 26px"}}>{t("noRegNoPass")}</p>
-
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,margin:"16px 0"}}>
           <div style={{flex:1,height:1,background:"var(--glass-10)"}}/>
-          <span style={{color:"var(--text-secondary)",fontSize:12,whiteSpace:"nowrap"}}>{t("saveProgress")}</span>
+          <span style={{color:"var(--text-muted)",fontSize:12,whiteSpace:"nowrap"}}>{t("noRegNoPass")}</span>
           <div style={{flex:1,height:1,background:"var(--glass-10)"}}/>
         </div>
+
+        <p style={{textAlign:"center",color:"var(--text-secondary)",fontSize:12,margin:"0 0 18px"}}>{t("saveProgress")}</p>
 
         <div style={{background:theme==="light"?"#FFFFFF":"var(--glass-5)",border:theme==="light"?"1px solid #CBD5E1":"1px solid var(--glass-12)",borderRadius:14,padding:"18px 20px",boxShadow:theme==="light"?"0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.03)":"none"}}>
           <div style={{display:"flex",marginBottom:16,background:theme==="light"?"#F1F5F9":"var(--glass-4)",borderRadius:9,padding:3}}>
@@ -4375,9 +4376,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
 
       {/* Dropdown menu - rendered outside <main> so CSS zoom never affects it */}
-      {showMenu&&(()=>{const _br=burgerRef.current?.getBoundingClientRect();const _menuRight=_br?Math.max(8,window.innerWidth-_br.right):8;return(<>
+      {showMenu&&(()=>{const _br=burgerRef.current?.getBoundingClientRect();const _menuRight=_br?Math.max(8,window.innerWidth-_br.right):8;const _menuLeft=_br?Math.max(8,_br.left):8;const _isRtl=dir==="rtl";return(<>
         <div onClick={()=>setShowMenu(false)} style={{position:"fixed",inset:0,zIndex:199}}/>
-        <div style={{position:"fixed",top:82,right:_menuRight,background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:14,padding:"6px 0",zIndex:200,minWidth:240,boxShadow:"0 8px 32px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.2)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100dvh - 110px)"}}>
+        <div style={{position:"fixed",top:82,...(_isRtl?{right:_menuRight}:{left:_menuLeft}),background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:14,padding:"6px 0",zIndex:200,minWidth:240,boxShadow:"0 8px 32px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.2)",animation:"fadeIn 0.15s ease",direction:"ltr",overflowY:"auto",maxHeight:"calc(100dvh - 110px)"}}>
 
           {/* Language + Gender */}
           <div style={{padding:"8px 14px 10px",borderBottom:"1px solid var(--glass-6)",display:"flex",gap:8,alignItems:"center",justifyContent:"center"}}>
@@ -4611,7 +4612,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
               return (
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",direction:"ltr"}}>
-                  {logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{burgerBtn}</div>
+                  {dir==="rtl"?<>{logoGroup}<div style={{display:"flex",alignItems:"center",gap:8}}>{burgerBtn}</div></>:<><div style={{display:"flex",alignItems:"center",gap:8}}>{burgerBtn}</div>{logoGroup}</>}
                 </div>
               );
             })()}
@@ -4627,7 +4628,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </div>
             )}
             {isGuest && (
-              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:0,marginTop:6,direction:dir}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,marginTop:6,direction:dir}}>
                 <span onClick={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"header"})}catch{}}}
                   style={{fontSize:11,fontWeight:500,color:"rgba(180,210,255,0.85)",cursor:"pointer",transition:"all 0.15s",textDecoration:"none",lineHeight:1}}
                   onMouseEnter={e=>{e.currentTarget.style.textDecoration="underline";e.currentTarget.style.color="rgba(180,210,255,1)";}}
@@ -4675,7 +4676,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
                 {/* CTA button */}
                 {!allDone ? (
-                  <button onClick={()=>tryStartQuiz(()=>startTopic(nextTopic,nextLevel),"topic")} style={{width:"100%",height:52,padding:"0 20px",background:theme==="light"?"linear-gradient(135deg,#0EA5E9,#7C3AED)":"linear-gradient(135deg,#00D4FF,#A855F7)",border:"none",borderRadius:14,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",letterSpacing:0.3,boxShadow:theme==="light"?"0 2px 8px rgba(14,165,233,0.25)":"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)",transition:"transform 0.2s,box-shadow 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=theme==="light"?"0 4px 16px rgba(14,165,233,0.3)":"0 6px 28px rgba(0,212,255,0.4),0 0 50px rgba(0,212,255,0.15)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow=theme==="light"?"0 2px 8px rgba(14,165,233,0.25)":"0 4px 20px rgba(0,212,255,0.3),0 0 40px rgba(0,212,255,0.1)";}}>
+                  <button className="gbtn" onClick={()=>tryStartQuiz(()=>startTopic(nextTopic,nextLevel),"topic")} style={{width:"100%",padding:"16px 20px",background:"rgba(0,212,255,0.07)",border:"2px solid rgba(0,212,255,0.3)",borderRadius:14,color:"var(--code-text)",fontSize:16,fontWeight:800,cursor:"pointer",letterSpacing:0.3,transition:"all 0.2s",animation:"pulse 2.8s infinite"}}>
                     {completedCount > 0 ? t("heroContinueTrack") : t("heroStartTrack")}
                   </button>
                 ) : (
