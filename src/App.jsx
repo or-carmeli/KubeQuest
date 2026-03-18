@@ -225,7 +225,7 @@ const TRANSLATIONS = {
     resetTopic: "אפסי נושא", resetTopicConfirm: "לאפס את ההתקדמות בנושא זה?",
     mixedQuizBtn: "🎲 חידון מיקס", mixedQuizDesc: "10 שאלות אקראיות מכל הנושאים",
     tabTopics: "📚 נושאים", tabRoadmap: "🗺️ מסלול",
-    interviewMode: "🎯 מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה",
+    interviewMode: "🎯 מצב ראיון", interviewModeHint: "רמזים כבויים, יש טיימר לכל שאלה", interviewModeActive: "מצב ראיון פעיל · טיימר פעיל · רמזים כבויים",
     dailyChallengeTitle: "אתגר יומי", dailyChallengeNew: "חדש היום",
     dailyChallengeDesc: "5 שאלות מכל הנושאים · מתחלף כל יום",
     heroStage: "שלב", heroStageOf: "מתוך", heroStartTrack: "התחל את המסלול", heroContinueTrack: "המשך למשימה הבאה", heroAllDone: "כל הנושאים הושלמו!",
@@ -512,7 +512,7 @@ const TRANSLATIONS = {
     accuracyLabel: "accuracy",
     goBackToTopic: "Go back to this topic",
     tabTopics: "📚 Topics", tabRoadmap: "🗺️ Roadmap",
-    interviewMode: "🎯 Interview Mode", interviewModeHint: "Hints off, timer on for every question",
+    interviewMode: "🎯 Interview Mode", interviewModeHint: "Hints off, timer on for every question", interviewModeActive: "Interview mode active · Timer on · Hints off",
     dailyChallengeTitle: "Daily Challenge", dailyChallengeNew: "NEW DAILY",
     dailyChallengeDesc: "5 mixed questions · resets every day",
     a11yTitle: "♿ Accessibility", a11yFontSize: "Text Size", a11yReduceMotion: "Reduce Motion", a11yHighContrast: "High Contrast",
@@ -4352,7 +4352,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
             {isInterviewMode && (
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginTop:6}}>
-                <span style={{fontSize:11,color:"rgba(180,210,255,0.75)",fontWeight:400,direction:"rtl",lineHeight:1}}>מצב ראיון פעיל · טיימר פעיל · רמזים כבויים</span>
+                <span style={{fontSize:11,color:"rgba(180,210,255,0.75)",fontWeight:400,direction:dir,lineHeight:1}}>{t("interviewModeActive")}</span>
               </div>
             )}
           </div>
