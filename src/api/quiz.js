@@ -50,6 +50,33 @@ export async function checkQuizAnswer(supabase, questionId, selectedIndex, quizR
 }
 
 /**
+ * Fetch a hint for a question (first sentence of explanation).
+ * Returns: { hint: string }
+ */
+export async function fetchQuestionHint(supabase, questionId, source = "quiz") {
+  const { data, error } = await supabase.rpc("get_question_hint", {
+    p_question_id: questionId,
+    p_source: source,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get one random wrong option to eliminate.
+ * Returns: { eliminate: number } (-1 if none available)
+ */
+export async function fetchEliminateOption(supabase, questionId, source = "quiz", exclude = -1) {
+  const { data, error } = await supabase.rpc("get_eliminate_option", {
+    p_question_id: questionId,
+    p_source: source,
+    p_exclude: exclude,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Fetch theory text for a topic/level.
  * Returns: string (theory content) or null
  */
