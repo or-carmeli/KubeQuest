@@ -1,7 +1,10 @@
 /**
- * Performance Insights — internal observability dashboard.
+ * Performance Insights — Dev-only internal observability dashboard.
  *
- * Gated by EXPERIMENTAL_ENABLED (dev or ?arch URL param in prod).
+ * Triple-gated:
+ *  1. Menu item only rendered when import.meta.env.DEV
+ *  2. Route only registered when import.meta.env.DEV
+ *  3. Component guard below returns null in production
  *
  * 100% real data. No simulated metrics.
  */
@@ -13,11 +16,11 @@ import {
 import { THRESHOLDS, SEVERITY_COLORS, severity, computeBaseline, CRUX_BENCHMARKS, compareToGlobal } from "../utils/mockTelemetry";
 import { buildSnapshot, TIME_RANGES } from "../utils/hybridTelemetry";
 import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/realTelemetry";
-import { EXPERIMENTAL_ENABLED } from "../utils/experimentalMode";
+
 
 // ─── Component-level guard ─────────────────────────────────────────────────────
 export default function PerformanceInsights({ onBack }) {
-  if (!EXPERIMENTAL_ENABLED) return null;
+  if (!import.meta.env.DEV) return null;
   return <PerformanceInsightsInner onBack={onBack} />;
 }
 

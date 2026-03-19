@@ -225,6 +225,7 @@ export default function ArchitectureView({ lang, onBack }) {
               border: `1px solid ${dailyDone ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)"}`,
               borderRadius: 12, padding: "10px 14px", marginBottom: 16,
               display: "flex", alignItems: "center", gap: 10, cursor: dailyDone ? "default" : "pointer",
+              direction: en ? "ltr" : "rtl",
             }}
               onClick={dailyDone ? undefined : () => startScenario(ARCHITECTURE_SCENARIOS[dailyIndex])}
             >
