@@ -4604,7 +4604,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </svg>
               );
               const logoText=(
-                <div style={{display:"inline-flex",alignItems:"flex-start",gap:2}}><h1 className="home-title-text" style={{fontSize:26,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.3,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><span style={{fontSize:9,padding:"1px 5px",borderRadius:5,background:"rgba(255,255,255,0.08)",color:"#bbb",fontWeight:600,letterSpacing:0.3,lineHeight:1,flexShrink:0,marginTop:-2}}>Beta</span></div>
+                <div style={{display:"inline-flex",alignItems:"flex-start",gap:2,position:"relative"}}><h1 className="home-title-text" style={{fontSize:26,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.3,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><span style={{position:"absolute",right:-30,top:-2,fontSize:9,padding:"1px 5px",borderRadius:5,background:"rgba(255,255,255,0.08)",color:"#bbb",fontWeight:600,letterSpacing:0.3,lineHeight:1}}>Beta</span></div>
               );
               const logoGroup=(
                 <div style={{display:"flex",alignItems:"center",gap:14}}>
@@ -4638,7 +4638,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </button>
               );
               return (
-                <div style={{display:"flex",alignItems:"center",width:"100%",direction:"ltr",position:"relative",padding:"0 8px"}}>
+                <div style={{display:"flex",alignItems:"center",width:"100%",direction:"ltr",position:"relative",padding:"8px 8px 0"}}>
                   <div style={{position:"absolute",[dir==="rtl"?"right":"left"]:0,top:"50%",transform:"translateY(-50%)"}}>
                     {burgerBtn}
                   </div>
@@ -5331,7 +5331,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     <span aria-hidden="true" style={{display:"inline-flex",alignItems:"center",gap:3}}><Star size={12} strokeWidth={1.5} color="#A855F7" /> {stats.total_score||0} {t("pts")}</span>
                     {sessionScore>0&&<span style={{color:"#00D4FF",fontSize:10,fontWeight:600,marginLeft:4,opacity:0.8}}>(+{sessionScore})</span>}
                   </span>}
-                  {!isInHistoryMode&&isFreeMode(selectedTopic?.id)&&selectedTopic?.id!=="mixed"&&<span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,opacity:0.6,background:"var(--glass-4)",padding:"2px 6px",borderRadius:4}}>{t("freeModeBadge")}</span>}
+                  {!isInHistoryMode&&isFreeMode(selectedTopic?.id)&&selectedTopic?.id!=="mixed"&&selectedTopic?.id!=="daily"&&<span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,opacity:0.6,background:"var(--glass-4)",padding:"2px 6px",borderRadius:4}}>{t("freeModeBadge")}</span>}
                 </div>
                 <div style={{height:6,background:"var(--glass-6)",borderRadius:4,direction:"ltr",transform:lang==="he"?"scaleX(-1)":undefined}}>
                   <div style={{height:"100%",borderRadius:4,
