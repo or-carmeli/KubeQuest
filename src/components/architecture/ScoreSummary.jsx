@@ -1,4 +1,5 @@
 import { getRank, getNearMiss, RANKS } from "../../utils/architectureLogic";
+import { Zap, Wallet, ShieldCheck } from "lucide-react";
 
 export default function ScoreSummary({
   score, metrics, decisionCount, lang, onBack, onRetry, analysis,
@@ -97,9 +98,9 @@ export default function ScoreSummary({
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-bright)", marginBottom: 14 }}>
           {en ? "Final System Metrics" : "מדדי מערכת סופיים"}
         </div>
-        <MetricBar label={en ? "Performance" : "ביצועים"} icon="⚡" value={metrics.performance} fillColor={fillColor} />
-        <MetricBar label={en ? "Cost Efficiency" : "יעילות עלות"} icon="💰" value={metrics.cost} fillColor={fillColor} />
-        <MetricBar label={en ? "Reliability" : "אמינות"} icon="🛡️" value={metrics.reliability} fillColor={fillColor} />
+        <MetricBar label={en ? "Performance" : "ביצועים"} icon={<Zap size={13} />} value={metrics.performance} fillColor={fillColor} />
+        <MetricBar label={en ? "Cost Efficiency" : "יעילות עלות"} icon={<Wallet size={13} />} value={metrics.cost} fillColor={fillColor} />
+        <MetricBar label={en ? "Reliability" : "אמינות"} icon={<ShieldCheck size={13} />} value={metrics.reliability} fillColor={fillColor} />
       </div>
 
       {/* Decision Timeline */}
@@ -244,7 +245,7 @@ function MetricBar({ label, icon, value, fillColor }) {
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-        <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>{icon} {label}</span>
+        <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>{icon} {label}</span>
         <span style={{ fontSize: 12, fontWeight: 800, color: fillColor(value) }}>{value}</span>
       </div>
       <div style={{ height: 7, borderRadius: 4, background: "var(--glass-6)", overflow: "hidden" }}>

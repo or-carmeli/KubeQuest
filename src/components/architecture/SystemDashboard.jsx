@@ -143,8 +143,8 @@ export default function SystemDashboard({ systemState, prevSystemState, alerts, 
                   {icon}
                 </span>
                 <div style={{ flex: 1, minWidth: 0, lineHeight: 1.5 }}>
-                  <span style={{ fontWeight: 700, fontSize: 10, color: "var(--text-dim)", letterSpacing: 0.3 }}>{prefix} </span>
-                  <span style={{ fontWeight: 500, color: type === "critical" ? "#DC2626" : "var(--text-secondary)" }}>{text}</span>
+                  <span style={{ fontWeight: 700, fontSize: 10, color: "var(--text-muted)", letterSpacing: 0.3 }}>{prefix} </span>
+                  <span style={{ fontWeight: 500, color: type === "critical" ? "#EF4444" : "var(--text-light)" }}>{text}</span>
                 </div>
               </div>
             );
@@ -164,11 +164,10 @@ export default function SystemDashboard({ systemState, prevSystemState, alerts, 
             const text = getLocalizedField(log, "text", lang) || log.text || log;
             const ts = log.timestamp || "";
             const noise = log.noise;
-            // Subdued palette: errors are warm-muted, not bright red
-            const color = log.level === "error" ? "#B47070" : log.level === "warn" ? "#A08050" : "#5C6370";
+            const color = log.level === "error" ? "#E07070" : log.level === "warn" ? "#D4A050" : "#8B949E";
             return (
-              <div key={i} style={{ color, whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: noise ? 0.4 : 0.8 }}>
-                {ts && <span style={{ color: "#3B4048" }}>{ts} </span>}
+              <div key={i} style={{ color, whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: noise ? 0.5 : 1 }}>
+                {ts && <span style={{ color: "#6B7280" }}>{ts} </span>}
                 {text}
               </div>
             );
