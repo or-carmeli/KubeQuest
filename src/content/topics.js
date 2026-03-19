@@ -309,7 +309,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "PodDisruptionBudget (PDB) מגדיר את מספר ה-Pods המינימלי שחייב להישאר זמין בזמן disruptions מתוכננות, כמו `kubectl drain`.\nדוגמה: עם replicas: 3 ו-minAvailable: 2, Kubernetes יאשר פינוי רק אם לפחות 2 Pods נשארים זמינים.\nמגן על זמינות אפליקציות קריטיות בזמן maintenance.",
+                "PodDisruptionBudget (PDB) מגדיר את מספר ה-Pods המינימלי שחייב להישאר זמין בזמן disruptions מתוכננות, כמו `kubectl drain`\nדוגמה: עם replicas: 3 ו-minAvailable: 2, Kubernetes יאשר פינוי רק אם לפחות 2 Pods נשארים זמינים.\nמגן על זמינות אפליקציות קריטיות בזמן maintenance.",
             },
             {
               q: "מה מגדירים resource limits ב-Kubernetes?",
@@ -412,7 +412,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "PodDisruptionBudget (PDB) defines the minimum number of Pods that must remain available during voluntary disruptions such as `kubectl drain`.\nExample: with replicas: 3 and minAvailable: 2, Kubernetes will only allow eviction if at least 2 Pods remain available.\nProtects critical application availability during Node maintenance.",
+                "PodDisruptionBudget (PDB) defines the minimum number of Pods that must remain available during voluntary disruptions such as `kubectl drain`\nExample: with replicas: 3 and minAvailable: 2, Kubernetes will only allow eviction if at least 2 Pods remain available.\nProtects critical application availability during Node maintenance.",
             },
             {
               q: "What do resource limits define in Kubernetes?",
@@ -475,7 +475,7 @@ export const TOPICS = [
               tags: ["daemonset-topology"],
               options: [
               "שה-Pod רץ פעם אחת עד להשלמה ולא מופעל מחדש. התנהגות של Job",
-              "ש-DaemonSet מבטיח ש-Pod אחד רץ על כל Node ב-Cluster",
+              "DaemonSet מבטיח ש-Pod אחד רץ על כל Node ב-Cluster",
               "שה-Pod רץ רק על Node שמסומן עם label מתאים דרך nodeSelector",
               "שה-Pod מופעל מחדש לפי לוח זמנים קבוע. התנהגות של CronJob",
 ],
@@ -555,7 +555,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "maxUnavailable:0 מונע הורדת Pod ישן עד שהחדש עובר readiness.\nאם Pods חדשים נכשלים ב-readiness, ה-rollout נתקע.\n\nיש לבדוק:\n\nkubectl logs <pod-name>\n\nmaxUnavailable:0 = בטיחות מלאה, אבל readiness כושל = rollout תקוע.",
+                "maxUnavailable:0 מונע הורדת Pod ישן עד שהחדש עובר readiness.\nאם Pods חדשים נכשלים ב-readiness, ה-rollout נתקע.\n\nיש לבדוק:\n\n`kubectl logs`\n\nmaxUnavailable:0 = בטיחות מלאה, אבל readiness כושל = rollout תקוע.",
             },
             {
               q: "ה-Deployment לא מנהל Pods.\n\nהרצת:\n\n```\nkubectl get pods --show-labels\n```\n\nפלט:\n\n```\napp=backend-v2\n```\n\nהגדרת Deployment:\n\n```yaml\nselector:\n  matchLabels:\n    app: backend\n```\n\nמה הבעיה?",

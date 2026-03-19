@@ -32,6 +32,10 @@ ALTER TABLE incident_steps  ADD COLUMN IF NOT EXISTS tags JSONB NOT NULL DEFAULT
 
 -- 2. Tag quiz_questions (both he and en rows share the same tag set)
 
+-- pod-architecture
+UPDATE quiz_questions SET tags = '["pod-architecture"]'::jsonb
+WHERE q LIKE '%What is a Pod in Kubernetes%' OR q LIKE '%מה הוא Pod ב-Kubernetes%';
+
 -- controller-hierarchy
 UPDATE quiz_questions SET tags = '["controller-hierarchy"]'::jsonb
 WHERE q LIKE '%What does a Deployment do%' OR q LIKE '%מה Deployment עושה%';

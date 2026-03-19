@@ -55,7 +55,7 @@ export default function PodDiagram() {
           {["IP", "Network", "Volumes"].map((r) => (
             <span key={r} style={{
               fontSize: 9, color: "var(--text-muted)", fontFamily: MONO,
-              letterSpacing: 0.2, opacity: 0.7,
+              letterSpacing: 0.2, opacity: 0.9,
             }}>
               {r}
             </span>
@@ -65,7 +65,7 @@ export default function PodDiagram() {
       {/* Caption */}
       <div style={{
         fontSize: 10, color: "var(--text-dim)", marginTop: 6,
-        textAlign: "center", opacity: 0.6,
+        textAlign: "center", opacity: 0.8,
       }}>
         shared resources
       </div>
