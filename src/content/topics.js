@@ -712,7 +712,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\nIPs של Pods תואמים נוספים לאובייקט Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
+                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\n\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n\nכל Pod עם label של app: my-app ייכנס לרשימת ה-Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
             },
             {
               q: "מה ההבדל בין port ל-targetPort ב-Service?",
@@ -810,7 +810,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "A Service defines a label selector. The Endpoints controller finds matching Pods.\nMatching Pod IPs are added to the Endpoints object automatically.\nkube-proxy routes traffic to one of the healthy endpoints.",
+                "A Service defines a label selector. The Endpoints controller finds matching Pods.\n\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n\nEvery Pod with the label app: my-app is added to the Endpoints list.\nkube-proxy routes traffic to one of the healthy endpoints.",
             },
             {
               q: "What is the difference between port and targetPort in a Service?",
@@ -900,7 +900,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "מגדירים Secret מסוג kubernetes.io/tls עם tls.crt ו-tls.key.\nמפנים ל-Secret ב-spec.tls של ה-Ingress עם שמות ה-hosts.\nה-Ingress Controller מבצע TLS termination אוטומטית.",
+                "מגדירים Secret מסוג kubernetes.io/tls עם tls.crt ו-tls.key.\nמפנים ל-Secret ב-spec.tls של ה-Ingress עם שמות ה-hosts.\nה-Ingress Controller מבצע TLS termination אוטומטית.\n\nדוגמה:\n```yaml\nspec:\n  tls:\n  - hosts:\n    - app.example.com\n    secretName: app-tls-secret\n```",
             },
             {
               q: "מה path-based routing ב-Ingress?",
@@ -1088,7 +1088,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "NetworkPolicy היא רק spec. האכיפה תלויה ב-CNI plugin.\nCalico, Cilium ו-Weave אוכפים. Flannel ו-kubenet:\u200E לא.\nב-Flannel, NetworkPolicy נוצרת אבל לא נאכפת. אפס הגנה.",
+                "NetworkPolicy היא רק spec. האכיפה תלויה ב-`CNI plugin`.\nCalico, Cilium ו-Weave אוכפים. Flannel ו-kubenet: לא.\nב-Flannel, NetworkPolicy נוצרת אבל לא נאכפת. אפס הגנה.",
             },
             {
               q: "מה היתרון של IPVS על iptables ב-kube-proxy?",
@@ -1549,7 +1549,7 @@ export const TOPICS = [
                 "LimitRange = per-container defaults ומגבלות. ResourceQuota = מגבלות aggregate ל-Namespace.\nLimitRange מגן מ-container בודד. ResourceQuota מגן מצריכה כוללת.\nLimitRange = מיקרו. ResourceQuota = מאקרו.",
             },
             {
-              q: "מה seccomp profile עושה?",
+              q: "ב-Kubernetes ניתן להגדיר seccomp profile ב-securityContext של Pod.\n\nמה התפקיד של seccomp profile?",
               options: [
               "מגביל את כמות ה-CPU שקונטיינר יכול לצרוך בכל Node",
               "מצפין את התעבורה בין קונטיינרים באותו Pod דרך localhost",
@@ -1558,19 +1558,19 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "seccomp מגביל אילו system calls קונטיינר יכול לבצע.\nLinux מציע 300+ syscalls, אבל רוב הקונטיינרים צריכים רק חלק קטן.\nseccompProfile.type: RuntimeDefault מיישם baseline מומלץ. מצמצם attack surface.",
+                "seccomp (Secure Computing) מגביל אילו system calls קונטיינר יכול לבצע.\n\nלמה זה חשוב?\nב-Linux יש 300+ syscalls, אבל קונטיינר ממוצע צריך רק חלק קטן מהם. חסימת השאר מצמצמת את ה-attack surface.\n\nאיך מגדירים:\n\nsecurityContext:\n  seccompProfile:\n    type: RuntimeDefault\n\nRuntimeDefault מפעיל פרופיל בסיסי שחוסם syscalls מסוכנים כמו reboot או mount.",
             },
             {
-              q: "כיצד מסנכרנים Secret מ-AWS Secrets Manager?",
+              q: "איך מושכים Secrets מ-AWS Secrets Manager לתוך Kubernetes?",
               options: [
-              "External Secrets Operator: SecretStore + ExternalSecret CR",
-              "Vault Agent Injector: sidecar שמזריק secrets ישירות ל-Pod",
-              "SOPS operator:\u200E מפענח קבצי YAML מוצפנים ויוצר K8s Secrets",
-              "Sealed Secrets controller:\u200E מצפין Secrets ושומר אותם ב-Git",
+              "External Secrets Operator - מגדיר SecretStore ו-ExternalSecret CR",
+              "Vault Agent Injector - sidecar שמזריק secrets ישירות לתוך ה-Pod",
+              "SOPS operator - מפענח קבצי YAML מוצפנים ויוצר K8s Secrets",
+              "Sealed Secrets - מצפין Secrets ושומר אותם ב-Git בצורה בטוחה",
 ],
               answer: 0,
               explanation:
-                "ESO מסנכרן secrets מ-AWS/GCP/Vault אל K8s Secrets אוטומטית.\nSecretStore = חיבור ל-provider. ExternalSecret = מה לסנכרן.\nSecrets לא מנוהלים ידנית ולא נשמרים ב-git.",
+                "ESO מושך secrets מ-AWS/GCP/Vault ויוצר K8s Secrets אוטומטית.\nSecretStore מגדיר את החיבור ל-provider.\nExternalSecret מגדיר אילו secrets למשוך.\nה-Secrets לא נשמרים ב-Git ולא מנוהלים ידנית.",
             },
         ],
         questionsEn: [
@@ -1647,7 +1647,7 @@ export const TOPICS = [
                 "LimitRange = per-container defaults and limits. ResourceQuota = aggregate limits for the Namespace.\nLimitRange protects from one container. ResourceQuota protects from total consumption.\nLimitRange = micro level. ResourceQuota = macro level.",
             },
             {
-              q: "What does a seccomp profile do?",
+              q: "In Kubernetes you can set a seccomp profile in a Pod's securityContext.\n\nWhat does a seccomp profile do?",
               options: [
               "Limits the amount of CPU a container can consume on each Node",
               "Encrypts traffic between containers in the same Pod via localhost",
@@ -1656,7 +1656,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "seccomp restricts which system calls a container can make.\nLinux has 300+ syscalls but most containers need only a small subset.\nseccompProfile.type: RuntimeDefault applies the recommended baseline. Reduces attack surface.",
+                "seccomp (Secure Computing) restricts which system calls a container can make.\n\nWhy does it matter?\nLinux has 300+ syscalls, but an average container only needs a small subset. Blocking the rest reduces the attack surface.\n\nHow to configure:\n\nsecurityContext:\n  seccompProfile:\n    type: RuntimeDefault\n\nRuntimeDefault applies a baseline profile that blocks dangerous syscalls like reboot or mount.",
             },
             {
               q: "How do you sync a Secret from AWS Secrets Manager?",
@@ -2135,16 +2135,16 @@ export const TOPICS = [
                 "ה-StorageClass חייב להגדיר allowVolumeExpansion: true.\nאז מגדילים spec.resources.requests.storage ב-PVC וה-provisioner מרחיב את הדיסק.\nהקטנה לא נתמכת, ובחלק מה-backends נדרש Pod restart.",
             },
             {
-              q: "מה תפקיד הפקודה `helm template`?",
+              q: "מה הפקודה\n\n```\nhelm template\n```\n\nעושה?",
               options: [
-              "יוצר Helm Chart חדש מתוך תבנית scaffold מובנית",
-              "שומר snapshot של ה-Chart הנוכחי לצורך rollback עתידי",
-              "מעדכן את ה-values.yaml של Chart קיים מ-remote repository",
-              "מרנדר את ה-Chart ל-YAML בלי להתקין אותו. ל-pipelines ו-dry-run",
+              "יוצרת Helm Chart חדש מתוך תבנית ברירת מחדל",
+              "שומרת גרסה של ה-Chart לצורך rollback עתידי",
+              "ממירה את ה-Chart לקבצי YAML מבלי להחיל אותם על הקלאסטר",
+              "מעדכנת את קובץ values.yaml מתוך מאגר מרוחק",
 ],
-              answer: 3,
+              answer: 2,
               explanation:
-                "`helm template` מרנדר Chart ל-YAML גולמי בלי להתקין שום דבר ב-Cluster.\nשימושי ל-CI/CD pipelines, debug, ו-GitOps שדורש YAML מפורש ב-git.",
+                "הפקודה helm template מבצעת rendering ל-Chart, כלומר מחליפה את המשתנים בתבניות בערכים מתוך values.yaml, ומפיקה קובצי Kubernetes YAML כפי שהם ייראו בפריסה בפועל.\n\nבניגוד ל-helm install, הפקודה לא שולחת את ה-YAML ל-API server ולא יוצרת משאבים בקלאסטר.\n\nהפקודה שימושית לצורכי בדיקה, debug, ולתהליכי CI/CD או GitOps, כאשר רוצים לראות או לשמור את ה-YAML המלא לפני פריסה.",
             },
             {
               q: "מה תפקיד הפקודה `helm rollback`?",
@@ -2233,16 +2233,16 @@ export const TOPICS = [
                 "The StorageClass must have allowVolumeExpansion: true.\nThen increase spec.resources.requests.storage in the PVC and the provisioner resizes the disk.\nShrinking is not supported, and some backends require a Pod restart.",
             },
             {
-              q: "What is the purpose of `helm template`?",
+              q: "What does the command\n\n```\nhelm template\n```\n\ndo?",
               options: [
-              "Renders the Chart to YAML without installing. For pipelines and dry-runs",
-              "Updates the values.yaml of an existing Chart from a remote repository",
-              "Creates a new Helm Chart from a built-in scaffold template",
-              "Saves a snapshot of the current Chart for future rollback",
+              "Creates a new Helm Chart from a default template",
+              "Saves a version of the Chart for future rollback",
+              "Converts the Chart to YAML files without applying them to the cluster",
+              "Updates the values.yaml file from a remote repository",
 ],
-              answer: 0,
+              answer: 2,
               explanation:
-                "`helm template` renders a Chart to raw YAML without installing anything to the cluster.\nUseful for CI/CD pipelines, debugging, and GitOps workflows that need explicit YAML in git.",
+                "The helm template command performs rendering, converting the Chart to Kubernetes YAML files as they would appear in an actual deployment, without sending them to the cluster.\n\nUseful for testing, debugging, CI/CD pipelines, and GitOps workflows that need the full YAML stored in git.",
             },
             {
               q: "What is the purpose of `helm rollback`?",
@@ -2554,7 +2554,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "כשקונטיינר קורס, Kubernetes מפעיל instance חדש שה-logs שלו כמעט ריקים.\n--previous שולף logs מה-instance שקרס. בדיוק מה שצריך לאבחון.",
+                "כשקונטיינר קורס, הוא עולה מחדש עם לוגים ריקים.\n\nהפלאג previous-- שולף את הלוגים מההרצה הקודמת שנכשלה, בדיוק מה שצריך לאבחון.\n\nkubectl logs pod-name --previous",
             },
             {
               q: "מה מציגה הפקודה `kubectl top nodes`?",
@@ -2652,7 +2652,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "When a container crashes, Kubernetes starts a new instance whose logs may be nearly empty.\n--previous fetches logs from the crashed run. Exactly what you need to diagnose the cause.",
+                "When a container crashes, it restarts with empty logs.\n\nThe --previous flag fetches logs from the previous failed run, exactly what you need to diagnose the cause.\n\nkubectl logs pod-name --previous",
             },
             {
               q: "What does `kubectl top nodes` show?",
@@ -3121,13 +3121,13 @@ export const TOPICS = [
           {
             q: "הרצת:\n\n```\ndf -h\n```\n\nפלט:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nמה הבעיה ומה הצעד הראשון?",
             options: [
-              "הדיסק כמעט מלא - יש להריץ \u2066du -sh /*\u2069 לזיהוי קבצים גדולים",
+              "הדיסק כמעט מלא - יש להריץ `du -sh /*` לזיהוי קבצים גדולים",
               "הדיסק כמעט מלא - יש להריץ \u2066fsck\u2069 לתיקון שגיאות מערכת קבצים",
               "הדיסק כמעט מלא - יש למחוק את כל \u2066/var/log\u2069 ולהפעיל מחדש",
               "השימוש בדיסק תקין - ערך של 96% סביר לשרת ייצור",
             ],
             answer: 0,
-            explanation: "96% שימוש בדיסק על root partition, נשארו רק 2GB מתוך 50.\n\nב-100% שירותים מפסיקים לכתוב לוגים, DB קורס, ואפילו SSH יכול ליפול.\n\nהצעד הראשון - לזהות מה תופס מקום:\n\ndu -sh /*\n\nלרוב זה /var/log או /tmp.\n\nfsck מתקן שגיאות מערכת קבצים אבל לא משחרר מקום בדיסק מלא.\nמחיקת כל /var/log מסוכנת ועלולה למחוק לוגים קריטיים. גישה שיטתית עם du עדיפה.\n96% זה לא תקין. הכלל הוא לטפל מתחת ל-85%.",
+            explanation: "הדיסק ב-96%, נשארו רק 2GB. ב-100% שירותים יפסיקו לעבוד.\n\nהצעד הראשון - למצוא מה תופס מקום:\n\ndu -sh /*\n\nלרוב האשם הוא /var/log או /tmp.\n\nלמה לא התשובות האחרות?\nfsck מתקן שגיאות במערכת קבצים, לא משחרר מקום.\nמחיקת כל /var/log מסוכנת - עלולה למחוק לוגים קריטיים.\n96% זה לא תקין לשרת ייצור - הכלל הוא לטפל מתחת ל-85%.",
           },
           {
             q: "שירות לא עולה אחרי הפעלה מחדש של השרת.\n\nאיזו פקודה תראה את הלוגים של השירות?",
@@ -3138,7 +3138,7 @@ export const TOPICS = [
               "cat /etc/systemd/system/service-name.service",
             ],
             answer: 1,
-            explanation: "שירות לא עולה? קודם כל קוראים את הלוגים.\n\njournalctl -u service-name --no-pager -n 50\n\n-n 50 מגביל ל-50 שורות אחרונות, מספיק כדי לראות את שגיאת ההפעלה.\n\nקודם מבינים למה נפל, רק אחר כך מתקנים.\n\nsystemctl restart בלי לבדוק את הלוגים קודם זה טעות. אם הבעיה מבנית, הוא ייפול שוב.\ndmesg מציג הודעות kernel, לא לוגים של שירותים.\ncat על קובץ ה-unit מציג את ההגדרות, לא את הלוגים של מה שנכשל.",
+            explanation: "שירות לא עולה? קודם כל קוראים את הלוגים.\n\n```\njournalctl -u service-name --no-pager -n 50\n```\n\nn 50- מגביל ל-50 שורות אחרונות, מספיק כדי לראות את שגיאת ההפעלה.\n\nקודם מבינים למה נפל, רק אחר כך מתקנים.\n\nsystemctl restart בלי לבדוק את הלוגים קודם זה טעות. אם הבעיה מבנית, הוא ייפול שוב.\ndmesg מציג הודעות kernel, לא לוגים של שירותים.\ncat על קובץ ה-unit מציג את ההגדרות, לא את הלוגים של מה שנכשל.",
           },
           {
             q: "צריך לבדוק אם שירות nginx פעיל.\n\nאיזו פקודה הכי מתאימה?",
@@ -3333,7 +3333,7 @@ export const TOPICS = [
               "nginx מאזין רק על localhost ולא נגיש מבחוץ",
             ],
             answer: 0,
-            explanation: "הפלט מראה שני listening sockets של nginx על פורטים 80 ו-443.\n\n0.0.0.0 אומר \"כל ממשקי הרשת\" - נגיש מבחוץ.\n\nLISTEN אומר שהפורט פתוח ומחכה. חיבורים פעילים לא נראים ב-ss -l.\n\nלראות חיבורים פעילים:\n\nss -tnp\n\nnginx כן פועל, LISTEN מוכיח את זה.\nss לא מציג firewall. לבדוק עם iptables -L.\nאם היה רק localhost, הכתובת הייתה 127.0.0.1, לא 0.0.0.0.",
+            explanation: "הפלט מראה שני listening sockets של nginx על פורטים 80 ו-443.\n\n0.0.0.0 אומר \"כל ממשקי הרשת\" - נגיש מבחוץ.\n\nLISTEN אומר שהפורט פתוח ומחכה. חיבורים פעילים לא נראים ב-`ss -l`.\n\nלראות חיבורים פעילים:\n\n`ss -tnp`\n\nnginx כן פועל, LISTEN מוכיח את זה.\nss לא מציג firewall. לבדוק עם `iptables -L`.\nאם היה רק localhost, הכתובת הייתה 127.0.0.1, לא 0.0.0.0.",
           },
           {
             q: "יש לך קובץ לוג בגודל 2GB ואתה צריך למצוא את כל השורות שמכילות \"ERROR\" מהשעה האחרונה.\n\nאיזו גישה הכי יעילה?",
@@ -3423,7 +3423,7 @@ export const TOPICS = [
               "nginx is listening only on localhost and is not externally accessible",
             ],
             answer: 0,
-            explanation: "Output shows two listening sockets for nginx on ports 80 and 443.\n\n0.0.0.0 means \"all interfaces\" - accessible externally.\n\nLISTEN means the port is open and waiting. Active connections don't show in ss -l.\n\nTo see active connections:\n\nss -tnp\n\nnginx is running. LISTEN proves it.\nss doesn't show firewall. Check with iptables -L.\nIf localhost-only, the address would be 127.0.0.1, not 0.0.0.0.",
+            explanation: "Output shows two listening sockets for nginx on ports 80 and 443.\n\n0.0.0.0 means \"all interfaces\" - accessible externally.\n\nLISTEN means the port is open and waiting. Active connections don't show in `ss -l`.\n\nTo see active connections:\n\n`ss -tnp`\n\nnginx is running. LISTEN proves it.\nss doesn't show firewall. Check with `iptables -L`.\nIf localhost-only, the address would be 127.0.0.1, not 0.0.0.0.",
           },
           {
             q: "You have a 2GB log file and need to find all lines containing \"ERROR\" from the last hour.\n\nWhich approach is most efficient?",
@@ -3522,13 +3522,13 @@ export const TOPICS = [
           {
             q: "הרצת:\n\n```\nsar -n DEV 1 5\n```\n\nפלט (ממוצע):\n\n```\nIFACE   rxpck/s  txpck/s   rxkB/s   txkB/s  rxdrop/s  txdrop/s\neth0    95000    92000    115000    110000     850       0\n```\n\nכרטיס הרשת הוא 1Gbps. מה הבעיה?",
             options: [
-              "rxkB/s (115MB/s) מתקרב לקיבולת 1Gbps עם 850 drops/s",
-              "מספר המנות (95,000/s) גבוה מדי וגורם לעומס על ה-NIC",
-              "הבעיה היא ב-txdrop כי הצד השולח לא מצליח לשדר",
-              "יש לעבור ל-UDP כי TCP overhead גורם לאיבוד מנות",
+              "ה-throughput קרוב למגבלת ה-NIC של 1Gbps - כרטיס הרשת רווי ומאבד מנות",
+              "הפרוטוקול הוא TCP - מעבר ל-UDP יפחית את ה-overhead ויפתור את הבעיה",
+              "הבעיה היא ב-packet drops בצד ה-tx - צריך לבדוק את ה-txdrop counter",
+              "הערכים תקינים לשרת בעומס גבוה - אין כאן חריגה מהנורמה",
             ],
             answer: 0,
-            explanation: "צריך לשלב שלושה סימנים לאבחון NIC saturation.\n\nrxkB/s = 115 MB/s. קיבולת 1Gbps = 125 MB/s. הכרטיס ב-92%.\nrxdrop/s = 850. ring buffer מלא, מנות נופלות.\ntxdrop/s = 0. הבעיה בקליטה, לא בשליחה.\n\nאיבוד מנות = retransmissions + latency.\n\nלהגדיל ring buffer:\n\nethtool -G eth0 rx 4096\n\nהבעיה היא bandwidth, לא מספר מנות.\ntxdrop = 0 זה טוב, הבעיה ב-rxdrop.\nUDP לא פותר NIC saturation.",
+            explanation: "הקצב מתקרב למגבלת 1Gbps, ולכן הממשק כמעט רווי.\nrxdrop מצביע על איבוד מנות בצד הקליטה, לרוב בגלל עומס על ה-NIC או buffer מלא.\nזו בעיית bandwidth (NIC saturation), לא כמות מנות ולא פרוטוקול.",
           },
           {
             q: "הרצת:\n\n```\nperf top\n```\n\nפלט:\n\n```\n  35.2%  [kernel]        [k] _raw_spin_lock\n  18.1%  [kernel]        [k] copy_user_generic_unrolled\n  12.4%  libc.so.6       [.] __memcpy_avx2\n   8.3%  myapp           [.] parse_request\n```\n\nמה המסקנה?",
