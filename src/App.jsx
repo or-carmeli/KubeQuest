@@ -4108,7 +4108,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .explanation-card li{font-size:13px!important;line-height:1.8!important}
 .home-actions{gap:5px!important}
 .home-actions>button{font-size:11px!important;padding:5px 8px!important}
-.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 14px 12px!important}
+.home-screen{padding:calc(22px + env(safe-area-inset-top, 0px)) 14px 12px!important}
 .home-header{flex-direction:column!important;gap:10px!important;min-height:auto!important}
 .home-controls{position:static!important;transform:none!important;margin-bottom:4px!important}
 .roadmap-row{gap:8px!important}
@@ -4136,7 +4136,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 }
 @media(max-width:390px){
 .home-logo{width:40px!important;height:40px!important}
-.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 10px 10px!important}
+.home-screen{padding:calc(22px + env(safe-area-inset-top, 0px)) 10px 10px!important}
 .page-pad{padding:10px 12px!important}
 .topic-card-section{padding:11px 12px!important}
 .stats-cell{padding:9px 6px!important;font-size:11px}
@@ -4151,7 +4151,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 }
 @media(max-width:360px){
 .home-logo{width:34px!important;height:34px!important}
-.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 8px 8px!important}
+.home-screen{padding:calc(22px + env(safe-area-inset-top, 0px)) 8px 8px!important}
 .page-pad{padding:8px 10px!important}
 .topic-card-section{padding:10px 10px!important}
 .stats-grid{gap:8px!important}
@@ -4570,7 +4570,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!isStatusDomain && <>
       {/* HOME */}
       {screen==="home"&&(
-        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"calc(30px + env(safe-area-inset-top, 0px)) 12px 16px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
+        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"calc(22px + env(safe-area-inset-top, 0px)) 12px 16px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
           {/* ── Hero - centered, matches loading screen composition ── */}
           <div className="home-hero" style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",marginBottom:16}}>
             {/* Header row: logo+title on one side, burger on the other */}
