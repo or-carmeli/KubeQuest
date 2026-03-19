@@ -17,6 +17,7 @@ import { THRESHOLDS, SEVERITY_COLORS, severity, computeBaseline, CRUX_BENCHMARKS
 import { buildSnapshot, TIME_RANGES } from "../utils/hybridTelemetry";
 import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/realTelemetry";
 
+
 // ─── Component-level guard ─────────────────────────────────────────────────────
 export default function PerformanceInsights({ onBack }) {
   if (!import.meta.env.DEV) return null;

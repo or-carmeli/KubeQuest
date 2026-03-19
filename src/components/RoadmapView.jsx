@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getLocalizedField } from "../utils/i18n";
+import { EXPERIMENTAL_ENABLED } from "../utils/experimentalMode";
 import TopicIcon from "./TopicIcon";
 import { Lock, CheckCircle2 } from "lucide-react";
 
@@ -59,13 +60,13 @@ export default function RoadmapView({
     idx > 0 && !isStageCompleted(topics[idx - 1].id, completedTopics);
 
   const currentStageIdx = topics.findIndex(
-    (topic, idx) => !topic.isComingSoon && !isRoadmapStageLocked(idx) && !isStageCompleted(topic.id, completedTopics)
+    (topic, idx) => (!topic.isComingSoon || EXPERIMENTAL_ENABLED) && !isRoadmapStageLocked(idx) && !isStageCompleted(topic.id, completedTopics)
   );
   const allDone = currentStageIdx === -1;
-  const currentStageNum = allDone ? topics.filter(t => !t.isComingSoon).length : currentStageIdx + 1;
+  const currentStageNum = allDone ? topics.filter(t => !t.isComingSoon || EXPERIMENTAL_ENABLED).length : currentStageIdx + 1;
 
-  // Available topics (excludes comingSoon) for progress calculations
-  const availableTopics = topics.filter(t => !t.isComingSoon);
+  // Available topics (excludes comingSoon unless experimental) for progress calculations
+  const availableTopics = topics.filter(t => !t.isComingSoon || EXPERIMENTAL_ENABLED);
 
   // Overall path progress = completed difficulty levels / total levels
   const overallProgress = (() => {
@@ -101,7 +102,7 @@ export default function RoadmapView({
       {/* ── Roadmap path ── */}
       <div style={{display:"flex",flexDirection:"column"}}>
         {topics.map((topic, idx) => {
-          const comingSoon = !!topic.isComingSoon;
+          const comingSoon = !!topic.isComingSoon && !EXPERIMENTAL_ENABLED;
           const locked    = comingSoon || isRoadmapStageLocked(idx);
           const completed = !comingSoon && isStageCompleted(topic.id, completedTopics);
           const isCurrent = idx === currentStageIdx;

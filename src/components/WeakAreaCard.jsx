@@ -1,9 +1,9 @@
 import { TOPIC_META } from "../topicMeta";
+import { EXPERIMENTAL_ENABLED } from "../utils/experimentalMode";
 
-// Derive available topic names from TOPIC_META, excluding comingSoon topics.
-// When a comingSoon topic is released, it is automatically included here.
+// Derive available topic names from TOPIC_META, excluding comingSoon topics (unless experimental).
 const TOPIC_NAMES = Object.fromEntries(
-  TOPIC_META.filter(t => !t.isComingSoon).map(t => [t.id, t.name])
+  TOPIC_META.filter(t => !t.isComingSoon || EXPERIMENTAL_ENABLED).map(t => [t.id, t.name])
 );
 
 // Returns the hex color for the side-bar indicator based on accuracy (0-100).

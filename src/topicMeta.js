@@ -112,5 +112,7 @@ export const TOPIC_META = [
   },
 ];
 
+import { EXPERIMENTAL_ENABLED } from "./utils/experimentalMode";
+
 /** Number of available (non-comingSoon) topics. Used by achievements. */
-export const AVAILABLE_TOPIC_COUNT = TOPIC_META.filter(t => !t.isComingSoon).length;
+export const AVAILABLE_TOPIC_COUNT = TOPIC_META.filter(t => !t.isComingSoon || EXPERIMENTAL_ENABLED).length;

@@ -1,23 +1,35 @@
 import { describe, it, expect } from "vitest";
 import { TOPIC_META, AVAILABLE_TOPIC_COUNT, ACHIEVEMENTS } from "../topicMeta";
 import { TOPICS } from "../content/topics";
+import { EXPERIMENTAL_ENABLED } from "./experimentalMode";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const AVAILABLE_TOPICS = TOPICS.filter(t => !t.isComingSoon);
-const COMING_SOON_TOPICS = TOPICS.filter(t => t.isComingSoon);
+const AVAILABLE_TOPICS = TOPICS.filter(t => !t.isComingSoon || EXPERIMENTAL_ENABLED);
+const COMING_SOON_TOPICS = TOPICS.filter(t => t.isComingSoon && !EXPERIMENTAL_ENABLED);
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("comingSoon topic handling", () => {
 
-  it("should have at least one comingSoon topic (argo)", () => {
-    expect(COMING_SOON_TOPICS.length).toBeGreaterThanOrEqual(1);
-    expect(COMING_SOON_TOPICS.some(t => t.id === "argo")).toBe(true);
+  it("argo is marked isComingSoon in TOPIC_META", () => {
+    expect(TOPIC_META.some(t => t.id === "argo" && t.isComingSoon)).toBe(true);
   });
 
-  it("AVAILABLE_TOPIC_COUNT matches non-comingSoon topics", () => {
-    const expected = TOPIC_META.filter(t => !t.isComingSoon).length;
+  it("argo availability respects experimental flag", () => {
+    if (EXPERIMENTAL_ENABLED) {
+      // In experimental mode, argo should be available
+      expect(AVAILABLE_TOPICS.some(t => t.id === "argo")).toBe(true);
+      expect(COMING_SOON_TOPICS.some(t => t.id === "argo")).toBe(false);
+    } else {
+      // In normal mode, argo should be coming soon
+      expect(AVAILABLE_TOPICS.some(t => t.id === "argo")).toBe(false);
+      expect(COMING_SOON_TOPICS.some(t => t.id === "argo")).toBe(true);
+    }
+  });
+
+  it("AVAILABLE_TOPIC_COUNT matches available topics (respects experimental flag)", () => {
+    const expected = TOPIC_META.filter(t => !t.isComingSoon || EXPERIMENTAL_ENABLED).length;
     expect(AVAILABLE_TOPIC_COUNT).toBe(expected);
     expect(AVAILABLE_TOPIC_COUNT).toBe(AVAILABLE_TOPICS.length);
   });
@@ -93,9 +105,9 @@ describe("comingSoon topic handling", () => {
     expect(allEasy.condition({}, partial)).toBe(false);
   });
 
-  it("comingSoon topic questions are never in the local question pool", () => {
-    const comingSoonIds = new Set(COMING_SOON_TOPICS.map(t => t.id));
-    // Verify that iterating AVAILABLE_TOPICS excludes all comingSoon topic IDs
+  it("coming-soon topics (when not experimental) are excluded from available", () => {
+    const comingSoonIds = new Set(TOPICS.filter(t => t.isComingSoon && !EXPERIMENTAL_ENABLED).map(t => t.id));
+    // Verify that iterating AVAILABLE_TOPICS excludes all truly-comingSoon topic IDs
     AVAILABLE_TOPICS.forEach(t => {
       expect(comingSoonIds.has(t.id)).toBe(false);
     });
@@ -103,60 +115,51 @@ describe("comingSoon topic handling", () => {
 
   // ── Edge case 1: stale localStorage data with comingSoon topic ──────────
 
-  it("stale argo entries in completedTopics do not inflate best_score", () => {
+  it("comingSoon filter excludes argo from score when not experimental", () => {
     const LEVEL_POINTS = { easy: 10, medium: 20, hard: 30 };
-    const comingSoonIds = new Set(COMING_SOON_TOPICS.map(t => t.id));
+    // Simulate non-experimental: argo is comingSoon
+    const comingSoonIds = new Set(TOPICS.filter(t => t.isComingSoon).map(t => t.id));
+    const baseTopics = TOPICS.filter(t => !t.isComingSoon);
 
-    // Simulate completedTopics that includes stale argo data from dev/testing
     const completedTopics = {};
-    AVAILABLE_TOPICS.forEach(t => {
+    baseTopics.forEach(t => {
       completedTopics[`${t.id}_easy`] = { correct: 3, total: 5 };
     });
-    // Stale argo entries (from testing)
     completedTopics["argo_easy"] = { correct: 5, total: 5 };
     completedTopics["argo_medium"] = { correct: 4, total: 5 };
     completedTopics["argo_hard"] = { correct: 3, total: 5 };
 
-    // Replicate computeScore logic (as in App.jsx) WITH comingSoon filter
     const computeScore = (completed) =>
       Object.entries(completed).reduce((sum, [key, res]) => {
         const parts = key.split("_");
         const topicId = parts.slice(0, -1).join("_");
-        if (comingSoonIds.has(topicId)) return sum; // Must skip comingSoon
+        if (comingSoonIds.has(topicId)) return sum;
         const lvl = parts[parts.length - 1];
         return sum + ((res.correct ?? 0) * (LEVEL_POINTS[lvl] ?? 0));
       }, 0);
 
     const score = computeScore(completedTopics);
-
-    // Expected: only available topics contribute (3 correct * 10 pts each)
-    const expectedScore = AVAILABLE_TOPICS.length * 3 * 10;
+    const expectedScore = baseTopics.length * 3 * 10;
     expect(score).toBe(expectedScore);
-
-    // Verify argo points were NOT included
-    const argoWouldAdd = 5 * 10 + 4 * 20 + 3 * 30; // 50 + 80 + 90 = 220
-    expect(score).not.toBe(expectedScore + argoWouldAdd);
   });
 
-  it("stale argo entries do not count toward completedLevelCount", () => {
-    const availableIds = new Set(AVAILABLE_TOPICS.map(t => t.id));
+  it("comingSoon filter excludes argo from completedLevelCount when not experimental", () => {
+    // Simulate non-experimental: only base topics count
+    const baseIds = new Set(TOPICS.filter(t => !t.isComingSoon).map(t => t.id));
 
     const completedTopics = {};
-    // Two available topics completed on easy
     completedTopics["workloads_easy"] = { correct: 5, total: 5 };
     completedTopics["networking_easy"] = { correct: 5, total: 5 };
-    // Stale argo entries
     completedTopics["argo_easy"] = { correct: 5, total: 5 };
     completedTopics["argo_medium"] = { correct: 4, total: 5 };
 
-    // Replicate StatsView completedLevelCount logic
     const completedLevelCount = Object.keys(completedTopics).filter(k => {
       const parts = k.split("_");
       const topicId = parts.slice(0, -1).join("_");
-      return availableIds.has(topicId);
+      return baseIds.has(topicId);
     }).length;
 
-    expect(completedLevelCount).toBe(2); // Only workloads_easy + networking_easy
+    expect(completedLevelCount).toBe(2);
   });
 
   // ── Edge case 2: achievement thresholds after topic release ─────────────

@@ -240,7 +240,7 @@ export default function ArchitectureView({ lang, onBack }) {
                 </div>
               </div>
               {!dailyDone && (
-                <span style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700 }}>{en ? "Start →" : "← התחל"}</span>
+                <span style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700 }}>{en ? "Start →" : "התחל ←"}</span>
               )}
             </div>
           )}
