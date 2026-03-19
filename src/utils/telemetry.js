@@ -92,6 +92,7 @@ export function init({ dsn, environment, release }) {
       "Non-Error promise rejection",
       "Loading chunk",
       "Importing a module script failed",
+      "Load failed",
     ],
     beforeSend(event) {
       try {
