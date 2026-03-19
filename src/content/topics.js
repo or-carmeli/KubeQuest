@@ -547,7 +547,6 @@ export const TOPICS = [
             },
             {
               q: "עדכון Rolling update נתקע.\n\nהרצת:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nפלט:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nבנוסף, מוגדר maxUnavailable: 0\n\nמה הסיבה?",
-              tags: ["rolling-update"],
               options: [
               "Pods החדשים לא עוברים readiness probe, ו-maxUnavailable:0 מונע הורדת ישנים",
               "ה-TLS certificate שגוי ב-admission webhook שבודק את ה-Pod spec",
@@ -649,7 +648,6 @@ export const TOPICS = [
             },
             {
               q: "A rolling update is stuck.\n\nCommand:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nOutput:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nConfig: maxUnavailable: 0\n\nWhat is the cause?",
-              tags: ["rolling-update"],
               options: [
               "An admission webhook TLS certificate is invalid and rejecting new Pod specs",
               "New Pods are failing readiness probes, and maxUnavailable:0 prevents removing old ones",

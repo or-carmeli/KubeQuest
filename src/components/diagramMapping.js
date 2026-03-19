@@ -73,7 +73,6 @@ export const TAG_DIAGRAM_CONFIG = {
 
   // ── storage ─────────────────────────────────────────────────────────────
   "storage-binding":      { component: "PvPvcDiagram",               score: 4 },
-  "dynamic-provisioning": { component: "DynamicProvisioningDiagram", score: 4 },
 
   // ── security ────────────────────────────────────────────────────────────
   "rbac-binding":         { component: "RbacDiagram",                score: 4 },

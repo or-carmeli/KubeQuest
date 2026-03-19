@@ -9,7 +9,8 @@ export default function PodDiagram() {
       padding: "14px 12px 10px", margin: "4px 0 2px",
       background: "rgba(255,255,255,0.02)",
       border: "1px solid rgba(255,255,255,0.06)",
-      borderRadius: 12,
+      borderRadius: 12, maxWidth: 300, width: "100%", alignSelf: "center",
+      boxSizing: "border-box", overflow: "hidden",
     }}>
       {/* Pod outer box */}
       <div style={{

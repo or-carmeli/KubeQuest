@@ -405,29 +405,7 @@ function ProbesDiagram() {
   );
 }
 
-// ── 13. Dynamic Provisioning flow ───────────────────────────────────
-function DynamicProvisioningDiagram() {
-  return (
-    <div style={wrap}>
-      <div style={col({ gap: 4, width: "100%", maxWidth: 260 })}>
-        <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { width: "100%" })}>PVC created</div>
-        <div style={arrow()}>|</div>
-        <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { width: "100%" })}>StorageClass</div>
-        <div style={arrow()}>|</div>
-        <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%" })}>CSI Provisioner</div>
-        <div style={arrow()}>|</div>
-        <div style={row({ gap: 6 })}>
-          <div style={smallBox(C.green, C.greenBg, C.greenText)}>PV</div>
-          <span style={subLabel()}>+</span>
-          <div style={smallBox(C.amber, C.amberBg, C.amberText)}>Disk</div>
-        </div>
-      </div>
-      <div style={caption()}>automatic PV + disk creation</div>
-    </div>
-  );
-}
-
-// ── 14. Taints & Tolerations ────────────────────────────────────────
+// ── 13. Taints & Tolerations ────────────────────────────────────────
 function TaintsTolerationsDiagram() {
   return (
     <div style={wrap}>
@@ -607,7 +585,7 @@ function LazyDiagram({ children, diagramId }) {
   }, [diagramId]);
 
   return (
-    <div ref={ref} style={{ minHeight: visible ? "auto" : 80 }}>
+    <div ref={ref} style={{ minHeight: visible ? "auto" : 130 }}>
       {visible ? children : null}
     </div>
   );
@@ -678,7 +656,6 @@ const COMPONENT_MAP = {
   NetworkPolicyDiagram,
   HpaDiagram,
   ProbesDiagram,
-  DynamicProvisioningDiagram,
   TaintsTolerationsDiagram,
   IngressVsLbDiagram,
   HeadlessServiceDiagram,
@@ -773,5 +750,5 @@ const _knownInfoTags = new Set([
   "dns", "port-mapping", "traffic-policy", "admission-control",
   "resource-limits", "qos-eviction", "node-lifecycle", "storage-interface",
   "storage-zone", "config-mount", "image-pull", "dns-resolution",
-  "pod-disruption",
+  "pod-disruption", "dynamic-provisioning",
 ]);

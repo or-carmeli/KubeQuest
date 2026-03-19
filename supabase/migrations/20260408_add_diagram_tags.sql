@@ -36,12 +36,9 @@ ALTER TABLE incident_steps  ADD COLUMN IF NOT EXISTS tags JSONB NOT NULL DEFAULT
 UPDATE quiz_questions SET tags = '["controller-hierarchy"]'::jsonb
 WHERE q LIKE '%What does a Deployment do%' OR q LIKE '%מה Deployment עושה%';
 
--- rolling-update
+-- rolling-update (conceptual only — troubleshooting/stuck scenarios excluded)
 UPDATE quiz_questions SET tags = '["rolling-update"]'::jsonb
 WHERE q LIKE '%advantage of a Rolling Update%' OR q LIKE '%היתרון של Rolling Update%';
-
-UPDATE quiz_questions SET tags = '["rolling-update"]'::jsonb
-WHERE q LIKE '%maxUnavailable%' AND q LIKE '%maxSurge%';
 
 -- statefulset-storage
 UPDATE quiz_questions SET tags = '["statefulset-storage"]'::jsonb
@@ -127,13 +124,6 @@ WHERE q LIKE '%PV and PVC bind%' OR q LIKE '%PV ו-PVC מתחברים%';
 UPDATE quiz_questions SET tags = '["storage-binding"]'::jsonb
 WHERE q LIKE '%Multi-Attach error%';
 
--- dynamic-provisioning
-UPDATE quiz_questions SET tags = '["dynamic-provisioning"]'::jsonb
-WHERE q LIKE '%Dynamic Provisioning%';
-
-UPDATE quiz_questions SET tags = '["dynamic-provisioning"]'::jsonb
-WHERE q LIKE '%WaitForFirstConsumer%';
-
 -- gitops-sync (ArgoCD topics)
 UPDATE quiz_questions SET tags = '["gitops-sync"]'::jsonb
 WHERE q LIKE '%Synced%Healthy%ArgoCD%' OR q LIKE '%Synced ל-Healthy ב-ArgoCD%';
@@ -142,10 +132,7 @@ UPDATE quiz_questions SET tags = '["gitops-sync"]'::jsonb
 WHERE q LIKE '%auto-sync%self-heal%' OR q LIKE '%auto-sync ו-self-heal%';
 
 
--- 3. Tag daily_questions
-
-UPDATE daily_questions SET tags = '["rolling-update"]'::jsonb
-WHERE q LIKE '%rolling update%stuck%' OR q LIKE '%Rolling update נתקע%';
+-- 3. Tag daily_questions (rolling-update excluded — all daily are troubleshooting)
 
 UPDATE daily_questions SET tags = '["service-discovery"]'::jsonb
 WHERE q LIKE '%get endpoints%' AND q LIKE '%<none>%';
@@ -161,9 +148,6 @@ WHERE q LIKE '%LoadBalancer%Pending%' OR q LIKE '%EXTERNAL-IP%pending%';
 
 UPDATE daily_questions SET tags = '["storage-binding"]'::jsonb
 WHERE q LIKE '%Multi-Attach error%';
-
-UPDATE daily_questions SET tags = '["rolling-update"]'::jsonb
-WHERE q LIKE '%maxUnavailable%' AND q LIKE '%maxSurge%';
 
 UPDATE daily_questions SET tags = '["headless-dns"]'::jsonb
 WHERE q LIKE '%Headless Service%' AND q LIKE '%clusterIP%';
