@@ -59,7 +59,7 @@ const smallBox = (border, bg, color, extra) => ({
 
 const caption = (extra) => ({
   fontSize: 10, color: C.dim, marginTop: 6,
-  textAlign: "center", opacity: 0.6, ...extra,
+  textAlign: "center", opacity: 0.8, ...extra,
 });
 
 const arrow = (extra) => ({
@@ -79,7 +79,7 @@ const dashed = { borderTop: "1px dashed rgba(255,255,255,0.08)" };
 
 const subLabel = (extra) => ({
   fontSize: 9, color: C.muted, fontFamily: MONO,
-  letterSpacing: 0.2, opacity: 0.7, ...extra,
+  letterSpacing: 0.2, opacity: 0.9, ...extra,
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
