@@ -284,8 +284,8 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
         {/* Back (hidden on standalone status subdomain) */}
         {!isStatusDomain && (
           <div style={{display:"flex",justifyContent:lang==="en"?"flex-start":"flex-end",marginBottom:24}}>
-            <button onClick={()=>setScreen("home")} style={{background:"var(--glass-3)",border:"1px solid var(--glass-6)",color:"var(--text-secondary)",padding:"7px 12px",borderRadius:6,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:5}}>
-              {lang==="en"?"\u2190 Return":"\u05D7\u05D6\u05E8\u05D4 \u2192"}
+            <button onClick={()=>setScreen("home")} style={{background:"var(--glass-3)",border:"1px solid var(--glass-6)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {lang==="en"?"\u2190":"\u2192"}
             </button>
           </div>
         )}

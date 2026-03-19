@@ -140,7 +140,7 @@ export default function StatsView({
     return (
       <div className="page-pad" style={{ maxWidth: 660, margin: "0 auto", padding: "20px 16px", animation: "fadeIn 0.3s ease", direction: dir }}>
         <button onClick={onBack} style={backBtnStyle}>
-          {dir === "rtl" ? "→" : "←"} {dir === "rtl" ? "חזרה" : "Back"}
+          {dir === "rtl" ? "→" : "←"}
         </button>
         <h2 style={{ fontSize: 20, fontWeight: 800, textAlign: "center", color: "var(--text-primary)", marginBottom: 8 }}>
           {t("statsTitle")}
@@ -606,12 +606,13 @@ const backBtnStyle = {
   background: "var(--glass-4)",
   border: "1px solid var(--glass-9)",
   color: "var(--text-secondary)",
-  padding: "8px 14px",
+  width: 34,
+  height: 34,
   borderRadius: 8,
   cursor: "pointer",
-  fontSize: 13,
+  fontSize: 16,
   marginBottom: 20,
   display: "flex",
   alignItems: "center",
-  gap: 6,
+  justifyContent: "center",
 };

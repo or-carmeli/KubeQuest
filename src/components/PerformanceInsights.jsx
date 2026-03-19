@@ -1,0 +1,597 @@
+/**
+ * Performance Insights — Dev-only internal observability dashboard.
+ *
+ * Triple-gated:
+ *  1. Menu item only rendered when import.meta.env.DEV
+ *  2. Route only registered when import.meta.env.DEV
+ *  3. Component guard below returns null in production
+ *
+ * 100% real data. No simulated metrics.
+ */
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import {
+  ArrowLeft, Activity, AlertTriangle, Clock, Gauge, Users,
+  Eye, ChevronDown, ChevronUp, RefreshCw, Globe,
+} from "lucide-react";
+import { THRESHOLDS, SEVERITY_COLORS, severity, computeBaseline, CRUX_BENCHMARKS, compareToGlobal } from "../utils/mockTelemetry";
+import { buildSnapshot, TIME_RANGES } from "../utils/hybridTelemetry";
+import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/realTelemetry";
+
+// ─── Component-level guard ─────────────────────────────────────────────────────
+export default function PerformanceInsights({ onBack }) {
+  if (!import.meta.env.DEV) return null;
+  return <PerformanceInsightsInner onBack={onBack} />;
+}
+
+// ─── Design tokens ─────────────────────────────────────────────────────────────
+const MONO = "'Fira Code','Courier New',monospace";
+const COLLECTING = "Collecting\u2026";
+
+// Shared spacing constants
+const CHART_ROW_H    = 28;   // row height for horizontal bar charts
+const CHART_LABEL_W  = 100;  // fixed label column width
+const CHART_VALUE_W  = 56;   // fixed value column width
+const CHART_BAR_H    = 6;    // bar thickness
+const CHART_BAR_R    = 3;    // bar border-radius
+const CHART_GAP      = 0;    // gap between rows (controlled via padding)
+const SECTION_GAP    = 16;   // gap between sections within a tab
+const COL_GAP        = 10;   // gap between columns in a row
+
+// ─── Shared chart primitives ───────────────────────────────────────────────────
+
+/** Section header used above every chart / data block. */
+function ChartSection({ title, subtitle, children }) {
+  return (
+    <div style={{ marginBottom: SECTION_GAP }}>
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{subtitle}</div>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Structured empty state for any chart area. */
+function EmptyChartState({ title, message, hint }) {
+  return (
+    <div style={{ padding: "32px 24px", textAlign: "center", background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 10 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>{title || "No data yet"}</div>
+      <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: 420, margin: "0 auto" }}>{message}</div>
+      {hint && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10 }}>{hint}</div>}
+    </div>
+  );
+}
+
+/**
+ * Horizontal bar chart with strict 3-column layout:
+ *   [label (fixed)] [bar (flex)] [value (fixed)]
+ * All rows align to the same grid.
+ */
+function HorizontalBarChart({ items, labelWidth = CHART_LABEL_W, valueWidth = CHART_VALUE_W }) {
+  const maxVal = useMemo(() => Math.max(...items.map(r => r.value), 1), [items]);
+  const total = useMemo(() => items.reduce((s, r) => s + r.value, 0), [items]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {items.map((item, i) => {
+        const pct = (item.value / maxVal) * 100;
+        const sharePct = total > 0 ? Math.round((item.value / total) * 100) : 0;
+        return (
+          <div key={item.label} style={{ display: "flex", alignItems: "center", height: CHART_ROW_H, gap: COL_GAP, borderBottom: i < items.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
+            {/* Label column — fixed width, truncated */}
+            <span style={{ width: labelWidth, flexShrink: 0, fontSize: 11, color: "var(--text-secondary)", fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {item.label}
+            </span>
+            {/* Bar column — flexible */}
+            <div style={{ flex: 1, background: "var(--glass-3)", borderRadius: CHART_BAR_R, height: CHART_BAR_H, overflow: "hidden" }}>
+              <div style={{ width: `${Math.max(pct, 2)}%`, height: "100%", background: item.color || "var(--glass-15)", borderRadius: CHART_BAR_R, transition: "width 0.3s ease" }} />
+            </div>
+            {/* Value column — fixed width, right-aligned */}
+            <span style={{ width: valueWidth, flexShrink: 0, textAlign: "right", fontSize: 11, fontFamily: MONO, color: "var(--text-secondary)" }}>
+              {item.value}{item.showPct !== false && total > 1 ? <span style={{ color: "var(--text-disabled)", marginLeft: 3, fontSize: 9 }}>{sharePct}%</span> : ""}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Summary stat row: label on left, value on right. Use inside a container. */
+function StatRow({ label, value, unit, warn, warnColor, last }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: CHART_ROW_H, borderBottom: last ? "none" : "1px solid var(--glass-3)" }}>
+      <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: MONO, color: warn ? (warnColor || "#fbbf24") : "var(--text-primary)" }}>
+        {value}{unit || ""}
+      </span>
+    </div>
+  );
+}
+
+/** Large metric for the top banner — optimized for screen-share readability. */
+function BannerMetric({ label, value, color, last }) {
+  return (
+    <div style={{ flex: 1, minWidth: 100, padding: "0 16px", borderRight: last ? "none" : "1px solid var(--glass-3)" }}>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color, fontFamily: MONO, lineHeight: 1 }}>{value}</div>
+    </div>
+  );
+}
+
+/** Inline metric for secondary areas (flow stats, etc). */
+function InlineMetric({ label, value, color }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.4, marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color, fontFamily: MONO, lineHeight: 1 }}>{value}</div>
+    </div>
+  );
+}
+
+function ConfidenceBadge({ level }) {
+  if (level === "none") return null;
+  const cfg = {
+    low:    { bg: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "rgba(251,191,36,0.25)", icon: "\u25CB" },
+    medium: { bg: "rgba(96,165,250,0.10)", color: "#60a5fa", border: "rgba(96,165,250,0.20)", icon: "\u25D1" },
+    high:   { bg: "rgba(52,211,153,0.10)", color: "#34d399", border: "rgba(52,211,153,0.20)", icon: "\u25CF" },
+  };
+  const c = cfg[level] || cfg.low;
+  const label = level === "low" ? "Low confidence" : level === "medium" ? "Medium" : "High";
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
+      <span style={{ fontSize: 9 }}>{c.icon}</span>
+      {label}
+    </span>
+  );
+}
+
+function SeverityDot({ sev, size = 6 }) {
+  return <span style={{ width: size, height: size, borderRadius: "50%", background: SEVERITY_COLORS[sev]?.text || "#60a5fa", flexShrink: 0, marginTop: 1 }} />;
+}
+
+function sevColor(value, threshold, goodColor = "#34d399") {
+  if (value == null) return "var(--text-dim)";
+  const s = severity(value, threshold);
+  return s === "info" ? goodColor : SEVERITY_COLORS[s].text;
+}
+
+// ─── Loading skeleton ──────────────────────────────────────────────────────────
+function Skeleton() {
+  return (
+    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+        <div style={{ width: 36, height: 36, background: "var(--glass-3)", borderRadius: 8 }} />
+        <div style={{ width: 180, height: 22, background: "var(--glass-3)", borderRadius: 6 }} />
+      </div>
+      <div style={{ height: 80, background: "var(--glass-2)", borderRadius: 12, marginBottom: 32, animation: "pulse 1.5s ease-in-out infinite" }} />
+      <div style={{ height: 60, background: "var(--glass-2)", borderRadius: 12, animation: "pulse 1.5s ease-in-out infinite", animationDelay: "0.2s" }} />
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
+function PerformanceInsightsInner({ onBack }) {
+  const [data, setData] = useState(null);
+  const [activeTab, setActiveTab] = useState("vitals");
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [timeRangeKey, setTimeRangeKey] = useState("session");
+
+  const activeRange = TIME_RANGES.find(r => r.key === timeRangeKey) || TIME_RANGES[TIME_RANGES.length - 1];
+
+  useEffect(() => {
+    const cleanup = initRealTelemetry();
+    recordRouteChange("performanceInsights");
+    return cleanup;
+  }, []);
+
+  const loadSnapshot = useCallback(() => {
+    const real = getRealMetrics();
+    setData(buildSnapshot(real, activeRange.sec));
+    setLastUpdated(new Date());
+  }, [activeRange.sec]);
+
+  useEffect(() => { const t = setTimeout(loadSnapshot, 350); return () => clearTimeout(t); }, [loadSnapshot]);
+  const refresh = useCallback(() => { setData(null); setTimeout(loadSnapshot, 250); }, [loadSnapshot]);
+  useEffect(() => { const id = setInterval(loadSnapshot, 30_000); return () => clearInterval(id); }, [loadSnapshot]);
+
+  // Hooks before early return
+  const health = data?.health || { status: "unknown", reason: "Initializing telemetry collectors\u2026", score: 0 };
+  const alerts = data?.alerts || [];
+  const insights = data?.insights || [];
+  const latencyBaseline = data?.latencyBaseline || null;
+  const confidence = data?.confidence || { level: "none", label: "No data" };
+  const healthColor = health.status === "unhealthy" ? "#f87171" : health.status === "degraded" ? "#fbbf24" : health.status === "unknown" ? "#64748b" : "#34d399";
+  const trendDir = latencyBaseline?.direction || null;
+
+  // Time context
+  const agoSec = lastUpdated ? Math.max(0, Math.round((Date.now() - lastUpdated.getTime()) / 1000)) : null;
+  const rangeLabel = activeRange.sec != null ? `Last ${activeRange.label}` : "Session";
+  const timeContextText = agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s ago` : rangeLabel;
+
+  if (!data) return <Skeleton />;
+
+  const hasLatencyData = data.latencyTimeline.length > 0;
+  const TABS = [
+    { id: "vitals",   label: "Vitals",    icon: Eye },
+    { id: "client",   label: "Client",    icon: Globe },
+    { id: "userflow", label: "User Flow", icon: Users },
+  ];
+
+  return (
+    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease" }}>
+
+      {/* ── Header ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+        <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center" }}>
+          <ArrowLeft size={16} />
+        </button>
+        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>Performance Insights</span>
+        <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>Dev Only</span>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{timeContextText}</span>
+          <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center" }} title="Refresh">
+            <RefreshCw size={12} />
+          </button>
+        </div>
+      </div>
+
+      {/* Time range selector */}
+      <div style={{ display: "flex", gap: 2, marginBottom: 18, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3, width: "fit-content" }}>
+        {TIME_RANGES.map(r => {
+          const active = r.key === timeRangeKey;
+          return (
+            <button key={r.key} onClick={() => setTimeRangeKey(r.key)} style={{
+              background: active ? "var(--glass-10)" : "transparent",
+              border: "none",
+              color: active ? "var(--text-bright)" : "var(--text-muted)",
+              padding: "5px 12px",
+              borderRadius: 6,
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: active ? 700 : 400,
+              transition: "all 0.15s ease",
+            }}>
+              {r.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════════════
+         ZONE 1 — Status banner
+         ════════════════════════════════════════════════════════════════════════ */}
+      <div style={{ background: `rgba(${health.status === "unhealthy" ? "239,68,68" : health.status === "degraded" ? "245,158,11" : health.status === "unknown" ? "148,163,184" : "52,211,153"},0.03)`, border: `1px solid ${healthColor}18`, borderRadius: 12, padding: "18px 20px", marginBottom: 8 }}>
+        {/* Status + confidence */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}CC, 0 0 12px ${healthColor}66` }} />
+          <span style={{ fontSize: 17, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>
+            {health.status === "unknown" ? `System idle \u00b7 No traffic in ${rangeLabel.toLowerCase()}` : health.status === "healthy" && confidence.level === "low" ? "Healthy (low confidence)" : { healthy: "Healthy", degraded: "Degraded", unhealthy: "Unhealthy" }[health.status]}
+          </span>
+          <ConfidenceBadge level={confidence.level} />
+        </div>
+        <div style={{ fontSize: 14, color: health.status === "unknown" ? "var(--text-muted)" : "var(--text-secondary)", lineHeight: 1.5, marginBottom: 16 }}>{health.reason}</div>
+
+        {/* Key metrics row */}
+        <div style={{ display: "flex", gap: 0, flexWrap: "wrap", paddingTop: 16, borderTop: "1px solid var(--glass-3)" }}>
+          <BannerMetric label="P95 LATENCY" value={data.p95 != null ? data.p95 + "ms" : (data.totalRequests > 0 ? "Sampling\u2026" : "\u2014")} color={data.p95 != null ? sevColor(data.p95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
+          <BannerMetric label="ERROR RATE" value={data.errorRate != null ? data.errorRate + "%" : (data.totalRequests > 0 ? "0%" : "N/A")} color={data.errorRate != null && data.errorRate >= 2 ? "#f87171" : "var(--text-bright)"} />
+          <BannerMetric label="TRAFFIC" value={data.traffic?.rps != null ? data.traffic.label : (data.totalRequests > 0 ? data.totalRequests + " req" : "\u2014")} color={data.totalRequests > 0 ? "var(--text-bright)" : "var(--text-dim)"} />
+          <BannerMetric label="ERRORS" value={String(data.errorCount)} color={data.errorCount > 0 ? "#f87171" : "var(--text-bright)"} last />
+        </div>
+      </div>
+
+      {/* Collapsible alerts */}
+      {alerts.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}>
+            {alertsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            <AlertTriangle size={12} color={health.status === "unhealthy" ? "#f87171" : "#fbbf24"} />
+            <span>{alerts.length} alert{alerts.length !== 1 ? "s" : ""}</span>
+          </button>
+          {alertsOpen && (
+            <div style={{ padding: "4px 12px 8px 30px", display: "flex", flexDirection: "column", gap: 4 }}>
+              {alerts.map((a, i) => (
+                <div key={i} style={{ fontSize: 12, color: SEVERITY_COLORS[a.severity].text, display: "flex", alignItems: "center", gap: 6 }}>
+                  <SeverityDot sev={a.severity} />
+                  {a.message}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════════
+         ZONE 2 — Latency chart + Insights
+         ════════════════════════════════════════════════════════════════════════ */}
+      <div style={{ marginTop: 24 }}>
+        <ChartSection
+          title={<span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            Request Latency
+            {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? "#fbbf24" : trendDir === "decreasing" ? "#34d399" : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
+              {trendDir === "increasing" ? "Trending up" : trendDir === "decreasing" ? "Trending down" : "Stable"}
+            </span>}
+          </span>}
+          subtitle={hasLatencyData ? `Based on ${data.latencyTimeline.length} request${data.latencyTimeline.length !== 1 ? "s" : ""} in ${rangeLabel.toLowerCase()}${confidence.level === "low" ? " \u00b7 Low sample size" : ""}` : null}
+        >
+          {hasLatencyData
+            ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} />
+            : <EmptyChartState title={`No requests in ${rangeLabel.toLowerCase()}`} message={activeRange.sec != null ? `No network requests recorded in the last ${activeRange.label}. Try a wider time range or interact with the app.` : "No traffic has been observed in this session."} hint={activeRange.sec != null && activeRange.sec <= 60 ? "Short windows may be empty during idle periods." : "Navigate to a quiz or topic to generate requests."} />
+          }
+        </ChartSection>
+      </div>
+
+      {/* Insights */}
+      {insights.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <ChartSection title="Insights">
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {insights.map((ins, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
+                  <SeverityDot sev={ins.severity} size={7} />
+                  <span style={{ fontSize: 14, color: ins.severity === "info" ? "var(--text-secondary)" : SEVERITY_COLORS[ins.severity].text, lineHeight: 1.5 }}>
+                    {ins.message}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </ChartSection>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════════
+         ZONE 3 — Diagnostics tabs
+         ════════════════════════════════════════════════════════════════════════ */}
+      <div style={{ marginTop: 28 }}>
+        <ChartSection title="Diagnostics">
+          <div style={{ display: "flex", gap: 4, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                  background: active ? "var(--glass-6)" : "none",
+                  border: active ? "1px solid var(--glass-10)" : "1px solid transparent",
+                  color: active ? "var(--text-bright)" : "var(--text-muted)",
+                  padding: "6px 11px", borderRadius: 7, cursor: "pointer", fontSize: 12,
+                  fontWeight: active ? 600 : 400, display: "flex", alignItems: "center",
+                  gap: 5, whiteSpace: "nowrap", transition: "all 0.15s ease",
+                }}>
+                  <Icon size={12} />{tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </ChartSection>
+
+        {activeTab === "vitals"   && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} />}
+        {activeTab === "client"   && <ClientTab client={data.client} />}
+        {activeTab === "userflow" && <UserFlowTab userFlow={data.userFlow} />}
+      </div>
+
+      <div style={{ textAlign: "center", padding: "28px 0 12px", fontSize: 10, color: "var(--text-dim)" }}>
+        All data collected from real browser signals
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LATENCY CHART (vertical bar chart with baseline + summary strip)
+// ═══════════════════════════════════════════════════════════════════════════════
+const LatencyChart = memo(function LatencyChart({ data, baseline, p95 }) {
+  const max = useMemo(() => Math.max(...data.map(d => d.value), 1), [data]);
+  const avg = useMemo(() => Math.round(data.reduce((s, d) => s + d.value, 0) / data.length), [data]);
+  const spikeThreshold = baseline ? baseline.baseline * 2 : THRESHOLDS.p95Latency.warning;
+  const baselinePct = baseline ? Math.min((baseline.baseline / max) * 100, 92) : null;
+
+  return (
+    <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "14px 16px" }}>
+      {/* Bar area */}
+      <div style={{ position: "relative" }}>
+        {baselinePct !== null && (
+          <div style={{ position: "absolute", bottom: `${baselinePct}%`, left: 0, right: 0, borderBottom: "1px dashed var(--glass-8)", zIndex: 1, pointerEvents: "none" }}>
+            <span style={{ position: "absolute", right: 0, top: -11, fontSize: 9, color: "var(--text-dim)", background: "var(--glass-2)", padding: "0 4px", borderRadius: 2 }}>avg {baseline.baseline}ms</span>
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 1.5, height: 64 }}>
+          {data.map((d, i) => {
+            const h = Math.max((d.value / max) * 100, 4);
+            const s = severity(d.value, THRESHOLDS.p95Latency);
+            const isSpike = d.value > spikeThreshold;
+            const color = s !== "info" ? SEVERITY_COLORS[s].text : isSpike ? "rgba(251,191,36,0.5)" : "var(--glass-12)";
+            return <div key={i} title={`${d.time}: ${d.value}ms`} style={{ flex: 1, height: `${h}%`, background: color, borderRadius: "2px 2px 0 0", minWidth: 2, transition: "height 0.3s ease" }} />;
+          })}
+        </div>
+      </div>
+      {/* Time axis */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-dim)" }}>
+        <span>{data[0]?.time}</span>
+        <span>{data[data.length - 1]?.time}</span>
+      </div>
+      {/* Summary strip */}
+      <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--glass-3)", fontSize: 11 }}>
+        <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{avg}ms</span></span>
+        {p95 != null && <span style={{ color: "var(--text-muted)" }}>P95 <span style={{ color: sevColor(p95, THRESHOLDS.p95Latency, "var(--text-primary)"), fontFamily: MONO, fontWeight: 600 }}>{p95}ms</span></span>}
+        <span style={{ color: "var(--text-muted)" }}>Samples <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{data.length}</span></span>
+      </div>
+    </div>
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VITALS TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+function VitalsTab({ vitals, navTiming }) {
+  const hasVitals = vitals.lcp != null || vitals.inp != null || vitals.cls != null;
+  const vitalsList = [
+    vitals.lcp != null && { metric: "lcp", key: "LCP", desc: "Largest Contentful Paint", value: vitals.lcp, unit: "ms", threshold: THRESHOLDS.lcp },
+    vitals.inp != null && { metric: "inp", key: "INP", desc: "Interaction to Next Paint", value: vitals.inp, unit: "ms", threshold: THRESHOLDS.inp },
+    vitals.cls != null && { metric: "cls", key: "CLS", desc: "Cumulative Layout Shift", value: vitals.cls, unit: "",   threshold: THRESHOLDS.cls },
+  ].filter(Boolean);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
+      <ChartSection title="Core Web Vitals" subtitle="Session measurements vs. global benchmarks (CrUX p75)">
+        {hasVitals ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {vitalsList.map(v => {
+              const sev = severity(v.value, v.threshold);
+              const col = sev === "info" ? "#34d399" : SEVERITY_COLORS[sev].text;
+              const pct = Math.min((v.value / v.threshold.critical) * 100, 100);
+              const statusLabel = sev === "info" ? "Good" : sev === "warning" ? "Needs work" : "Poor";
+              const bench = CRUX_BENCHMARKS[v.metric];
+              const comparison = compareToGlobal(v.metric, v.value);
+              const compColor = comparison?.verdict === "faster" ? "#34d399" : comparison?.verdict === "within" ? "var(--text-muted)" : "#fbbf24";
+              return (
+                <div key={v.key} style={{ background: "var(--glass-2)", borderRadius: 10, padding: "14px 16px" }}>
+                  {/* Header: name + description */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                    <div>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{v.key}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 6 }}>{v.desc}</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: col, fontWeight: 600 }}>{statusLabel}</span>
+                  </div>
+                  {/* Values: session vs global */}
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>SESSION</div>
+                      <span style={{ fontSize: 22, fontWeight: 700, color: col, fontFamily: MONO }}>{v.value}{v.unit}</span>
+                    </div>
+                    {bench && (
+                      <div style={{ borderLeft: "1px solid var(--glass-4)", paddingLeft: 16 }}>
+                        <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>GLOBAL (P75)</div>
+                        <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text-muted)", fontFamily: MONO }}>{bench.good}{bench.unit}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ flex: 1, background: "var(--glass-3)", borderRadius: CHART_BAR_R, height: CHART_BAR_H, overflow: "hidden" }}>
+                      <div style={{ width: `${Math.max(pct, 3)}%`, height: "100%", background: col, borderRadius: CHART_BAR_R, transition: "width 0.3s ease" }} />
+                    </div>
+                  </div>
+                  {/* Comparison insight */}
+                  {comparison && (
+                    <div style={{ fontSize: 11, color: compColor, marginTop: 6, fontWeight: 500 }}>
+                      {comparison.label}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyChartState title="Web Vitals not yet measured" message="LCP is captured on first meaningful paint. INP and CLS require user interaction." hint="Click buttons, scroll, or navigate to trigger collection." />
+        )}
+      </ChartSection>
+
+      {navTiming && (
+        <ChartSection title="Navigation Timing">
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
+            <StatRow label="TTFB" value={navTiming.ttfb} unit="ms" />
+            <StatRow label="DOM Content Loaded" value={navTiming.domContentLoaded} unit="ms" />
+            <StatRow label="Full Page Load" value={navTiming.pageLoad} unit="ms" warn={navTiming.pageLoad > 3000} />
+            <StatRow label="DNS Lookup" value={navTiming.dnsLookup} unit="ms" />
+            <StatRow label="TCP Connect" value={navTiming.tcpConnect} unit="ms" last />
+          </div>
+        </ChartSection>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLIENT TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+function ClientTab({ client }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
+      <ChartSection title="Error Counters">
+        <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
+          <StatRow label="Unhandled errors"   value={client.unhandledErrors}   warn={client.unhandledErrors > 0}   warnColor="#f87171" />
+          <StatRow label="Promise rejections" value={client.promiseRejections} warn={client.promiseRejections > 0} warnColor="#f87171" />
+          <StatRow label="Failed requests"    value={client.failedRequests}    warn={client.failedRequests > 0}    warnColor="#f87171" />
+          <StatRow label="Slow requests"      value={client.slowRequests}      warn={client.slowRequests > 0}      warnColor="#fbbf24" last />
+        </div>
+      </ChartSection>
+
+      {client.recentErrors.length > 0 && (
+        <ChartSection title="Recent Errors" subtitle={`Last ${Math.min(client.recentErrors.length, 10)} events`}>
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
+            {client.recentErrors.slice(-10).reverse().map((err, i, arr) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
+                <SeverityDot sev="warning" size={5} />
+                <span style={{ color: "var(--text-dim)", flexShrink: 0, fontFamily: MONO, fontSize: 10, width: 64 }}>{new Date(err.timestamp).toLocaleTimeString()}</span>
+                <span style={{ color: "var(--text-secondary)", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{err.message}</span>
+              </div>
+            ))}
+          </div>
+        </ChartSection>
+      )}
+
+      {client.recentNetworkLog.length > 0 && (
+        <ChartSection title="Recent Network Issues" subtitle={`Last ${Math.min(client.recentNetworkLog.length, 10)} events`}>
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
+            {client.recentNetworkLog.slice(-10).reverse().map((entry, i, arr) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
+                <SeverityDot sev={entry.type === "error" ? "critical" : "warning"} size={5} />
+                <span style={{ color: "var(--text-dim)", flexShrink: 0, fontFamily: MONO, fontSize: 10, width: 64 }}>{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                <span style={{ color: "var(--text-secondary)", fontFamily: MONO, fontSize: 10, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.url}</span>
+                {entry.status && <span style={{ color: "#f87171", fontFamily: MONO, fontSize: 10, flexShrink: 0 }}>{entry.status}</span>}
+                {entry.duration != null && <span style={{ color: "var(--text-dim)", fontFamily: MONO, fontSize: 10, flexShrink: 0 }}>{entry.duration}ms</span>}
+              </div>
+            ))}
+          </div>
+        </ChartSection>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USER FLOW TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+function UserFlowTab({ userFlow }) {
+  const hasActivity = userFlow.routeChanges > 0 || userFlow.quizStarted > 0;
+  const completionRate = userFlow.quizStarted > 0 ? Math.round((userFlow.quizCompleted / userFlow.quizStarted) * 100) : null;
+  const sessionMin = Math.floor(userFlow.sessionDuration / 60);
+  const sessionSec = userFlow.sessionDuration % 60;
+
+  if (!hasActivity) {
+    return <EmptyChartState title="No user activity recorded" message="Route visits, quiz metrics, and session data will appear as you use the app." hint="Navigate between screens or start a quiz to generate flow data." />;
+  }
+
+  const routeItems = userFlow.routeVisits.map(r => ({ label: "/" + r.route, value: r.visits }));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
+      {/* Session stats */}
+      <ChartSection title="Session Activity">
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <InlineMetric label="SESSION" value={`${sessionMin}m ${sessionSec}s`} color="var(--text-secondary)" />
+          <InlineMetric label="ROUTES VISITED" value={String(userFlow.routeChanges)} color="var(--text-secondary)" />
+          {userFlow.quizStarted > 0 && <InlineMetric label="QUIZZES STARTED" value={String(userFlow.quizStarted)} color="#60a5fa" />}
+          {userFlow.quizCompleted > 0 && <InlineMetric label="COMPLETED" value={String(userFlow.quizCompleted)} color="#34d399" />}
+          {completionRate != null && <InlineMetric label="COMPLETION RATE" value={completionRate + "%"} color={sevColor(completionRate, THRESHOLDS.completionRate)} />}
+          {userFlow.retries > 0 && <InlineMetric label="RETRIES" value={String(userFlow.retries)} color="var(--text-secondary)" />}
+        </div>
+      </ChartSection>
+
+      {/* Route visits bar chart */}
+      {routeItems.length > 0 && (
+        <ChartSection title="Route Visits" subtitle={`${routeItems.length} route${routeItems.length !== 1 ? "s" : ""} visited`}>
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
+            <HorizontalBarChart items={routeItems} />
+          </div>
+        </ChartSection>
+      )}
+    </div>
+  );
+}
