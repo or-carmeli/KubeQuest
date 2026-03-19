@@ -9,10 +9,10 @@ import RoadmapView from "./components/RoadmapView";
 import StatsView from "./components/StatsView";
 import { ACHIEVEMENTS } from "./topicMeta";
 import { TOPICS } from "./content/topics";
-/** Topics available for progress, quizzes, and stats (excludes comingSoon). */
-const AVAILABLE_TOPICS = TOPICS.filter(t => !t.isComingSoon);
+/** Topics available for progress, quizzes, and stats (excludes comingSoon unless experimental). */
+const AVAILABLE_TOPICS = TOPICS.filter(t => !t.isComingSoon || EXPERIMENTAL_ENABLED);
 /** IDs of comingSoon topics — used to filter stale localStorage entries. */
-const COMING_SOON_IDS = new Set(TOPICS.filter(t => t.isComingSoon).map(t => t.id));
+const COMING_SOON_IDS = new Set(TOPICS.filter(t => t.isComingSoon && !EXPERIMENTAL_ENABLED).map(t => t.id));
 import { DAILY_QUESTIONS } from "./content/dailyQuestions";
 import { INCIDENTS } from "./content/incidents";
 import { CHEATSHEET } from "./content/cheatsheet";
@@ -22,7 +22,7 @@ import { captureError, setUserContext, setScreen as setTelemetryScreen } from ".
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
 import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } from "./components/CodeBlocks";
-import PodDiagram from "./components/PodDiagram";
+import { getDiagramForQuestion } from "./components/QuizDiagrams";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress, fetchQuestionHint, fetchEliminateOption } from "./api/quiz";
 import StatusView from "./components/StatusView";
 // eslint-disable-next-line no-unused-vars
@@ -40,9 +40,9 @@ function StatIcon({ name, size = 15, color }) { const C = STAT_ICONS[name]; retu
 const ACHIEVEMENT_ICONS = { flame: FlameIcon, award: Award, star: Star, trophy: Trophy };
 function AchievementIcon({ name, size = 16, color }) { const C = ACHIEVEMENT_ICONS[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
 
-// Feature flag: Architecture Scenarios (secret URL param in prod)
-const ARCHITECTURE_ENABLED = !import.meta.env.PROD
-  || new URLSearchParams(window.location.search).has("arch");
+import { EXPERIMENTAL_ENABLED } from "./utils/experimentalMode";
+import PerformanceInsights from "./components/PerformanceInsights";
+import { recordRouteChange } from "./utils/realTelemetry";
 
 
 
@@ -1166,7 +1166,7 @@ export default function K8sQuestApp() {
       console.info("[KubeQuest:boot] Screen was", s, "- falling back to home (transient state lost on refresh)");
       return "home";
     }
-    if (s && ["home","incidentList","incident","privacy","terms",...(ARCHITECTURE_ENABLED?["architecture"]:[])].includes(s)) return s;
+    if (s && ["home","incidentList","incident","privacy","terms",...(EXPERIMENTAL_ENABLED?["architecture","performanceInsights"]:[])].includes(s)) return s;
     return "home";
   });
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -1296,7 +1296,7 @@ export default function K8sQuestApp() {
 
   // ── Telemetry context (safe metadata only) ────────────────────────────────
   useEffect(() => { setUserContext({ isGuest }); }, [isGuest]);
-  useEffect(() => { setTelemetryScreen(screen); }, [screen]);
+  useEffect(() => { setTelemetryScreen(screen); if (EXPERIMENTAL_ENABLED) recordRouteChange(screen); }, [screen]);
 
   // ── War Room (Incident) state ─────────────────────────────────────────────
   const [selectedIncident,   setSelectedIncident]   = useState(null);
@@ -3533,7 +3533,7 @@ export default function K8sQuestApp() {
 
   // ── War Room: periodic notification when user is on safe screens ──────────
   useEffect(() => {
-    if (import.meta.env.PROD) return; // War Room disabled in production
+    if (!EXPERIMENTAL_ENABLED) return; // War Room disabled unless experimental
     if (warRoomToastShownRef.current) return;
     // Only trigger on home or incidentList screens (safe, not during quiz/incident)
     if (screen !== "home" && screen !== "incidentList") return;
@@ -4100,7 +4100,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
   return (
     <div data-kq-rendered="app" dir={isStatusDomain?"ltr":undefined} style={{minHeight:"100vh",background:"var(--gradient-body)",fontFamily:"Segoe UI, system-ui, sans-serif",direction:isStatusDomain?"ltr":dir,position:"relative",overflowX:"hidden"}}>
       {/* War Room toast notification */}
-      {!import.meta.env.PROD && warRoomToast && (
+      {EXPERIMENTAL_ENABLED && warRoomToast && (
         <button onClick={() => { setWarRoomToast(false); setScreen("incidentList"); }}
           aria-label={t("warRoomNotification")}
           style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:10000,background:"linear-gradient(135deg,rgba(239,68,68,0.95),rgba(185,28,28,0.95))",color:"#fff",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,padding:"10px 20px",fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:8,boxShadow:"0 8px 32px rgba(239,68,68,0.35),0 2px 8px rgba(0,0,0,0.3)",backdropFilter:"blur(12px)",animation:"warRoomToastIn 0.35s ease",direction:dir,maxWidth:"90vw",whiteSpace:"nowrap"}}>
@@ -4423,7 +4423,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {/* ── 0. Architecture Scenarios (Advanced) ── */}
-          {ARCHITECTURE_ENABLED&&<button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:screen==="architecture"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
+          {EXPERIMENTAL_ENABLED&&<button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:screen==="architecture"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
             <Brain size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"Architecture Scenarios":"תרחישי ארכיטקטורה"}
             <span style={{background:"rgba(168,85,247,0.12)",color:"#C084FC",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:4,marginInlineStart:"auto",flexShrink:0,lineHeight:1.5,letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"ADV":"מתקדם"}</span>
@@ -4433,10 +4433,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{padding:"12px 16px 5px"}}>
             <span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",direction:dir}}>{lang==="en"?"PRACTICE":"תרגול"}</span>
           </div>
-          <button className="menu-item" onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:import.meta.env.PROD?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
+          <button className="menu-item" onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:!EXPERIMENTAL_ENABLED?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             <Siren size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"War Room":"חדר מצב"}
-            {import.meta.env.PROD&&<span style={{background:"rgba(120,140,255,0.1)",color:"#9fb3ff",fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:999,marginInlineStart:"auto",flexShrink:0,lineHeight:1.4}}>Soon</span>}
+            {!EXPERIMENTAL_ENABLED&&<span style={{background:"rgba(120,140,255,0.1)",color:"#9fb3ff",fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:999,marginInlineStart:"auto",flexShrink:0,lineHeight:1.4}}>Soon</span>}
           </button>
           <button className="menu-item" onClick={()=>{tryStartQuiz(startMixedQuiz,"mixed");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             <Shuffle size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
@@ -4498,6 +4498,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <Activity size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"System Status":"סטטוס מערכת"}
           </button>
+          {EXPERIMENTAL_ENABLED && (
+          <button className="menu-item" onClick={()=>{setScreen("performanceInsights");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="performanceInsights"?"var(--glass-3)":"none",border:"none",color:screen==="performanceInsights"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="performanceInsights"?600:400,direction:dir}}>
+            <BarChart3 size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"Performance Insights":"תובנות ביצועים"}
+            <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginInlineStart:"auto",letterSpacing:0.5}}>ADV</span>
+          </button>
+          )}
           <button className="menu-item" onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="about"?"var(--glass-3)":"none",border:"none",color:screen==="about"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="about"?600:400,direction:dir}}>
             <Info size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("aboutBtn")}
@@ -4831,8 +4838,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <div className="action-card-inner" style={{display:"flex",alignItems:"center",gap:12,minWidth:0,flex:1}}>
               <div className="action-text" style={{textAlign:"start",minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                  <span style={{color:import.meta.env.PROD?"var(--text-dim)":"#EF4444",fontWeight:800,fontSize:14}}>{t("incidentModeBtn")}</span>
-                  {import.meta.env.PROD
+                  <span style={{color:!EXPERIMENTAL_ENABLED?"var(--text-dim)":"#EF4444",fontWeight:800,fontSize:14}}>{t("incidentModeBtn")}</span>
+                  {!EXPERIMENTAL_ENABLED
                     ?<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>Coming Soon</span>
                     :<span style={{background:"rgba(239,68,68,0.12)",color:"#EF4444",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>NEW</span>}
                 </div>
@@ -4844,13 +4851,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {(()=>{const nextTopicId=AVAILABLE_TOPICS.find(t=>computeTopicProgress(t.id)<100)?.id;return(
           <div className="topic-list" style={{display:"flex",flexDirection:"column",gap:12}}>
             {TOPICS.filter(t=>!t.devOnly||!import.meta.env.PROD).map(topic=>{
-              const comingSoon=topic.isComingSoon&&import.meta.env.PROD;
+              const comingSoon=topic.isComingSoon&&!EXPERIMENTAL_ENABLED;
               return(
               <section key={topic.id} id={`topic-card-${topic.id}`} aria-label={topic.name} className={`topic-card-section${highlightTopic===topic.id?" pulseHighlight":""}${topic.id===nextTopicId?" topic-next":""}${computeTopicProgress(topic.id)>=100?" topic-done":""}`} style={{background:"var(--glass-2)",border:"1px solid var(--glass-7)",borderRadius:14,padding:"16px 18px",opacity:comingSoon?0.55:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
                   <div aria-hidden="true" style={{width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}><TopicIcon name={topic.icon} size={22} color={topic.color} /></div>
                   <div style={{flex:1}}>
-                    <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>{topic.name}{topic.isComingSoon&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(234,179,8,0.25)"}}>COMING SOON</span>}{topic.isNew&&!topic.isComingSoon&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}</h3>
+                    <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>{topic.name}{topic.isComingSoon&&!EXPERIMENTAL_ENABLED&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(234,179,8,0.25)"}}>COMING SOON</span>}{topic.isNew&&!topic.isComingSoon&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}</h3>
                     <div style={{color:"var(--text-dim)",fontSize:12}}>{getLocalizedField(topic, "description", lang)}</div>
                   </div>
                   {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -5244,9 +5251,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
 
       {/* ARCHITECTURE SCENARIOS */}
-      {ARCHITECTURE_ENABLED&&screen==="architecture"&&(
+      {EXPERIMENTAL_ENABLED&&screen==="architecture"&&(
         <ArchitectureView lang={lang} onBack={()=>setScreen("home")} />
       )}
+
+      {/* PERFORMANCE INSIGHTS */}
+      {EXPERIMENTAL_ENABLED&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} />}
 
       {/* STATS */}
       {screen==="stats"&&(
@@ -5532,7 +5542,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               </div>
                             );
                           })}
-                          {/מה הוא Pod ב|What is a Pod/i.test(q.q) && <PodDiagram />}
+                          {getDiagramForQuestion(q.tags)}
                         </div>}
                       </div>
                     );
@@ -5593,7 +5603,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               </div>
                             );
                           })}
-                          {/מה הוא Pod ב|What is a Pod/i.test(q.q) && <PodDiagram />}
+                          {getDiagramForQuestion(q.tags)}
                         </div>
                       </div>
                     );
@@ -5811,7 +5821,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       })()}
       {/* ── INCIDENT LIST ─────────────────────────────────────────────────── */}
       {screen==="incidentList"&&(
-        import.meta.env.PROD ? (
+        !EXPERIMENTAL_ENABLED ? (
         <div style={{maxWidth:780,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
           <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
             <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
@@ -6055,7 +6065,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
 
       {/* ── INCIDENT PLAYING ──────────────────────────────────────────────── */}
-      {!import.meta.env.PROD&&screen==="incident"&&selectedIncident&&(()=>{
+      {EXPERIMENTAL_ENABLED&&screen==="incident"&&selectedIncident&&(()=>{
         const step = getIncidentStep(incidentStepIndex);
         if (!step) { return <div style={{textAlign:"center",padding:"40px 20px"}}><p style={{color:"var(--text-secondary)",fontSize:14}}>{lang==="en"?"Incident step not found. Returning...":"שלב לא נמצא. חוזר..."}</p><button onClick={()=>setScreen("incidentList")} style={{marginTop:12,padding:"10px 22px",background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:10,color:"var(--text-secondary)",fontSize:14,cursor:"pointer"}}>{lang==="en"?"Back":"חזרה"}</button></div>; }
         const totalSteps = incidentSteps?.length || (selectedIncident.steps?.length || 0);
@@ -6257,6 +6267,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         </div>
                         {!incCorrect&&<p style={{fontSize:12,color:"var(--text-muted)",margin:"0 0 10px",lineHeight:1.5}}>{t("incidentWrongSub")}</p>}
                         {renderIncidentExplanation(incExplanation)}
+                        {getDiagramForQuestion(step.tags)}
                       </div>
                       <button onClick={nextIncidentStep}
                         style={{width:"100%",padding:14,background:"rgba(0,212,255,0.10)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:10,color:"#67e8f9",fontSize:14,fontWeight:700,cursor:"pointer",transition:"all 0.15s"}}
@@ -6274,7 +6285,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       })()}
 
       {/* ── INCIDENT COMPLETE ─────────────────────────────────────────────── */}
-      {!import.meta.env.PROD&&screen==="incidentComplete"&&selectedIncident&&(()=>{
+      {EXPERIMENTAL_ENABLED&&screen==="incidentComplete"&&selectedIncident&&(()=>{
         const totalSteps = incidentSteps?.length || (selectedIncident.steps?.length || 0);
         const maxScore = totalSteps * 10;
         const passed   = incidentPassed; // single source of truth - set in nextIncidentStep

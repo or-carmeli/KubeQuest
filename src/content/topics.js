@@ -58,6 +58,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה הוא Pod ב-Kubernetes?",
+              tags: ["pod-architecture"],
               options: [
               "אובייקט שמנהל גישה לרשת בין Nodes",
               "קונטרולר שאחראי על rolling updates של Deployments",
@@ -70,6 +71,7 @@ export const TOPICS = [
             },
             {
               q: "מה Deployment עושה?",
+              tags: ["controller-hierarchy"],
               options: [
               "מנהל IP addresses ומאפשר גישה חיצונית לאפליקציות מחוץ ל-Cluster",
               "מנהל הרשאות גישה ל-Secrets ו-ConfigMaps בין Namespaces",
@@ -156,6 +158,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is a Pod in Kubernetes?",
+              tags: ["pod-architecture"],
               options: [
               "An object that manages network routing between Nodes in the cluster",
               "The smallest unit of execution, containing one or more containers",
@@ -168,6 +171,7 @@ export const TOPICS = [
             },
             {
               q: "What does a Deployment do?",
+              tags: ["controller-hierarchy"],
               options: [
               "Manages persistent storage volumes for StatefulSets and databases",
               "Manages access permissions to Secrets and ConfigMaps across Namespaces",
@@ -258,6 +262,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה היתרון של Rolling Update?",
+              tags: ["rolling-update"],
               options: [
               "מאפשר לחזור לגרסה קודמת ללא שמירת revisions",
               "מגביל את מספר ה-Pods המחוברים ל-Service בזמן עדכון",
@@ -282,6 +287,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין StatefulSet ל-Deployment?",
+              tags: ["statefulset-storage"],
               options: [
               "StatefulSet מתזמן Pods מהר יותר כי הוא שומר cache של ה-node selection",
               "Pods ב-StatefulSet מקבלים שמות קבועים ואחסון קבוע",
@@ -294,6 +300,7 @@ export const TOPICS = [
             },
             {
               q: "מה PodDisruptionBudget עושה?",
+              tags: ["pod-disruption"],
               options: [
               "מגדיר מינימום Pods זמינים בזמן disruptions מתוכננות",
               "מגביל את כמות ה-CPU ש-Deployment יכול לצרוך בזמן rolling update",
@@ -318,6 +325,7 @@ export const TOPICS = [
             },
             {
               q: "מה עושים taints ו-tolerations ב-Kubernetes?",
+              tags: ["taints-tolerations"],
               options: [
               "מאפשרים scheduling של Pods על Nodes מסוימים רק אם ל-Pod יש toleration תואם",
               "מגבילים תעבורת רשת נכנסת ויוצאת בין Pods ב-Cluster",
@@ -330,6 +338,7 @@ export const TOPICS = [
             },
             {
               q: "Node חווה לחץ זיכרון. שלושה Pods רצים עליו: אחד Guaranteed, אחד Burstable ואחד BestEffort. איזה Pod יפונה ראשון?",
+              tags: ["qos-eviction"],
               options: [
               "ה-Pod עם QoS class BestEffort יפונה ראשון",
               "ה-Pod עם QoS class Guaranteed יפונה ראשון",
@@ -356,6 +365,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is the advantage of a Rolling Update?",
+              tags: ["rolling-update"],
               options: [
               "Prevents the Service from routing to unhealthy Pods during upgrade",
               "Replaces Pods gradually so there are always running Pods serving traffic",
@@ -380,6 +390,7 @@ export const TOPICS = [
             },
             {
               q: "What is the main difference between StatefulSet and Deployment?",
+              tags: ["statefulset-storage"],
               options: [
               "StatefulSet only works with cloud providers and not on-premise clusters",
               "Pods in StatefulSet get fixed names and their own storage",
@@ -392,6 +403,7 @@ export const TOPICS = [
             },
             {
               q: "What does a PodDisruptionBudget do?",
+              tags: ["pod-disruption"],
               options: [
               "Restricts inbound network traffic to Pods during maintenance windows",
               "Limits the total CPU a Deployment can consume during a rolling update",
@@ -416,6 +428,7 @@ export const TOPICS = [
             },
             {
               q: "What do taints and tolerations do in Kubernetes?",
+              tags: ["taints-tolerations"],
               options: [
               "Allow Pods to be scheduled on tainted Nodes only if the Pod has a matching toleration",
               "Restrict inbound and outbound network traffic between Pods in the Cluster",
@@ -428,6 +441,7 @@ export const TOPICS = [
             },
             {
               q: "A Node is experiencing memory pressure. Three Pods are running on it: one Guaranteed, one Burstable, and one BestEffort. Which Pod is evicted first?",
+              tags: ["qos-eviction"],
               options: [
               "The Pod with QoS class Guaranteed is evicted first",
               "The Pod with QoS class BestEffort is evicted first",
@@ -458,6 +472,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה DaemonSet מבטיח?",
+              tags: ["daemonset-topology"],
               options: [
               "שה-Pod רץ פעם אחת עד להשלמה ולא מופעל מחדש. התנהגות של Job",
               "ש-DaemonSet מבטיח ש-Pod אחד רץ על כל Node ב-Cluster",
@@ -470,6 +485,7 @@ export const TOPICS = [
             },
             {
               q: "מה תפקיד ה-HPA ב-Kubernetes?",
+              tags: ["hpa-scaling"],
               options: [
               "Horizontal Pod Autoscaler -\u200E מגדיל ומקטין Pods לפי עומס",
               "High Performance App -\u200E תצורת Pod מותאמת לביצועים גבוהים",
@@ -494,6 +510,7 @@ export const TOPICS = [
             },
             {
               q: "מה התפקיד של topologySpreadConstraints בתזמון Pods ב-Kubernetes?",
+              tags: ["topology-spread"],
               options: [
               "קובע סדר עדיפויות לפינוי Pods כאשר Node נכנס למצב NotReady",
               "מגביל את מספר ה-Pods שה-scheduler יכול למקם בו-זמנית במהלך rolling update",
@@ -530,6 +547,7 @@ export const TOPICS = [
             },
             {
               q: "עדכון Rolling update נתקע.\n\nהרצת:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nפלט:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nבנוסף, מוגדר maxUnavailable: 0\n\nמה הסיבה?",
+              tags: ["rolling-update"],
               options: [
               "Pods החדשים לא עוברים readiness probe, ו-maxUnavailable:0 מונע הורדת ישנים",
               "ה-TLS certificate שגוי ב-admission webhook שבודק את ה-Pod spec",
@@ -556,6 +574,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What does a DaemonSet guarantee?",
+              tags: ["daemonset-topology"],
               options: [
               "The Pod runs on a fixed schedule. This describes a CronJob, not a DaemonSet",
               "The Pod runs only on Nodes matching a specific label via nodeSelector",
@@ -568,6 +587,7 @@ export const TOPICS = [
             },
             {
               q: "What is HPA?",
+              tags: ["hpa-scaling"],
               options: [
               "Helm Package Archive: the storage format for packaged Helm charts",
               "Host Port Assignment: allocates host ports on Nodes for Pod services",
@@ -592,6 +612,7 @@ export const TOPICS = [
             },
             {
               q: "What is the role of topologySpreadConstraints in Kubernetes scheduling?",
+              tags: ["topology-spread"],
               options: [
               "Defines affinity rules that force Pods to run on a specific Node based on its labels",
               "Spreads Pods evenly across failure domains such as Nodes or Zones to improve availability",
@@ -628,6 +649,7 @@ export const TOPICS = [
             },
             {
               q: "A rolling update is stuck.\n\nCommand:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nOutput:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nConfig: maxUnavailable: 0\n\nWhat is the cause?",
+              tags: ["rolling-update"],
               options: [
               "An admission webhook TLS certificate is invalid and rejecting new Pod specs",
               "New Pods are failing readiness probes, and maxUnavailable:0 prevents removing old ones",
@@ -668,6 +690,7 @@ export const TOPICS = [
         questions: [
             {
               q: "למה צריך Service?",
+              tags: ["service-discovery"],
               options: [
               "כדי לגבות קונפיגורציה של Pod לפני מחיקה",
               "כדי לחסוך עלויות cloud על ידי שיתוף IP בין מספר Pods",
@@ -680,6 +703,7 @@ export const TOPICS = [
             },
             {
               q: "איזה Service מתאים לגישה חיצונית ב-cloud?",
+              tags: ["service-types"],
               options: [
               "ClusterIP:\u200E מספק IP פנימי שנגיש מכל Node ב-Cluster",
               "ExternalName:\u200E ממפה ל-DNS חיצוני ומאפשר גישה דרך CNAME",
@@ -704,6 +728,7 @@ export const TOPICS = [
             },
             {
               q: "כיצד Service מוצא את ה-Pods שלו?",
+              tags: ["service-discovery"],
               options: [
               "לפי labels ו-selector שמוגדרים ב-spec של ה-Service",
               "לפי port שה-Pod מאזין עליו ו-Service מתאים",
@@ -716,6 +741,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין port ל-targetPort ב-Service?",
+              tags: ["port-mapping"],
               options: [
               "targetPort משמש ל-HTTP בלבד, port משמש לכל הפרוטוקולים",
               "port הוא לתנועה חיצונית, targetPort לתנועה פנימית בין Services",
@@ -728,6 +754,7 @@ export const TOPICS = [
             },
             {
               q: "מה kube-dns/CoreDNS ב-Kubernetes?",
+              tags: ["dns"],
               options: [
               "Firewall שמסנן תנועה DNS ומונע גישה ל-domains זדוניים",
               "Load balancer שמנתב בקשות DNS בין Nodes",
@@ -740,6 +767,7 @@ export const TOPICS = [
             },
             {
               q: "מה מטרת Ingress ב-Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "סוג Pod מיוחד שאחראי על ניהול חיבורי HTTPS",
               "storage manager שמנהל PVCs מסוג network storage",
@@ -752,6 +780,7 @@ export const TOPICS = [
             },
             {
               q: "מה NetworkPolicy ב-Kubernetes?",
+              tags: ["network-policy-flow"],
               options: [
               "DNS server פנימי שמנהל name resolution בין Pods",
               "סוג Service שמגביל גישה לפי Namespace",
@@ -766,6 +795,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "Why do we need a Service?",
+              tags: ["service-discovery"],
               options: [
               "To encrypt traffic between Pods running in different Namespaces",
               "A Pod's IP address changes every time it restarts; a Service provides a stable IP that always routes to healthy Pods",
@@ -778,6 +808,7 @@ export const TOPICS = [
             },
             {
               q: "Which Service type is for cloud external access?",
+              tags: ["service-types"],
               options: [
               "ClusterIP: provides an internal cluster IP reachable from every Node in the cluster",
               "LoadBalancer: creates a cloud Load Balancer and assigns an external IP address",
@@ -802,6 +833,7 @@ export const TOPICS = [
             },
             {
               q: "How does a Service find its Pods?",
+              tags: ["service-discovery"],
               options: [
               "By labels and selector",
               "By the port the Pod listens on, matched against the Service's targetPort",
@@ -814,6 +846,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between port and targetPort in a Service?",
+              tags: ["port-mapping"],
               options: [
               "There is no difference. Both define the same port the Service listens and forwards on",
               "port is the Service port; targetPort is the container port",
@@ -826,6 +859,7 @@ export const TOPICS = [
             },
             {
               q: "What is CoreDNS in Kubernetes?",
+              tags: ["dns"],
               options: [
               "An internal DNS server that resolves Service names to IPs",
               "A certificate manager Pod that issues TLS certificates for Services",
@@ -838,6 +872,7 @@ export const TOPICS = [
             },
             {
               q: "What is the purpose of an Ingress in Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "Routes HTTP/HTTPS by path or hostname to different Services through one entry point",
               "A special Pod type responsible for managing HTTPS connections to the API server",
@@ -850,6 +885,7 @@ export const TOPICS = [
             },
             {
               q: "What is a NetworkPolicy in Kubernetes?",
+              tags: ["network-policy-flow"],
               options: [
               "A StorageClass that restricts PV access based on Pod labels",
               "An internal DNS server that manages name resolution between Pods in a Namespace",
@@ -880,6 +916,7 @@ export const TOPICS = [
             },
             {
               q: "מה היתרון של Ingress על פני LoadBalancer?",
+              tags: ["ingress-vs-lb"],
               options: [
               "מהיר יותר כי הוא מבצע פחות hop routing בין Pods",
               "זול יותר כי הוא מחליף SSL certificates אוטומטית",
@@ -904,6 +941,7 @@ export const TOPICS = [
             },
             {
               q: "מה path-based routing ב-Ingress?",
+              tags: ["ingress-routing"],
               options: [
               "ניתוב לפי IP המקור של הבקשה ל-Service ספציפי",
               "ניתוב לפי Namespace שממנו הבקשה נשלחת",
@@ -928,6 +966,7 @@ export const TOPICS = [
             },
             {
               q: "כיצד Ingress מנתב לפי hostname?",
+              tags: ["ingress-routing"],
               options: [
               "לפי port שעליו מגיעה הבקשה, ממופה בשדה ports בהגדרת ה-Ingress",
               "דרך ConfigMap שמגדיר מיפוי של hostnames ל-Services",
@@ -940,6 +979,7 @@ export const TOPICS = [
             },
             {
               q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
+              tags: ["traffic-policy"],
               options: [
               "Cluster מפזר עומס שווה בין כל ה-Pods; Local שולח תנועה רק ל-Pod הקרוב ביותר",
               "Local דורש externalIPs מוגדרים; Cluster עובד עם כל סוגי Service כולל ClusterIP",
@@ -978,6 +1018,7 @@ export const TOPICS = [
             },
             {
               q: "What is the advantage of Ingress over LoadBalancer?",
+              tags: ["ingress-vs-lb"],
               options: [
               "One entry point for all services",
               "Always cheaper because it auto-renews SSL certificates at no extra cost",
@@ -1002,6 +1043,7 @@ export const TOPICS = [
             },
             {
               q: "What is path-based routing in Ingress?",
+              tags: ["ingress-routing"],
               options: [
               "Routing HTTP requests by URL path to different Services",
               "Routing by an HTTP header such as X-User-Type to reach a specific Service",
@@ -1026,6 +1068,7 @@ export const TOPICS = [
             },
             {
               q: "How does Ingress route by hostname?",
+              tags: ["ingress-routing"],
               options: [
               "By the port on which the request arrives, mapped in the ports field of the Ingress",
               "A single host field at the root of the Ingress spec applies one hostname to all rules",
@@ -1038,6 +1081,7 @@ export const TOPICS = [
             },
             {
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
+              tags: ["traffic-policy"],
               options: [
               "Local maintains automatic session affinity; Cluster requires explicit sessionAffinity: ClientIP",
               "Local routes traffic only to Pods on the same Node and preserves client IP; Cluster forwards to any Pod and performs SNAT",
@@ -1104,6 +1148,7 @@ export const TOPICS = [
             },
             {
               q: "נניח שיש Service בשם `app-svc`.\n\nהפקודה `kubectl get endpoints` מחזירה:\n\n```\nNAME      ENDPOINTS\napp-svc   <none>\n```\n\nקיים Pod עם label:\n\n```yaml\napp: App\n```\n\nוב-Service מוגדר selector:\n\n```yaml\nspec:\n  selector:\n    app: app\n```\n\nמדוע ה-Service לא מנתב תעבורה ל-Pods?",
+              tags: ["service-discovery"],
               options: [
               "ה-selector לא תואם. labels ב-Kubernetes הם case-sensitive",
               "ה-Pod וה-Service נמצאים ב-Namespaces שונים",
@@ -1202,6 +1247,7 @@ export const TOPICS = [
             },
             {
               q: "Given a Service named `app-svc`.\n\nRunning `kubectl get endpoints` returns:\n\n```\nNAME      ENDPOINTS\napp-svc   <none>\n```\n\nThe Pod has this label:\n\n```yaml\napp: App\n```\n\nThe Service selector is:\n\n```yaml\nspec:\n  selector:\n    app: app\n```\n\nWhy is the Service not routing traffic to the Pods?",
+              tags: ["service-discovery"],
               options: [
               "The selector does not match. Labels in Kubernetes are case-sensitive",
               "The Pod and Service are in different Namespaces",
@@ -1478,6 +1524,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה ההבדל בין Role ל-ClusterRole?",
+              tags: ["role-scope"],
               options: [
               "Role מוגבל ל-Namespace, ClusterRole חל על כל ה-Cluster",
               "ClusterRole חל רק על Nodes, Role חל על כל שאר המשאבים ב-Cluster",
@@ -1490,6 +1537,7 @@ export const TOPICS = [
             },
             {
               q: "מה תפקיד RoleBinding?",
+              tags: ["rbac-binding"],
               options: [
               "שכפול הרשאות Role אחד ל-Namespace אחר",
               "הגדרת כללי RBAC חדשים בתוך Namespace",
@@ -1526,6 +1574,7 @@ export const TOPICS = [
             },
             {
               q: "מה תפקיד admission webhook ב-Kubernetes?",
+              tags: ["admission-control"],
               options: [
               "HTTP callback שמופעל לפני שמירת resource ב-etcd, לאימות או לשינוי",
               "HTTP handler שמנהל certificate rotation עבור ה-API server",
@@ -1538,6 +1587,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין LimitRange ל-ResourceQuota?",
+              tags: ["resource-limits"],
               options: [
               "LimitRange: CPU quota ל-Node. ResourceQuota: memory quota ל-Cluster",
               "LimitRange:\u200E מגביל מספר Pods. ResourceQuota:\u200E מגביל מספר Nodes",
@@ -1576,6 +1626,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is the difference between Role and ClusterRole?",
+              tags: ["role-scope"],
               options: [
               "ClusterRole applies only to Nodes; Role applies to all other resources in the cluster",
               "Role grants permissions only to Users; ClusterRole grants permissions only to ServiceAccounts",
@@ -1588,6 +1639,7 @@ export const TOPICS = [
             },
             {
               q: "What is a RoleBinding?",
+              tags: ["rbac-binding"],
               options: [
               "Binding a Role to a user/ServiceAccount within a Namespace",
               "Escalating a Role's permissions to ClusterRole level",
@@ -1624,6 +1676,7 @@ export const TOPICS = [
             },
             {
               q: "What is an admission webhook?",
+              tags: ["admission-control"],
               options: [
               "An HTTP handler that manages certificate rotation for the API server",
               "An HTTP endpoint that syncs resources between different Clusters",
@@ -1636,6 +1689,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between LimitRange and ResourceQuota?",
+              tags: ["resource-limits"],
               options: [
               "LimitRange applies only to new Pods; ResourceQuota applies only to existing Pods",
               "LimitRange sets per-container defaults and limits; ResourceQuota sets aggregate limits for the whole Namespace",
@@ -1888,6 +1942,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה ההבדל בין PV ל-PVC?",
+              tags: ["storage-binding"],
               options: [
               "PV מוגדר בתוך Pod spec; PVC מוגדר ברמת Namespace",
               "PV נוצר אוטומטית ע״י kubelet; PVC נוצר ע״י ה-Scheduler",
@@ -1986,6 +2041,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is the difference between PV and PVC?",
+              tags: ["storage-binding"],
               options: [
               "PV is defined inside the Pod spec; PVC is defined at the Namespace level",
               "PV is a storage resource in the Cluster; PVC is a request for storage from a Pod",
@@ -2088,6 +2144,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה משמעות Dynamic Provisioning ב-Kubernetes?",
+              tags: ["dynamic-provisioning"],
               options: [
               "הקצאת CPU דינמית ל-Pods לפי עומס שמדווח מ-metrics-server",
               "שינוי גודל אוטומטי של PVC קיים לפי צריכת הדיסק בפועל",
@@ -2172,6 +2229,7 @@ export const TOPICS = [
             },
             {
               q: "כיצד PV ו-PVC מתחברים?",
+              tags: ["storage-binding"],
               options: [
               "לפי שם PVC בלבד, שחייב להיות זהה לשם ה-PV",
               "לפי ה-Node שה-Pod מתוזמן עליו, כך שה-PV נוצר באותו Node",
@@ -2186,6 +2244,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is Dynamic Provisioning?",
+              tags: ["dynamic-provisioning"],
               options: [
               "Automatic Pod migration to another Node when the current Node runs out of disk",
               "PV and physical disk created automatically when a PVC with StorageClass is submitted",
@@ -2270,6 +2329,7 @@ export const TOPICS = [
             },
             {
               q: "How do a PV and PVC bind?",
+              tags: ["storage-binding"],
               options: [
               "By the Node the Pod is scheduled on, so the PV is created on the same Node",
               "By matching accessMode, storage capacity, and storageClassName",
@@ -2288,6 +2348,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה תפקיד CSI ב-Kubernetes?",
+              tags: ["storage-interface"],
               options: [
               "Cluster Sync Interface:\u200E סטנדרט לסנכרון נתונים בין Clusters",
               "Container Storage Interface:\u200E סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers ל-K8s",
@@ -2324,6 +2385,7 @@ export const TOPICS = [
             },
             {
               q: "כיצד StatefulSet מנהל storage?",
+              tags: ["statefulset-storage"],
               options: [
               "כל Pod מקבל PVC ייחודי משלו דרך volumeClaimTemplates",
               "StatefulSet לא תומך ב-storage ומשתמש רק ב-ConfigMaps לשמירת state",
@@ -2336,6 +2398,7 @@ export const TOPICS = [
             },
             {
               q: "מה volume binding mode WaitForFirstConsumer?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
+              tags: ["dynamic-provisioning"],
               options: [
               "ממתין לאישור Admin ב-RBAC לפני יצירת PV חדש",
               "ממתין לסיום replication בין Zones לפני binding של ה-PVC",
@@ -2372,6 +2435,7 @@ export const TOPICS = [
             },
             {
               q: "Pod עם PVC ב-AWS EKS.\nה-Pod עבר ל-Node ב-Availability Zone אחרת.\nה-PVC מראה סטטוס Bound, אבל ה-Pod לא מצליח לעלות.\n\nמה הסיבה?",
+              tags: ["storage-zone"],
               options: [
               "NetworkPolicy חוסמת גישה מה-Node החדש ל-storage",
               "ה-EBS Volume נמצא ב-AZ אחרת מה-Node. EBS הוא single-AZ",
@@ -2386,6 +2450,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is CSI?",
+              tags: ["storage-interface"],
               options: [
               "Container Storage Interface: an open standard for writing storage drivers for Kubernetes",
               "Container Security Interface: a standard for scanning images and enforcing security policies",
@@ -2422,6 +2487,7 @@ export const TOPICS = [
             },
             {
               q: "How does a StatefulSet manage storage?",
+              tags: ["statefulset-storage"],
               options: [
               "All Pods in the StatefulSet share a single PVC for storing data",
               "Each Pod gets its own unique PVC via volumeClaimTemplates",
@@ -2434,6 +2500,7 @@ export const TOPICS = [
             },
             {
               q: "What does volume binding mode WaitForFirstConsumer do?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
+              tags: ["dynamic-provisioning"],
               options: [
               "Waits for Admin RBAC approval before creating a new PV",
               "Waits for a Pod to be scheduled before creating the PV. Ensures the PV is in the same Zone as the Pod",
@@ -2470,6 +2537,7 @@ export const TOPICS = [
             },
             {
               q: "A Pod with a PVC on AWS EKS.\nThe Pod moved to a Node in a different Availability Zone.\nThe PVC shows Bound status, but the Pod fails to start.\n\nWhat is the cause?",
+              tags: ["storage-zone"],
               options: [
               "The StorageClass is wrong and does not support multi-AZ",
               "The PVC was deleted and recreated with a different ID",
@@ -2534,6 +2602,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין Running ל-Ready?",
+              tags: ["probe-comparison"],
               options: [
               "Running:\u200E הקונטיינר פועל. Ready:\u200E ה-Pod עבר readiness probe ומוכן לקבל traffic",
               "Running:\u200E ה-Pod ממתין ל-image pull. Ready:\u200E ה-image הורד והקונטיינר עלה",
@@ -2632,6 +2701,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between Running and Ready?",
+              tags: ["probe-comparison"],
               options: [
               "Ready: the Pod is connected to a Service. Running: the Pod is active but not connected to a Service",
               "Running: the Pod is waiting for image pull. Ready: the image was pulled and the container started",
@@ -2746,6 +2816,7 @@ export const TOPICS = [
             },
             {
               q: "מה קורה כש-liveness probe נכשל?",
+              tags: ["probe-comparison"],
               options: [
               "Pod מוגדר NotReady",
               "Pod נמחק לצמיתות",
@@ -2844,6 +2915,7 @@ export const TOPICS = [
             },
             {
               q: "What happens when a liveness probe fails?",
+              tags: ["probe-comparison"],
               options: [
               "Pod is permanently deleted",
               "Only an event is recorded",
@@ -3705,6 +3777,7 @@ export const TOPICS = [
           },
           {
             q: "מה ההבדל בין Synced ל-Healthy ב-ArgoCD?",
+            tags: ["gitops-sync"],
             options: [
               "Synced אומר שהמצב תואם Git, Healthy אומר שהמשאבים עובדים תקין",
               "Synced ו-Healthy זה אותו דבר, רק שמות שונים",
@@ -3749,6 +3822,7 @@ export const TOPICS = [
           },
           {
             q: "מפתח דוחף שינוי ל-Git.\nArgoCD מוגדר עם auto-sync ו-self-heal.\n\nמהנדס אחר עושה `kubectl edit` ומשנה משהו ידנית בקלאסטר.\n\nמה יקרה?",
+            tags: ["gitops-sync"],
             options: [
               "השינוי הידני יישאר כי הוא נעשה אחרון",
               "ArgoCD יזהה את ה-drift ויחזיר את המצב למה שמוגדר ב-Git",
