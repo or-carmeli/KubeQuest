@@ -22,6 +22,7 @@ import { captureError, setUserContext, setScreen as setTelemetryScreen } from ".
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
 import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } from "./components/CodeBlocks";
+import PodDiagram from "./components/PodDiagram";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress, fetchQuestionHint, fetchEliminateOption } from "./api/quiz";
 import StatusView from "./components/StatusView";
 // eslint-disable-next-line no-unused-vars
@@ -829,8 +830,10 @@ function isBlockCodeLine(line) {
   // Indented continuation (2+ leading spaces) - check raw line for whitespace
   if (/^\s{2,}\S/.test(line)) return true;
 
-  // CLI commands: kubectl, helm, docker, etc.
+  // CLI commands: kubectl, helm, docker, etc. (with arguments)
   if (/^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s/.test(trimmed)) return true;
+  // Standalone system commands (no arguments needed)
+  if (/^(\$\s*)?(?:top|ps|free|df|uptime|dmesg|iostat|sar|lsof|netstat|ss|w|vmstat|htop|nproc|hostname|whoami|id|pwd|mount|ifconfig|ip)$/.test(trimmed)) return true;
   // Terminal output headers
   if (/^(?:NAME|READY|STATUS|NAMESPACE|AGE|RESTARTS|IP|NODE)\s/.test(trimmed)) return true;
   // Error/status lines
@@ -936,7 +939,7 @@ function renderQuestion(qText, lang, animate) {
   }
 
   // Multi-paragraph with code block detection
-  const terminalPat = /^(\$\s*kubectl|kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized|Events:|Warning\s|Normal\s|\d+\/\d+\s|\d+[a-z]*\s{2,})/;
+  const terminalPat = /^(\$\s*kubectl|kubectl|NAME\s|READY|STATUS\s|\s{2,}|[a-z0-9]+(-[a-z0-9]+)+\s|FATAL|Error:|Failed|rpc error|unauthorized|Events:|Warning\s|Normal\s|\d+\/\d+\s|\d+[a-z]*\s{2,}|(\$\s*)?(?:top|ps|free|df|uptime|dmesg|iostat|sar|lsof|netstat|ss|w|vmstat|htop|nproc|hostname|whoami|id|pwd|mount|ifconfig|ip)$)/;
   // Pre-process: merge fenced code blocks (```...```) that may have been split across paragraphs
   const merged = [];
   let inFence = false, fenceBuf = [];
@@ -999,7 +1002,7 @@ function renderQuestion(qText, lang, animate) {
           }
 
           // Terminal command block
-          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/m.test(code);
+          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)(?:\s|$)/m.test(code);
           if (isCommand) {
             return <TerminalBlock key={idx} animate={animate}>{code}</TerminalBlock>;
           }
@@ -1025,7 +1028,7 @@ function renderQuestion(qText, lang, animate) {
           const cleaned = para.replace(/^["״"]+|["״"]+$/g, "").trim();
           const firstLine = nonEmpty[0]?.trim() || "";
           const isError = /^(error:|Error:|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|Back-off|warning:)/i.test(firstLine);
-          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)\s/.test(firstLine);
+          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)(?:\s|$)/.test(firstLine);
           // YAML-like content
           if (/^\s*[\w.\-/]+:\s/m.test(cleaned) && /\n\s+\w/.test(cleaned)) {
             return <YamlBlock key={idx}>{cleaned}</YamlBlock>;
@@ -4604,7 +4607,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </svg>
               );
               const logoText=(
-                <div style={{display:"inline-flex",alignItems:"flex-start",gap:2,position:"relative"}}><h1 className="home-title-text" style={{fontSize:26,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.3,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1><span style={{position:"absolute",right:-30,top:-2,fontSize:9,padding:"1px 5px",borderRadius:5,background:"rgba(255,255,255,0.08)",color:"#bbb",fontWeight:600,letterSpacing:0.3,lineHeight:1}}>Beta</span></div>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                  <h1 className="home-title-text" style={{fontSize:26,fontWeight:900,margin:0,lineHeight:1,letterSpacing:-0.3,background:"linear-gradient(90deg,#00D4FF,#A855F7,#FF6B35,#00D4FF)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",color:"transparent",backgroundSize:"300% auto",animation:"shine 9s linear infinite",whiteSpace:"nowrap"}}>KubeQuest</h1>
+                  <span style={{fontSize:10,color:theme==="light"?"rgba(0,0,0,0.4)":"rgba(255,255,255,0.35)",fontWeight:500,letterSpacing:1.5,textTransform:"uppercase",lineHeight:1}}>Beta</span>
+                </div>
               );
               const logoGroup=(
                 <div style={{display:"flex",alignItems:"center",gap:14}}>
@@ -5421,8 +5427,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
-                      dir={dir}
-                      style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46,overflow:"hidden"}}>
+                      dir={optDir}
+                      style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:optDir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46,overflow:"hidden"}}>
                       <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
                       <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang,{noCodeStyle:true})}</span>
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:16,height:16,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
@@ -5511,7 +5517,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s))
                             );
                             if (isCodeOnly) {
+                              const codeLangMatch = s.match(/^```(\w*)/);
+                              const codeLang = codeLangMatch?.[1] || "";
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
+                              if (codeLang === "yaml" || codeLang === "yml" || (!codeLang && /^\s*[\w.\-/]+:\s/m.test(code) && /\n\s+\w/.test(code))) {
+                                return <YamlBlock key={idx}>{code}</YamlBlock>;
+                              }
                               return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
                             }
                             return (
@@ -5520,6 +5531,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               </div>
                             );
                           })}
+                          {/מה הוא Pod ב|What is a Pod/i.test(q.q) && <PodDiagram />}
                         </div>}
                       </div>
                     );
@@ -5554,7 +5566,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           <span style={{fontSize:12,fontWeight:800,color:"#A855F7",letterSpacing:0.5}}>{lang==="he"?"תשובה אידיאלית":"Ideal Answer"}</span>
                         </div>
                         <div style={{padding:"18px 20px",display:"flex",flexDirection:"column",gap:14}}>
-                          {(()=>{const idDir=hasHebrew(q.options[iCorrectIdx])?"rtl":"ltr";return <div dir={idDir} style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:idDir,textAlign:idDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>{renderBidi(q.options[iCorrectIdx],lang)}</div>;})()}
+                          {(()=>{const optText=q.options[iCorrectIdx];const stripped=optText.replace(/^`|`$/g,"").trim();const isPureCmd=!hasHebrew(optText)&&CLI_COMMAND_RE.test(stripped);if(isPureCmd)return null;const idDir=hasHebrew(optText)?"rtl":"ltr";return <div dir={idDir} style={{color:"var(--text-primary)",fontWeight:700,fontSize:14,lineHeight:1.7,wordBreak:"break-word",overflowWrap:"anywhere",direction:idDir,textAlign:idDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>{renderBidi(optText,lang)}</div>;})()}
                           {iParagraphs.map((s,idx)=>{
                             const stripped = s.replace(/`([^`]+)`/g, "$1").trim();
                             const looksLikeRef = /^(kubectl|helm|docker)\s+\w+[.,;:!?]?$/.test(stripped);
@@ -5566,7 +5578,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s))
                             );
                             if (isCodeOnly) {
+                              const codeLangMatch = s.match(/^```(\w*)/);
+                              const codeLang = codeLangMatch?.[1] || "";
                               const code = s.replace(/^```[a-z]*\n?|```$/g, "").replace(/^`|`$/g, "").trim();
+                              if (codeLang === "yaml" || codeLang === "yml" || (!codeLang && /^\s*[\w.\-/]+:\s/m.test(code) && /\n\s+\w/.test(code))) {
+                                return <YamlBlock key={idx}>{code}</YamlBlock>;
+                              }
                               return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
                             }
                             return (
@@ -5575,6 +5592,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               </div>
                             );
                           })}
+                          {/מה הוא Pod ב|What is a Pod/i.test(q.q) && <PodDiagram />}
                         </div>
                       </div>
                     );
