@@ -12,6 +12,7 @@ This document covers the full observability stack for KubeQuest.
 | Synthetic tests | GitHub Actions | Smoke tests every 6 hours |
 | Analytics | Vercel Analytics | Page views, traffic |
 | Performance | Vercel Speed Insights + Web Vitals → Sentry | Core Web Vitals (LCP, CLS, INP) |
+| Dev observability | Performance Insights (dev-only) | Real-time latency, errors, vitals, traffic, user flow |
 
 ## Sentry Setup
 
@@ -76,6 +77,57 @@ Releases are automatically created with each deploy using the git commit hash (`
 Core Web Vitals (LCP, CLS, INP) are reported to Sentry as breadcrumbs and tags on error events. This lets you correlate performance with errors — e.g., "errors spike when LCP > 4s".
 
 Vitals are also independently tracked by Vercel Speed Insights.
+
+## Performance Insights (Dev-only)
+
+A real-time observability dashboard available exclusively in development mode (`npm run dev`). Built on 100% real client-side telemetry — no mock or simulated data.
+
+**Data sources:**
+
+| Signal | Collection method |
+|--------|------------------|
+| Web Vitals (LCP, INP, CLS) | `web-vitals` library with CrUX p75 benchmark comparison |
+| Request latency (P95) | Transparent `fetch` instrumentation |
+| Error rate | Failed requests / total requests |
+| Traffic (RPS) | Requests per second from fetch wrapper |
+| Navigation timing | `performance.getEntriesByType("navigation")` |
+| Client errors | `window.onerror` + `unhandledrejection` listeners |
+| User flow | Route visits, quiz completion, session duration |
+
+**Architecture:**
+
+```mermaid
+flowchart LR
+    BROWSER["Browser Runtime<br/>web-vitals · fetch · errors"] --> COLLECT["Telemetry<br/>Collector"]
+    COLLECT --> SNAPSHOT["Snapshot Builder<br/>Time-range Filter"]
+    SNAPSHOT --> ANALYSIS["Analysis Engine<br/>Health · Insights"]
+    ANALYSIS --> UI["Dashboard<br/>UI"]
+
+    style BROWSER fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style COLLECT fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style SNAPSHOT fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style ANALYSIS fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
+    style UI fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+```
+
+**Key capabilities:**
+
+- **Data confidence scoring** — distinguishes meaningful signals from insufficient samples (low / medium / high)
+- **Weighted health assessment** — combines latency, errors, vitals, and network failures into Healthy / Degraded / Unhealthy / Idle
+- **Insights engine** — derives analytical conclusions from metric correlations, not just threshold breaches
+- **Time-range filtering** — 30s, 1m, 5m, 15m, 30m, or full session
+- **CrUX benchmark comparison** — session Web Vitals compared against Google's global p75 thresholds
+
+**Dev-only gating:** Triple-gated (menu visibility, route registration, component guard) on `import.meta.env.DEV`. Fully tree-shaken from production builds.
+
+**Files:**
+
+| File | Role |
+|------|------|
+| `src/utils/realTelemetry.js` | Collects real browser signals |
+| `src/utils/hybridTelemetry.js` | Filters by time range, builds snapshot |
+| `src/utils/mockTelemetry.js` | Analysis engine (health, insights, confidence, thresholds) |
+| `src/components/PerformanceInsights.jsx` | Dashboard UI |
 
 ## Synthetic Monitoring
 
