@@ -538,7 +538,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "maxUnavailable:0 מונע הורדת Pod ישן עד שהחדש עובר readiness.\nאם Pods חדשים נכשלים ב-readiness, ה-rollout נתקע. יש לבדוק באמצעות `kubectl logs`.\nmaxUnavailable:0 = בטיחות מלאה, אבל readiness כושל = rollout תקוע.",
+                "maxUnavailable:0 מונע הורדת Pod ישן עד שהחדש עובר readiness.\nאם Pods חדשים נכשלים ב-readiness, ה-rollout נתקע.\n\nיש לבדוק:\n\nkubectl logs <pod-name>\n\nmaxUnavailable:0 = בטיחות מלאה, אבל readiness כושל = rollout תקוע.",
             },
             {
               q: "ה-Deployment לא מנהל Pods.\n\nהרצת:\n\n```\nkubectl get pods --show-labels\n```\n\nפלט:\n\n```\napp=backend-v2\n```\n\nהגדרת Deployment:\n\n```yaml\nselector:\n  matchLabels:\n    app: backend\n```\n\nמה הבעיה?",
@@ -1349,16 +1349,16 @@ export const TOPICS = [
                 "LimitRange מגדיר ברירות מחדל ומגבלות CPU/Memory per-container ב-Namespace.\nמזריק default values ואוכף min/max אם container לא מציין requests/limits.\nללא LimitRange, Pod בודד יכול לצרוך את כל משאבי ה-Node.",
             },
             {
-              q: "מה securityContext.runAsNonRoot: true עושה?",
+              q: "מה עושה ההגדרה runAsNonRoot: true ב-securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
-              "מגביל CPU usage של הקונטיינר לערך שנקבע ב-limits",
-              "מונע הפעלת קונטיינר כ-user 0 (root)",
-              "מצפין את כל ה-filesystem של הקונטיינר",
-              "מגביל גישת רשת של הקונטיינר ל-addresses ספציפיות",
+              "מצפינה את מערכת הקבצים של הקונטיינר",
+              "מונעת מהקונטיינר לרוץ כמשתמש root (UID 0)",
+              "מגבילה את צריכת ה-CPU של הקונטיינר לפי limits",
+              "מגבילה את גישת הרשת של הקונטיינר",
 ],
               answer: 1,
               explanation:
-                "runAsNonRoot: true מונע הפעלת קונטיינר כ-root (UID 0).\nroot בקונטיינר + container escape = גישת root על ה-Node.\nמצמצם blast radius. Kubernetes ידחה קונטיינר שמוגדר לרוץ כ-root.",
+                "ההגדרה runAsNonRoot: true מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (UID 0).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -1447,16 +1447,16 @@ export const TOPICS = [
                 "LimitRange sets default and max CPU/Memory per container in a Namespace.\nAuto-injects defaults and enforces min/max if containers don't specify them.\nWithout LimitRange, a single Pod can consume all Node resources.",
             },
             {
-              q: "What does securityContext.runAsNonRoot: true do?",
+              q: "What does the runAsNonRoot: true setting do in securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
-              "Encrypts the entire container filesystem",
-              "Prevents the container from running as user 0 (root)",
-              "Limits the container's CPU usage to the value set in limits",
-              "Limits the container's network access to specific IP addresses",
+              "Encrypts the container's filesystem",
+              "Prevents the container from running as root user (UID 0)",
+              "Limits the container's CPU usage according to limits",
+              "Restricts the container's network access",
 ],
               answer: 1,
               explanation:
-                "runAsNonRoot: true prevents the container from running as root (UID 0).\nRoot in container + container escape = root access on the Node.\nReduces blast radius. Kubernetes rejects containers configured to run as root.",
+                "The runAsNonRoot: true setting ensures the process inside the container does not run as root (UID 0).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
             },
             {
               q: "What is the difference between resource requests and limits?",
@@ -2144,7 +2144,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "הפקודה helm template מבצעת rendering ל-Chart, כלומר מחליפה את המשתנים בתבניות בערכים מתוך values.yaml, ומפיקה קובצי Kubernetes YAML כפי שהם ייראו בפריסה בפועל.\n\nבניגוד ל-helm install, הפקודה לא שולחת את ה-YAML ל-API server ולא יוצרת משאבים בקלאסטר.\n\nהפקודה שימושית לצורכי בדיקה, debug, ולתהליכי CI/CD או GitOps, כאשר רוצים לראות או לשמור את ה-YAML המלא לפני פריסה.",
+                "הפקודה helm template מבצעת rendering ל-Chart, כלומר מחליפה את המשתנים בתבניות בערכים מתוך values.yaml, ומפיקה קובצי Kubernetes YAML כפי שהם ייראו בפריסה בפועל.\n\nבניגוד ל-helm install הפקודה לא שולחת את ה-YAML ל-API server ולא יוצרת משאבים בקלאסטר.\n\nהפקודה שימושית לצורכי בדיקה, debug, ולתהליכי CI/CD או GitOps, כאשר רוצים לראות או לשמור את ה-YAML המלא לפני פריסה.",
             },
             {
               q: "מה תפקיד הפקודה `helm rollback`?",
@@ -2299,16 +2299,16 @@ export const TOPICS = [
                 "CSI הוא סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers עבור Kubernetes.\nכל vendor שולח CSI driver משלו (AWS EBS, Azure Disk, Ceph) כ-DaemonSet ב-Cluster.\nזה מאפשר עדכונים ללא תלות בגרסת Kubernetes.",
             },
             {
-              q: "מה תפקיד Helm Hook?",
+              q: "מה התפקיד של Helm Hook?",
               options: [
-              "כלי debug שמאפשר לבדוק templates לפני התקנת Chart",
-              "סוג מיוחד של Chart שמכיל רק dependencies ולא templates",
-              "מנגנון חלופי ל-Rollback שמחזיר Release לגרסה קודמת",
-              "פעולה (Job) שרצה בשלב מסוים במחזור חיי Release",
+              "כלי לניפוי שגיאות (debug) של templates לפני פריסה",
+              "הרצת משאב (לרוב Job) בנקודה מסוימת במחזור החיים של Release",
+              "מנגנון לביצוע rollback לגרסה קודמת של Release",
+              "סוג Chart שמכיל רק dependencies ללא templates",
 ],
-              answer: 3,
+              answer: 1,
               explanation:
-                "Hooks הם Jobs שרצים בשלבי מחזור חיים של Release: pre-install, post-upgrade, pre-delete ועוד.\nדיבאג של templates נעשה עם `helm template`, ו-rollback נעשה עם `helm rollback`.\nשימושים נפוצים: DB migrations לפני upgrade, או התראת Slack אחרי deploy.",
+                "Helm Hooks מאפשרים להריץ משאבים של Kubernetes בנקודות מוגדרות במחזור החיים של Release, כמו לפני או אחרי פעולות install, upgrade או delete.\n\nברוב המקרים מדובר ב-Job שמבצע פעולה חד-פעמית, למשל:\nהרצת database migrations לפני deploy (pre-install, pre-upgrade)\nבדיקות או התראות לאחר deploy (post-install, post-upgrade)\n\nה-Hook מוגדר באמצעות annotation ב-YAML, ו-Helm מפעיל אותו אוטומטית בשלב המתאים.\n\nאיך זה נראה טכנית?\nמגדירים ב-YAML:\n\n```yaml\nannotations:\n  \"helm.sh/hook\": pre-install\n```\n\nואז Helm יודע להריץ את המשאב הזה בזמן המתאים.",
             },
             {
               q: "מה תפקיד VolumeSnapshot?",
@@ -2335,7 +2335,7 @@ export const TOPICS = [
                 "volumeClaimTemplates יוצר PVC ייחודי לכל Pod. Pod-0 מקבל data-myapp-0 וכן הלאה.\nכל PVC נשאר קשור ל-Pod שלו גם אחרי restart. כך databases שומרים נתונים.\nscale down לא מוחק PVCs; scale up מקשר PVCs ישנים מחדש.",
             },
             {
-              q: "מה volume binding mode WaitForFirstConsumer?",
+              q: "מה volume binding mode WaitForFirstConsumer?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
               options: [
               "ממתין לאישור Admin ב-RBAC לפני יצירת PV חדש",
               "ממתין לסיום replication בין Zones לפני binding של ה-PVC",
@@ -2397,16 +2397,16 @@ export const TOPICS = [
                 "CSI is an open standard for writing storage drivers for Kubernetes.\nEach vendor ships their own CSI driver (AWS EBS, Ceph, etc.) as a DaemonSet in the cluster.\nThis lets vendors update drivers independently of Kubernetes releases.",
             },
             {
-              q: "What is a Helm Hook?",
+              q: "What is the role of a Helm Hook?",
               options: [
-              "An alternative rollback mechanism that restores a Release to a previous version",
-              "A Job that runs at a specific lifecycle point of a Release (pre-install, post-upgrade)",
-              "A special Chart type that contains only dependencies and no templates",
-              "A debugging tool that validates templates before installing a Chart",
+              "A tool for debugging templates before deployment",
+              "Running a resource (usually a Job) at a specific point in the Release lifecycle",
+              "A mechanism for rolling back to a previous Release version",
+              "A Chart type that contains only dependencies without templates",
 ],
               answer: 1,
               explanation:
-                "Hooks are Jobs that run at specific Release lifecycle points: pre-install, post-upgrade, pre-delete, etc.\nTemplate debugging is done with `helm template`, and rollback is done with `helm rollback`.\nCommon uses: DB migrations before upgrade, or Slack notifications after deploy.",
+                "Helm Hooks allow running Kubernetes resources at defined points in the Release lifecycle, such as before or after install, upgrade, or delete operations.\n\nTypically this is a Job performing a one-time action, for example:\nRunning database migrations before deploy (pre-install, pre-upgrade)\nTests or notifications after deploy (post-install, post-upgrade)\n\nThe Hook is defined via an annotation in YAML, and Helm triggers it automatically at the right stage.\n\nHow does it look technically?\nDefine in YAML:\n\n```yaml\nannotations:\n  \"helm.sh/hook\": pre-install\n```\n\nThen Helm knows to run this resource at the appropriate time.",
             },
             {
               q: "What is a VolumeSnapshot?",
@@ -2433,7 +2433,7 @@ export const TOPICS = [
                 "volumeClaimTemplates creates a unique PVC per Pod. Pod-0 gets data-myapp-0 and so on.\nEach PVC stays bound to its Pod across restarts. How databases keep persistent data.\nScaling down doesn't delete PVCs; scaling up reconnects the existing ones.",
             },
             {
-              q: "What does volume binding mode WaitForFirstConsumer do?",
+              q: "What does volume binding mode WaitForFirstConsumer do?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
               options: [
               "Waits for Admin RBAC approval before creating a new PV",
               "Waits for a Pod to be scheduled before creating the PV. Ensures the PV is in the same Zone as the Pod",
@@ -2497,7 +2497,7 @@ export const TOPICS = [
         theoryEn: "Basic Debug Commands\n\nCMD:kubectl describe pod <pod-name>\nDESC:Shows detailed Pod information including events and status.\n\nCMD:kubectl logs <pod-name>\nDESC:Displays container logs for debugging application issues.\n\nCMD:kubectl exec -it <pod-name> -- bash\nDESC:Opens an interactive shell inside the container.\n\nCMD:kubectl get pods -A\nDESC:Lists all Pods across all Namespaces.\n\nCMD:kubectl get events -A\nDESC:Lists cluster events from all Namespaces.\n\nFLOW_TITLE:Debugging Workflow\nFLOW:kubectl get pods -A\nFLOW:kubectl describe pod my-pod\nFLOW:kubectl logs my-pod\nFLOW:kubectl exec -it my-pod -- bash",
         questions: [
             {
-              q: "ה-Pod 'web-server' לא מגיב ואתה לא יודע למה. איזו פקודה תיתן לך events ומצב מפורט כדי להתחיל לאבחן?",
+              q: "ה-Pod 'web-server' לא מגיב. איזו פקודה תציג מידע מפורט ו-events לצורך אבחון?",
               options: [
               "`kubectl describe pod web-server`",
               "`kubectl status pod web-server`",
@@ -2757,7 +2757,7 @@ export const TOPICS = [
                 "כשה-probe נכשל failureThreshold פעמים ברציפות, Kubernetes ממית ומפעיל מחדש את הקונטיינר.\nreadiness probe לעומת זאת רק מסיר מה-Service Endpoints. ללא restart.",
             },
             {
-              q: "ה-Pod נמצא ב-ContainerCreating זמן רב. מה הסיבות האפשריות?",
+              q: "ה-Pod נמצא ב-ContainerCreating זמן רב.\n\n```\nkubectl get pods\n```\n\n```\nNAME          READY   STATUS              RESTARTS   AGE\nweb-app       0/1     ContainerCreating   0          8m\n```\n\nמה הסיבות האפשריות?",
               options: [
               "Image pull איטי בגלל registry עמוס, או חוסר bandwidth ב-Node",
               "PVC שלא נמצא, Secret חסר, image pull איטי, או בעיה ב-CNI",
@@ -2855,7 +2855,7 @@ export const TOPICS = [
                 "When the probe fails failureThreshold times consecutively, Kubernetes kills and restarts the container.\nA readiness probe failure only removes the Pod from Service Endpoints. No restart.",
             },
             {
-              q: "A Pod is in ContainerCreating for a long time. What are the likely causes?",
+              q: "A Pod is stuck in ContainerCreating for a long time.\n\n```\nkubectl get pods\n```\n\n```\nNAME          READY   STATUS              RESTARTS   AGE\nweb-app       0/1     ContainerCreating   0          8m\n```\n\nWhat are the likely causes?",
               options: [
               "Slow image pull due to overloaded registry or insufficient Node bandwidth",
               "Init container stuck in a loop delaying the main container startup",
@@ -3138,7 +3138,7 @@ export const TOPICS = [
               "cat /etc/systemd/system/service-name.service",
             ],
             answer: 1,
-            explanation: "שירות לא עולה? קודם כל קוראים את הלוגים.\n\n```\njournalctl -u service-name --no-pager -n 50\n```\n\nn 50- מגביל ל-50 שורות אחרונות, מספיק כדי לראות את שגיאת ההפעלה.\n\nקודם מבינים למה נפל, רק אחר כך מתקנים.\n\nsystemctl restart בלי לבדוק את הלוגים קודם זה טעות. אם הבעיה מבנית, הוא ייפול שוב.\ndmesg מציג הודעות kernel, לא לוגים של שירותים.\ncat על קובץ ה-unit מציג את ההגדרות, לא את הלוגים של מה שנכשל.",
+            explanation: "שירות לא עולה? קודם כל קוראים את הלוגים:\n\n```\njournalctl -u service-name --no-pager -n 50\n```\n\nדוגמת פלט:\n\n```\nMar 19 08:12:02 srv1 service-name[1423]: Error: failed to bind port 8080: address already in use\nMar 19 08:12:02 srv1 systemd[1]: service-name.service: Main process exited, code=exited, status=1/FAILURE\n```\n\nn 50- מגביל ל-50 שורות אחרונות - מספיק לזהות את שגיאת ההפעלה.\n\nsystemctl restart בלי לבדוק לוגים קודם זה טעות - הבעיה תחזור.\ndmesg מציג הודעות kernel, לא לוגים של שירותים.",
           },
           {
             q: "צריך לבדוק אם שירות nginx פעיל.\n\nאיזו פקודה הכי מתאימה?",
@@ -3176,13 +3176,13 @@ export const TOPICS = [
           {
             q: "אתה מנסה להתחבר לשרת מרוחק בפורט 8080 אבל החיבור נכשל.\n\nהרצת:\n\n```\ncurl -v http://remote-server:8080\n```\n\nפלט:\n\n```\n* connect to remote-server port 8080 failed: Connection refused\n```\n\nמה המשמעות?",
             options: [
-              "DNS לא הצליח לפענח את שם השרת לכתובת IP",
-              "אין שירות שמאזין על פורט 8080, או ש-firewall דוחה חיבורים",
-              "פורט המקור בצד הלקוח תפוס ולא ניתן להקצאה",
-              "תעודת ה-SSL לא תקינה וה-TLS handshake נכשל",
+              "שם השרת לא מצליח להתפענח ב-DNS",
+              "אין שירות שמאזין על הפורט או ש-firewall חוסם",
+              "פורט המקור בצד הלקוח תפוס ולא זמין",
+              "תעודת SSL לא תקינה וה-handshake נכשל",
             ],
             answer: 1,
-            explanation: "Connection refused אומר שחבילת TCP SYN הגיעה לשרת, אבל השרת ענה ב-RST.\n\nDNS ו-routing עובדים. הבעיה: אין מי שמאזין על הפורט, או firewall דוחה.\n\nלבדוק בשרת המרוחק:\n\nss -tlnp | grep 8080\n\nולבדוק firewall:\n\niptables -L\n\nבעיית DNS הייתה מציגה Could not resolve host.\nהפורט המקומי נבחר אוטומטית, זו כמעט אף פעם לא הבעיה.\nSSL מופיע רק אחרי שה-TCP connection הצליח. כאן הוא נכשל.",
+            explanation: "Connection refused = חבילת TCP SYN הגיעה לשרת, אבל הוא ענה ב-RST.\n\nDNS ו-routing עובדים. הבעיה: אין מי שמאזין על הפורט, או firewall דוחה.\n\nבעיית DNS הייתה מציגה Could not resolve host.\nSSL רלוונטי רק אחרי שה-TCP connection הצליח.",
           },
           {
             q: "הרצת:\n\n```\nlsof +D /var/log/ | head -20\n```\n\nלמה הפקודה הזו שימושית?",
@@ -3228,7 +3228,7 @@ export const TOPICS = [
               "cat /etc/systemd/system/service-name.service",
             ],
             answer: 1,
-            explanation: "Service won't start? Read the logs first.\n\njournalctl -u service-name --no-pager -n 50\n\n-n 50 limits to the last 50 lines, enough to see the startup error.\n\nUnderstand why it failed, then fix it.\n\nsystemctl restart without checking logs first is a mistake. If it's a config issue, it'll just fail again.\ndmesg shows kernel messages, not service logs.\ncat on the unit file shows the config, not the logs of what failed.",
+            explanation: "Service won't start? Read the logs first:\n\n```\njournalctl -u service-name --no-pager -n 50\n```\n\nExample output:\n\n```\nMar 19 08:12:02 srv1 service-name[1423]: Error: failed to bind port 8080: address already in use\nMar 19 08:12:02 srv1 systemd[1]: service-name.service: Main process exited, code=exited, status=1/FAILURE\n```\n\n-n 50 limits to the last 50 lines - enough to spot the startup error.\n\nsystemctl restart without checking logs first is a mistake - the problem will return.\ndmesg shows kernel messages, not service logs.",
           },
           {
             q: "You need to check if the nginx service is running.\n\nWhich command is most appropriate?",
@@ -3266,13 +3266,13 @@ export const TOPICS = [
           {
             q: "You are trying to connect to a remote server on port 8080 but the connection fails.\n\nYou ran:\n\n```\ncurl -v http://remote-server:8080\n```\n\nOutput:\n\n```\n* connect to remote-server port 8080 failed: Connection refused\n```\n\nWhat does this mean?",
             options: [
-              "DNS failed to resolve the server hostname to an IP address",
-              "No service is listening on port 8080, or a firewall is rejecting connections",
-              "The source port on the client side is occupied and cannot be allocated",
-              "The SSL certificate is invalid, causing the TLS handshake to fail",
+              "DNS failed to resolve the server hostname",
+              "No service is listening on the port, or a firewall is blocking",
+              "The source port on the client side is unavailable",
+              "The SSL certificate is invalid and the handshake failed",
             ],
             answer: 1,
-            explanation: "Connection refused means the TCP SYN packet reached the server, but the server replied with RST.\n\nDNS and routing work. The problem: nothing is listening on that port, or a firewall is rejecting it.\n\nCheck on the remote server:\n\nss -tlnp | grep 8080\n\nAnd check firewall:\n\niptables -L\n\nA DNS issue would show Could not resolve host.\nThe local port is picked automatically, almost never the problem.\nSSL issues only show up after TCP connection succeeds. Here it failed.",
+            explanation: "Connection refused = the TCP SYN reached the server, but it replied with RST.\n\nDNS and routing work. The problem: nothing is listening on that port, or a firewall is rejecting it.\n\nA DNS issue would show Could not resolve host.\nSSL is only relevant after the TCP connection succeeds.",
           },
           {
             q: "You ran:\n\n```\nlsof +D /var/log/ | head -20\n```\n\nWhy is this command useful?",
@@ -3292,15 +3292,15 @@ export const TOPICS = [
         theoryEn: "Advanced troubleshooting and system-level performance analysis.\n🔹 top - %us/%sy/%wa/%idle - CPU line breakdown. High wa = disk issue, low idle = CPU load\n🔹 free - available - the key column, how much memory is actually free for new processes\n🔹 uptime - load average - avg processes in queue. Above core count = overloaded\n🔹 ss -tlnp - open ports and which processes are listening\n🔹 iostat -x - disk I/O analysis (%util, await, r/s, w/s)\n🔹 Process states - R=running, S=sleeping, D=I/O wait, Z=zombie, T=stopped\n🔹 OOM Killer - kernel kills processes exceeding memory limits (check dmesg)\nCODE:\ntop (press P to sort by CPU, M to sort by Memory)\niostat -x 1 3\nss -tlnp | grep 8080\ngrep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
         questions: [
           {
-            q: "שרת מגיב לאט.\n\nהרצת:\n\n```\ntop\n```\n\nאיזה ערך מציין עומס גבוה על ה-CPU?",
+            q: "שרת מגיב לאט. מריצים top ורואים:\n\n```\ntop\n```\n\n```\n%Cpu(s): 72.5 us, 18.0 sy, 0.3 ni, 5.0 id, 4.0 wa, 0.0 hi, 0.2 si\n```\n\nמה מעיד על עומס גבוה על ה-CPU?",
             options: [
-              "ערך %idle גבוה (מעל 90%) שמראה שה-CPU חופשי",
-              "ערך %wa גבוה (מעל 50%) שמראה המתנה ארוכה לדיסק",
-              "ערך %us + %sy גבוה (מעל 90%) וערך %idle נמוך מאוד",
-              "ערך load average נמוך מ-1 שמציין עומס מינימלי",
+              "ערך %id נמוך (5.0%) - המעבד כמעט לא פנוי",
+              "ערך %wa גבוה (4.0%) - המעבד ממתין לדיסק",
+              "ערך %ni גבוה (0.3%) - תהליכים עם עדיפות שונה",
+              "ערך %si גבוה (0.2%) - פסיקות תוכנה תכופות",
             ],
-            answer: 2,
-            explanation: "שרת מגיב לאט. פותחים top ורואים את שורת %Cpu(s).\n\nאם %us + %sy גבוהים ו-%idle נמוך, ה-CPU עמוס.\n\nלוחצים P למיון לפי CPU ומזהים את התהליך הצרכן.\n\nאם %wa גבוה, הבעיה בדיסק, לא ב-CPU. לבדוק עם:\n\niostat -x 1 3\n\n%idle גבוה אומר שה-CPU דווקא פנוי, ההפך.\n%wa גבוה = המתנה לדיסק, לא עומס CPU. טעות נפוצה.\nload average נמוך מ-1 = עומס קל.",
+            answer: 0,
+            explanation: "בשורת %Cpu(s) של top, השדה %id (idle) מציין כמה מהמעבד פנוי.\n\nכאן הערך הוא 5.0% בלבד, כלומר ה-CPU תפוס ב-95% מהזמן (%us + %sy = 90.5%).\n\n%wa מתייחס להמתנה לדיסק ולא לעומס מעבד ישיר.\n%ni ו-%si נמוכים מאוד ואינם מעידים על בעיה.",
           },
           {
             q: "הרצת:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n              total   used   free   shared  buff/cache  available\nMem:           16G    15G   200M     100M        800M       500M\n```\n\nמה המצב?",
@@ -3355,7 +3355,7 @@ export const TOPICS = [
               "להתעלם מהתהליך כי zombies נעלמים מעצמם תמיד",
             ],
             answer: 1,
-            explanation: "תהליך zombie (Z) כבר סיים לרוץ, אבל הרשומה נשארת בטבלה.\nהסיבה: האב לא קרא wait() לאסוף exit status.\n\nzombie בודד לא בעיה. אלפים = bug באב.\n\nלגרום לאב לטפל:\n\nkill -s SIGCHLD <parent_pid>\n\nkill -9 על zombie לא עובד, הוא כבר מת.\nrestart שרת זה פטיש גדול מדי, zombie לא צורך משאבים.\nzombies לא נעלמים מעצמם.",
+            explanation: "תהליך zombie (Z) כבר סיים לרוץ, אבל הרשומה נשארת בטבלה.\nהסיבה: האב לא קרא wait() לאסוף exit status.\n\nzombie בודד לא בעיה. אלפים = bug באב.\n\nלגרום לאב לטפל:\n\n```\nkill -s SIGCHLD <parent_pid>\n```\n\nkill -9 על zombie לא עובד, הוא כבר מת.\nrestart שרת זה פטיש גדול מדי, zombie לא צורך משאבים.\nzombies לא נעלמים מעצמם.",
           },
           {
             q: "הרצת:\n\n```\niostat -x 1 3\n```\n\nפלט:\n\n```\nDevice   r/s    w/s   rkB/s   wkB/s  await  %util\nsda      5.00  450.00  20.00 51200.00 250.00  99.80\n```\n\nמה המסקנה?",
@@ -3382,15 +3382,15 @@ export const TOPICS = [
         ],
         questionsEn: [
           {
-            q: "A server is responding slowly.\n\nYou ran:\n\n```\ntop\n```\n\nWhich value indicates high CPU load?",
+            q: "A server is responding slowly. You run top and see:\n\n```\ntop\n```\n\n```\n%Cpu(s): 72.5 us, 18.0 sy, 0.3 ni, 5.0 id, 4.0 wa, 0.0 hi, 0.2 si\n```\n\nWhat indicates high CPU load?",
             options: [
-              "High %idle (above 90%) showing the CPU is mostly free",
-              "High %wa (above 50%) showing the CPU waits for disk",
-              "High %us + %sy (above 90%) with very low %idle",
-              "Load average below 1 indicating minimal system load",
+              "Low %id (5.0%) - the CPU is barely idle",
+              "High %wa (4.0%) - the CPU is waiting for disk",
+              "High %ni (0.3%) - processes with altered priority",
+              "High %si (0.2%) - frequent software interrupts",
             ],
-            answer: 2,
-            explanation: "Server is slow. Open top and check the %Cpu(s) line.\n\nIf %us + %sy are high and %idle is low, CPU is loaded.\n\nPress P to sort by CPU and find the consuming process.\n\nIf %wa is high, the problem is disk, not CPU. Check with:\n\niostat -x 1 3\n\nHigh %idle means the CPU is actually free. Opposite.\nHigh %wa = waiting for disk, not CPU load. Common mistake.\nLoad average below 1 = light load.",
+            answer: 0,
+            explanation: "In top's %Cpu(s) line, %id (idle) shows how much CPU is free.\n\nHere it's only 5.0%, meaning the CPU is 95% busy (%us + %sy = 90.5%).\n\n%wa refers to disk wait, not direct CPU load.\n%ni and %si are very low and don't indicate a problem.",
           },
           {
             q: "You ran:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n              total   used   free   shared  buff/cache  available\nMem:           16G    15G   200M     100M        800M       500M\n```\n\nWhat is the situation?",
@@ -3445,7 +3445,7 @@ export const TOPICS = [
               "Ignore the process because zombies always disappear on their own",
             ],
             answer: 1,
-            explanation: "Zombie (Z) process already finished, but the entry stays in the process table.\nThe parent didn't call wait() to collect exit status.\n\nA single zombie is harmless. Thousands = bug in the parent.\n\nGet the parent to handle it:\n\nkill -s SIGCHLD <parent_pid>\n\nkill -9 on a zombie doesn't work, it's already dead.\nServer restart is overkill. A zombie uses no resources.\nZombies don't disappear on their own.",
+            explanation: "Zombie (Z) process already finished, but the entry stays in the process table.\nThe parent didn't call wait() to collect exit status.\n\nA single zombie is harmless. Thousands = bug in the parent.\n\nGet the parent to handle it:\n\n```\nkill -s SIGCHLD <parent_pid>\n```\n\nkill -9 on a zombie doesn't work, it's already dead.\nServer restart is overkill. A zombie uses no resources.\nZombies don't disappear on their own.",
           },
           {
             q: "You ran:\n\n```\niostat -x 1 3\n```\n\nOutput:\n\n```\nDevice   r/s    w/s   rkB/s   wkB/s  await  %util\nsda      5.00  450.00  20.00 51200.00 250.00  99.80\n```\n\nWhat is the conclusion?",
