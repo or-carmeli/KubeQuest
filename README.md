@@ -555,12 +555,16 @@ src/
     StatsView.jsx      # User statistics dashboard
     StatusView.jsx     # System status monitor
     WeakAreaCard.jsx   # Lowest-accuracy topic card
-    ErrorBoundary.jsx  # Crash recovery wrapper + Sentry capture
+    ErrorBoundary.jsx       # Crash recovery wrapper + Sentry capture
+    PerformanceInsights.jsx # Dev-only observability dashboard (real telemetry)
   utils/
-    telemetry.js       # Sentry wrapper (error capture, scrubbing, web vitals)
-    storage.js         # Safe localStorage layer with corruption recovery
-    bidi.jsx           # BiDi text rendering for Hebrew/English mixed content
-    quizPersistence.js # localStorage helpers for quiz resume
+    telemetry.js            # Sentry wrapper (error capture, scrubbing, web vitals)
+    storage.js              # Safe localStorage layer with corruption recovery
+    bidi.jsx                # BiDi text rendering for Hebrew/English mixed content
+    quizPersistence.js      # localStorage helpers for quiz resume
+    realTelemetry.js        # Real client-side telemetry collector
+    hybridTelemetry.js      # Snapshot builder with time-range filtering
+    mockTelemetry.js        # Analysis engine (health, insights, confidence)
 public/
   sw.js                # Service worker (offline cache, build-stamped)
 k8s/                   # Kubernetes manifests (namespace, deployment, service, ingress, HPA)
