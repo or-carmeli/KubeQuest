@@ -309,7 +309,7 @@ export default {
       context: "20 pods per service × 6 services = 120 pods running for 5 days straight. Your AWS compute bill estimate jumped $12K for the week. Most pods are at <5% CPU utilization. CFO flagged the spend. Meanwhile, the database connection problem remains unaddressed — 120 pods × 3 connections each = 360, exceeding max_connections.",
       contextHe: "20 pods לשירות × 6 שירותים = 120 pods רצים 5 ימים ברצף. הערכת חשבון חישוב AWS קפצה ב-$12K לשבוע. רוב ה-pods ב-פחות מ-5% ניצולת CPU. ה-CFO סימן את ההוצאה. בינתיים, בעיית חיבורי ה-DB נשארת — 120 pods × 3 חיבורים = 360, מעבר ל-max_connections.",
       question: "Over-provisioned and expensive, with an unaddressed DB connection bottleneck. How do you adjust?",
-      questionHe: "הקצאת יתר ויקר, עם צוואר בקבוק חיבורי DB שלא טופל. איך תתאים?",
+      questionHe: "הקצאת יתר ויקר, עם bottleneck בחיבורי DB שלא טופל. איך תתאים?",
       alerts: [
         { type: "warning", source: "CFO", text: "AWS compute bill estimate: $12K/week — 4x over budget", textHe: "הערכת חשבון חישוב AWS: $12K לשבוע -- פי 4 מהתקציב" },
         { type: "info", source: "Cost Explorer", text: "Reserved Instance coverage: 45% -- savings opportunity available", textHe: "כיסוי Reserved Instance: 45% -- יש הזדמנות לחיסכון", noise: true },

@@ -5,9 +5,9 @@
 export default {
   id: "rds-latency",
   title: "RDS Latency Under Load",
-  titleHe: "צוואר בקבוק ב-RDS תחת עומס",
+  titleHe: "Bottleneck ב-RDS תחת עומס",
   description: "Your PostgreSQL RDS instance is choking under a 5x traffic spike. Diagnose and resolve the bottleneck before users start churning.",
-  descriptionHe: "מופע ה-PostgreSQL RDS שלך נחנק תחת עלייה של פי 5 בתעבורה. אבחן ופתור את צוואר הבקבוק לפני שמשתמשים מתחילים לנטוש.",
+  descriptionHe: "מופע ה-PostgreSQL RDS שלך נחנק תחת עלייה של פי 5 בתעבורה. אבחן ופתור את ה-bottleneck לפני שמשתמשים מתחילים לנטוש.",
   difficulty: "medium",
   estimatedTime: "5-7 min",
   tags: ["AWS", "RDS", "PostgreSQL", "Scaling"],
