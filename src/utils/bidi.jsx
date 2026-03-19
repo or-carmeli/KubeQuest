@@ -69,7 +69,7 @@ export function getTermKind(token) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 // Inline-code style for backtick-wrapped terms only (subtle, readable)
-export const CODE_SPAN_STYLE = {background:"rgba(255,255,255,0.06)",borderRadius:4,padding:"2px 6px",fontSize:"0.95em",fontFamily:"'JetBrains Mono','Fira Code',monospace",color:"inherit",whiteSpace:"nowrap"};
+export const CODE_SPAN_STYLE = {fontWeight:600,color:"inherit",whiteSpace:"nowrap"};
 
 // ─── renderBidiInner ──────────────────────────────────────────────────────────
 
@@ -172,8 +172,9 @@ export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
 // in RTL Hebrew paragraphs. K8s terms get inline-code styling.
 // Also handles backtick-wrapped inline code (`command`) for consistency.
 // Returns text unchanged for English mode.
-export function renderBidi(text, lang) {
+export function renderBidi(text, lang, opts) {
   if (!text || lang !== "he") return text;
+  const noCodeStyle = opts?.noCodeStyle;
 
   // Strip LTR marks (U+200E) - the span-based bidi isolation is more robust
   // and these marks interfere with the keyword regex below.
@@ -218,7 +219,7 @@ export function renderBidi(text, lang) {
       return btParts.map((part, i) => {
         if (i % 2 === 1) {
           // backtick-wrapped content → always render as LTR inline code
-          return <span key={`bt-${i}`} dir="ltr" style={{unicodeBidi:"isolate",...CODE_SPAN_STYLE}}>{part}</span>;
+          return <span key={`bt-${i}`} dir="ltr" style={{unicodeBidi:"isolate",...(noCodeStyle?{}:CODE_SPAN_STYLE)}}>{part}</span>;
         }
         if (!part) return null;
         // Anchor leading punctuation to RTL context when following an LTR code span
@@ -240,7 +241,7 @@ export function renderBidi(text, lang) {
     if (cliParts.length > 1) {
       return cliParts.map((part, i) => {
         if (!part) return null;
-        if (i % 2 === 1) return <span key={`cli-${i}`} dir="ltr" style={{unicodeBidi:"isolate",...CODE_SPAN_STYLE}}>{part}</span>;
+        if (i % 2 === 1) return <span key={`cli-${i}`} dir="ltr" style={{unicodeBidi:"isolate",...(noCodeStyle?{}:CODE_SPAN_STYLE)}}>{part}</span>;
         // Anchor leading punctuation to RTL context when following an LTR CLI span
         let trimmed = part.trim();
         if (!trimmed) return null;
