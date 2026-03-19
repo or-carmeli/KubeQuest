@@ -187,9 +187,9 @@ export function renderBidi(text, lang) {
   text = text.replace(/([A-Za-z])\/([\u0590-\u05EA])/g, "$1 / $2");
 
   // DNS/FQDN template patterns (e.g. <service-name>.<namespace>.svc.cluster.local)
-  // Render as a single isolated LTR code span to prevent bidi fragmentation on <> and dots
+  // Render as a single isolated LTR span to prevent bidi fragmentation on <> and dots
   if (/^[<\w][\w.<>\-]*\.svc\.cluster\.local$/.test(text.trim()) || /^<[\w-]+>(\.<[\w-]+>)*(\.[a-z.]+)*$/.test(text.trim())) {
-    return <span dir="ltr" style={{unicodeBidi:"isolate",...CODE_SPAN_STYLE}}>{text}</span>;
+    return <span dir="ltr" style={{unicodeBidi:"isolate"}}>{text}</span>;
   }
 
   // Handle "Keyword: explanation" pattern in mixed Hebrew/English text.

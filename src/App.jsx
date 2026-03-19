@@ -2823,17 +2823,33 @@ export default function K8sQuestApp() {
     setShowExplanation(true);
 
     const correct = result.correct;
+    const isFree = isFreeMode(selectedTopic?.id);
+    const isMixedOrDaily = selectedTopic?.id === "mixed" || selectedTopic?.id === "daily";
+    // For mixed/daily modes, check if this question was already scored before
+    let alreadyScored = false;
+    if (isMixedOrDaily && correct && !isRetryRef.current) {
+      try {
+        const freeKey = currentQuestions[questionIndex].q.slice(0, 100);
+        const scored = new Set(safeGetJSON("scoredFreeKeys_v1", []));
+        alreadyScored = scored.has(freeKey);
+        if (!alreadyScored) {
+          scored.add(freeKey);
+          localStorage.setItem("scoredFreeKeys_v1", JSON.stringify([...scored]));
+        }
+      } catch {}
+    }
+    // Mixed/daily: earn points only for new (not previously answered) questions
+    const earnPoints = isMixedOrDaily ? !alreadyScored : !isFree;
     if (correct) {
       topicCorrectRef.current += 1;
       setFlash(true); setTimeout(() => setFlash(false), 600);
-      if (!isRetryRef.current) setSessionScore(p => p + (LEVEL_CONFIG[selectedLevel==="mixed"&&q.level?q.level:selectedLevel]?.points ?? 0));
+      if (!isRetryRef.current && earnPoints) setSessionScore(p => p + (LEVEL_CONFIG[selectedLevel==="mixed"&&q.level?q.level:selectedLevel]?.points ?? 0));
     }
     setQuizHistory(prev => {
       if (prev.length > questionIndex) return prev; // guard against double-submit
       return [...prev, { q: q.q, options: q.options, answer: result.correctIndex, chosen: selectedAnswer, explanation: result.explanation }];
     });
     // Immediately persist wrong answer so it survives mid-quiz exits
-    const isFree = isFreeMode(selectedTopic?.id);
     if (!correct && !isFree && !isRetryRef.current && selectedTopic && selectedLevel) {
       const key = `${selectedTopic.id}_${selectedLevel}`;
       setCompletedTopics(prev => {
@@ -2842,24 +2858,24 @@ export default function K8sQuestApp() {
       });
     }
     // Single atomic setStats call - prevents React batching from clobbering streak
-    // total_score accumulates on every correct answer (non-free modes only).
+    // total_score accumulates on correct answers (non-free modes, or new questions in mixed).
     // best_score (canonical) is computed separately at quiz completion.
     setStats(prev => {
       if (isRetryRef.current) return prev;
       const streak = correct ? prev.current_streak + 1 : 0;
       // For mixed mode, use the question's actual level for accurate local display
       const effectiveLevel = selectedLevel === "mixed" && q.level ? q.level : selectedLevel;
-      const points = correct ? (LEVEL_CONFIG[effectiveLevel]?.points ?? 0) : 0;
+      const points = correct && earnPoints ? (LEVEL_CONFIG[effectiveLevel]?.points ?? 0) : 0;
       return {
         ...prev,
-        current_streak: isFree ? prev.current_streak : streak,
-        max_streak:     isFree ? prev.max_streak     : Math.max(prev.max_streak, streak),
-        total_answered: isFree ? prev.total_answered : prev.total_answered + 1,
-        total_correct:  isFree ? prev.total_correct  : (correct ? prev.total_correct + 1 : prev.total_correct),
-        total_score:    prev.total_score + (isFree ? 0 : points),
+        current_streak: earnPoints ? streak : prev.current_streak,
+        max_streak:     earnPoints ? Math.max(prev.max_streak, streak) : prev.max_streak,
+        total_answered: earnPoints ? prev.total_answered + 1 : prev.total_answered,
+        total_correct:  earnPoints && correct ? prev.total_correct + 1 : prev.total_correct,
+        total_score:    prev.total_score + points,
       };
     });
-    if (!isRetryRef.current && !isFree) {
+    if (!isRetryRef.current && !isFree && !isMixedOrDaily) {
       setTopicStats(prev => {
         const curr = prev[selectedTopic.id] || { answered: 0, correct: 0 };
         return { ...prev, [selectedTopic.id]: { answered: curr.answered + 1, correct: curr.correct + (correct ? 1 : 0) } };
@@ -4078,7 +4094,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         onBlur={e=>e.currentTarget.style.top="-100px"}>
         {lang==="en"?"Skip to content":"דלג לתוכן"}
       </a>}
-      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes termCursorBlink{0%,100%{opacity:1}50%{opacity:0}}.term-cursor{display:inline-block;width:7px;height:14px;background:#484f58;vertical-align:text-bottom;margin-left:1px}.term-cursor-blink{animation:termCursorBlink 600ms step-end infinite}.term-output-reveal{animation:termFadeIn 200ms ease-out forwards}@keyframes termFadeIn{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.term-cursor-blink{animation:none}.term-output-reveal{animation:none}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.gbtn{transition:all 0.2s}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,212,255,0.2)}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}@media(max-width:600px){
+      <style>{`${a11y.reduceMotion?"*{animation:none!important;transition:none!important}":""}${a11y.highContrast?"#main-content{filter:contrast(1.4) brightness(1.06)}":""}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}@keyframes toast{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes correctFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}@keyframes popIn{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes confettiFall{from{top:-20px;transform:rotate(0deg);opacity:1}to{top:100vh;transform:rotate(720deg);opacity:0}}@keyframes pulseHighlight{0%{box-shadow:0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 0 0 8px rgba(239,68,68,0.2)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}@keyframes nodePulse{0%,100%{box-shadow:0 0 10px var(--nc,#00D4FF)}50%{box-shadow:0 0 22px var(--nc,#00D4FF)}}@keyframes warRoomToastIn{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes warRoomGlow{0%,100%{box-shadow:0 0 15px rgba(239,68,68,0.15),0 0 30px rgba(239,68,68,0.05)}50%{box-shadow:0 0 20px rgba(239,68,68,0.25),0 0 40px rgba(239,68,68,0.1)}}@keyframes resolvedPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1);opacity:1}}@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes termCursorBlink{0%,100%{opacity:1}50%{opacity:0}}.term-cursor{display:inline-block;width:7px;height:14px;background:#484f58;vertical-align:text-bottom;margin-left:1px}.term-cursor-blink{animation:termCursorBlink 600ms step-end infinite}.term-output-reveal{animation:termFadeIn 200ms ease-out forwards}@keyframes termFadeIn{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.term-cursor-blink{animation:none}.term-output-reveal{animation:none}}.pulseHighlight{animation:pulseHighlight 0.5s ease 3;border-color:rgba(239,68,68,0.45)!important}.gbtn{transition:all 0.2s}.gbtn:hover{background:rgba(0,212,255,0.13)!important;border-color:rgba(0,212,255,0.5)!important;color:#00D4FF!important;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,212,255,0.2)}.card-hover{transition:transform 0.2s;cursor:pointer}.card-hover:hover{transform:translateY(-3px)}.opt-btn{transition:all 0.15s;cursor:pointer}.opt-btn:hover{transform:translateX(-2px)}.opt-cmd-scroll::-webkit-scrollbar{height:3px}.opt-cmd-scroll::-webkit-scrollbar-track{background:transparent}.opt-cmd-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:3px}.opt-cmd-scroll{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.18) transparent}.explanation-card ul[dir="rtl"]{direction:rtl;text-align:right}.explanation-card ul[dir="rtl"] li::marker{unicode-bidi:isolate}button,input{font-family:inherit}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #00D4FF!important;outline-offset:2px;border-radius:4px}.cli-command{direction:ltr;unicode-bidi:isolate;white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono','Fira Code',monospace;display:block;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;color:inherit;font-size:0.95em;margin-top:4px;text-align:left}.cbr-block{background:var(--code-bg-block);border:1px solid var(--glass-6);border-radius:6px;display:flex;align-items:stretch;transition:border-color 0.15s,background 0.15s;overflow:hidden}.cbr-block:hover{border-color:var(--glass-12);background:var(--code-bg-block-hover)}.cbr-code{flex:1;min-width:0;padding:10px 14px;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12.5px;color:var(--code-text);line-height:1.6;white-space:pre;overflow-x:auto;direction:ltr}.cbr-copy{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 12px;border:none;border-left:1px solid var(--glass-6);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;min-width:62px;justify-content:center}.cbr-copy:hover{background:var(--glass-4);color:var(--text-secondary)}.cbr-copy:focus-visible{outline:2px solid #00D4FF!important;outline-offset:-2px}.cbr-copy.copied{color:#10B981;background:rgba(16,185,129,0.08)}.back-btn{transition:all 0.2s}.back-btn:hover{background:rgba(0,212,255,0.1)!important;border-color:rgba(0,212,255,0.3)!important;box-shadow:0 0 12px rgba(0,212,255,0.35);transform:scale(1.05)}[data-theme="light"] .back-btn:hover{background:rgba(14,165,233,0.06)!important;border-color:#0EA5E9!important;box-shadow:0 2px 8px rgba(14,165,233,0.12);transform:scale(1.05)}@media(max-width:600px){
 .stats-grid{grid-template-columns:repeat(2,1fr)!important}
 .page-pad{padding:12px 14px!important}
 .quiz-bar-right{gap:8px!important}
@@ -4092,7 +4108,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .explanation-card li{font-size:13px!important;line-height:1.8!important}
 .home-actions{gap:5px!important}
 .home-actions>button{font-size:11px!important;padding:5px 8px!important}
-.home-screen{padding:12px 14px!important}
+.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 14px 12px!important}
 .home-header{flex-direction:column!important;gap:10px!important;min-height:auto!important}
 .home-controls{position:static!important;transform:none!important;margin-bottom:4px!important}
 .roadmap-row{gap:8px!important}
@@ -4120,7 +4136,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 }
 @media(max-width:390px){
 .home-logo{width:40px!important;height:40px!important}
-.home-screen{padding:10px 10px!important}
+.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 10px 10px!important}
 .page-pad{padding:10px 12px!important}
 .topic-card-section{padding:11px 12px!important}
 .stats-cell{padding:9px 6px!important;font-size:11px}
@@ -4135,7 +4151,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 }
 @media(max-width:360px){
 .home-logo{width:34px!important;height:34px!important}
-.home-screen{padding:8px 8px!important}
+.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 8px 8px!important}
 .page-pad{padding:8px 10px!important}
 .topic-card-section{padding:10px 10px!important}
 .stats-grid{gap:8px!important}
@@ -4554,7 +4570,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!isStatusDomain && <>
       {/* HOME */}
       {screen==="home"&&(
-        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"32px 12px 16px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
+        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"calc(30px + env(safe-area-inset-top, 0px)) 12px 16px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
           {/* ── Hero - centered, matches loading screen composition ── */}
           <div className="home-hero" style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",marginBottom:16}}>
             {/* Header row: logo+title on one side, burger on the other */}
@@ -4624,7 +4640,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               );
             })()}
             {/* Compact greeting row */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:8,flexWrap:"nowrap",maxWidth:"100%",overflow:"hidden"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:12,flexWrap:"nowrap",maxWidth:"100%",overflow:"hidden"}}>
               <span style={{color:"var(--text-muted)",fontSize:12,lineHeight:1,direction:dir,flexShrink:0}}>{t("greeting")}</span>
               <span style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,lineHeight:1,direction:"ltr",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{displayName}</span>
             </div>
@@ -4859,7 +4875,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* ── SEARCH ── */}
       {screen==="search"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
-          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
             {dir==="rtl"?"→":"←"}
           </button>
           <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
@@ -4916,7 +4932,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const anyTopicCompleted=AVAILABLE_TOPICS.some(topic=>(['easy','medium','hard']).some(lvl=>completedTopics[`${topic.id}_${lvl}`]));
         return (
           <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
-            <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
+            <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
               {dir==="rtl"?"→":"←"}
             </button>
             <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:4}}>{t("mistakesBtn")}</h2>
@@ -5008,7 +5024,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         return (
           <div className="page-pad" style={{maxWidth:700,margin:"0 auto",padding:"16px 14px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
             <div style={{display:"flex",justifyContent:isHe?"flex-end":"flex-start",marginBottom:16}}>
-              <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13,display:"inline-flex",alignItems:"center",gap:5}}>
+              <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13,display:"inline-flex",alignItems:"center",gap:5}}>
                 {isHe?"חזרה →":"← Back"}
               </button>
             </div>
@@ -5060,7 +5076,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* ── PRIVACY POLICY ── */}
       {screen==="privacy"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
-          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
             {dir==="rtl"?"→":"←"}
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
@@ -5109,7 +5125,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* ── TERMS OF SERVICE ── */}
       {screen==="terms"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
-          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
             {dir==="rtl"?"→":"←"}
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
@@ -5156,7 +5172,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* ── ABOUT ── */}
       {screen==="about"&&(
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
-          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:6}}>
             {dir==="rtl"?"→":"←"}
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,marginBottom:28}}>
@@ -5232,7 +5248,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"12px 14px",animation:"fadeIn 0.3s ease",display:"flex",flexDirection:"column",minHeight:"calc(100dvh - 24px)"}}>
           <div style={{marginBottom:8,flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",direction:dir,marginBottom:4}}>
-              <button onClick={()=>setScreen("home")} aria-label={t("back")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
+              <button className="back-btn" onClick={()=>setScreen("home")} aria-label={t("back")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
               <span style={{fontSize:12,color:LEVEL_CONFIG[selectedLevel]?.color,background:`${LEVEL_CONFIG[selectedLevel]?.color||"#888"}18`,padding:"3px 10px",borderRadius:20,fontWeight:700,whiteSpace:"nowrap",flexShrink:0,display:"inline-flex",alignItems:"center",gap:4}}><LevelIcon name={LEVEL_CONFIG[selectedLevel]?.icon} size={12} color={LEVEL_CONFIG[selectedLevel]?.color} /> {levelLabel(selectedLevel)}</span>
             </div>
             <h2 style={{margin:0,color:selectedTopic.color,fontSize:17,fontWeight:800,textAlign:"center"}}>{selectedTopic.name}</h2>
@@ -5300,7 +5316,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     <span aria-hidden="true" style={{display:"inline-flex",alignItems:"center",gap:3}}><Star size={12} strokeWidth={1.5} color="#A855F7" /> {stats.total_score||0} {t("pts")}</span>
                     {sessionScore>0&&<span style={{color:"#00D4FF",fontSize:10,fontWeight:600,marginLeft:4,opacity:0.8}}>(+{sessionScore})</span>}
                   </span>}
-                  {!isInHistoryMode&&isFreeMode(selectedTopic?.id)&&<span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,opacity:0.6,background:"var(--glass-4)",padding:"2px 6px",borderRadius:4}}>{t("freeModeBadge")}</span>}
+                  {!isInHistoryMode&&isFreeMode(selectedTopic?.id)&&selectedTopic?.id!=="mixed"&&<span style={{fontSize:9,color:"var(--text-dim)",fontWeight:600,opacity:0.6,background:"var(--glass-4)",padding:"2px 6px",borderRadius:4}}>{t("freeModeBadge")}</span>}
                 </div>
                 <div style={{height:6,background:"var(--glass-6)",borderRadius:4,direction:"ltr",transform:lang==="he"?"scaleX(-1)":undefined}}>
                   <div style={{height:"100%",borderRadius:4,
@@ -5377,6 +5393,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   }
                   const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
                   const isCodeOption = !hasHebrew(opt) && /^(kubectl|helm|docker|kubeadm|crictl|etcdctl)\s/.test(opt.trim());
+                  const hasMixedCode = !isCodeOption && /`[^`]+`/.test(opt);
                   return (
                     <button key={opt} className="opt-btn"
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
@@ -5388,6 +5405,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       {isCodeOption
                         ? <span dir="ltr" style={{flex:1,minWidth:0,lineHeight:1.55,unicodeBidi:"isolate"}}>
                             <span className="opt-cmd-scroll" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"#0d1117",borderRadius:4,padding:"5px 10px",fontFamily:"'JetBrains Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"#c9d1d9"}}>{renderBidi(opt,lang)}</span>
+                          </span>
+                        : hasMixedCode
+                        ? <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>
+                            {opt.split(/`([^`]+)`/).map((part, j) => {
+                              if (j % 2 === 1) return <span key={j} className="opt-cmd-scroll" dir="ltr" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"#0d1117",borderRadius:4,padding:"5px 10px",marginTop:4,marginBottom:4,fontFamily:"'JetBrains Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"#c9d1d9",unicodeBidi:"isolate"}}>{part}</span>;
+                              if (!part.trim()) return null;
+                              return <span key={j}>{renderBidi(part, lang)}</span>;
+                            })}
                           </span>
                         : <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang)}</span>
                       }
@@ -5469,7 +5494,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                             // Short CLI references ending with punctuation (e.g. "kubectl logs.") are
                             // inline text, not standalone code blocks.
                             const looksLikeRef = /^(kubectl|helm|docker)\s+\w+[.,;:!?]?$/.test(stripped);
-                            const isCodeOnly = !looksLikeRef && (
+                            const withoutInlineCode = s.replace(/`[^`]+`/g, "").trim();
+                            const isMixedProse = withoutInlineCode.length > 3 && /[a-zA-Z\u0590-\u05FF]{2,}/.test(withoutInlineCode);
+                            const isCodeOnly = !looksLikeRef && !isMixedProse && (
                               (!(/[\u0590-\u05FF]/).test(stripped) && CLI_COMMAND_RE.test(stripped))
                               || (s.startsWith("```") && s.endsWith("```"))
                               || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s))
@@ -5522,7 +5549,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           {iParagraphs.map((s,idx)=>{
                             const stripped = s.replace(/`([^`]+)`/g, "$1").trim();
                             const looksLikeRef = /^(kubectl|helm|docker)\s+\w+[.,;:!?]?$/.test(stripped);
-                            const isCodeOnly = !looksLikeRef && (
+                            const withoutInlineCode = s.replace(/`[^`]+`/g, "").trim();
+                            const isMixedProse = withoutInlineCode.length > 3 && /[a-zA-Z\u0590-\u05FF]{2,}/.test(withoutInlineCode);
+                            const isCodeOnly = !looksLikeRef && !isMixedProse && (
                               (!(/[\u0590-\u05FF]/).test(stripped) && CLI_COMMAND_RE.test(stripped))
                               || (s.startsWith("```") && s.endsWith("```"))
                               || (s.startsWith("`") && s.endsWith("`") && !(/[\u0590-\u05FF]/).test(s))
@@ -5677,7 +5706,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 return(
                   <button onClick={()=>startTopic(selectedTopic,nextLvl)}
                     style={{padding:14,background:`linear-gradient(135deg,${nextCfg.color}ee,${nextCfg.color}88)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 20px ${nextCfg.color}55`}}>
-                    {t("nextLevelBtn")} {nextCfg.icon} {getLocalizedField(nextCfg, "label", lang)}
+                    {t("nextLevelBtn")}
                   </button>
                 );
               })()}
@@ -5756,7 +5785,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {screen==="incidentList"&&(
         import.meta.env.PROD ? (
         <div style={{maxWidth:780,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
-          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
             <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"50vh",textAlign:"center",padding:"0 20px"}}>
@@ -5876,7 +5905,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         ) : (
         <div style={{maxWidth:780,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
           {/* Back button */}
-          <button onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
             <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
           </button>
           {/* Header */}
