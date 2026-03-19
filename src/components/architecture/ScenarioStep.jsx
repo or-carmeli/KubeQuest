@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { getLocalizedField } from "../../utils/i18n";
 import { getSystemSeverity } from "../../utils/architectureLogic";
+import { Zap, Wallet, ShieldCheck } from "lucide-react";
 import DecisionOption from "./DecisionOption";
 import SystemDashboard from "./SystemDashboard";
 
@@ -67,9 +68,9 @@ export default function ScenarioStep({ step, metrics, systemState, prevSystemSta
           {estimatedTotal > 0 && <span style={{ opacity: 0.5 }}> / ~{estimatedTotal}</span>}
         </span>
         <div style={{ display: "flex", gap: 6, marginInlineStart: "auto" }}>
-          <ScorePill icon="⚡" value={metrics.performance} />
-          <ScorePill icon="💰" value={metrics.cost} />
-          <ScorePill icon="🛡️" value={metrics.reliability} />
+          <ScorePill icon={<Zap size={10} />} value={metrics.performance} />
+          <ScorePill icon={<Wallet size={10} />} value={metrics.cost} />
+          <ScorePill icon={<ShieldCheck size={10} />} value={metrics.reliability} />
         </div>
       </div>
 
@@ -216,9 +217,9 @@ export default function ScenarioStep({ step, metrics, systemState, prevSystemSta
               </div>
 
               <div style={{ display: "flex", gap: 14, marginTop: 12, flexWrap: "wrap", paddingTop: 10, borderTop: `1px solid ${outcomeBorder}` }}>
-                <ImpactDelta label="⚡" name={en ? "Perf" : "ביצועים"} value={selectedOption.impact.performance} />
-                <ImpactDelta label="💰" name={en ? "Cost" : "עלות"} value={selectedOption.impact.cost} />
-                <ImpactDelta label="🛡️" name={en ? "Rel" : "אמינות"} value={selectedOption.impact.reliability} />
+                <ImpactDelta label={<Zap size={11} />} name={en ? "Perf" : "ביצועים"} value={selectedOption.impact.performance} />
+                <ImpactDelta label={<Wallet size={11} />} name={en ? "Cost" : "עלות"} value={selectedOption.impact.cost} />
+                <ImpactDelta label={<ShieldCheck size={11} />} name={en ? "Rel" : "אמינות"} value={selectedOption.impact.reliability} />
               </div>
             </div>
 
@@ -244,7 +245,7 @@ function ScorePill({ icon, value }) {
   const color = value < 35 ? "#B91C1C" : value < 50 ? "#92400E" : "var(--text-muted)";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color, fontWeight: 700 }}>
-      <span style={{ fontSize: 9 }}>{icon}</span>
+      <span style={{ display: "flex", alignItems: "center" }}>{icon}</span>
       <span>{value}</span>
     </div>
   );
@@ -255,7 +256,8 @@ function ImpactDelta({ label, name, value }) {
   const color = value > 0 ? "#15803D" : "#B91C1C";
   return (
     <span style={{ fontSize: 11, color, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}>
-      {label} <span style={{ color: "var(--text-dim)", fontWeight: 500 }}>{name}</span> {value > 0 ? "+" : ""}{value}
+      <span style={{ display: "flex", alignItems: "center" }}>{label}</span>
+      <span style={{ color: "var(--text-dim)", fontWeight: 500 }}>{name}</span> {value > 0 ? "+" : ""}{value}
     </span>
   );
 }
