@@ -7,6 +7,7 @@
  * Extracted from App.jsx to enable regression testing.
  */
 import React from "react";
+import { TerminalBlock } from "../components/CodeBlocks";
 
 // ─── Detect Hebrew ────────────────────────────────────────────────────────────
 export const hasHebrew = (text) => /[\u05D0-\u05EA]/.test(text ?? "");
@@ -271,7 +272,7 @@ export function splitCliParts(text, lang, keyPrefix) {
   if (parts.length <= 1) return renderBidiInner(text, lang, keyPrefix);
   return parts.map((part, i) => {
     if (!part) return null;
-    if (i % 2 === 1) return <code key={`${keyPrefix}-c${i}`} dir="ltr" className="cli-command">{part.trim()}</code>;
+    if (i % 2 === 1) return <TerminalBlock key={`${keyPrefix}-c${i}`}>{part.trim()}</TerminalBlock>;
     const trimmed = part.trim();
     return trimmed ? <span key={`${keyPrefix}-t${i}`}>{renderBidiInner(trimmed, lang, `${keyPrefix}b${i}`)}</span> : null;
   });

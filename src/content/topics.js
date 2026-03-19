@@ -138,7 +138,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "requests מגדיר כמה CPU/Memory ה-Pod מבקש.\nה-Scheduler משתמש בערכים אלה כדי למצוא Node עם מספיק משאבים.\nrequests הוא רמז לתזמון. הקונטיינר יכול לצרוך יותר, עד limits.",
+                "requests מגדיר את כמות ה-CPU/Memory המינימלית שה-Pod צריך כדי לרוץ.\nה-Scheduler בודק את הערכים האלה כדי לבחור Node עם מספיק משאבים פנויים.\nהקונטיינר יכול לצרוך יותר מה-requests, אבל לא מעבר ל-limits.",
             },
             {
               q: "מה מטרת Namespace ב-Kubernetes?",
