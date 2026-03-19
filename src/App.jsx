@@ -4198,7 +4198,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <div style={{fontWeight:700,color:"var(--text-primary)",fontSize:17,marginBottom:14,textAlign:"center"}}>{t("resumeTitle")}</div>
             {/* Topic card */}
             <div style={{display:"flex",alignItems:"center",gap:10,background:"var(--glass-4)",border:"1px solid var(--glass-9)",borderRadius:10,padding:"9px 12px",marginBottom:10,direction:"ltr"}}>
-              <span style={{fontSize:20}}>{resumeData.topicIcon}</span>
               <div style={{flex:1}}>
                 <div style={{color:"var(--text-primary)",fontWeight:600,fontSize:13}}>{resumeData.topicName}</div>
                 <div style={{color:"var(--text-muted)",fontSize:11}}>
@@ -5706,7 +5705,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 const nt=AVAILABLE_TOPICS[nextTopicIdx];
                 return<button onClick={()=>startTopic(nt,"easy")}
                   style={{padding:14,background:`linear-gradient(135deg,${nt.color}ee,${nt.color}88)`,border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 20px ${nt.color}55`}}>
-                  {lang==="en"?"Next Topic":"נושא הבא"}: {nt.icon} {nt.name}
+                  {lang==="en"?"Next Topic":"נושא הבא"}: {nt.name}
                 </button>;
               })()}
               {/* Next level button */}
