@@ -179,7 +179,7 @@ function mulberry32(seed) {
 
 const TRANSLATIONS = {
   he: {
-    tagline: "למדי Kubernetes בצורה כיפית ואינטראקטיבית",
+    tagline: "לשפר את כישורי הקוברנטיס שלך",
     startPlaying: "התחילי לשחק כאורחת",
     noRegNoPass: "או",
     saveProgress: "התחברי / הירשמי כדי לשמור התקדמות",
@@ -278,7 +278,7 @@ const TRANSLATIONS = {
     hint_m: "רמז", eliminate_m: "הסר תשובה שגויה",
     shareResult_m: "שתף תוצאה",
     // Male-form overrides (used when gender === "m")
-    tagline_m: "למד Kubernetes בצורה כיפית ואינטראקטיבית",
+    tagline_m: "לשפר את כישורי הקוברנטיס שלך",
     startPlaying_m: "התחל לשחק כאורח",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
@@ -4108,7 +4108,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 .explanation-card li{font-size:13px!important;line-height:1.8!important}
 .home-actions{gap:5px!important}
 .home-actions>button{font-size:11px!important;padding:5px 8px!important}
-.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 14px 12px!important}
+.home-screen{padding:calc(22px + env(safe-area-inset-top, 0px)) 14px 12px!important}
 .home-header{flex-direction:column!important;gap:10px!important;min-height:auto!important}
 .home-controls{position:static!important;transform:none!important;margin-bottom:4px!important}
 .roadmap-row{gap:8px!important}
@@ -4136,7 +4136,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 }
 @media(max-width:390px){
 .home-logo{width:40px!important;height:40px!important}
-.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 10px 10px!important}
+.home-screen{padding:calc(22px + env(safe-area-inset-top, 0px)) 10px 10px!important}
 .page-pad{padding:10px 12px!important}
 .topic-card-section{padding:11px 12px!important}
 .stats-cell{padding:9px 6px!important;font-size:11px}
@@ -4151,7 +4151,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 }
 @media(max-width:360px){
 .home-logo{width:34px!important;height:34px!important}
-.home-screen{padding:calc(30px + env(safe-area-inset-top, 0px)) 8px 8px!important}
+.home-screen{padding:calc(22px + env(safe-area-inset-top, 0px)) 8px 8px!important}
 .page-pad{padding:8px 10px!important}
 .topic-card-section{padding:10px 10px!important}
 .stats-grid{gap:8px!important}
@@ -4570,7 +4570,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!isStatusDomain && <>
       {/* HOME */}
       {screen==="home"&&(
-        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"calc(30px + env(safe-area-inset-top, 0px)) 12px 16px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
+        <div className="page-pad home-screen" style={{maxWidth:700,margin:"0 auto",padding:"calc(22px + env(safe-area-inset-top, 0px)) 12px 16px",animation:"fadeIn 0.4s ease",overflowX:"hidden",direction:dir}}>
           {/* ── Hero - centered, matches loading screen composition ── */}
           <div className="home-hero" style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",marginBottom:16}}>
             {/* Header row: logo+title on one side, burger on the other */}
@@ -5095,7 +5095,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {icon:<Trash2 size={18} strokeWidth={1.5}/>,title:"Data Deletion",body:<>You can request deletion of all data associated with your account at any time by contacting us. Guest mode data is stored only in your browser and can be cleared at any time through your browser settings.</>},
             {icon:<Mail size={18} strokeWidth={1.5}/>,title:"Contact",body:<>If you have questions about this privacy policy or requests related to your data, contact us at:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Privacy" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
           ]:[
-            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"מבוא",body:<>KubeQuest היא פלטפורמה אינטראקטיבית ללימוד ותרגול Kubernetes באמצעות שאלות ותרחישי troubleshooting. הפרטיות שלכם חשובה לנו. מדיניות זו מסבירה אילו נתונים אנחנו אוספים, כיצד אנחנו משתמשים בהם ומהן הזכויות שלכם.</>},
+            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"מבוא",body:<>KubeQuest היא פלטפורמה אינטראקטיבית ללימוד ולשפר את כישורי הקוברנטיס שלך באמצעות שאלות ותרחישי troubleshooting. הפרטיות שלכם חשובה לנו. מדיניות זו מסבירה אילו נתונים אנחנו אוספים, כיצד אנחנו משתמשים בהם ומהן הזכויות שלכם.</>},
             {icon:<BarChart3 size={18} strokeWidth={1.5}/>,title:"מידע שאנו אוספים",body:<>אנו אוספים רק את המידע המינימלי הנדרש לפעולת השירות. לא נאסף מידע אישי רגיש.<br/><br/><span style={{fontWeight:600}}>נתוני חשבון (אופציונלי)</span><br/>אם נרשמתם דרך Supabase Auth, אנחנו שומרים את כתובת האימייל ומזהה ייחודי לצורך אימות.<br/><br/><span style={{fontWeight:600}}>נתוני התקדמות</span><br/>ציונים, דיוק, רצפים, נושאים שהושלמו והישגים. המידע נשמר מקומית בדפדפן ומסונכרן לבסיס הנתונים רק אם יצרתם חשבון.<br/><br/><span style={{fontWeight:600}}>נתונים טכניים</span><br/>איננו אוספים כתובות IP, טביעות אצבע של מכשירים או היסטוריית גלישה. לא נעשה שימוש בכלי מעקב או אנליטיקה.</>},
             {icon:<Target size={18} strokeWidth={1.5}/>,title:"כיצד אנחנו משתמשים במידע",body:<>• שמירה והצגה של התקדמות הלמידה שלכם<br/>• הפעלת לוח המובילים הגלובלי (שם משתמש וציון בלבד)<br/>• סנכרון התקדמות בין מכשירים כשאתם מחוברים<br/><br/>איננו משתמשים במידע שלכם לפרסום, יצירת פרופילים או כל מטרה מעבר לפונקציונליות הליבה של האפליקציה.<br/><br/>אנחנו לא משתמשים בכלי פרסום או מעקב ואיננו מוכרים מידע אישי.</>},
             {icon:<Cookie size={18} strokeWidth={1.5}/>,title:"עוגיות ואחסון מקומי",body:<>KubeQuest אינה משתמשת בעוגיות למעקב. אנו משתמשים ב-localStorage בדפדפן רק לשמירת העדפות משתמש והתקדמות בתרגול:<br/><br/>• התקדמות וציונים בחידונים<br/>• העדפת ערכת נושא (כהה/בהיר)<br/>• הגדרות נגישות<br/>• העדפת שפה<br/><br/>מידע זה לעולם לא יוצא מהדפדפן שלכם אלא אם יצרתם חשבון לסנכרון.</>},
@@ -5143,7 +5143,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {icon:<AlertTriangle size={18} strokeWidth={1.5}/>,title:"Limitation of Liability",body:<>The platform is provided "as is" without warranties of any kind, express or implied. KubeQuest is not liable for any damages arising from the use of the platform, including but not limited to errors in content, service interruptions, or data loss.</>},
             {icon:<Mail size={18} strokeWidth={1.5}/>,title:"Contact",body:<>For questions regarding these terms of service, contact us at:<br/><br/><a href="mailto:contact@kubequest.online?subject=KubeQuest%20Terms" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>contact@kubequest.online</a></>},
           ]:[
-            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"מבוא",body:<>KubeQuest היא פלטפורמה חינוכית אינטראקטיבית ללימוד ותרגול Kubernetes באמצעות שאלות ותרחישי troubleshooting מהעולם האמיתי. השימוש בפלטפורמה מהווה הסכמה לתנאי שימוש אלו.</>},
+            {icon:<ClipboardList size={18} strokeWidth={1.5}/>,title:"מבוא",body:<>KubeQuest היא פלטפורמה חינוכית אינטראקטיבית ללימוד ולשפר את כישורי הקוברנטיס שלך באמצעות שאלות ותרחישי troubleshooting מהעולם האמיתי. השימוש בפלטפורמה מהווה הסכמה לתנאי שימוש אלו.</>},
             {icon:<GraduationCap size={18} strokeWidth={1.5}/>,title:"שימוש בפלטפורמה",body:<>השירות מיועד למטרות לימוד והתפתחות מקצועית בלבד. התוכן שמוצג נועד לסייע למשתמשים ללמוד מושגי Kubernetes ולהתכונן להסמכות מקצועיות.</>},
             {icon:<User size={18} strokeWidth={1.5}/>,title:"חשבונות משתמש",body:<>יצירת חשבון היא אופציונלית. אם יצרתם חשבון, אתם אחראים על כל הפעילות המתבצעת תחתיו. שמרו על פרטי ההתחברות שלכם מאובטחים. מצב אורח זמין ללא הרשמה.</>},
             {icon:<PenLine size={18} strokeWidth={1.5}/>,title:"דיוק המידע",body:<>אנו משקיעים מאמצים רבים בכתיבת תוכן מדויק ועדכני. עם זאת, לא ניתן להבטיח שכל השאלות, התשובות וההסברים חפים לחלוטין משגיאות. התוכן מיועד ללמידה ואינו מהווה תחליף לתיעוד רשמי.</>},
@@ -5196,7 +5196,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
           </div>
           {[
-            {icon:<BookOpen size={18} strokeWidth={1.5}/>,title:lang==="en"?"What is this?":"מה זה?",body:lang==="en"?<>KubeQuest is an interactive app for practicing Kubernetes through questions and real troubleshooting scenarios.<br/><br/>The goal is not just memorizing commands, but understanding how to diagnose real cluster issues.<br/><br/>Topics include:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>:<>KubeQuest היא אפליקציה לתרגול Kubernetes דרך שאלות ותרחישי תקלות.<br/><br/>המטרה היא לא רק לזכור פקודות, אלא להבין איך לאבחן בעיות אמיתיות בקלאסטר Kubernetes.<br/><br/>נושאים לדוגמה:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>},
+            {icon:<BookOpen size={18} strokeWidth={1.5}/>,title:lang==="en"?"What is this?":"מה זה?",body:lang==="en"?<>KubeQuest is an interactive app for practicing Kubernetes through questions and real troubleshooting scenarios.<br/><br/>The goal is not just memorizing commands, but understanding how to diagnose real cluster issues.<br/><br/>Topics include:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>:<>KubeQuest היא אפליקציה ללשפר את כישורי הקוברנטיס שלך דרך שאלות ותרחישי תקלות.<br/><br/>המטרה היא לא רק לזכור פקודות, אלא להבין איך לאבחן בעיות אמיתיות בקלאסטר Kubernetes.<br/><br/>נושאים לדוגמה:<br/>• Pods<br/>• Networking<br/>• Scheduling<br/>• Storage<br/>• Troubleshooting</>},
             {icon:<Activity size={18} strokeWidth={1.5}/>,title:lang==="en"?"How it works":"איך זה עובד",body:lang==="en"?<>The app includes several practice modes:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>Practice questions by topic.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>Daily challenge with random questions.<br/><br/><span style={{fontWeight:600}}>War Room</span><br/>Troubleshooting scenarios that simulate real Kubernetes cluster issues.</>:<>האפליקציה כוללת כמה מצבי תרגול:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>תרגול שאלות לפי נושאים שונים.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>אתגר יומי עם שאלות אקראיות.<br/><br/><span style={{fontWeight:600}}>חדר מצב</span><br/>תרחישי תקלות המדמים בעיות אמיתיות בקלאסטר.</>},
             {icon:<Target size={18} strokeWidth={1.5}/>,title:lang==="en"?"Who is it for":"למי זה מיועד",body:lang==="en"?<>• DevOps Engineers<br/>• SRE Engineers<br/>• Developers working with Kubernetes<br/>• Anyone preparing for CKA or CKAD certifications</>:<>האפליקציה מיועדת ל:<br/><br/>• DevOps Engineers<br/>• SRE Engineers<br/>• מפתחים שעובדים עם Kubernetes<br/>• אנשים שמתכוננים להסמכות CKA או CKAD</>},
             {icon:<User size={18} strokeWidth={1.5}/>,title:lang==="en"?"Built by":"פותח על ידי",body:<span>Or Carmeli<br/><span style={{color:"var(--text-dim)",fontSize:12}}>DevOps Engineer</span><br/><br/><a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>LinkedIn</a>{" · "}<a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer" style={{color:"var(--text-primary)",textDecoration:"none",fontWeight:600}}>GitHub</a></span>},
