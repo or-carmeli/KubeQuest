@@ -78,6 +78,7 @@ export const INCIDENTS = [
       {
         prompt:
           "Missing Config File on Startup\n\n• Logs show: `FATAL config file '/etc/app/config.yaml' not found`\n• App expects a mounted config file that doesn't exist\n\nWhat do you check?",
+        tags: ["config-mount"],
         promptHe:
           "קובץ Config חסר בהפעלה\n\n• לוגים מציגים: `FATAL config file '/etc/app/config.yaml' not found`\n• האפליקציה מצפה לקובץ config שלא קיים\n\nמה בודקים?",
         options: [
@@ -150,8 +151,8 @@ export const INCIDENTS = [
     correctApproach: "Check the pod logs with --previous flag to see the startup error, then compare the expected volume mounts against the existing ConfigMaps in the namespace.",
     correctApproachHe: "לבדוק את הלוגים של ה-Pod עם --previous כדי לראות את שגיאת ההפעלה, ואז להשוות את ה-volume mounts המצופים מול ה-ConfigMaps הקיימים ב-namespace.",
     command: "kubectl logs payment-service-7d4b9-abc12 -n staging --previous",
-    hint: "Check the pod logs first - they reveal what the app printed right before crashing.",
-    hintHe: "בדוק קודם את הלוגים של ה-Pod - הם חושפים מה האפליקציה הדפיסה לפני הקריסה.",
+    hint: "Start with what the container saw last.",
+    hintHe: "התחל ממה שהקונטיינר ראה אחרון.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -268,6 +269,7 @@ export const INCIDENTS = [
       {
         prompt:
           "Secret Created but Pull Still Fails\n\n• Secret `regcred` created in namespace\n• Deployment still shows ImagePullBackOff\n• Secret exists but isn't being used\n\nWhat critical step did you miss?",
+        tags: ["image-pull"],
         promptHe:
           "Secret נוצר אך המשיכה עדיין נכשלת\n\n• Secret `regcred` נוצר ב-namespace\n• ה-Deployment עדיין מציג ImagePullBackOff\n• ה-Secret קיים אך לא בשימוש\n\nאיזה צעד קריטי החמצת?",
         options: [
@@ -294,8 +296,8 @@ export const INCIDENTS = [
     correctApproach: "Use kubectl describe pod to see the ImagePullBackOff event, then create a docker-registry Secret and reference it in the Deployment's imagePullSecrets field.",
     correctApproachHe: "להשתמש ב-kubectl describe pod כדי לראות את אירוע ה-ImagePullBackOff, ליצור Secret מסוג docker-registry ולהפנות אליו ב-imagePullSecrets של ה-Deployment.",
     command: "kubectl describe pod myapp-deployment-abc12 -n default",
-    hint: "Look at the pod events - they tell you exactly why the image pull failed.",
-    hintHe: "בדוק את ה-Events של ה-Pod - הם מספרים בדיוק למה משיכת ה-image נכשלה.",
+    hint: "Think about what happens before running.",
+    hintHe: "חשוב מה קורה לפני שהקונטיינר רץ.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -461,8 +463,8 @@ export const INCIDENTS = [
     correctApproach: "Check kubectl describe pod for the OOMKilled termination reason, review current memory limits versus actual usage with kubectl top, then raise the memory limit to match real-world consumption.",
     correctApproachHe: "לבדוק ב-kubectl describe pod את סיבת הסיום OOMKilled, לבדוק את מגבלות הזיכרון מול הצריכה בפועל עם kubectl top, ולהעלות את מגבלת הזיכרון בהתאם.",
     command: "kubectl top pods -n production --sort-by=memory",
-    hint: "Look at the pod's termination reason - it tells you the kernel killed the process for exceeding memory.",
-    hintHe: "בדוק את סיבת הסיום של ה-Pod - היא מספרת שהקרנל הרג את התהליך בגלל חריגה מהזיכרון.",
+    hint: "Focus on how the process was terminated.",
+    hintHe: "שים לב לאופן שבו התהליך הופסק.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -533,6 +535,7 @@ export const INCIDENTS = [
       {
         prompt:
           "Endpoints Are Empty\n\n• Endpoints: `<none>`\n• Service exists, pods exist, but they're not connected\n\nWhat do you do next?",
+        tags: ["service-discovery"],
         promptHe:
           "Endpoints ריקים\n\n• Endpoints: `<none>`\n• Service קיים, Pods קיימים, אך לא מחוברים\n\nמה הצעד הבא?",
         options: [
@@ -556,6 +559,7 @@ export const INCIDENTS = [
       {
         prompt:
           "Selector Mismatch Found\n\n• Service selector: `app=backend`\n• Actual pod labels: `app=backend-v2`\n• Label was changed in last deployment, Service not updated\n\nWhat is the fix?",
+        tags: ["service-discovery"],
         promptHe:
           "נמצאה אי-התאמת Selector\n\n• Selector של Service: `app=backend`\n• Labels בפועל על Pods: `app=backend-v2`\n• ה-label שונה בדיפלוימנט האחרון, ה-Service לא עודכן\n\nמה התיקון?",
         options: [
@@ -628,8 +632,8 @@ export const INCIDENTS = [
     correctApproach: "Compare the Service selector with the actual pod labels using kubectl get endpoints and kubectl describe service to find the mismatch, then fix the selector or pod labels.",
     correctApproachHe: "להשוות את ה-selector של ה-Service מול ה-labels בפועל של הפודים באמצעות kubectl get endpoints ו-kubectl describe service כדי לזהות את אי-ההתאמה, ולתקן את ה-selector או את ה-labels.",
     command: "kubectl get endpoints backend-api-svc -n production",
-    hint: "Check the Service endpoints - if the list is empty, the selector doesn't match any pods.",
-    hintHe: "בדוק את ה-endpoints של ה-Service - אם הרשימה ריקה, ה-selector לא תואם אף Pod.",
+    hint: "Check what the Service actually sees.",
+    hintHe: "בדוק מה ה-Service באמת רואה.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -677,6 +681,7 @@ export const INCIDENTS = [
       {
         prompt:
           "DNS Resolution Returns NXDOMAIN\n\n• `nslookup kubernetes.default` returns NXDOMAIN\n• Cluster DNS confirmed non-functional\n\nWhere does Kubernetes cluster DNS run?",
+        tags: ["dns-resolution"],
         promptHe:
           "פתרון DNS מחזיר NXDOMAIN\n\n• `nslookup kubernetes.default` מחזיר NXDOMAIN\n• DNS קלאסטרי אושר כלא-פעיל\n\nהיכן רץ ה-DNS של cluster Kubernetes?",
         options: [
@@ -818,8 +823,8 @@ export const INCIDENTS = [
     correctApproach: "Test DNS resolution from inside a pod with nslookup, check CoreDNS pod status in kube-system, identify the OOMKilled state, and raise CoreDNS memory limits.",
     correctApproachHe: "לבדוק פענוח DNS מתוך Pod עם nslookup, לבדוק את סטטוס פודי CoreDNS ב-kube-system, לזהות את מצב ה-OOMKilled, ולהעלות את מגבלות הזיכרון של CoreDNS.",
     command: "kubectl logs -n kube-system -l k8s-app=kube-dns --previous",
-    hint: "When nothing can resolve DNS - check the DNS provider itself. CoreDNS runs as pods in kube-system.",
-    hintHe: "כשאף שירות לא מצליח לפענח DNS - בדוק את ספק ה-DNS עצמו. CoreDNS רץ כפודים ב-kube-system.",
+    hint: "If everyone is affected, look at the shared layer.",
+    hintHe: "אם כולם מושפעים, חפש בשכבה המשותפת.",
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -867,6 +872,7 @@ export const INCIDENTS = [
       {
         prompt:
           "Inspecting NetworkPolicy Rules\n\n• Policies found: `deny-all-ingress`, `allow-frontend`\n• Need to understand what each policy permits\n\nHow do you inspect the rules?",
+        tags: ["network-policy-flow"],
         promptHe:
           "בדיקת כללי NetworkPolicy\n\n• Policies שנמצאו: `deny-all-ingress`, `allow-frontend`\n• צריך להבין מה כל policy מתירה\n\nכיצד בודקים את הכללים?",
         options: [
@@ -1008,7 +1014,7 @@ export const INCIDENTS = [
     correctApproach: "Compare the NetworkPolicy's ingress allow rules against the actual pod labels, identify the label mismatch, and fix the policy selector to match the correct pod labels.",
     correctApproachHe: "להשוות את כללי ה-ingress allow של ה-NetworkPolicy מול ה-labels בפועל של הפודים, לזהות את אי-ההתאמה ב-labels, ולתקן את ה-selector של המדיניות כך שיתאים ל-labels הנכונים.",
     command: "kubectl describe networkpolicy api-netpol -n production",
-    hint: "Compare the NetworkPolicy selector labels with the actual pod labels - look for the mismatch.",
-    hintHe: "השווה את ה-labels של ה-NetworkPolicy selector מול ה-labels בפועל של הפודים - חפש את אי-ההתאמה.",
+    hint: "Look carefully at names and labels.",
+    hintHe: "הסתכל היטב על שמות ותוויות.",
   },
 ];
