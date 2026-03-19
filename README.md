@@ -555,12 +555,16 @@ src/
     StatsView.jsx      # User statistics dashboard
     StatusView.jsx     # System status monitor
     WeakAreaCard.jsx   # Lowest-accuracy topic card
-    ErrorBoundary.jsx  # Crash recovery wrapper + Sentry capture
+    ErrorBoundary.jsx       # Crash recovery wrapper + Sentry capture
+    PerformanceInsights.jsx # Dev-only observability dashboard (real telemetry)
   utils/
-    telemetry.js       # Sentry wrapper (error capture, scrubbing, web vitals)
-    storage.js         # Safe localStorage layer with corruption recovery
-    bidi.jsx           # BiDi text rendering for Hebrew/English mixed content
-    quizPersistence.js # localStorage helpers for quiz resume
+    telemetry.js            # Sentry wrapper (error capture, scrubbing, web vitals)
+    storage.js              # Safe localStorage layer with corruption recovery
+    bidi.jsx                # BiDi text rendering for Hebrew/English mixed content
+    quizPersistence.js      # localStorage helpers for quiz resume
+    realTelemetry.js        # Real client-side telemetry collector
+    hybridTelemetry.js      # Snapshot builder with time-range filtering
+    mockTelemetry.js        # Analysis engine (health, insights, confidence)
 public/
   sw.js                # Service worker (offline cache, build-stamped)
 k8s/                   # Kubernetes manifests (namespace, deployment, service, ingress, HPA)
@@ -595,6 +599,37 @@ See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 Contributions are welcome - new questions, bug fixes, UI improvements.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and question format guidelines.
+
+---
+
+## Performance Insights (Dev-only Observability)
+
+A dev-only observability dashboard built on real client-side telemetry. No simulated or mock data. Available exclusively in development mode and fully tree-shaken from production builds.
+
+Key capabilities:
+
+- **Real-time Web Vitals** (LCP, INP, CLS) with session-vs-global comparison against Google CrUX p75 benchmarks
+- **Request latency** (P95) and **error rate** computed from instrumented `fetch` calls, with time-range filtering (30s to full session)
+- **Traffic awareness** (requests/sec) and **data confidence scoring** to distinguish meaningful signals from insufficient samples
+- **Health assessment** that combines latency, errors, vitals, and network failures into a single weighted status (Healthy / Degraded / Unhealthy / Idle)
+- **Insights engine** that derives analytical conclusions from metric correlations, not just threshold breaches
+- **Navigation timing**, client error tracking, and user flow metrics (route visits, quiz completion rates, session duration)
+
+Access it via the sidebar menu in `npm run dev`. The feature is triple-gated: menu visibility, route registration, and component-level guard are all conditioned on `import.meta.env.DEV`.
+
+```mermaid
+flowchart LR
+    BROWSER["Browser Runtime<br/>web-vitals · fetch · errors"] --> COLLECT["Telemetry<br/>Collector"]
+    COLLECT --> SNAPSHOT["Snapshot Builder<br/>Time-range Filter"]
+    SNAPSHOT --> ANALYSIS["Analysis Engine<br/>Health · Insights"]
+    ANALYSIS --> UI["Dashboard<br/>UI"]
+
+    style BROWSER fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+    style COLLECT fill:#1a1a2e,stroke:#A855F7,stroke-width:2px,color:#fff
+    style SNAPSHOT fill:#1a1a2e,stroke:#F59E0B,stroke-width:2px,color:#fff
+    style ANALYSIS fill:#1a1a2e,stroke:#10B981,stroke-width:2px,color:#fff
+    style UI fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
+```
 
 ---
 

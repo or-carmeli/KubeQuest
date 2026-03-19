@@ -19,12 +19,14 @@ import { CHEATSHEET } from "./content/cheatsheet";
 import { saveQuizState, loadQuizState, clearQuizState, isRecentQuizState } from "./utils/quizPersistence";
 import { safeGetItem, safeGetJSON, checkDataVersion } from "./utils/storage";
 import { captureError, setUserContext, setScreen as setTelemetryScreen } from "./utils/telemetry";
+import { recordRouteChange } from "./utils/realTelemetry";
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
 import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } from "./components/CodeBlocks";
 import PodDiagram from "./components/PodDiagram";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress, fetchQuestionHint, fetchEliminateOption } from "./api/quiz";
 import StatusView from "./components/StatusView";
+import PerformanceInsights from "./components/PerformanceInsights";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
@@ -1296,7 +1298,7 @@ export default function K8sQuestApp() {
 
   // ── Telemetry context (safe metadata only) ────────────────────────────────
   useEffect(() => { setUserContext({ isGuest }); }, [isGuest]);
-  useEffect(() => { setTelemetryScreen(screen); }, [screen]);
+  useEffect(() => { setTelemetryScreen(screen); if (import.meta.env.DEV) recordRouteChange(screen); }, [screen]);
 
   // ── War Room (Incident) state ─────────────────────────────────────────────
   const [selectedIncident,   setSelectedIncident]   = useState(null);
@@ -4498,6 +4500,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <Activity size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"System Status":"סטטוס מערכת"}
           </button>
+          {import.meta.env.DEV && (
+          <button className="menu-item" onClick={()=>{setScreen("performanceInsights");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="performanceInsights"?"var(--glass-3)":"none",border:"none",color:screen==="performanceInsights"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="performanceInsights"?600:400,direction:dir}}>
+            <BarChart3 size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"Performance Insights":"תובנות ביצועים"}
+            <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
+          </button>
+          )}
           <button className="menu-item" onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="about"?"var(--glass-3)":"none",border:"none",color:screen==="about"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="about"?600:400,direction:dir}}>
             <Info size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("aboutBtn")}
@@ -5046,8 +5055,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         return (
           <div className="page-pad" style={{maxWidth:700,margin:"0 auto",padding:"16px 14px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
             <div style={{display:"flex",justifyContent:isHe?"flex-end":"flex-start",marginBottom:16}}>
-              <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13,display:"inline-flex",alignItems:"center",gap:5}}>
-                {isHe?"חזרה →":"← Back"}
+              <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"inline-flex",alignItems:"center",justifyContent:"center"}}>
+                {isHe?"→":"←"}
               </button>
             </div>
 
@@ -5263,6 +5272,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       </>}
       {/* STATUS */}
       {screen==="status"&&<StatusView supabase={supabase} lang={lang} isStatusDomain={isStatusDomain} setScreen={setScreen} APP_VERSION={APP_VERSION} />}
+
+      {/* PERFORMANCE INSIGHTS (dev-only) */}
+      {import.meta.env.DEV&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} />}
 
       {!isStatusDomain && <>
       {/* TOPIC */}
@@ -6067,8 +6079,8 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {/* Top bar */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8,direction:dir}}>
               <button onClick={()=>{saveIncidentProgress(selectedIncident,incidentStepIndex,incidentScore,incidentMistakes,incidentElapsed,incidentHistory);setScreen("incidentList");}}
-                style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-muted)",padding:"7px 12px",borderRadius:7,cursor:"pointer",fontSize:13}}>
-                {lang==="he"?"חזרה":"Return"}
+                style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-muted)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {dir==="rtl"?"→":"←"}
               </button>
               <div style={{display:"flex",gap:12,alignItems:"center",fontSize:12,fontWeight:600,fontFamily:"'SF Mono','Fira Code',monospace",direction:"ltr",unicodeBidi:"isolate"}}>
                 <span style={{color:"var(--text-secondary)"}}>{incidentStepIndex+1}/{totalSteps}</span>
