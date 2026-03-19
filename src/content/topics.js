@@ -126,7 +126,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion. CronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nOption 3 מהפך את התפקידים. Option 2 שגוי כי שניהם run-to-completion ולא רצים לצמיתות. Option 1 שגוי כי Job לא רץ על כל Node.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
+                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion. CronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
             },
             {
               q: "מה resource requests ב-Pod?",
@@ -224,7 +224,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Job runs a task once to completion; CronJob schedules Jobs on a recurring cron schedule.\nJob = run-to-completion. CronJob = recurring (backups, cleanup, reports).\nOption 0 reverses the roles. Option 2 is wrong because neither creates long-running Pods. Option 3 is wrong because Jobs do not run on every Node.\nOn failure, Job retries by creating new Pods (up to backoffLimit).",
+                "Job runs a task once to completion; CronJob schedules Jobs on a recurring cron schedule.\nJob = run-to-completion. CronJob = recurring (backups, cleanup, reports).\nBoth create Pods that run to completion, not long-running Pods.\nOn failure, Job retries by creating new Pods (up to backoffLimit).",
             },
             {
               q: "What are resource requests in a Pod?",
@@ -271,10 +271,10 @@ export const TOPICS = [
             {
               q: "כיצד מבצעים rollback?",
               options: [
-              "kubectl scale deployment my-app --replicas=0 ואז להגדיל מחדש",
-              "kubectl rollout undo deployment/my-app",
-              "kubectl delete deployment my-app ואז kubectl apply מחדש עם YAML קודם",
-              "kubectl patch deployment my-app --type=json -p '[{\"op\":\"replace\"}]'",
+              "`kubectl scale deployment my-app --replicas=0` ואז להגדיל מחדש",
+              "`kubectl rollout undo deployment/my-app`",
+              "`kubectl delete deployment my-app` ואז `kubectl apply` מחדש עם YAML קודם",
+              "`kubectl patch deployment my-app --type=json -p '[{\"op\":\"replace\"}]'`",
 ],
               answer: 1,
               explanation:
@@ -329,28 +329,28 @@ export const TOPICS = [
                 "`taint` = הגבלה שמוצבת על Node. רק Pods עם toleration תואם יתוזמנו עליו.\n`toleration` = הרשאה שמוגדרת ב-spec של ה-Pod ומאפשרת לו לרוץ על Node עם אותו taint.\nPods ללא toleration תואם לא יתוזמנו על Node עם אותו taint.",
             },
             {
-              q: "`Node` חווה לחץ זיכרון. שלושה `Pods` רצים עליו: אחד `Guaranteed`, אחד `Burstable` ואחד `BestEffort`. איזה `Pod` יפונה ראשון?",
+              q: "Node חווה לחץ זיכרון. שלושה Pods רצים עליו: אחד Guaranteed, אחד Burstable ואחד BestEffort. איזה Pod יפונה ראשון?",
               options: [
-              "ה-`Pod` עם `QoS` class `BestEffort` יפונה ראשון",
-              "ה-`Pod` עם `QoS` class `Guaranteed` יפונה ראשון",
-              "ה-`Pod` עם הכי הרבה replicas יפונה ראשון",
-              "Kubernetes יפנה את כל ה-`Pods` בו-זמנית",
+              "ה-Pod עם QoS class BestEffort יפונה ראשון",
+              "ה-Pod עם QoS class Guaranteed יפונה ראשון",
+              "ה-Pod עם הכי הרבה replicas יפונה ראשון",
+              "Kubernetes יפנה את כל ה-Pods בו-זמנית",
 ],
               answer: 0,
               explanation:
-                "`QoS` class נקבעת לפי ההגדרות של `requests` ו-`limits` לכל קונטיינר ב-Pod.\n\n`Guaranteed`: כאשר לכל הקונטיינרים מוגדרים `requests` ו-`limits`, ובכל אחד מהם requests=limits.\n\n`Burstable`: כאשר מוגדרים `requests` או `limits`, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\n`BestEffort`: כאשר לא מוגדרים כלל `requests` או `limits`.\n\nמבחינת eviction: `BestEffort` יפונה ראשון, אחריו `Burstable`, ו-`Guaranteed` הוא המוגן ביותר.",
+                "QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
             },
             {
-              q: "מה `ephemeral container` ב-Kubernetes?",
+              q: "מה ephemeral container ב-Kubernetes?",
               options: [
-              "קונטיינר זמני שמוסיפים ל-`Pod` רץ לצורך debugging",
-              "`Pod` זמני שנוצר אוטומטית כש-Deployment מתזמן על `Node` חדש",
-              "גרסה מוקטנת של `Pod` שמשמשת ל-batch jobs קצרים",
+              "קונטיינר זמני שמוסיפים ל-Pod רץ לצורך debugging",
+              "Pod זמני שנוצר אוטומטית כש-Deployment מתזמן על Node חדש",
+              "גרסה מוקטנת של Pod שמשמשת ל-batch jobs קצרים",
               "init container שמוגדר עם TTL קצוב לניקוי אוטומטי",
 ],
               answer: 0,
               explanation:
-                "`ephemeral container` הוא קונטיינר זמני שניתן להוסיף ל-`Pod` רץ לצורך debugging או troubleshooting.\nבדרך כלל מוזרק באמצעות `kubectl debug`.\n\nהוא לא חלק מה-spec המקורי של ה-`Pod`.\nהוא מתווסף באופן דינמי לצורך חקירה.\nהוא לא מאותחל מחדש עם ה-`Pod`.",
+                "ephemeral container הוא קונטיינר זמני שניתן להוסיף ל-Pod רץ לצורך debugging או troubleshooting.\nבדרך כלל מוזרק באמצעות kubectl debug.\n\nהוא לא חלק מה-spec המקורי של ה-Pod.\nהוא מתווסף באופן דינמי לצורך חקירה.\nהוא לא מאותחל מחדש עם ה-Pod.",
             },
         ],
         questionsEn: [
@@ -369,10 +369,10 @@ export const TOPICS = [
             {
               q: "How do you perform a rollback?",
               options: [
-              "kubectl scale deployment my-app --replicas=0 then scale back up",
-              "kubectl rollout undo deployment/my-app",
-              "kubectl delete deployment my-app and re-apply the previous YAML manifest",
-              "kubectl patch deployment my-app to restore the previous image tag",
+              "`kubectl scale deployment my-app --replicas=0` then scale back up",
+              "`kubectl rollout undo deployment/my-app`",
+              "`kubectl delete deployment my-app` and re-apply the previous YAML manifest",
+              "`kubectl patch deployment my-app` to restore the previous image tag",
 ],
               answer: 1,
               explanation:
@@ -427,28 +427,28 @@ export const TOPICS = [
                 "`taint` = a restriction placed on a Node. Only Pods with a matching toleration can be scheduled on it.\n`toleration` = permission defined in the Pod spec that allows it to run on a Node with that taint.\nPods without a matching toleration will not be scheduled on a Node with that taint.",
             },
             {
-              q: "A `Node` is experiencing memory pressure. Three `Pods` are running on it: one `Guaranteed`, one `Burstable`, and one `BestEffort`. Which `Pod` is evicted first?",
+              q: "A Node is experiencing memory pressure. Three Pods are running on it: one Guaranteed, one Burstable, and one BestEffort. Which Pod is evicted first?",
               options: [
-              "The `Pod` with `QoS` class `Guaranteed` is evicted first",
-              "The `Pod` with `QoS` class `BestEffort` is evicted first",
-              "The `Pod` with the most replicas is evicted first",
-              "Kubernetes evicts all `Pods` at the same time",
+              "The Pod with QoS class Guaranteed is evicted first",
+              "The Pod with QoS class BestEffort is evicted first",
+              "The Pod with the most replicas is evicted first",
+              "Kubernetes evicts all Pods at the same time",
 ],
               answer: 1,
               explanation:
-                "`QoS` (Quality of Service) determines the priority of `Pods` when a `Node` experiences resource pressure, especially memory pressure.\nKubernetes determines the `QoS` class automatically based on the `requests` and `limits` defined for containers.\n\n`Guaranteed`: `requests` and `limits` are defined and equal for all containers. Highest protection from eviction.\n`Burstable`: `requests` are defined but `limits` are higher. Partial protection.\n`BestEffort`: no `requests` and no `limits` defined. These `Pods` are the first to be evicted when the `Node` experiences memory pressure.",
+                "QoS (Quality of Service) determines the priority of Pods when a Node experiences resource pressure, especially memory pressure.\nKubernetes determines the QoS class automatically based on the requests and limits defined for containers.\n\nGuaranteed: requests and limits are defined and equal for all containers. Highest protection from eviction.\nBurstable: requests are defined but limits are higher. Partial protection.\nBestEffort: no requests and no limits defined. These Pods are the first to be evicted when the Node experiences memory pressure.",
             },
             {
-              q: "What is an `ephemeral container` in Kubernetes?",
+              q: "What is an ephemeral container in Kubernetes?",
               options: [
-              "A temporary `Pod` automatically created when a Deployment targets a new `Node`",
-              "A temporary container added to a running `Pod` for debugging",
-              "A stripped-down `Pod` variant used for short-lived batch jobs",
+              "A temporary Pod automatically created when a Deployment targets a new Node",
+              "A temporary container added to a running Pod for debugging",
+              "A stripped-down Pod variant used for short-lived batch jobs",
               "An init container configured with a TTL for automatic cleanup",
 ],
               answer: 1,
               explanation:
-                "An `ephemeral container` is a temporary container that can be added to a running `Pod` for debugging or troubleshooting.\nIt is usually injected using `kubectl debug`.\n\nIt is not part of the original `Pod` spec.\nIt is added dynamically for troubleshooting.\nIt is not restarted with the `Pod`.",
+                "An ephemeral container is a temporary container that can be added to a running Pod for debugging or troubleshooting.\nIt is usually injected using kubectl debug.\n\nIt is not part of the original Pod spec.\nIt is added dynamically for troubleshooting.\nIt is not restarted with the Pod.",
             },
         ],
       },
@@ -538,7 +538,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "maxUnavailable:0 מונע הורדת Pod ישן עד שהחדש עובר readiness.\nאם Pods חדשים נכשלים ב-readiness, ה-rollout נתקע. יש לבדוק באמצעות kubectl logs.\nmaxUnavailable:0 = בטיחות מלאה, אבל readiness כושל = rollout תקוע.",
+                "maxUnavailable:0 מונע הורדת Pod ישן עד שהחדש עובר readiness.\nאם Pods חדשים נכשלים ב-readiness, ה-rollout נתקע. יש לבדוק באמצעות `kubectl logs`.\nmaxUnavailable:0 = בטיחות מלאה, אבל readiness כושל = rollout תקוע.",
             },
             {
               q: "ה-Deployment לא מנהל Pods.\n\nהרצת:\n\n```\nkubectl get pods --show-labels\n```\n\nפלט:\n\n```\napp=backend-v2\n```\n\nהגדרת Deployment:\n\n```yaml\nselector:\n  matchLabels:\n    app: backend\n```\n\nמה הבעיה?",
@@ -636,7 +636,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "maxUnavailable:0 prevents removing old Pods until new ones pass readiness.\nNew Pods fail readiness → rollout stalls. Check kubectl logs on new Pods.\nmaxUnavailable:0 = safe but readiness failure = permanent stall.",
+                "maxUnavailable:0 prevents removing old Pods until new ones pass readiness.\nNew Pods fail readiness → rollout stalls. Check `kubectl logs` on new Pods.\nmaxUnavailable:0 = safe but readiness failure = permanent stall.",
             },
             {
               q: "A Deployment does not manage its Pods.\n\nCommand:\n\n```\nkubectl get pods --show-labels\n```\n\nOutput:\n\n```\napp=backend-v2\n```\n\nDeployment spec:\n\n```yaml\nselector:\n  matchLabels:\n    app: backend\n```\n\nWhat is wrong?",
@@ -867,7 +867,7 @@ export const TOPICS = [
         theoryEn: "DNS and Ingress\n🔹 Service DNS - every Service gets an automatic DNS name: service.namespace.svc.cluster.local.\n🔹 Ingress - routes external HTTP/HTTPS traffic to Services based on path or hostname.\n🔹 Single entry point - Ingress consolidates routing, reducing the need for multiple LoadBalancers.\n🔹 Ingress Controller - requires a controller such as nginx or traefik to process Ingress rules.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  rules:\n - host: app.example.com\n    http:\n      paths:\n - path: /api\n        pathType: Prefix\n        backend:\n          service:\n            name: api-svc\n            port:\n              number: 80",
         questions: [
             {
-              q: "מה ה-DNS name של service בשם 'api' ב-namespace 'prod'?",
+              q: "מה ה-DNS name של service בשם api ב-namespace בשם prod?",
               options: [
               "prod.api.local",
               "api.prod",
@@ -953,14 +953,14 @@ export const TOPICS = [
             {
               q: "איך בודקים למה Service לא מגיע ל-Pods?",
               options: [
-              "בדוק kubectl get endpoints <service>. אם ריק, selector לא תואם labels",
-              "kubectl describe service/<name> --show-pods מציג Pods מחוברים",
-              "kubectl logs service/<name> כדי לראות את logs של ה-Service",
-              "kubectl exec -it service/<name> -- netstat מציג חיבורים פעילים",
+              "בדוק `kubectl get endpoints <service>`. אם ריק, selector לא תואם labels",
+              "`kubectl describe service/<name> --show-pods` מציג Pods מחוברים",
+              "`kubectl logs service/<name>` כדי לראות את logs של ה-Service",
+              "`kubectl exec -it service/<name> -- netstat` מציג חיבורים פעילים",
 ],
               answer: 0,
               explanation:
-                "kubectl get endpoints מציג Pod IPs שה-Service מנתב אליהם.\nרשימה ריקה = בעיית selector/labels.\nבדוק kubectl get pods --show-labels והשווה ל-selector של ה-Service.",
+                "`kubectl get endpoints` מציג Pod IPs שה-Service מנתב אליהם.\nרשימה ריקה = בעיית selector/labels.\nבדוק `kubectl get pods --show-labels` והשווה ל-selector של ה-Service.",
             },
         ],
         questionsEn: [
@@ -1051,14 +1051,14 @@ export const TOPICS = [
             {
               q: "How do you debug why a Service is not reaching its Pods?",
               options: [
-              "kubectl logs service/<name> to view connection logs from the Service",
-              "kubectl exec -it service/<name> -- netstat to view active connections",
-              "Check kubectl get endpoints <service>. If empty, selector doesn't match labels",
-              "kubectl describe service/<name> --show-pods to list all attached Pods",
+              "`kubectl logs service/<name>` to view connection logs from the Service",
+              "`kubectl exec -it service/<name> -- netstat` to view active connections",
+              "Check `kubectl get endpoints <service>`. If empty, selector doesn't match labels",
+              "`kubectl describe service/<name> --show-pods` to list all attached Pods",
 ],
               answer: 2,
               explanation:
-                "kubectl get endpoints shows Pod IPs the Service routes to.\nEmpty list = selector/label mismatch.\nCompare kubectl get pods --show-labels with the Service selector.",
+                "`kubectl get endpoints` shows Pod IPs the Service routes to.\nEmpty list = selector/label mismatch.\nCompare `kubectl get pods --show-labels` with the Service selector.",
             },
         ],
       },
@@ -1112,7 +1112,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Labels הם case-sensitive. app: App ≠ app: app. כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-app: App כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים. • Pod לא Ready:\u200E לא הבעיה כאן. • Namespace:\u200E לא רלוונטי.\nבדוק kubectl get endpoints ו-kubectl get pods --show-labels.",
+                "Labels הם case-sensitive. app: App ≠ app: app. כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-app: App כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים. • Pod לא Ready:\u200E לא הבעיה כאן. • Namespace:\u200E לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
             },
             {
               q: "NetworkPolicy חוסמת DNS.\nPods לא מצליחים לפתור שמות.\n\nהגדרה:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n  - ports:\n    - port: 443\n```\n\nמה חסר?",
@@ -1210,7 +1210,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Labels are case-sensitive. app: App ≠ app: app → empty Endpoints.\nChange selector to app: App to match the Pod label.\n• Wrong port: connection error, not empty Endpoints. • Not Ready: different issue. • Namespace: not relevant here.\nAlways verify with kubectl get endpoints and kubectl get pods --show-labels.",
+                "Labels are case-sensitive. app: App ≠ app: app → empty Endpoints.\nChange selector to app: App to match the Pod label.\n• Wrong port: connection error, not empty Endpoints. • Not Ready: different issue. • Namespace: not relevant here.\nAlways verify with `kubectl get endpoints` and `kubectl get pods --show-labels`.",
             },
             {
               q: "A NetworkPolicy blocks DNS.\nPods cannot resolve names.\n\nPolicy:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n  - ports:\n    - port: 443\n```\n\nWhat is missing?",
@@ -1486,7 +1486,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Role מוגבל ל-Namespace ספציפי. ClusterRole חל על כל ה-Cluster.\nRole ב-prod לא מעניק גישה ב-staging. ClusterRole כולל Nodes, PVs ועוד.\nOption 1 שגוי: ClusterRole חל על כל המשאבים. Option 2 שגוי: שניהם חלים על Users, Groups, ו-ServiceAccounts. Option 3 שגוי: ההבדל הוא ב-scope ולא ב-verbs.\nניתן לקשור ClusterRole ל-Namespace בודד עם RoleBinding.",
+                "Role מוגבל ל-Namespace ספציפי. ClusterRole חל על כל ה-Cluster.\nRole ב-prod לא מעניק גישה ב-staging. ClusterRole כולל Nodes, PVs ועוד.\nשניהם חלים על Users, Groups, ו-ServiceAccounts. ההבדל המרכזי הוא ב-scope בלבד.\nניתן לקשור ClusterRole ל-Namespace בודד עם RoleBinding.",
             },
             {
               q: "מה תפקיד RoleBinding?",
@@ -1584,7 +1584,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Role is Namespace-scoped. ClusterRole applies cluster-wide.\nRole in prod grants no access in staging. ClusterRole covers Nodes, PVs, etc.\nOption 0 is wrong: ClusterRole covers all resources. Option 1 is wrong: both apply to Users, Groups, and ServiceAccounts. Option 3 is wrong: the difference is scope, not verbs.\nClusterRole can be bound to a single Namespace via RoleBinding.",
+                "Role is Namespace-scoped. ClusterRole applies cluster-wide.\nRole in prod grants no access in staging. ClusterRole covers Nodes, PVs, etc.\nBoth apply to Users, Groups, and ServiceAccounts. The key difference is scope, not verbs.\nClusterRole can be bound to a single Namespace via RoleBinding.",
             },
             {
               q: "What is a RoleBinding?",
@@ -1710,7 +1710,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Sealed Secrets מצפין Secret ל-SealedSecret עם המפתח הציבורי של ה-Cluster.\nה-SealedSecret המוצפן בטוח לשמירה ב-git. רק ה-controller עם המפתח הפרטי מפענח.\nOption 1 שגוי: SealedSecret מ-Cluster A לא ניתן לפענוח ב-Cluster B.\nOption 0 שגוי: Sealed Secrets לא יוצר secrets אוטומטית מ-env vars.\nOption 2 שגוי: Sealed Secrets לא מצפין תעבורת רשת.",
+                "Sealed Secrets מצפין Secret ל-SealedSecret עם המפתח הציבורי של ה-Cluster.\nה-SealedSecret המוצפן בטוח לשמירה ב-git. רק ה-controller עם המפתח הפרטי מפענח.\nכל Cluster מחזיק מפתח פרטי ייחודי, כך ש-SealedSecret מ-Cluster אחד לא ניתן לפענוח ב-Cluster אחר.\nההצפנה חלה רק על Secrets בתוך git, לא על תעבורת רשת או יצירת secrets מ-env vars.",
             },
             {
               q: "מה שלוש רמות Pod Security Standards?",
@@ -1808,7 +1808,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Sealed Secrets encrypts a Secret into a SealedSecret using the cluster's public key.\nThe SealedSecret is safe to commit to git. Only the cluster's controller can decrypt it.\nOption 0 is wrong: a SealedSecret from Cluster A cannot be decrypted by Cluster B.\nOption 2 is wrong: Sealed Secrets does not auto-create secrets from env vars.\nOption 3 is wrong: Sealed Secrets does not encrypt network traffic.",
+                "Sealed Secrets encrypts a Secret into a SealedSecret using the cluster's public key.\nThe SealedSecret is safe to commit to git. Only the cluster's controller can decrypt it.\nEach cluster holds a unique private key, so a SealedSecret from one cluster cannot be decrypted by another.\nThe encryption applies only to Secrets stored in git, not to network traffic or auto-creation from env vars.",
             },
             {
               q: "What are the three Pod Security Standard levels?",
@@ -1884,7 +1884,7 @@ export const TOPICS = [
     levels: {
       easy: {
         theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 PV:\u200E יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 PVC:\u200E בקשה לאחסון מ-Pod\n🔹 Helm Chart:\u200E חבילה של Kubernetes manifests עם templates\n🔹 helm install:\u200E מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
-        theoryEn: "PersistentVolumes and Helm Basics\n🔹 PersistentVolume (PV) - a storage resource in the cluster, provisioned by an administrator.\n🔹 PersistentVolumeClaim (PVC) - a request by a Pod for a specific amount of storage.\n🔹 Helm Chart - a package of Kubernetes manifests with configurable templates.\n🔹 helm install - deploys a Chart to the cluster and creates a named Release.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
+        theoryEn: "PersistentVolumes and Helm Basics\n🔹 PersistentVolume (PV) - a storage resource in the cluster, provisioned by an administrator.\n🔹 PersistentVolumeClaim (PVC) - a request by a Pod for a specific amount of storage.\n🔹 Helm Chart - a package of Kubernetes manifests with configurable templates.\n🔹 `helm install` - deploys a Chart to the cluster and creates a named Release.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         questions: [
             {
               q: "מה ההבדל בין PV ל-PVC?",
@@ -1925,14 +1925,14 @@ export const TOPICS = [
             {
               q: "מה הפקודה להתקנת Helm Chart?",
               options: [
-              "helm upgrade",
-              "helm template",
-              "helm install",
-              "helm create",
+              "`helm upgrade`",
+              "`helm template`",
+              "`helm install`",
+              "`helm create`",
 ],
               answer: 2,
               explanation:
-                "helm install מתקין Chart ויוצר Release שנשמר כ-Secret ב-Cluster.\nhelm upgrade משנה Release קיים. helm template מרנדר YAML בלי להתקין. helm create יוצר scaffold של Chart חדש.\nאפשר לעקוף ערכים עם --set key=value או -f myvalues.yaml.",
+                "`helm install` מתקין Chart ויוצר Release שנשמר כ-Secret ב-Cluster.\n`helm upgrade` משנה Release קיים. `helm template` מרנדר YAML בלי להתקין. `helm create` יוצר scaffold של Chart חדש.\nאפשר לעקוף ערכים עם --set key=value או -f myvalues.yaml.",
             },
             {
               q: "מה Volume מסוג emptyDir?",
@@ -2023,14 +2023,14 @@ export const TOPICS = [
             {
               q: "What command installs a Helm Chart?",
               options: [
-              "helm upgrade",
-              "helm template",
-              "helm install",
-              "helm create",
+              "`helm upgrade`",
+              "`helm template`",
+              "`helm install`",
+              "`helm create`",
 ],
               answer: 2,
               explanation:
-                "helm install creates a Release stored as a Secret in the cluster.\nhelm upgrade modifies an existing Release. helm template renders YAML without installing. helm create scaffolds a new Chart.\nOverride values with --set key=value or -f myvalues.yaml.",
+                "`helm install` creates a Release stored as a Secret in the cluster.\n`helm upgrade` modifies an existing Release. `helm template` renders YAML without installing. `helm create` scaffolds a new Chart.\nOverride values with --set key=value or -f myvalues.yaml.",
             },
             {
               q: "What is emptyDir?",
@@ -2084,7 +2084,7 @@ export const TOPICS = [
       },
       medium: {
         theory: "StorageClass ו-Helm Values.\n🔹 StorageClass:\u200E מגדיר סוג אחסון ו-provisioner\n🔹 Dynamic Provisioning:\u200E PV נוצר אוטומטית עם PVC\n🔹 Reclaim Policy Delete:\u200E מוחק PV כש-PVC נמחק\n🔹 helm upgrade / --set:\u200E עדכון ושינוי values\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
-        theoryEn: "StorageClass and Helm Values\n🔹 StorageClass - defines the type of storage and the provisioner used to create it.\n🔹 Dynamic provisioning - a PersistentVolume is created automatically when a PVC is submitted.\n🔹 Reclaim policy - the Delete policy removes the PV automatically when its PVC is deleted.\n🔹 helm upgrade - updates a Release with new values using --set or a values file.\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
+        theoryEn: "StorageClass and Helm Values\n🔹 StorageClass - defines the type of storage and the provisioner used to create it.\n🔹 Dynamic provisioning - a PersistentVolume is created automatically when a PVC is submitted.\n🔹 Reclaim policy - the Delete policy removes the PV automatically when its PVC is deleted.\n🔹 `helm upgrade` - updates a Release with new values using `--set` or a values file.\nCODE:\nhelm install my-app ./chart --set replicaCount=3\nhelm upgrade my-app ./chart -f prod-values.yaml\nhelm rollback my-app 1",
         questions: [
             {
               q: "מה משמעות Dynamic Provisioning ב-Kubernetes?",
@@ -2096,7 +2096,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "כש-PVC נוצר עם StorageClass, ה-provisioner יוצר PV ודיסק אמיתי אוטומטית.\nOption 1 שגוי: Dynamic Provisioning הוא יצירה, לא שינוי גודל (זה Volume expansion). Option 0 שגוי: CPU allocation נעשית דרך requests/limits. Option 3 שגוי: Pod migration קשור ל-scheduling, לא ל-storage.\nזו הגישה הסטנדרטית בכל Cluster ענן.",
+                "כש-PVC נוצר עם StorageClass, ה-provisioner יוצר PV ודיסק אמיתי אוטומטית.\nשינוי גודל דיסק קיים נעשה דרך Volume Expansion, לא דרך Dynamic Provisioning.\nזו הגישה הסטנדרטית בכל Cluster ענן, והיא חוסכת יצירת PV ידנית.",
             },
             {
               q: "מה Reclaim Policy Delete?",
@@ -2108,25 +2108,25 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "כשה-PVC נמחק, גם ה-PV והדיסק הפיזי (EBS, GCP PD) נמחקים אוטומטית.\nOption 0 מתאר את Retain policy, לא Delete. Option 1 שגוי: אין backup אוטומטי. Option 2 שגוי: Delete מוחק הכל.\nRetain לעומת זאת משמר את הנתונים גם אחרי מחיקת ה-PVC.",
+                "כשה-PVC נמחק, גם ה-PV והדיסק הפיזי (EBS, GCP PD) נמחקים אוטומטית.\nRetain לעומת זאת משמר את ה-PV והנתונים גם אחרי מחיקת ה-PVC.\nאין backup אוטומטי לפני מחיקה, לכן חשוב לגבות מראש בסביבות production.",
             },
             {
               q: "איך עוקפים ערך מ-values.yaml בזמן התקנת Helm Chart?",
               options: [
-              "helm template --set key=value",
-              "helm rollback --set key=value",
-              "helm install --set key=value",
-              "helm show values --set key=value",
+              "`helm template --set key=value`",
+              "`helm rollback --set key=value`",
+              "`helm install --set key=value`",
+              "`helm show values --set key=value`",
 ],
               answer: 2,
               explanation:
-                "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade.\nhelm template רק מרנדר YAML בלי להתקין. helm rollback לא מקבל --set. helm show values מציג ערכים בלבד.\nלשינויים מרובים עדיף --values (-f) עם קובץ YAML מותאם.",
+                "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade.\n`helm template` רק מרנדר YAML בלי להתקין. `helm rollback` לא מקבל --set. `helm show values` מציג ערכים בלבד.\nלשינויים מרובים עדיף --values (-f) עם קובץ YAML מותאם.",
             },
             {
               q: "כיצד מרחיבים PVC?",
               options: [
               "מגדירים allowVolumeExpansion: true ב-StorageClass ומגדילים spec.resources.requests.storage",
-              "יוצרים PVC שני ומשתמשים ב-kubectl merge-pvc לאיחוד הנפחים",
+              "יוצרים PVC שני ומשתמשים ב-`kubectl merge-pvc` לאיחוד הנפחים",
               "מוחקים את ה-PVC ויוצרים חדש עם גודל גדול יותר באותו StorageClass",
               "משנים את ה-PV הקיים ישירות ומעדכנים את capacity.storage בו",
 ],
@@ -2135,7 +2135,7 @@ export const TOPICS = [
                 "ה-StorageClass חייב להגדיר allowVolumeExpansion: true.\nאז מגדילים spec.resources.requests.storage ב-PVC וה-provisioner מרחיב את הדיסק.\nהקטנה לא נתמכת, ובחלק מה-backends נדרש Pod restart.",
             },
             {
-              q: "מה helm template עושה?",
+              q: "מה תפקיד הפקודה `helm template`?",
               options: [
               "יוצר Helm Chart חדש מתוך תבנית scaffold מובנית",
               "שומר snapshot של ה-Chart הנוכחי לצורך rollback עתידי",
@@ -2144,19 +2144,19 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "helm template מרנדר Chart ל-YAML גולמי בלי להתקין שום דבר ב-Cluster.\nשימושי ל-CI/CD pipelines, debug, ו-GitOps שדורש YAML מפורש ב-git.",
+                "`helm template` מרנדר Chart ל-YAML גולמי בלי להתקין שום דבר ב-Cluster.\nשימושי ל-CI/CD pipelines, debug, ו-GitOps שדורש YAML מפורש ב-git.",
             },
             {
-              q: "מה עושה helm rollback?",
+              q: "מה תפקיד הפקודה `helm rollback`?",
               options: [
               "מוחק את ה-Release לחלוטין ומסיר את כל המשאבים שנוצרו",
-              "מעדכן את ה-Chart לגרסה חדשה ומפעיל helm upgrade אוטומטית",
+              "מעדכן את ה-Chart לגרסה חדשה ומפעיל `helm upgrade` אוטומטית",
               "מאפס את כל ה-values לברירות מחדל של ה-Chart",
               "מחזיר Release ל-revision קודמת מתוך ההיסטוריה",
 ],
               answer: 3,
               explanation:
-                "helm rollback מחזיר Release ל-revision ספציפי מתוך ההיסטוריה.\nOption 0 מתאר helm uninstall. Option 1 מתאר helm upgrade. Option 2 שגוי: rollback לא מאפס values, אלא מחזיר ל-revision ספציפי.\nהרצת helm history מציגה את כל ה-revisions עם תאריכים וסטטוסים.\nrollback הוא למעשה upgrade חדש עם manifests ישנים. נוצר revision חדש.",
+                "`helm rollback` מחזיר Release ל-revision ספציפי מתוך ההיסטוריה.\nהריצו `helm history` כדי לראות את כל ה-revisions עם תאריכים וסטטוסים, ואז בחרו את ה-revision הרצוי.\nמאחורי הקלעים, rollback הוא למעשה upgrade חדש עם manifests ישנים - ולכן נוצר revision חדש.",
             },
             {
               q: "מה אומר PVC בסטטוס Pending?",
@@ -2168,7 +2168,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "PVC Pending = לא נמצא PV מתאים.\nהרצת kubectl describe pvc תראה מה חסר.\nסיבות נפוצות: StorageClass לא קיים, AccessMode לא תואם, או capacity לא מספיק.",
+                "PVC Pending = לא נמצא PV מתאים.\nהרצת `kubectl describe pvc` תראה מה חסר.\nסיבות נפוצות: StorageClass לא קיים, AccessMode לא תואם, או capacity לא מספיק.",
             },
             {
               q: "כיצד PV ו-PVC מתחברים?",
@@ -2180,7 +2180,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "K8s מחבר PVC ל-PV לפי storageClassName, accessModes, ו-capacity (PV >= PVC).\nOption 0 שגוי: שם לא חייב להתאים. Option 1 שגוי: PV הוא cluster-level resource. Option 2 שגוי: PV לא משויך ל-Namespace.\nלאחר binding הם קשורים עד שאחד נמחק.",
+                "K8s מחבר PVC ל-PV לפי storageClassName, accessModes, ו-capacity (PV >= PVC).\nהשם לא חייב להתאים. PV הוא cluster-level resource ולא משויך ל-Namespace.\nלאחר binding הם קשורים עד שאחד נמחק.",
             },
         ],
         questionsEn: [
@@ -2194,7 +2194,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "When a PVC references a StorageClass, the provisioner creates a PV and real disk automatically.\nOption 3 is wrong: Dynamic Provisioning is creation, not resizing (that is Volume expansion). Option 2 is wrong: CPU allocation uses requests/limits. Option 0 is wrong: Pod migration is a scheduling concern.\nThis is the standard approach in all cloud-hosted Kubernetes clusters.",
+                "When a PVC references a StorageClass, the provisioner creates a PV and real disk automatically.\nResizing an existing disk is done via Volume Expansion, not Dynamic Provisioning.\nThis is the standard approach in all cloud-hosted Kubernetes clusters, eliminating the need for manual PV creation.",
             },
             {
               q: "What does Reclaim Policy Delete do?",
@@ -2206,25 +2206,25 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "When the PVC is deleted, both the PV and the physical disk (EBS, GCP PD) are deleted automatically.\nOption 1 describes Retain policy, not Delete. Option 0 is wrong: there is no automatic backup. Option 2 is wrong: Delete removes everything.\nFor databases, use Retain instead to preserve data after PVC deletion.",
+                "When the PVC is deleted, both the PV and the physical disk (EBS, GCP PD) are deleted automatically.\nRetain policy, by contrast, preserves the PV and data even after PVC deletion.\nThere is no automatic backup before deletion, so always back up production data beforehand.",
             },
             {
               q: "How do you change a Helm value from the CLI?",
               options: [
-              "helm template --set key=value",
-              "helm rollback --set key=value",
-              "helm install --set key=value",
-              "helm show values --set key=value",
+              "`helm template --set key=value`",
+              "`helm rollback --set key=value`",
+              "`helm install --set key=value`",
+              "`helm show values --set key=value`",
 ],
               answer: 2,
               explanation:
-                "--set key=value overrides values from values.yaml at install/upgrade time.\nhelm template only renders YAML without installing. helm rollback does not accept --set. helm show values only displays values.\nFor multiple overrides, use --values (-f) with a custom YAML file.",
+                "--set key=value overrides values from values.yaml at install/upgrade time.\n`helm template` only renders YAML without installing. `helm rollback` does not accept --set. `helm show values` only displays values.\nFor multiple overrides, use --values (-f) with a custom YAML file.",
             },
             {
               q: "How do you expand a PVC?",
               options: [
               "Edit the existing PV directly and update its capacity.storage field",
-              "Create a second PVC and use kubectl merge-pvc to combine the volumes",
+              "Create a second PVC and use `kubectl merge-pvc` to combine the volumes",
               "Set allowVolumeExpansion: true in the StorageClass then increase spec.resources.requests.storage",
               "Delete the PVC and recreate it with a larger size in the same StorageClass",
 ],
@@ -2233,7 +2233,7 @@ export const TOPICS = [
                 "The StorageClass must have allowVolumeExpansion: true.\nThen increase spec.resources.requests.storage in the PVC and the provisioner resizes the disk.\nShrinking is not supported, and some backends require a Pod restart.",
             },
             {
-              q: "What does helm template do?",
+              q: "What is the purpose of `helm template`?",
               options: [
               "Renders the Chart to YAML without installing. For pipelines and dry-runs",
               "Updates the values.yaml of an existing Chart from a remote repository",
@@ -2242,19 +2242,19 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "helm template renders a Chart to raw YAML without installing anything to the cluster.\nUseful for CI/CD pipelines, debugging, and GitOps workflows that need explicit YAML in git.",
+                "`helm template` renders a Chart to raw YAML without installing anything to the cluster.\nUseful for CI/CD pipelines, debugging, and GitOps workflows that need explicit YAML in git.",
             },
             {
-              q: "What does helm rollback do?",
+              q: "What is the purpose of `helm rollback`?",
               options: [
-              "Updates the Chart to a new version and runs helm upgrade automatically",
+              "Updates the Chart to a new version and runs `helm upgrade` automatically",
               "Resets all values to the Chart's default values.yaml configuration",
               "Deletes the Release completely and removes all created resources",
               "Reverts a Release to a previous revision from its history",
 ],
               answer: 3,
               explanation:
-                "helm rollback reverts a Release to a specific revision from its history.\nOption 2 describes helm uninstall. Option 0 describes helm upgrade. Option 1 is wrong: rollback does not reset values, it restores a specific revision.\nhelm history lists all revisions with timestamps and statuses.\nA rollback is technically a new upgrade using old manifests. It creates a new revision number.",
+                "`helm rollback` reverts a Release to a specific revision from its history.\nRun `helm history` to see all revisions with timestamps and statuses, then pick the revision you want.\nUnder the hood, a rollback is technically a new upgrade using old manifests - so it creates a new revision number.",
             },
             {
               q: "What does a PVC in Pending status mean?",
@@ -2266,7 +2266,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "PVC Pending means no matching PV was found.\nRun kubectl describe pvc to see what's missing.\nCommon causes: StorageClass doesn't exist, AccessMode mismatch, or insufficient capacity.",
+                "PVC Pending means no matching PV was found.\nRun `kubectl describe pvc` to see what's missing.\nCommon causes: StorageClass doesn't exist, AccessMode mismatch, or insufficient capacity.",
             },
             {
               q: "How do a PV and PVC bind?",
@@ -2278,7 +2278,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "K8s binds a PVC to a PV by matching storageClassName, accessModes, and capacity (PV >= PVC).\nOption 3 is wrong: names don't need to match. Option 0 is wrong: PV is a cluster-level resource. Option 2 is wrong: PVs are not namespaced.\nAfter binding they are locked together until one is deleted.",
+                "K8s binds a PVC to a PV by matching storageClassName, accessModes, and capacity (PV >= PVC).\nPV names do not need to match PVC names. PVs are cluster-level resources and are not namespaced.\nAfter binding they are locked together until one is deleted.",
             },
         ],
       },
@@ -2308,7 +2308,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Hooks הם Jobs שרצים בשלבי מחזור חיים של Release: pre-install, post-upgrade, pre-delete ועוד.\nOption 0 שגוי: debug נעשה עם helm template. Option 1 שגוי: אין סוג Chart כזה. Option 2 שגוי: rollback נעשה עם helm rollback.\nשימושים נפוצים: DB migrations לפני upgrade, או התראת Slack אחרי deploy.",
+                "Hooks הם Jobs שרצים בשלבי מחזור חיים של Release: pre-install, post-upgrade, pre-delete ועוד.\nדיבאג של templates נעשה עם `helm template`, ו-rollback נעשה עם `helm rollback`.\nשימושים נפוצים: DB migrations לפני upgrade, או התראת Slack אחרי deploy.",
             },
             {
               q: "מה תפקיד VolumeSnapshot?",
@@ -2356,19 +2356,19 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "ה-PVC מפנה ל-StorageClass בשם fast-ssd שלא קיים ב-Cluster.\nללא StorageClass, ה-provisioner לא יודע ליצור PV. הריצו kubectl get storageclass לראות מה קיים.\n• PVC גדול מדי = שגיאה על capacity • Node מלא = לא קשור ל-provisioning • Namespace שונה = שגיאה אחרת.",
+                "ה-PVC מפנה ל-StorageClass בשם fast-ssd שלא קיים ב-Cluster.\nללא StorageClass, ה-provisioner לא יודע ליצור PV. הריצו `kubectl get storageclass` לראות מה קיים.\n• PVC גדול מדי = שגיאה על capacity • Node מלא = לא קשור ל-provisioning • Namespace שונה = שגיאה אחרת.",
             },
             {
               q: "הרצת:\n\n```\nhelm upgrade\n```\n\nה-upgrade כשל באמצע.\nRelease ב-status failed.\nה-ConfigMap עודכן חלקית.\n\nמה הצעד הבא?",
               options: [
-              "helm upgrade שוב",
-              "helm rollback my-release [last-good-revision] להחזיר למצב עקבי",
+              "`helm upgrade` שוב",
+              "`helm rollback my-release [last-good-revision]` להחזיר למצב עקבי",
               "מחק ה-Release",
               "מחק ConfigMap",
 ],
               answer: 1,
               explanation:
-                "כש-helm upgrade נכשל, resources עלולים להיות במצב לא עקבי.\nhelm rollback מחזיר הכל ל-revision תקין. הריצו helm history קודם לראות מספרי revision.\nupgrade נוסף ללא rollback עלול להחמיר את המצב.",
+                "כש-`helm upgrade` נכשל, resources עלולים להיות במצב לא עקבי.\n`helm rollback` מחזיר הכל ל-revision תקין. הריצו `helm history` קודם לראות מספרי revision.\nupgrade נוסף ללא rollback עלול להחמיר את המצב.",
             },
             {
               q: "Pod עם PVC ב-AWS EKS.\nה-Pod עבר ל-Node ב-Availability Zone אחרת.\nה-PVC מראה סטטוס Bound, אבל ה-Pod לא מצליח לעלות.\n\nמה הסיבה?",
@@ -2406,7 +2406,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Hooks are Jobs that run at specific Release lifecycle points: pre-install, post-upgrade, pre-delete, etc.\nOption 0 is wrong: rollback is done with helm rollback. Option 2 is wrong: there is no such Chart type. Option 3 is wrong: debugging is done with helm template.\nCommon uses: DB migrations before upgrade, or Slack notifications after deploy.",
+                "Hooks are Jobs that run at specific Release lifecycle points: pre-install, post-upgrade, pre-delete, etc.\nTemplate debugging is done with `helm template`, and rollback is done with `helm rollback`.\nCommon uses: DB migrations before upgrade, or Slack notifications after deploy.",
             },
             {
               q: "What is a VolumeSnapshot?",
@@ -2454,19 +2454,19 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "The PVC references a StorageClass named fast-ssd that doesn't exist in the Cluster.\nWithout a valid StorageClass, the provisioner can't create a PV. Run kubectl get storageclass to check.\n• Too large = capacity error • Node full = unrelated to provisioning • Different namespace = different error.",
+                "The PVC references a StorageClass named fast-ssd that doesn't exist in the Cluster.\nWithout a valid StorageClass, the provisioner can't create a PV. Run `kubectl get storageclass` to check.\n• Too large = capacity error • Node full = unrelated to provisioning • Different namespace = different error.",
             },
             {
               q: "Command:\n\n```\nhelm upgrade\n```\n\nThe upgrade failed midway.\nRelease status: failed.\nA ConfigMap is half-updated.\n\nWhat is the next step?",
               options: [
               "Delete the ConfigMap",
-              "Run helm upgrade again",
+              "Run `helm upgrade` again",
               "Delete the Release",
-              "helm rollback my-release [last-good-revision] to return to a consistent state",
+              "`helm rollback my-release [last-good-revision]` to return to a consistent state",
 ],
               answer: 3,
               explanation:
-                "When helm upgrade fails midway, resources may be in an inconsistent state.\nhelm rollback restores everything to a known good revision. Run helm history first.\nAnother upgrade without rollback risks making things worse.",
+                "When `helm upgrade` fails midway, resources may be in an inconsistent state.\n`helm rollback` restores everything to a known good revision. Run `helm history` first.\nAnother upgrade without rollback risks making things worse.",
             },
             {
               q: "A Pod with a PVC on AWS EKS.\nThe Pod moved to a Node in a different Availability Zone.\nThe PVC shows Bound status, but the Pod fails to start.\n\nWhat is the cause?",
@@ -2499,29 +2499,29 @@ export const TOPICS = [
             {
               q: "ה-Pod 'web-server' לא מגיב ואתה לא יודע למה. איזו פקודה תיתן לך events ומצב מפורט כדי להתחיל לאבחן?",
               options: [
-              "kubectl describe pod web-server",
-              "kubectl status pod web-server",
-              "kubectl get pod web-server",
-              "kubectl inspect pod web-server",
+              "`kubectl describe pod web-server`",
+              "`kubectl status pod web-server`",
+              "`kubectl get pod web-server`",
+              "`kubectl inspect pod web-server`",
 ],
               answer: 0,
               explanation:
-                "kubectl describe pod מציג events, conditions, ומידע מפורט.\nה-Events בתחתית הפלט הם לרוב הסיבה הישירה לבעיה.",
+                "`kubectl describe pod` מציג events, conditions, ומידע מפורט.\nה-Events בתחתית הפלט הם לרוב הסיבה הישירה לבעיה.",
             },
             {
               q: "ה-Pod 'api-service' נמצא ב-Running אבל האפליקציה מחזירה שגיאות 500. מה הפקודה הראשונה שתריץ?",
               options: [
-              "kubectl top pod api-service",
-              "kubectl describe pod api-service",
-              "kubectl logs api-service",
-              "kubectl events api-service",
+              "`kubectl top pod api-service`",
+              "`kubectl describe pod api-service`",
+              "`kubectl logs api-service`",
+              "`kubectl events api-service`",
 ],
               answer: 2,
               explanation:
-                "kubectl logs מציג את ה-stdout/stderr של הקונטיינר.\nהמקום הראשון לחפש שגיאות אפליקציה כשה-Pod רץ.\nהוסף --follow לעקוב בזמן אמת.",
+                "`kubectl logs` מציג את ה-stdout/stderr של הקונטיינר.\nהמקום הראשון לחפש שגיאות אפליקציה כשה-Pod רץ.\nהוסף --follow לעקוב בזמן אמת.",
             },
             {
-              q: "מה kubectl get events מציג?",
+              q: "מה מציגה הפקודה `kubectl get events`?",
               options: [
               "אירועים מה-Namespace הנוכחי: Pod scheduling, image pull, probe failures",
               "רק Pod logs",
@@ -2547,17 +2547,17 @@ export const TOPICS = [
             {
               q: "כיצד רואים לוגים של קונטיינר שקרס?",
               options: [
-              "kubectl get logs --crashed",
-              "kubectl logs pod-name",
-              "kubectl describe pod-name --logs",
-              "kubectl logs pod-name --previous",
+              "`kubectl get logs --crashed`",
+              "`kubectl logs pod-name`",
+              "`kubectl describe pod-name --logs`",
+              "`kubectl logs pod-name --previous`",
 ],
               answer: 3,
               explanation:
                 "כשקונטיינר קורס, Kubernetes מפעיל instance חדש שה-logs שלו כמעט ריקים.\n--previous שולף logs מה-instance שקרס. בדיוק מה שצריך לאבחון.",
             },
             {
-              q: "מה kubectl top nodes מציג?",
+              q: "מה מציגה הפקודה `kubectl top nodes`?",
               options: [
               "שימוש ב-CPU/Memory של כל Node בזמן אמת (דורש metrics-server)",
               "רשימת כל ה-Nodes ב-Cluster כולל Status ו-Roles",
@@ -2566,22 +2566,22 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "מציג צריכת CPU ו-Memory בזמן אמת של כל Node, כולל אחוז ניצול.\nדורש metrics-server מותקן ב-Cluster.\nkubectl top pods מציג את אותו מידע ברמת Pod.",
+                "מציג צריכת CPU ו-Memory בזמן אמת של כל Node, כולל אחוז ניצול.\nדורש metrics-server מותקן ב-Cluster.\n`kubectl top pods` מציג את אותו מידע ברמת Pod.",
             },
             {
               q: "כיצד בודקים health של ה-API server?",
               options: [
-              "kubectl get --raw='/healthz' (מחזיר ok אם בריא)",
-              "kubectl check apiserver",
-              "kubectl status cluster",
-              "kubectl describe apiserver",
+              "`kubectl get --raw='/healthz'` (מחזיר ok אם בריא)",
+              "`kubectl check apiserver`",
+              "`kubectl status cluster`",
+              "`kubectl describe apiserver`",
 ],
               answer: 0,
               explanation:
-                "kubectl get --raw='/healthz' מחזיר ok אם ה-API server בריא.\ncomponentstatuses הוסרה ב-K8s 1.26. השתמשו ב-/healthz, /readyz, /livez במקום.",
+                "`kubectl get --raw='/healthz'` מחזיר ok אם ה-API server בריא.\ncomponentstatuses הוסרה ב-K8s 1.26. השתמשו ב-/healthz, /readyz, /livez במקום.",
             },
             {
-              q: "מה kubectl config get-contexts עושה?",
+              q: "מה תפקיד הפקודה `kubectl config get-contexts`?",
               options: [
               "מציג את כל ה-kubeconfig contexts: cluster, user, ו-namespace מוגדרים",
               "מציג את כל ה-Docker contexts שמוגדרים ב-daemon המקומי",
@@ -2597,29 +2597,29 @@ export const TOPICS = [
             {
               q: "Pod 'web-server' is not responding and you don't know why. Which command gives you events and detailed state to start diagnosing?",
               options: [
-              "kubectl describe pod web-server",
-              "kubectl status pod web-server",
-              "kubectl get pod web-server",
-              "kubectl inspect pod web-server",
+              "`kubectl describe pod web-server`",
+              "`kubectl status pod web-server`",
+              "`kubectl get pod web-server`",
+              "`kubectl inspect pod web-server`",
 ],
               answer: 0,
               explanation:
-                "kubectl describe pod shows events, conditions, and detailed info.\nThe Events section at the bottom usually reveals the direct cause of the problem.",
+                "`kubectl describe pod` shows events, conditions, and detailed info.\nThe Events section at the bottom usually reveals the direct cause of the problem.",
             },
             {
               q: "Pod 'api-service' is Running but the app returns 500 errors. What is the first command you run?",
               options: [
-              "kubectl top pod api-service",
-              "kubectl describe pod api-service",
-              "kubectl logs api-service",
-              "kubectl events api-service",
+              "`kubectl top pod api-service`",
+              "`kubectl describe pod api-service`",
+              "`kubectl logs api-service`",
+              "`kubectl events api-service`",
 ],
               answer: 2,
               explanation:
-                "kubectl logs shows the container's stdout/stderr.\nFirst place to look for application errors while the Pod is running.\nUse --follow to stream logs in real time.",
+                "`kubectl logs` shows the container's stdout/stderr.\nFirst place to look for application errors while the Pod is running.\nUse --follow to stream logs in real time.",
             },
             {
-              q: "What does kubectl get events show?",
+              q: "What does `kubectl get events` show?",
               options: [
               "Only Pod logs",
               "Only Node events",
@@ -2645,17 +2645,17 @@ export const TOPICS = [
             {
               q: "How do you view logs from a crashed container?",
               options: [
-              "kubectl get logs --crashed",
-              "kubectl logs pod-name",
-              "kubectl describe pod-name --logs",
-              "kubectl logs pod-name --previous",
+              "`kubectl get logs --crashed`",
+              "`kubectl logs pod-name`",
+              "`kubectl describe pod-name --logs`",
+              "`kubectl logs pod-name --previous`",
 ],
               answer: 3,
               explanation:
                 "When a container crashes, Kubernetes starts a new instance whose logs may be nearly empty.\n--previous fetches logs from the crashed run. Exactly what you need to diagnose the cause.",
             },
             {
-              q: "What does kubectl top nodes show?",
+              q: "What does `kubectl top nodes` show?",
               options: [
               "Kubelet logs from every Node in the Cluster",
               "A list of all Nodes in the Cluster with their Status and Roles",
@@ -2664,22 +2664,22 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Shows real-time CPU and Memory consumption for every Node, including utilization percentage.\nRequires metrics-server installed in the cluster.\nkubectl top pods shows the same at Pod level.",
+                "Shows real-time CPU and Memory consumption for every Node, including utilization percentage.\nRequires metrics-server installed in the cluster.\n`kubectl top pods` shows the same at Pod level.",
             },
             {
               q: "How do you check the health of the API server?",
               options: [
-              "kubectl status cluster",
-              "kubectl describe apiserver",
-              "kubectl check apiserver",
-              "kubectl get --raw='/healthz' (returns ok when healthy)",
+              "`kubectl status cluster`",
+              "`kubectl describe apiserver`",
+              "`kubectl check apiserver`",
+              "`kubectl get --raw='/healthz'` (returns ok when healthy)",
 ],
               answer: 3,
               explanation:
-                "kubectl get --raw='/healthz' returns 'ok' if the API server is healthy.\ncomponentstatuses was removed in K8s 1.26. Use /healthz, /readyz, /livez instead.",
+                "`kubectl get --raw='/healthz'` returns 'ok' if the API server is healthy.\ncomponentstatuses was removed in K8s 1.26. Use /healthz, /readyz, /livez instead.",
             },
             {
-              q: "What does kubectl config get-contexts do?",
+              q: "What is the purpose of `kubectl config get-contexts`?",
               options: [
               "Lists all Docker contexts configured on the local daemon",
               "Lists all Namespaces in the current Cluster",
@@ -2706,7 +2706,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "הקונטיינר עולה, קורס מיד, ו-Kubernetes מנסה שוב עם המתנה גוברת.\nהריצו kubectl logs --previous לראות את ה-logs מה-crash האחרון.",
+                "הקונטיינר עולה, קורס מיד, ו-Kubernetes מנסה שוב עם המתנה גוברת.\nהריצו `kubectl logs --previous` לראות את ה-logs מה-crash האחרון.",
             },
             {
               q: "ה-Pod נמצא ב-ImagePullBackOff. מה שתי הסיבות הנפוצות ביותר?",
@@ -2730,7 +2730,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "הקונטיינר חרג מ-limits.memory וה-Linux kernel ממית אותו עם exit code 137.\nהגדילו limits.memory, או בדקו memory leak עם kubectl top pod.",
+                "הקונטיינר חרג מ-limits.memory וה-Linux kernel ממית אותו עם exit code 137.\nהגדילו limits.memory, או בדקו memory leak עם `kubectl top pod`.",
             },
             {
               q: "ה-Pod נשאר ב-Pending.\n\nהרצת:\n\n```\nkubectl describe pod\n```\n\nפלט:\n\n```\n0/3 nodes are available:\n3 Insufficient cpu\n```\n\nמה הגורם השורשי?",
@@ -2778,7 +2778,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Finalizer מונע מחיקה עד ש-controller חיצוני מנקה אותו. אפילו --force לא עוזר.\nכשה-controller לא זמין, ה-Pod תקוע.\nפתרון: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' מסיר finalizers ידנית.",
+                "Finalizer מונע מחיקה עד ש-controller חיצוני מנקה אותו. אפילו --force לא עוזר.\nכשה-controller לא זמין, ה-Pod תקוע.\nפתרון: `kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'` מסיר finalizers ידנית.",
             },
             {
               q: "ה-Node ב-DiskPressure.\n\nהרצת:\n\n```\nkubectl describe node\n```\n\nפלט:\n\n```\nConditions:\n  DiskPressure True\n```\n\nמה הסיבות הנפוצות?",
@@ -2804,7 +2804,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "The container starts, crashes immediately, and Kubernetes retries with increasing back-off delay.\nRun kubectl logs --previous to see the logs from the last crash.",
+                "The container starts, crashes immediately, and Kubernetes retries with increasing back-off delay.\nRun `kubectl logs --previous` to see the logs from the last crash.",
             },
             {
               q: "A pod is stuck in ImagePullBackOff. What are the two most common causes?",
@@ -2828,7 +2828,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "The container exceeded limits.memory and the Linux kernel killed it with exit code 137.\nIncrease limits.memory, or use kubectl top pod to identify a memory leak.",
+                "The container exceeded limits.memory and the Linux kernel killed it with exit code 137.\nIncrease limits.memory, or use `kubectl top pod` to identify a memory leak.",
             },
             {
               q: "A Pod stays Pending.\n\nCommand:\n\n```\nkubectl describe pod\n```\n\nOutput:\n\n```\n0/3 nodes are available:\n3 Insufficient cpu\n```\n\nWhat is the root cause?",
@@ -2840,7 +2840,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "The Pod's CPU request is larger than available capacity on any Node.\nLower requests.cpu to actual usage (check with kubectl top pods), or add more Nodes.",
+                "The Pod's CPU request is larger than available capacity on any Node.\nLower requests.cpu to actual usage (check with `kubectl top pods`), or add more Nodes.",
             },
             {
               q: "What happens when a liveness probe fails?",
@@ -2876,7 +2876,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "A finalizer blocks deletion until an external controller clears it. Even --force can't bypass it.\nIf the controller is unavailable, the Pod stays stuck.\nFix: kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}' removes finalizers manually.",
+                "A finalizer blocks deletion until an external controller clears it. Even --force can't bypass it.\nIf the controller is unavailable, the Pod stays stuck.\nFix: `kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'` removes finalizers manually.",
             },
             {
               q: "A Node shows DiskPressure.\n\nCommand:\n\n```\nkubectl describe node\n```\n\nOutput:\n\n```\nConditions:\n  DiskPressure True\n```\n\nWhat are the common causes?",
@@ -2894,15 +2894,15 @@ export const TOPICS = [
       },
       hard: {
         theory: "Debug מתקדם.\n🔹 kubectl port-forward:\u200E מנתב port מ-Pod לlocal machine\n🔹 kubectl cp:\u200E מעתיק קבצים מ-Pod ואליו\n🔹 kubectl top:\u200E CPU/Memory usage בזמן אמת\n🔹 Pod ב-Terminating לא נמחק. בגלל finalizer\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
-        theoryEn: "Advanced Debugging\n🔹 kubectl port-forward - forwards a port from a Pod to your local machine for direct access.\n🔹 kubectl cp - copies files between a Pod and your local filesystem.\n🔹 kubectl top - displays real-time CPU and memory usage for Pods or Nodes.\n🔹 Stuck in Terminating - a Pod may hang in Terminating state if blocked by a finalizer.\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
+        theoryEn: "Advanced Debugging\n🔹 `kubectl port-forward` - forwards a port from a Pod to your local machine for direct access.\n🔹 `kubectl cp` - copies files between a Pod and your local filesystem.\n🔹 `kubectl top` - displays real-time CPU and memory usage for Pods or Nodes.\n🔹 Stuck in Terminating - a Pod may hang in Terminating state if blocked by a finalizer.\nCODE:\nkubectl port-forward pod/my-pod 8080:80\nkubectl cp my-pod:/app/log.txt ./log.txt\nkubectl top pod --sort-by=memory\nkubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'",
         questions: [
             {
               q: "לאחר Deployment, ה-Pods החדשים ב-CrashLoopBackOff.\nהגרסה הקודמת עבדה מצוין.\n\nמה שתי פעולות ה-debug הראשונות שלך?",
               options: [
               "Scale down ל-0 ו-redeploy מחדש",
               "מחק את כל ה-Pods ותן ל-Kubernetes ליצור אותם מחדש",
-              "kubectl logs <new-pod> --previous ו-kubectl describe pod <new-pod>",
-              "kubectl rollout undo מיד לגרסה הקודמת",
+              "`kubectl logs <new-pod> --previous` ו-`kubectl describe pod <new-pod>`",
+              "`kubectl rollout undo` מיד לגרסה הקודמת",
 ],
               answer: 2,
               explanation:
@@ -2911,17 +2911,17 @@ export const TOPICS = [
             {
               q: "ה-Node מראה NotReady.\nPods מפונים ממנו.\n\nהרצת:\n\n```\nkubectl get nodes\n```\n\nמה שתי הפעולות הראשונות שלך?",
               options: [
-              "kubectl drain <name> --force להעביר Pods ואז למחוק ולהצטרף מחדש",
-              "kubectl describe node <name> לבדוק Conditions ו-Events, ואז SSH ל-Node ולהריץ systemctl status kubelet",
-              "kubectl cordon <name> ואז לבדוק kubelet status דרך systemctl על ה-Node",
-              "kubectl delete node <name> ולתת ל-cluster autoscaler להפעיל Node חדש",
+              "`kubectl drain <name> --force` להעביר Pods ואז למחוק ולהצטרף מחדש",
+              "`kubectl describe node <name>` לבדוק Conditions ו-Events, ואז SSH ל-Node ולהריץ `systemctl status kubelet`",
+              "`kubectl cordon <name>` ואז לבדוק kubelet status דרך systemctl על ה-Node",
+              "`kubectl delete node <name>` ולתת ל-cluster autoscaler להפעיל Node חדש",
 ],
               answer: 1,
               explanation:
                 "describe node מציג Conditions ו-Events. המקום הראשון לחפש.\nSSH ל-Node ו-systemctl status kubelet לוודא שרץ.\nסיבות נפוצות: kubelet נפל, TLS cert פג, או disk/memory pressure.",
             },
             {
-              q: "מה kubectl drain עושה ומתי משתמשים בו?",
+              q: "מה תפקיד הפקודה `kubectl drain` ומתי משתמשים בה?",
               options: [
               "מפנה Pods מ-Node בצורה graceful ומסמן אותו כ-unschedulable לפני maintenance",
               "מנתק את ה-Node מהרשת כך ש-Pods לא מקבלים traffic נכנס",
@@ -2935,29 +2935,29 @@ export const TOPICS = [
             {
               q: "כיצד מאבחנים בעיות DNS ב-Kubernetes?",
               options: [
-              "kubectl get endpoints -n kube-system kube-dns ולוודא שה-IP תקין",
-              "kubectl logs -n kube-system coredns-xxx ולבדוק config של Corefile",
-              "kubectl describe svc kube-dns -n kube-system ולחפש Selector mismatch",
-              "kubectl exec pod -- nslookup kubernetes.default + בדיקת CoreDNS Pod logs",
+              "`kubectl get endpoints -n kube-system kube-dns` ולוודא שה-IP תקין",
+              "`kubectl logs -n kube-system coredns-xxx` ולבדוק config של Corefile",
+              "`kubectl describe svc kube-dns -n kube-system` ולחפש Selector mismatch",
+              "`kubectl exec pod -- nslookup kubernetes.default` + בדיקת CoreDNS Pod logs",
 ],
               answer: 3,
               explanation:
-                "nslookup kubernetes.default מתוך Pod מוודא ש-CoreDNS מגיב.\nאם נכשל. בדקו שה-CoreDNS Pods רצים ב-kube-system.\nkubectl logs <coredns-pod> -n kube-system יחשוף שגיאות.",
+                "nslookup kubernetes.default מתוך Pod מוודא ש-CoreDNS מגיב.\nאם נכשל. בדקו שה-CoreDNS Pods רצים ב-kube-system.\n`kubectl logs <coredns-pod> -n kube-system` יחשוף שגיאות.",
             },
             {
               q: "מה הפקודה לגיבוי etcd?",
               options: [
-              "etcdctl backup create --name=backup.db --cacert=... --cert=...",
-              "etcdctl snapshot save backup.db --endpoints=...",
-              "etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db",
-              "etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db",
+              "`etcdctl backup create --name=backup.db --cacert=... --cert=...`",
+              "`etcdctl snapshot save backup.db --endpoints=...`",
+              "`etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db`",
+              "`etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db`",
 ],
               answer: 1,
               explanation:
-                "etcdctl snapshot save יוצר snapshot מלא של etcd:\u200E כל מצב ה-Cluster.\nחובה לציין --endpoints, --cacert, --cert, ו--key לאימות.\nזהו הכלי הראשי ל-Disaster Recovery.",
+                "`etcdctl snapshot save` יוצר snapshot מלא של etcd:\u200E כל מצב ה-Cluster.\nחובה לציין --endpoints, --cacert, --cert, ו--key לאימות.\nזהו הכלי הראשי ל-Disaster Recovery.",
             },
             {
-              q: "ה-Pod רץ, אבל ה-liveness probe נכשל שוב ושוב.\n\nהפלט של kubectl describe pod מציג:\n\n```\nLiveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nמה בודקים?",
+              q: "ה-Pod רץ, אבל ה-liveness probe נכשל שוב ושוב.\n\nהפלט של `kubectl describe pod` מציג:\n\n```\nLiveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nמה בודקים?",
               options: [
               "ה-container image שגוי ולא מכיל את האפליקציה",
               "בעיית DNS שמונעת מה-probe להגיע ל-Pod",
@@ -2973,12 +2973,12 @@ export const TOPICS = [
               options: [
               "הוסף sidecar container שיאסוף את ה-logs מה-container הראשי",
               "ה-Pod רץ בוודאות. הבעיה היא ב-RBAC שחוסם גישה ל-logs",
-              "ה-Pod לא רץ. בדוק סטטוס עם kubectl get pod ואז Events עם kubectl describe pod",
+              "ה-Pod לא רץ. בדוק סטטוס עם `kubectl get pod` ואז Events עם `kubectl describe pod`",
               "מחק את ה-Pod ותן ל-Deployment ליצור אחד חדש שאפשר לקרוא לו logs",
 ],
               answer: 2,
               explanation:
-                "Kubernetes לא יכול לקרוא logs מ-container שלא רץ.\nבדקו סטטוס עם kubectl get pod. אם CrashLoopBackOff השתמשו ב---previous.\nאם Init:Error. בדקו logs של ה-init container עם -c <init-name>.",
+                "Kubernetes לא יכול לקרוא logs מ-container שלא רץ.\nבדקו סטטוס עם `kubectl get pod`. אם CrashLoopBackOff השתמשו ב---previous.\nאם Init:Error. בדקו logs של ה-init container עם -c <init-name>.",
             },
             {
               q: "Cluster חדש הותקן זה עתה.\n\nהרצת:\n\n```\nkubectl get nodes\n```\n\nפלט:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nמה הצעד הראשון?",
@@ -2997,9 +2997,9 @@ export const TOPICS = [
             {
               q: "After a Deployment, the new Pods are in CrashLoopBackOff.\nThe previous version worked fine.\n\nWhat are your first two debugging steps?",
               options: [
-              "Run kubectl logs <new-pod> --previous and kubectl describe pod <new-pod>",
+              "Run `kubectl logs <new-pod> --previous` and `kubectl describe pod <new-pod>`",
               "Delete all pods and wait for recreation",
-              "Run kubectl rollout undo immediately",
+              "Run `kubectl rollout undo` immediately",
               "Scale down to 0 and redeploy",
 ],
               answer: 0,
@@ -3009,17 +3009,17 @@ export const TOPICS = [
             {
               q: "A Node shows NotReady.\nPods on it are being evicted.\n\nCommand:\n\n```\nkubectl get nodes\n```\n\nWhat are your first two steps?",
               options: [
-              "kubectl delete node <name> and let the cluster autoscaler provision a new Node",
-              "kubectl drain <name> --force to move Pods then delete and rejoin the Node",
-              "kubectl cordon <name> then check kubelet status via systemctl on the Node",
-              "kubectl describe node <name> to check Conditions and Events, then SSH in and run systemctl status kubelet",
+              "`kubectl delete node <name>` and let the cluster autoscaler provision a new Node",
+              "`kubectl drain <name> --force` to move Pods then delete and rejoin the Node",
+              "`kubectl cordon <name>` then check kubelet status via systemctl on the Node",
+              "`kubectl describe node <name>` to check Conditions and Events, then SSH in and run `systemctl status kubelet`",
 ],
               answer: 3,
               explanation:
                 "describe node shows Conditions and Events. The first place to look.\nSSH in and run systemctl status kubelet to check if it's running.\nCommon causes: kubelet crashed, TLS cert expired, or disk/memory pressure.",
             },
             {
-              q: "What does kubectl drain do and when is it used?",
+              q: "What is the purpose of `kubectl drain` and when is it used?",
               options: [
               "Removes the Node from the Cluster entirely and sends all its Pods to garbage collection",
               "Disconnects the Node from the network so Pods stop receiving inbound traffic",
@@ -3033,29 +3033,29 @@ export const TOPICS = [
             {
               q: "How do you diagnose DNS issues in Kubernetes?",
               options: [
-              "kubectl exec pod -- nslookup kubernetes.default + check CoreDNS Pod logs",
-              "kubectl logs -n kube-system coredns-xxx and check the Corefile config",
-              "kubectl get endpoints -n kube-system kube-dns and verify the IP is correct",
-              "kubectl describe svc kube-dns -n kube-system and look for Selector mismatch",
+              "`kubectl exec pod -- nslookup kubernetes.default` + check CoreDNS Pod logs",
+              "`kubectl logs -n kube-system coredns-xxx` and check the Corefile config",
+              "`kubectl get endpoints -n kube-system kube-dns` and verify the IP is correct",
+              "`kubectl describe svc kube-dns -n kube-system` and look for Selector mismatch",
 ],
               answer: 0,
               explanation:
-                "nslookup kubernetes.default from inside a Pod verifies CoreDNS is responding.\nIf it fails, check that CoreDNS Pods are Running in kube-system.\nkubectl logs <coredns-pod> -n kube-system will reveal errors.",
+                "nslookup kubernetes.default from inside a Pod verifies CoreDNS is responding.\nIf it fails, check that CoreDNS Pods are Running in kube-system.\n`kubectl logs <coredns-pod> -n kube-system` will reveal errors.",
             },
             {
               q: "What is the command to back up etcd?",
               options: [
-              "etcdctl backup create --name=backup.db --cacert=... --cert=...",
-              "etcdctl snapshot save backup.db --endpoints=...",
-              "etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db",
-              "etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db",
+              "`etcdctl backup create --name=backup.db --cacert=... --cert=...`",
+              "`etcdctl snapshot save backup.db --endpoints=...`",
+              "`etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db`",
+              "`etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db`",
 ],
               answer: 1,
               explanation:
-                "etcdctl snapshot save creates a full snapshot of etcd: the entire cluster state.\nMust provide --endpoints, --cacert, --cert, and --key for authentication.\nThis is the standard backup method for disaster recovery.",
+                "`etcdctl snapshot save` creates a full snapshot of etcd: the entire cluster state.\nMust provide --endpoints, --cacert, --cert, and --key for authentication.\nThis is the standard backup method for disaster recovery.",
             },
             {
-              q: "A Pod is running, but the liveness probe keeps failing.\n\nThe output of kubectl describe pod shows:\n\n```\nLiveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nWhat do you check?",
+              q: "A Pod is running, but the liveness probe keeps failing.\n\nThe output of `kubectl describe pod` shows:\n\n```\nLiveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nWhat do you check?",
               options: [
               "The container image is wrong and does not contain the application",
               "A DNS issue preventing the probe from reaching the Pod",
@@ -3069,14 +3069,14 @@ export const TOPICS = [
             {
               q: "Command:\n\n```\nkubectl logs my-pod\n```\n\nOutput:\n\n```\nError from server (BadRequest):\ncontainer 'my-container' in pod\n'my-pod' is not running\n```\n\nWhat do you do?",
               options: [
-              "The Pod is not Running. Check status with kubectl get pod, then Events with kubectl describe pod",
+              "The Pod is not Running. Check status with `kubectl get pod`, then Events with `kubectl describe pod`",
               "Delete the Pod and let the Deployment create a new one whose logs you can read",
               "Add a sidecar container that collects logs from the main container",
               "The Pod is definitely Running. The issue is RBAC blocking access to read logs",
 ],
               answer: 0,
               explanation:
-                "Kubernetes can't stream logs from a container that isn't running.\nCheck status with kubectl get pod. If CrashLoopBackOff, use --previous.\nIf Init:Error, check init container logs with -c <init-name>.",
+                "Kubernetes can't stream logs from a container that isn't running.\nCheck status with `kubectl get pod`. If CrashLoopBackOff, use --previous.\nIf Init:Error, check init container logs with -c <init-name>.",
             },
             {
               q: "A new cluster was just initialized.\n\nCommand:\n\n```\nkubectl get nodes\n```\n\nOutput:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nWhat is the first step?",
@@ -3673,13 +3673,13 @@ export const TOPICS = [
           {
             q: "אפליקציה payments-service מוצגת כ-OutOfSync ב-ArgoCD אחרי deploy.\n\nמה הצעד הראשון המתאים ביותר?",
             options: [
-              "להריץ kubectl delete pod על כל ה-Pods ב-namespace",
-              "להריץ kubectl apply ידנית מתוך ה-repo",
+              "להריץ `kubectl delete pod` על כל ה-Pods ב-namespace",
+              "להריץ `kubectl apply` ידנית מתוך ה-repo",
               "לבדוק את ה-diff בין Git למצב בקלאסטר",
               "למחוק את ה-namespace וליצור מחדש",
             ],
             answer: 2,
-            explanation: "OutOfSync אומר שהמצב בקלאסטר שונה מ-Git.\nהצעד הראשון תמיד הוא לבדוק את ה-diff כדי להבין מה בדיוק שונה.\nלמחוק Pods או namespace זה הרסני ולא פותר את הבעיה.\nkubectl apply ידנית עוקף את תהליך ה-GitOps.",
+            explanation: "OutOfSync אומר שהמצב בקלאסטר שונה מ-Git.\nהצעד הראשון תמיד הוא לבדוק את ה-diff כדי להבין מה בדיוק שונה.\nלמחוק Pods או namespace זה הרסני ולא פותר את הבעיה.\n`kubectl apply` ידנית עוקף את תהליך ה-GitOps.",
           },
           {
             q: "ב-GitOps, מה ה-source of truth למצב הרצוי של הקלאסטר?",
@@ -3693,10 +3693,10 @@ export const TOPICS = [
             explanation: "העיקרון המרכזי של GitOps הוא ש-Git הוא ה-source of truth היחיד.\nכל שינוי עובר דרך Git, ו-ArgoCD מסנכרן את הקלאסטר בהתאם.\nהקלאסטר עצמו, ArgoCD UI, ו-Helm history הם רק השתקפות של המצב.",
           },
           {
-            q: "מהנדס עשה kubectl edit deployment ישירות על הקלאסטר.\nאחרי כמה דקות ArgoCD מציג את האפליקציה כ-OutOfSync.\n\nלמה?",
+            q: "מהנדס עשה `kubectl edit deployment` ישירות על הקלאסטר.\nאחרי כמה דקות ArgoCD מציג את האפליקציה כ-OutOfSync.\n\nלמה?",
             options: [
               "ArgoCD זיהה שהמצב בקלאסטר כבר לא תואם את Git",
-              "kubectl edit גרם ל-ArgoCD לעשות restart",
+              "`kubectl edit` גרם ל-ArgoCD לעשות restart",
               "ה-deployment נכשל כי ArgoCD חוסם שינויים ישירים",
               "ArgoCD מוחק אוטומטית שינויים שלא עברו דרך Git",
             ],
@@ -3718,12 +3718,12 @@ export const TOPICS = [
             q: "צוות רוצה לעשות rollback ל-version קודם של אפליקציה.\nהם משתמשים ב-GitOps עם ArgoCD.\n\nמה הדרך הנכונה?",
             options: [
               "ללחוץ Rollback ב-ArgoCD UI",
-              "להריץ kubectl rollout undo",
+              "להריץ `kubectl rollout undo`",
               "לעשות git revert ל-commit האחרון ולתת ל-ArgoCD לסנכרן",
               "למחוק את ה-Application ב-ArgoCD וליצור מחדש עם הגרסה הישנה",
             ],
             answer: 2,
-            explanation: "ב-GitOps, כל שינוי צריך לעבור דרך Git.\ngit revert יוצר commit חדש שמבטל את השינוי, ו-ArgoCD יסנכרן אוטומטית.\nkubectl rollout undo ו-ArgoCD Rollback עובדים, אבל יוצרים drift מ-Git.\nהמטרה היא לשמור על Git כ-source of truth.",
+            explanation: "ב-GitOps, כל שינוי צריך לעבור דרך Git.\ngit revert יוצר commit חדש שמבטל את השינוי, ו-ArgoCD יסנכרן אוטומטית.\n`kubectl rollout undo` ו-ArgoCD Rollback עובדים, אבל יוצרים drift מ-Git.\nהמטרה היא לשמור על Git כ-source of truth.",
           },
           {
             q: "ArgoCD Application מוגדר עם:\n\n```\nsource:\n  repoURL: https://github.com/org/app\n  targetRevision: main\n  path: deploy/production\n```\n\nמאיפה ArgoCD יקרא את ה-manifests?",
@@ -3748,7 +3748,7 @@ export const TOPICS = [
             explanation: "Synced = ה-manifests הוחלו בהצלחה, הקלאסטר תואם את Git.\nDegraded = יש בעיה ב-runtime, למשל Pod ב-CrashLoopBackOff או ImagePullBackOff.\nהבעיה היא לא ב-manifests עצמם אלא באפליקציה או ב-image.\nאם Git לא נגיש, ה-sync status היה Unknown, לא Synced.",
           },
           {
-            q: "מפתח דוחף שינוי ל-Git.\nArgoCD מוגדר עם auto-sync ו-self-heal.\n\nמהנדס אחר עושה kubectl edit ומשנה משהו ידנית בקלאסטר.\n\nמה יקרה?",
+            q: "מפתח דוחף שינוי ל-Git.\nArgoCD מוגדר עם auto-sync ו-self-heal.\n\nמהנדס אחר עושה `kubectl edit` ומשנה משהו ידנית בקלאסטר.\n\nמה יקרה?",
             options: [
               "השינוי הידני יישאר כי הוא נעשה אחרון",
               "ArgoCD יזהה את ה-drift ויחזיר את המצב למה שמוגדר ב-Git",
@@ -3779,12 +3779,12 @@ export const TOPICS = [
             q: "ArgoCD Application מוגדר עם Helm source:\n\n```\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nהמפתח רוצה לשנות את ה-image tag ל-v1.6.\n\nמה הדרך הנכונה ב-GitOps?",
             options: [
               "לשנות ב-ArgoCD UI את ה-parameter ישירות",
-              "להריץ helm upgrade עם --set image.tag=v1.6",
+              "להריץ `helm upgrade` עם --set image.tag=v1.6",
               "לעדכן את ה-values ב-Git ולעשות commit",
-              "לעשות kubectl set image על ה-deployment",
+              "לעשות `kubectl set image` על ה-deployment",
             ],
             answer: 2,
-            explanation: "ב-GitOps, כל שינוי צריך לעבור דרך Git.\nהדרך הנכונה היא לעדכן את ה-values בקובץ שנמצא ב-Git ולעשות commit.\nArgoCD ירנדר מחדש את ה-Helm chart עם ה-values החדשים ויסנכרן.\nשינוי דרך UI, helm upgrade, או kubectl עוקף את ה-GitOps flow.",
+            explanation: "ב-GitOps, כל שינוי צריך לעבור דרך Git.\nהדרך הנכונה היא לעדכן את ה-values בקובץ שנמצא ב-Git ולעשות commit.\nArgoCD ירנדר מחדש את ה-Helm chart עם ה-values החדשים ויסנכרן.\nשינוי דרך UI, `helm upgrade`, או `kubectl` עוקף את ה-GitOps flow.",
           },
           {
             q: "צוות משתמש ב-HPA שמשנה את מספר ה-replicas אוטומטית.\nArgoCD כל הזמן מציג OutOfSync כי replicas בקלאסטר שונה מ-Git.\n\nמה הפתרון?",
