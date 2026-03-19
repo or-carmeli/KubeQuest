@@ -475,7 +475,7 @@ export const TOPICS = [
               tags: ["daemonset-topology"],
               options: [
               "שה-Pod רץ פעם אחת עד להשלמה ולא מופעל מחדש. התנהגות של Job",
-              "ש-DaemonSet מבטיח ש-Pod אחד רץ על כל Node ב-Cluster",
+              "DaemonSet מבטיח ש-Pod אחד רץ על כל Node ב-Cluster",
               "שה-Pod רץ רק על Node שמסומן עם label מתאים דרך nodeSelector",
               "שה-Pod מופעל מחדש לפי לוח זמנים קבוע. התנהגות של CronJob",
 ],
