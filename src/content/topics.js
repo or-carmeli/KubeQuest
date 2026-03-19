@@ -2569,7 +2569,7 @@ export const TOPICS = [
                 "מציג צריכת CPU ו-Memory בזמן אמת של כל Node, כולל אחוז ניצול.\nדורש metrics-server מותקן ב-Cluster.\n`kubectl top pods` מציג את אותו מידע ברמת Pod.",
             },
             {
-              q: "כיצד בודקים health של ה-API server?",
+              q: "כיצד בודקים את ה-health של ה-API server\u200F?",
               options: [
               "`kubectl get --raw='/healthz'` (מחזיר ok אם בריא)",
               "`kubectl check apiserver`",
