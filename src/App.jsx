@@ -40,8 +40,9 @@ function StatIcon({ name, size = 15, color }) { const C = STAT_ICONS[name]; retu
 const ACHIEVEMENT_ICONS = { flame: FlameIcon, award: Award, star: Star, trophy: Trophy };
 function AchievementIcon({ name, size = 16, color }) { const C = ACHIEVEMENT_ICONS[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
 
-// Feature flag: Architecture Scenarios (dev only for now)
-const ARCHITECTURE_ENABLED = !import.meta.env.PROD;
+// Feature flag: Architecture Scenarios (secret URL param in prod)
+const ARCHITECTURE_ENABLED = !import.meta.env.PROD
+  || new URLSearchParams(window.location.search).has("arch");
 
 
 
@@ -379,7 +380,7 @@ const TRANSLATIONS = {
     incidentResumeBanner: "המשיכי את האירוע", incidentResumeBanner_m: "המשך את האירוע",
     incidentDiscard: "נטשי", incidentDiscard_m: "נטוש",
     incidentActiveLabel: "אירוע פעיל", incidentAvailableLabel: "אירועים זמינים",
-    incidentHeaderSub: "סימולציה של תקלות Kubernetes אמיתיות בזמן אמת.",
+    incidentHeaderSub: "סימולציה של תקלות קוברנטיס אמיתיות בזמן אמת.",
     incidentResumeBtn: "המשיכי חקירה", incidentResumeBtn_m: "המשך חקירה",
     incidentLocked: "נעול",
     incidentCompleted: "הושלם",
