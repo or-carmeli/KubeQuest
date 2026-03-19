@@ -22,13 +22,13 @@ import { captureError, setUserContext, setScreen as setTelemetryScreen } from ".
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
 import { TerminalBlock, YamlBlock, MONO_FONT, TERM_BG, TERM_TEXT, TERM_BORDER } from "./components/CodeBlocks";
-import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress } from "./api/quiz";
+import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress, fetchQuestionHint, fetchEliminateOption } from "./api/quiz";
 import StatusView from "./components/StatusView";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
 import TopicIcon from "./components/TopicIcon";
-import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon } from "lucide-react";
+import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon, Award } from "lucide-react";
 import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon, ArrowLeft, ArrowRight, CheckCircle, XOctagon, Lightbulb, PartyPopper, Clock } from "lucide-react";
 const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: FlameIcon, mixed: ShuffleIcon, daily: CalendarIcon };
 const CHEAT_ICON_MAP = { search: SearchIcon, folder: FolderOpen, bug: Bug, "scroll-text": ScrollText, terminal: Terminal, globe: GlobeIcon, settings: SettingsIcon, "trending-up": TrendingUp, trash: TrashIcon };
@@ -36,6 +36,8 @@ function CheatIcon({ name, size = 16, color }) { const C = CHEAT_ICON_MAP[name];
 function LevelIcon({ name, size = 13, color }) { const C = LEVEL_ICON_MAP[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
 const STAT_ICONS = { star: Star, target: Target, trophy: Trophy, flame: FlameIcon };
 function StatIcon({ name, size = 15, color }) { const C = STAT_ICONS[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
+const ACHIEVEMENT_ICONS = { flame: FlameIcon, award: Award, star: Star, trophy: Trophy };
+function AchievementIcon({ name, size = 16, color }) { const C = ACHIEVEMENT_ICONS[name]; return C ? <C size={size} strokeWidth={1.5} color={color} style={{flexShrink:0}} /> : null; }
 
 // Feature flag: Architecture Scenarios (dev only for now)
 const ARCHITECTURE_ENABLED = !import.meta.env.PROD;
@@ -1271,6 +1273,9 @@ export default function K8sQuestApp() {
   const nextBtnRef    = useRef(null); // focus target after submitting an answer
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [hintVisible, setHintVisible]         = useState(false);
+  const [serverHintText, setServerHintText]   = useState(null);
+  const [hintLoading, setHintLoading]         = useState(false);
+  const [eliminateLoading, setEliminateLoading] = useState(false);
   const [eliminatedOption, setEliminatedOption] = useState(null);
   const [resumeData, setResumeData] = useState(null);
   const [showResumeModal, setShowResumeModal] = useState(false);
@@ -2571,7 +2576,7 @@ export default function K8sQuestApp() {
     topicCorrectRef.current = Number(saved.topicCorrect) || 0;
     quizRunIdRef.current    = saved.quizRunId;
     liveIndexRef.current    = safeIndex;
-    setHintVisible(false);
+    setHintVisible(false); setServerHintText(null);
     setEliminatedOption(null);
     setTryAgainActive(false);
     setTryAgainSelected(null);
@@ -3172,19 +3177,30 @@ export default function K8sQuestApp() {
   useEffect(() => {
     setTryAgainActive(false);
     setTryAgainSelected(null);
-    setHintVisible(false);
+    setHintVisible(false); setServerHintText(null);
     setEliminatedOption(null);
   }, [questionIndex]);
 
-  const handleEliminate = () => {
-    if (eliminatedOption !== null || submitted) return;
+  const handleEliminate = async () => {
+    if (eliminatedOption !== null || submitted || eliminateLoading) return;
     const q = currentQuestions[questionIndex];
-    if (typeof q.answer !== "number") return; // Not available in online mode
-    const wrong = q.options
-      .map((_, i) => i)
-      .filter(i => i !== q.answer && (selectedAnswer === null || i !== selectedAnswer));
-    if (!wrong.length) return;
-    setEliminatedOption(wrong[Math.floor(Math.random() * wrong.length)]);
+    // Local question - eliminate client-side
+    if (typeof q.answer === "number") {
+      const wrong = q.options.map((_, i) => i).filter(i => i !== q.answer && (selectedAnswer === null || i !== selectedAnswer));
+      if (!wrong.length) return;
+      setEliminatedOption(wrong[Math.floor(Math.random() * wrong.length)]);
+      return;
+    }
+    // Server question - fetch from RPC
+    if (supabase && q.id) {
+      setEliminateLoading(true);
+      try {
+        const source = selectedTopic?.id === "daily" ? "daily" : "quiz";
+        const res = await fetchEliminateOption(supabase, q.id, source, selectedAnswer ?? -1);
+        if (res?.eliminate >= 0) setEliminatedOption(res.eliminate);
+      } catch (err) { console.warn("[eliminate]", err); }
+      finally { setEliminateLoading(false); }
+    }
   };
 
   const updateDailyStreak = () => {
@@ -4164,7 +4180,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
       {showConfetti&&!a11y.reduceMotion&&<Confetti/>}
-      {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid var(--glass-10)",borderRadius:10,padding:"8px 16px",display:"flex",alignItems:"center",gap:9,zIndex:9999,boxShadow:"0 0 16px rgba(0,212,255,0.08), 0 2px 10px rgba(0,0,0,0.35)",animation:"toast 0.3s ease",direction:dir}}><span aria-hidden="true" style={{fontSize:15,lineHeight:1,flexShrink:0}}>{newAchievement.icon}</span><span style={{color:"var(--text-bright)",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>{getLocalizedField(newAchievement,"name",lang)}</span></div>}
+      {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid var(--glass-10)",borderRadius:10,padding:"8px 16px",display:"flex",alignItems:"center",gap:9,zIndex:9999,boxShadow:"0 0 16px rgba(0,212,255,0.08), 0 2px 10px rgba(0,0,0,0.35)",animation:"toast 0.3s ease",direction:dir}}><span aria-hidden="true" style={{lineHeight:1,flexShrink:0,display:"flex",alignItems:"center"}}><AchievementIcon name={newAchievement.icon} size={15} color="var(--text-bright)" /></span><span style={{color:"var(--text-bright)",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>{getLocalizedField(newAchievement,"name",lang)}</span></div>}
       {saveError&&<div role="alert" aria-live="assertive" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
       {resumeToast&&<div role="status" aria-live="polite" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid rgba(0,212,255,0.35)",borderRadius:12,padding:"10px 20px",color:"#00D4FF",fontSize:13,fontWeight:600,zIndex:9999,boxShadow:"0 0 20px rgba(0,212,255,0.15)",animation:"fadeIn 0.3s ease",whiteSpace:"nowrap"}}>{t("resumeToast")}</div>}
 
@@ -4865,7 +4881,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               </section>
             );})}
           </div>);})()}
-          {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><span>{a.icon}</span>{getLocalizedField(a, "name", lang)}</div>)}</div></div>}
+          {unlockedAchievements.length>0&&<div style={{marginTop:18,background:"var(--glass-2)",border:"1px solid var(--glass-5)",borderRadius:12,padding:"14px 18px"}}><div style={{color:"var(--text-secondary)",fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:1}}>{t("achievementsTitle")}</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:6,background:"var(--glass-4)",borderRadius:20,padding:"5px 12px",fontSize:12,color:"var(--text-secondary)"}}><AchievementIcon name={a.icon} size={14} color="var(--text-secondary)" />{getLocalizedField(a, "name", lang)}</div>)}</div></div>}
           </>)}
           {homeTab==="roadmap"&&<RoadmapView topics={TOPICS.filter(t=>!t.devOnly||!import.meta.env.PROD)} levelConfig={LEVEL_CONFIG} completedTopics={completedTopics} isLevelLocked={isLevelLocked} startTopic={(topic,lvl)=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")} startMixedQuiz={()=>tryStartQuiz(startMixedQuiz,"mixed")} lang={lang} t={t} dir={dir} isGuest={isGuest} onSignup={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("signup");setUser(null);try{window.va?.track?.("signup_clicked",{source:"roadmap"})}catch{}}} onLogin={()=>{try{localStorage.removeItem("k8s_guest_session")}catch{}setAuthScreen("login");setUser(null);try{window.va?.track?.("login_clicked",{source:"roadmap"})}catch{}}}/>}
           <Footer lang={lang} onPrivacy={()=>setScreen("privacy")} onTerms={()=>setScreen("terms")}/>
@@ -5344,27 +5360,36 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 )}
               </div>
 
-              {!dispSubmitted&&!isInHistoryMode&&!tryAgainActive&&!isInterviewMode&&typeof currentQuestions[questionIndex]?.answer==="number"&&(
+              {!dispSubmitted&&!isInHistoryMode&&!tryAgainActive&&!isInterviewMode&&(typeof currentQuestions[questionIndex]?.answer==="number"||currentQuestions[questionIndex]?.id)&&(
                 <div style={{marginBottom:10}}>
                   <div style={{display:"flex",gap:6,marginBottom:6}}>
                     <button
-                      onClick={()=>setHintVisible(true)}
-                      disabled={hintVisible}
+                      onClick={async()=>{
+                        const q=currentQuestions[questionIndex];
+                        if(typeof q.answer==="number"){setHintVisible(true);return;}
+                        if(supabase&&q.id&&!hintLoading){
+                          setHintLoading(true);
+                          try{const source=selectedTopic?.id==="daily"?"daily":"quiz";const res=await fetchQuestionHint(supabase,q.id,source);if(res?.hint){setServerHintText(res.hint);setHintVisible(true);}}
+                          catch(err){console.warn("[hint]",err);}
+                          finally{setHintLoading(false);}
+                        }
+                      }}
+                      disabled={hintVisible||hintLoading}
                       aria-pressed={hintVisible}
-                      style={{flex:1,padding:"7px 10px",background:"rgba(245,158,11,0.07)",border:`1px solid ${hintVisible?"rgba(245,158,11,0.4)":"rgba(245,158,11,0.18)"}`,borderRadius:8,color:hintVisible?"#F59E0B":"#d97706",fontSize:12,cursor:hintVisible?"default":"pointer",fontWeight:hintVisible?700:400,transition:"all 0.15s"}}>
-                      {t("hint")}{hintVisible?" ✓":""}
+                      style={{flex:1,padding:"7px 10px",background:"rgba(245,158,11,0.07)",border:`1px solid ${hintVisible?"rgba(245,158,11,0.4)":"rgba(245,158,11,0.18)"}`,borderRadius:8,color:hintVisible?"#F59E0B":"#d97706",fontSize:12,cursor:hintVisible||hintLoading?"default":"pointer",fontWeight:hintVisible?700:400,transition:"all 0.15s"}}>
+                      {hintLoading?"...":t("hint")}{hintVisible?" ✓":""}
                     </button>
                     <button
                       onClick={handleEliminate}
-                      disabled={eliminatedOption!==null}
+                      disabled={eliminatedOption!==null||eliminateLoading}
                       aria-pressed={eliminatedOption!==null}
-                      style={{flex:1,padding:"7px 10px",background:"rgba(239,68,68,0.07)",border:`1px solid ${eliminatedOption!==null?"rgba(239,68,68,0.4)":"rgba(239,68,68,0.18)"}`,borderRadius:8,color:eliminatedOption!==null?"#EF4444":"#dc2626",fontSize:12,cursor:eliminatedOption!==null?"default":"pointer",fontWeight:eliminatedOption!==null?700:400,transition:"all 0.15s"}}>
-                      {t("eliminate")}{eliminatedOption!==null?" ✓":""}
+                      style={{flex:1,padding:"7px 10px",background:"rgba(239,68,68,0.07)",border:`1px solid ${eliminatedOption!==null?"rgba(239,68,68,0.4)":"rgba(239,68,68,0.18)"}`,borderRadius:8,color:eliminatedOption!==null?"#EF4444":"#dc2626",fontSize:12,cursor:eliminatedOption!==null||eliminateLoading?"default":"pointer",fontWeight:eliminatedOption!==null?700:400,transition:"all 0.15s"}}>
+                      {eliminateLoading?"...":t("eliminate")}{eliminatedOption!==null?" ✓":""}
                     </button>
                   </div>
                   {hintVisible&&(
                     <div role="note" dir={dir} style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"11px 14px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,unicodeBidi:"isolate",wordBreak:"break-word",overflowWrap:"anywhere",animation:"fadeIn 0.2s ease"}}>
-                      {renderBidiBlock((currentQuestions[questionIndex]?.explanation || "").split(/\.\s+/)[0], lang)}
+                      {renderBidiBlock(serverHintText||(currentQuestions[questionIndex]?.explanation || "").split(/\.\s+/)[0], lang)}
                     </div>
                   )}
                 </div>
@@ -5392,30 +5417,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     else if (isChosen)          { borderColor = "#EF4444"; bg = "rgba(239,68,68,0.1)";   color = "#EF4444"; labelBg = "rgba(239,68,68,0.2)";   labelColor = "#EF4444"; }
                   }
                   const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
-                  const isCodeOption = !hasHebrew(opt) && /^(kubectl|helm|docker|kubeadm|crictl|etcdctl)\s/.test(opt.trim());
-                  const hasMixedCode = !isCodeOption && /`[^`]+`/.test(opt);
                   return (
                     <button key={opt} className="opt-btn"
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
                       dir={dir}
-                      style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:isCodeOption?13:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46,overflow:"hidden"}}>
+                      style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:dir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46,overflow:"hidden"}}>
                       <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      {isCodeOption
-                        ? <span dir="ltr" style={{flex:1,minWidth:0,lineHeight:1.55,unicodeBidi:"isolate"}}>
-                            <span className="opt-cmd-scroll" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"#0d1117",borderRadius:4,padding:"5px 10px",fontFamily:"'JetBrains Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"#c9d1d9"}}>{renderBidi(opt,lang)}</span>
-                          </span>
-                        : hasMixedCode
-                        ? <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>
-                            {opt.split(/`([^`]+)`/).map((part, j) => {
-                              if (j % 2 === 1) return <span key={j} className="opt-cmd-scroll" dir="ltr" style={{display:"block",overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",maxWidth:"100%",background:"#0d1117",borderRadius:4,padding:"5px 10px",marginTop:4,marginBottom:4,fontFamily:"'JetBrains Mono','Fira Code','Cascadia Code',monospace",fontSize:12,letterSpacing:-0.3,direction:"ltr",textAlign:"left",color:"#c9d1d9",unicodeBidi:"isolate"}}>{part}</span>;
-                              if (!part.trim()) return null;
-                              return <span key={j}>{renderBidi(part, lang)}</span>;
-                            })}
-                          </span>
-                        : <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang)}</span>
-                      }
+                      <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang)}</span>
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:16,height:16,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
                       {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✓</span>}
                       {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✗</span>}
@@ -5667,7 +5677,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 setTopicScreen("quiz");
                 setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
                 setShowExplanation(false); setAnswerResult(null);
-                setHintVisible(false); setEliminatedOption(null);
+                setHintVisible(false); setServerHintText(null); setEliminatedOption(null);
                 setTryAgainActive(false); setTryAgainSelected(null);
                 topicCorrectRef.current=0; lastSessionScoreRef.current=0; bestImprovedRef.current=true;
                 liveIndexRef.current=0;
