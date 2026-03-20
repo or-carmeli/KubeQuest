@@ -1966,7 +1966,7 @@ export const TOPICS = [
                 "RWO מאפשר mount לקריאה וכתיבה מ-Node אחד בלבד. מתאים לרוב ה-databases.\nRWX מאפשר כמה Nodes במקביל (דורש NFS/EFS).\nROX:\u200E קריאה בלבד ממספר Nodes.",
             },
             {
-              q: "מה תפקיד Helm Chart?",
+              q: "מה תפקיד Helm Chart\u200F?",
               options: [
               "שכבת רשת וירטואלית שמחברת Pods ב-Cluster דרך CNI plugin",
               "Docker image מותאם שכולל Kubernetes manifests בתוך ה-layers שלו",
@@ -1978,7 +1978,7 @@ export const TOPICS = [
                 "Helm הוא package manager ל-Kubernetes. כמו apt או npm.\nChart הוא חבילה של YAML templates עם ערכי ברירת מחדל ב-values.yaml.\nבמקום לנהל עשרות קבצי YAML, מתקינים Chart אחד ומגדירים עם values.",
             },
             {
-              q: "מה הפקודה להתקנת Helm Chart?",
+              q: "מה הפקודה להתקנת Helm Chart\u200F?",
               options: [
               "`helm upgrade`",
               "`helm template`",
@@ -2026,7 +2026,7 @@ export const TOPICS = [
                 "emptyDir שורד restarts של קונטיינרים בתוך אותו Pod.\nברגע שה-Pod נמחק או מועבר ל-Node אחר, הנתונים נמחקים לחלוטין.",
             },
             {
-              q: "מה תפקיד values.yaml ב-Helm Chart?",
+              q: "מה תפקיד values.yaml ב-Helm Chart\u200F?",
               options: [
               "קובץ שמגדיר כללי RBAC עבור ה-Release שנוצר מ-Chart",
               "קובץ שמכיל secrets מוצפנים שה-Chart משתמש בהם בזמן deploy",
@@ -2168,7 +2168,7 @@ export const TOPICS = [
                 "כשה-PVC נמחק, גם ה-PV והדיסק הפיזי (EBS, GCP PD) נמחקים אוטומטית.\nRetain לעומת זאת משמר את ה-PV והנתונים גם אחרי מחיקת ה-PVC.\nאין backup אוטומטי לפני מחיקה, לכן חשוב לגבות מראש בסביבות production.",
             },
             {
-              q: "איך עוקפים ערך מ-values.yaml בזמן התקנת Helm Chart?",
+              q: "איך עוקפים ערך מ-values.yaml בזמן התקנת Helm Chart\u200F?",
               options: [
               "`helm template --set key=value`",
               "`helm rollback --set key=value`",
