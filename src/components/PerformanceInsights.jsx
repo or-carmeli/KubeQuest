@@ -248,7 +248,7 @@ const T = {
     zeroMsNote: "0ms values indicate DNS caching or connection reuse by the browser.",
   },
   he: {
-    title: "תובנות ביצועים",
+    title: "Performance Insights",
     devOnly: "Dev Only",
     p95Latency: "P95 LATENCY", p95Desc: "95th percentile - response time of 95% of requests",
     errorRate: "ERROR RATE", errorRateDesc: "Percentage of failed requests",
@@ -349,7 +349,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
 
   // Time context
   const agoSec = lastUpdated ? Math.max(0, Math.round((Date.now() - lastUpdated.getTime()) / 1000)) : null;
-  const rangeLabel = activeRange.sec != null ? (lang === "he" ? `${t("last")} ${activeRange.label}` : `Last ${activeRange.label}`) : "Session";
+  const rangeLabel = activeRange.sec != null ? `Last ${activeRange.label}` : "Session";
   const timeContextText = agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s` : rangeLabel;
 
   if (!data) return <Skeleton />;
@@ -362,11 +362,11 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   ];
 
   return (
-    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: dir }}>
+    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
 
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-        <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center" }}>
+        <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", order: dir === "rtl" ? 99 : 0 }}>
           <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>{t("title")}</span>
