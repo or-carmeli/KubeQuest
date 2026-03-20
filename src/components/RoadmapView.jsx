@@ -2,7 +2,7 @@ import { useState } from "react";
 import { getLocalizedField } from "../utils/i18n";
 import { EXPERIMENTAL_ENABLED } from "../utils/experimentalMode";
 import TopicIcon from "./TopicIcon";
-import { Lock, CheckCircle2, Zap, Triangle, Flame, RotateCcw } from "lucide-react";
+import { Lock, CheckCircle2, Zap, Triangle, Flame } from "lucide-react";
 
 const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: Flame };
 
@@ -169,19 +169,7 @@ export default function RoadmapView({
                 borderRadius:14,
                 padding:"12px 14px",
                 transition:"opacity 0.2s,border-color 0.2s",
-                position:"relative",
               }}>
-
-                {/* Review button – top corner */}
-                {completed&&(
-                  <button onClick={(e)=>{e.stopPropagation();startTopic(topic,"easy");}}
-                    aria-label={t("roadmapReview")}
-                    style={{position:"absolute",top:8,[dir==="rtl"?"left":"right"]:8,background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:8,color:"#10B981",cursor:"pointer",padding:6,display:"flex",alignItems:"center",justifyContent:"center",transition:"transform 0.15s,background 0.15s",zIndex:1}}
-                    onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.background="rgba(16,185,129,0.15)";}}
-                    onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.background="rgba(16,185,129,0.08)";}}>
-                    <RotateCcw size={14} strokeWidth={2} />
-                  </button>
-                )}
 
                 {/* Stage header */}
                 <button
