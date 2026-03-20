@@ -1813,7 +1813,7 @@ export const TOPICS = [
                 "Kyverno admission webhook חוסם images שלא מ-gcr.io/. policy-as-code.\nלשנות את ה-image למקור מ-gcr.io/ או לעדכן את ה-policy.\n• API crash = לא הייתה הודעת שגיאה • RBAC = \"forbidden\" לא \"webhook denied\" • Namespace missing = שגיאה אחרת.\nAdmission webhook רץ לפני שמירה ב-etcd ויכול לחסום כל create/update.",
             },
             {
-              q: "ה-PSA מוגדר עם enforce=restricted. Deployment נדחה:\n\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n\nמה מוסיפים ל-spec של ה-container?",
+              q: "ה-PSA מוגדר עם enforce=restricted. Deployment נדחה:\n\n```\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n```\n\nמה מוסיפים ל-spec של ה-container?",
               options: [
               "securityContext: {privileged: true, runAsUser: 0, capabilities: {add: [NET_ADMIN]}}",
               "securityContext: {allowPrivilegeEscalation: false, runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}",
@@ -1911,7 +1911,7 @@ export const TOPICS = [
                 "Kyverno admission webhook blocks images not from gcr.io/. Policy-as-code enforcement.\nChange the image to one from gcr.io/ or update the Kyverno policy.\n• API crash = no structured error message • RBAC = \"forbidden\" not \"webhook denied\" • Missing namespace = different error.\nAdmission webhooks run before etcd save and can block any create/update request.",
             },
             {
-              q: "PSA is set to enforce=restricted. A Deployment is rejected:\n\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n\nWhat must you add to the container spec?",
+              q: "PSA is set to enforce=restricted. A Deployment is rejected:\n\n```\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n```\n\nWhat must you add to the container spec?",
               options: [
               "securityContext: {privileged: true, runAsUser: 0, capabilities: {add: [NET_ADMIN]}}",
               "securityContext: {allowPrivilegeEscalation: false, runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}",
@@ -1935,7 +1935,7 @@ export const TOPICS = [
     descriptionEn: "PV · StorageClass · Helm · Operators",
     levels: {
       easy: {
-        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 PV:\u200E יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 PVC:\u200E בקשה לאחסון מ-Pod\n🔹 Helm Chart:\u200E חבילה של Kubernetes manifests עם templates\n🔹 helm install:\u200E מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
+        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 \u200FPV\u200F: יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 \u200FPVC\u200F: בקשה לאחסון מ-Pod\n🔹 \u200FHelm Chart\u200F: חבילה של Kubernetes manifests עם templates\n🔹 \u200Fhelm install\u200F: מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         theoryEn: "PersistentVolumes and Helm Basics\n🔹 PersistentVolume (PV) - a storage resource in the cluster, provisioned by an administrator.\n🔹 PersistentVolumeClaim (PVC) - a request by a Pod for a specific amount of storage.\n🔹 Helm Chart - a package of Kubernetes manifests with configurable templates.\n🔹 `helm install` - deploys a Chart to the cluster and creates a named Release.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         questions: [
             {
