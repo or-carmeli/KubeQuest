@@ -1218,7 +1218,7 @@ export default function K8sQuestApp() {
   const [timeLeft, setTimeLeft]                         = useState(TIMER_DURATIONS.easy);
   const [isInterviewMode, setIsInterviewMode]           = useState(() => safeGetItem("isInterviewMode_v1") === "true");
   const [homeTab, setHomeTab]                           = useState("roadmap");
-  const [showConfetti, setShowConfetti]                 = useState(false);
+  const [showConfetti, setShowConfetti]                 = useState(null);
   const [mixedQuestions, setMixedQuestions]             = useState([]);
   const [sessionScore, setSessionScore]                 = useState(0);
   const [retryMode, setRetryMode]                       = useState(false);
@@ -2300,7 +2300,14 @@ export default function K8sQuestApp() {
     if (!supabase || isGuest || !user?.id || user.id === "guest") return;
     try {
       const rankData = await fetchUserRank(supabase, user.id);
-      if (rankData) setUserRank(rankData);
+      if (rankData) {
+        setUserRank(prev => {
+          if (prev && rankData.rank && prev.rank && rankData.rank < prev.rank) {
+            setShowConfetti("rare"); setTimeout(() => setShowConfetti(null), 2200);
+          }
+          return rankData;
+        });
+      }
     } catch {}
   };
 
@@ -2989,7 +2996,7 @@ export default function K8sQuestApp() {
           const r = newCompleted[`${selectedTopic.id}_${lvl}`];
           return r && r.correct === r.total;
         });
-        if (allPerfect) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 2000); }
+        if (allPerfect) { setShowConfetti("success"); setTimeout(() => setShowConfetti(null), 2000); }
       }
       updateDailyStreak();
       window.va?.track?.("quiz_completed", { score: finalCorrect, totalQuestions: currentQuestions.length, topic: selectedTopic?.name || selectedTopic?.id });
@@ -3201,6 +3208,7 @@ export default function K8sQuestApp() {
     }
   };
 
+  const STREAK_MILESTONES = new Set([7, 14, 30]);
   const updateDailyStreak = () => {
     const today = getTodayLocal();
     setDailyStreak(prev => {
@@ -3211,6 +3219,9 @@ export default function K8sQuestApp() {
         const todayDate = new Date(today + "T12:00:00");
         const diffDays = Math.round((todayDate - prevDate) / 86400000);
         if (diffDays === 1) newStreak = (prev.streak || 0) + 1;
+      }
+      if (STREAK_MILESTONES.has(newStreak)) {
+        setShowConfetti("subtle"); setTimeout(() => setShowConfetti(null), 1500);
       }
       const next = { date: today, streak: newStreak };
       try { localStorage.setItem("daily_streak_v1", JSON.stringify(next)); } catch {}
@@ -4177,7 +4188,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {theme==="dark"&&<><div style={{position:"fixed",top:0,left:0,right:0,height:"55vh",pointerEvents:"none",background:"radial-gradient(ellipse 90% 55% at 50% 0%,rgba(0,212,255,0.05) 0%,transparent 70%)"}}/>
       <div style={{position:"fixed",top:"8%",left:"50%",transform:"translateX(-50%)",width:"70%",maxWidth:560,height:"35vh",pointerEvents:"none",background:"radial-gradient(ellipse at 50% 35%,rgba(0,212,255,0.035) 0%,rgba(99,102,241,0.025) 45%,transparent 72%)",filter:"blur(50px)"}}/></>}
       {flash&&!a11y.reduceMotion&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:800,background:"radial-gradient(circle at 50% 45%,rgba(16,185,129,0.14) 0%,transparent 60%)",animation:"correctFlash 0.6s ease forwards"}}/>}
-      {showConfetti&&!a11y.reduceMotion&&<ConfettiEffect variant="success"/>}
+      {showConfetti&&!a11y.reduceMotion&&<ConfettiEffect variant={showConfetti}/>}
       {newAchievement&&<div role="alert" aria-live="assertive" style={{position:"fixed",top:12,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid var(--glass-10)",borderRadius:10,padding:"8px 16px",display:"flex",alignItems:"center",gap:9,zIndex:9999,boxShadow:"0 0 16px rgba(0,212,255,0.08), 0 2px 10px rgba(0,0,0,0.35)",animation:"toast 0.3s ease",direction:dir}}><span aria-hidden="true" style={{lineHeight:1,flexShrink:0,display:"flex",alignItems:"center"}}><AchievementIcon name={newAchievement.icon} size={15} color="var(--text-bright)" /></span><span style={{color:"var(--text-bright)",fontSize:13,fontWeight:600,whiteSpace:"nowrap"}}>{getLocalizedField(newAchievement,"name",lang)}</span></div>}
       {saveError&&<div role="alert" aria-live="assertive" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"rgba(239,68,68,0.12)",border:"1px solid #EF444455",borderRadius:10,padding:"10px 18px",color:"#EF4444",fontSize:13,zIndex:9999}}>{saveError}</div>}
       {resumeToast&&<div role="status" aria-live="polite" style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,var(--bg-elevated),var(--bg-card))",border:"1px solid rgba(0,212,255,0.35)",borderRadius:12,padding:"10px 20px",color:"#00D4FF",fontSize:13,fontWeight:600,zIndex:9999,boxShadow:"0 0 20px rgba(0,212,255,0.15)",animation:"fadeIn 0.3s ease",whiteSpace:"nowrap"}}>{t("resumeToast")}</div>}
