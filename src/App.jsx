@@ -399,7 +399,7 @@ const TRANSLATIONS = {
     removeBookmark: "הסרי", removeBookmark_m: "הסר",
     bookmark: "☆ שמרי", bookmarkActive: "★ שמורה",
     bookmark_m: "☆ שמור", bookmarkActive_m: "★ שמור",
-    searchBtn: "חיפוש", searchPlaceholder: "חיפוש שאלות, פקודות, תרחישים...", searchNoResults: "לא נמצאו תוצאות",
+    searchBtn: "חיפוש", searchPlaceholder: "חפש פקודות, תקלות ותרחישים", searchNoResults: "לא נמצאו תוצאות",
     mistakesBtn: "תרגול טעויות", mistakesEmpty: "אין טעויות! כל הכבוד", mistakesHint: "שאלות שטעית בהן",
     guideBtn: "פקודות", guideSub: "פקודות kubectl מוכנות להעתקה. לחצו לפתיחה", aboutBtn: "אודות האפליקציה",
     privacyBtn: "מדיניות פרטיות", termsBtn: "תנאי שימוש",
@@ -613,7 +613,7 @@ const TRANSLATIONS = {
     startSavedQuiz: "▶ Practice Saved Questions",
     removeBookmark: "Remove",
     bookmark: "☆ Save", bookmarkActive: "★ Saved",
-    searchBtn: "Search", searchPlaceholder: "Search questions, commands, scenarios...", searchNoResults: "No results found",
+    searchBtn: "Search", searchPlaceholder: "Search commands, incidents, and scenarios", searchNoResults: "No results found",
     mistakesBtn: "My Mistakes", mistakesEmpty: "No mistakes! Great job", mistakesHint: "Questions you answered incorrectly",
     guideBtn: "Commands", guideSub: "Copy-ready kubectl commands. Tap to expand", aboutBtn: "About the App",
     privacyBtn: "Privacy Policy", termsBtn: "Terms of Service",
@@ -1243,6 +1243,9 @@ export default function K8sQuestApp() {
   const [deferredPrompt, setDeferredPrompt]             = useState(null);
   const [isAppInstalled, setIsAppInstalled]             = useState(false);
   const [searchQuery, setSearchQuery]                   = useState("");
+  const [searchFocused, setSearchFocused]               = useState(false);
+  const [rotatingIdx, setRotatingIdx]                   = useState(0);
+  const SEARCH_EXAMPLES = ["kubectl logs", "CrashLoopBackOff", "readiness probe", "NetworkPolicy", "ArgoCD", "kubectl describe", "ImagePullBackOff", "HPA autoscaling"];
   const [expandedGuideSection, setExpandedGuideSection] = useState(null);
   const [copiedCmd, setCopiedCmd]                       = useState(null);  // tracks last copied command for visual feedback
   const [answerResult, setAnswerResult]                 = useState(null); // { correct, correctIndex, explanation } - set after server-side validation
@@ -1295,6 +1298,13 @@ export default function K8sQuestApp() {
   // ── Telemetry context (safe metadata only) ────────────────────────────────
   useEffect(() => { setUserContext({ isGuest }); }, [isGuest]);
   useEffect(() => { setTelemetryScreen(screen); if (import.meta.env.DEV) recordRouteChange(screen); }, [screen]);
+
+  // ── Rotating search placeholder ──────────────────────────────────────────
+  useEffect(() => {
+    if (screen !== "search" || searchQuery || searchFocused) return;
+    const timer = setInterval(() => setRotatingIdx(i => (i + 1) % SEARCH_EXAMPLES.length), 2800);
+    return () => clearInterval(timer);
+  }, [screen, searchQuery, searchFocused]);
 
   // ── War Room (Incident) state ─────────────────────────────────────────────
   const [selectedIncident,   setSelectedIncident]   = useState(null);
@@ -4855,7 +4865,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
                   <div aria-hidden="true" style={{width:44,height:44,borderRadius:10,background:`${topic.color}14`,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${topic.color}22`,flexShrink:0}}><TopicIcon name={topic.icon} size={22} color={topic.color} /></div>
                   <div style={{flex:1}}>
-                    <h3 style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",direction:dir}}><span style={{unicodeBidi:"isolate"}}>{topic.name}</span>{topic.isComingSoon&&!EXPERIMENTAL_ENABLED&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(234,179,8,0.25)"}}>COMING SOON</span>}{topic.isNew&&!topic.isComingSoon&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(99,102,241,0.35)"}}>NEW</span>}</h3>
+                    <h3 dir="ltr" style={{margin:0,fontWeight:700,color:"var(--text-primary)",fontSize:15,textAlign:"center"}}>{(topic.isComingSoon&&!EXPERIMENTAL_ENABLED)&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,border:"1px solid rgba(234,179,8,0.25)",display:"inline-block",verticalAlign:"middle",position:"relative",top:-1,marginRight:6}}>COMING SOON</span>}{(topic.isNew&&!topic.isComingSoon)&&<span style={{background:"rgba(99,102,241,0.25)",color:"#818CF8",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,border:"1px solid rgba(99,102,241,0.35)",display:"inline-block",verticalAlign:"middle",position:"relative",top:-1,marginRight:6}}>NEW</span>}{topic.name}</h3>
                     <div style={{color:"var(--text-dim)",fontSize:12}}>{getLocalizedField(topic, "description", lang)}</div>
                   </div>
                   {(()=>{const done=LEVEL_ORDER.filter(lvl=>completedTopics[`${topic.id}_${lvl}`]).length;return done>0&&<div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -4906,10 +4916,22 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             {dir==="rtl"?"→":"←"}
           </button>
           <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
-          <input type="search" autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}
-            placeholder={t("searchPlaceholder")} dir={dir}
-            style={{width:"100%",padding:"12px 14px",background:"var(--glass-5)",border:"1px solid var(--glass-12)",borderRadius:10,color:"var(--text-primary)",fontSize:14,marginBottom:20,outline:"none",fontFamily:"inherit"}}
-          />
+          <div style={{position:"relative",marginBottom:20}}>
+            <Search size={16} strokeWidth={2} style={{position:"absolute",top:"50%",transform:"translateY(-50%)",[dir==="rtl"?"right":"left"]:14,color:searchFocused?"var(--text-secondary)":"var(--text-dim)",transition:"color 0.2s",pointerEvents:"none",zIndex:1}} />
+            <input type="search" autoFocus value={searchQuery}
+              onChange={e=>setSearchQuery(e.target.value)}
+              onFocus={()=>setSearchFocused(true)}
+              onBlur={()=>setSearchFocused(false)}
+              placeholder={searchQuery?"":t("searchPlaceholder")} dir={dir}
+              style={{width:"100%",padding:"12px 14px",boxSizing:"border-box",[dir==="rtl"?"paddingRight":"paddingLeft"]:40,background:searchFocused?"var(--glass-8)":"var(--glass-5)",border:searchFocused?"1px solid var(--glass-20)":"1px solid var(--glass-12)",borderRadius:12,color:"var(--text-primary)",fontSize:14,outline:"none",fontFamily:"inherit",transition:"background 0.2s, border-color 0.2s, box-shadow 0.2s",boxShadow:searchFocused?"0 0 0 3px var(--glass-6)":"none"}}
+            />
+            {!searchQuery&&!searchFocused&&(
+              <span style={{position:"absolute",top:"50%",transform:"translateY(-50%)",[dir==="rtl"?"right":"left"]:40,color:"var(--text-dim)",fontSize:13,pointerEvents:"none",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap",overflow:"hidden"}}>
+                <span style={{opacity:0.5}}>{lang==="en"?"e.g.":"למשל"}</span>
+                <span key={rotatingIdx} style={{fontFamily:MONO_FONT,fontSize:12,color:"var(--text-muted)",animation:"fadeIn 0.4s ease"}}>{SEARCH_EXAMPLES[rotatingIdx]}</span>
+              </span>
+            )}
+          </div>
           {searchQuery.trim().length>=2&&(()=>{
             const q=searchQuery.toLowerCase();
             const allResults=[];
