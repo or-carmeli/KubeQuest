@@ -227,7 +227,7 @@ const T = {
     session: "SESSION", routesVisited: "ROUTES VISITED",
     quizzesStarted: "QUIZZES STARTED", completed: "COMPLETED",
     completionRate: "COMPLETION RATE", retries: "RETRIES",
-    statusIdle: (range) => `המערכת פעילה - אין תעבורה ב-${range}`,
+    statusIdle: (range) => `System idle \u00b7 No traffic in ${range}`,
     statusHealthy: "Healthy", statusDegraded: "Degraded", statusUnhealthy: "Unhealthy",
     statusHealthyLow: "Healthy (low confidence)",
     confidenceLow: "Low confidence", confidenceMed: "Medium", confidenceHigh: "High",
