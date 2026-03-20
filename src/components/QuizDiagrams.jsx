@@ -558,31 +558,28 @@ function RoleScopeDiagram() {
 
 // ── 20. PSA Restricted Requirements ─────────────────────────────────
 function PsaAdmissionDiagram() {
-  const kvRow = (k, v, opts = {}) => (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding: "0 2px", ...opts.style }}>
-      <span style={{ fontSize: opts.dim ? 8 : 9, fontFamily: MONO, color: opts.dim ? "rgba(255,255,255,0.35)" : C.redText, fontWeight: opts.dim ? 500 : 600 }}>{k}</span>
-      <span style={{ fontSize: opts.dim ? 8 : 9, fontFamily: MONO, color: opts.dim ? "rgba(255,255,255,0.35)" : C.greenText, fontWeight: opts.dim ? 500 : 700 }}>{v}</span>
+  const kvRow = (k, v, dim) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding: "0 4px" }}>
+      <span style={{ fontSize: dim ? 8.5 : 9, fontFamily: MONO, color: dim ? "rgba(255,255,255,0.32)" : "#FCA5A5", fontWeight: 600 }}>{k}</span>
+      <span style={{ fontSize: dim ? 8.5 : 9, fontFamily: MONO, color: dim ? "rgba(255,255,255,0.32)" : "#6EE7B7", fontWeight: 700 }}>{v}</span>
     </div>
   );
   return (
     <div style={wrap}>
-      <div style={box(C.red, C.redBg, { width: "100%", maxWidth: 280, padding: "10px 12px 8px" })}>
-        {/* Policy label */}
-        <div style={{ fontSize: 9, fontFamily: MONO, fontWeight: 700, color: C.redText, letterSpacing: 0.8, textTransform: "uppercase", textAlign: "center", marginBottom: 8, opacity: 0.8 }}>restricted</div>
-        {/* Rejection cause — highlighted */}
-        <div style={{ padding: "6px 8px", background: "rgba(239,68,68,0.06)", borderRadius: 6, border: "1px solid rgba(239,68,68,0.18)", marginBottom: 8 }}>
+      <div style={box("rgba(239,68,68,0.30)", "rgba(239,68,68,0.03)", { width: "100%", maxWidth: 280, padding: "10px 12px 8px" })}>
+        <div style={{ fontSize: 9, fontFamily: MONO, fontWeight: 600, color: "rgba(252,165,165,0.7)", letterSpacing: 0.5, textAlign: "center", marginBottom: 8 }}>PSA: restricted</div>
+        <div style={{ padding: "5px 6px", background: "rgba(239,68,68,0.05)", borderRadius: 5, border: "1px solid rgba(239,68,68,0.14)", marginBottom: 8 }}>
           {kvRow("allowPrivilegeEscalation", "false")}
         </div>
-        {/* Other restricted checks — secondary */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6 }}>
-          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", fontFamily: MONO, letterSpacing: 0.3, marginBottom: 4 }}>other restricted checks</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {kvRow("runAsNonRoot", "true", { dim: true })}
-            {kvRow("seccompProfile", "RuntimeDefault", { dim: true })}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 6 }}>
+          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", fontFamily: MONO, letterSpacing: 0.3, marginBottom: 4 }}>other restricted checks</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {kvRow("runAsNonRoot", "true", true)}
+            {kvRow("seccompProfile", "RuntimeDefault", true)}
           </div>
         </div>
       </div>
-      <div style={caption()}>rejected: allowPrivilegeEscalation must be set to false</div>
+      <div style={{ fontSize: 9.5, color: "rgba(252,165,165,0.55)", marginTop: 6, textAlign: "center", fontFamily: MONO }}>Error: allowPrivilegeEscalation must be false</div>
     </div>
   );
 }
