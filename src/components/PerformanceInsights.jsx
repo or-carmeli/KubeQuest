@@ -135,7 +135,7 @@ function InlineMetric({ label, value, color }) {
   );
 }
 
-function ConfidenceBadge({ level }) {
+function ConfidenceBadge({ level, t }) {
   if (level === "none") return null;
   const cfg = {
     low:    { bg: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "rgba(251,191,36,0.25)", icon: "\u25CB" },
@@ -143,7 +143,7 @@ function ConfidenceBadge({ level }) {
     high:   { bg: "rgba(52,211,153,0.10)", color: "#34d399", border: "rgba(52,211,153,0.20)", icon: "\u25CF" },
   };
   const c = cfg[level] || cfg.low;
-  const label = level === "low" ? "Low confidence" : level === "medium" ? "Medium" : "High";
+  const label = t ? (level === "low" ? t("confidenceLow") : level === "medium" ? t("confidenceMed") : t("confidenceHigh")) : (level === "low" ? "Low confidence" : level === "medium" ? "Medium" : "High");
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
       <span style={{ fontSize: 9 }}>{c.icon}</span>
@@ -184,56 +184,110 @@ const T = {
   en: {
     title: "Performance Insights",
     devOnly: "Dev Only",
-    p95Latency: "P95 LATENCY", p95Desc: "Response time of 95% of requests",
+    p95Latency: "P95 LATENCY", p95Desc: "95th percentile - response time of 95% of requests",
     errorRate: "ERROR RATE", errorRateDesc: "Percentage of failed requests",
-    traffic: "TRAFFIC", trafficDesc: "Requests per second",
-    errors: "ERRORS", errorsDesc: "Total errors in time window",
+    traffic: "TRAFFIC", trafficDesc: "Requests per second (RPS)",
+    errors: "ERRORS", errorsDesc: "Total errors in selected time window",
     requestLatency: "Request Latency",
+    trendUp: "Trending up", trendDown: "Trending down", trendStable: "Stable",
+    basedOn: (n, range) => `Based on ${n} request${n !== 1 ? "s" : ""} in ${range}`,
+    lowSample: "Low sample size",
+    noRequestsTitle: (range) => `No requests in ${range}`,
+    noRequestsMsgTimed: (label) => `No network requests recorded in the last ${label}. Try a wider time range or interact with the app.`,
+    noRequestsMsgSession: "No traffic has been observed in this session.",
+    noRequestsHintShort: "Short windows may be empty during idle periods.",
+    noRequestsHintNav: "Navigate to a quiz or topic to generate requests.",
     insights: "Insights",
     diagnostics: "Diagnostics",
+    alertCount: (n) => `${n} alert${n !== 1 ? "s" : ""}`,
+    tabVitals: "Vitals", tabClient: "Client", tabUserFlow: "User Flow",
     coreVitals: "Core Web Vitals",
+    vitalsSubtitle: "Session measurements vs. global benchmarks (CrUX p75)",
+    vitalsEmpty: "Web Vitals not yet measured",
+    vitalsEmptyMsg: "LCP is captured on first meaningful paint. INP and CLS require user interaction.",
+    vitalsEmptyHint: "Click buttons, scroll, or navigate to trigger collection.",
+    sessionLabel: "SESSION", globalLabel: "GLOBAL (P75)",
+    good: "Good", needsWork: "Needs work", poor: "Poor",
     navTiming: "Navigation Timing",
     errorCounters: "Error Counters",
+    recentErrors: "Recent Errors", recentNetwork: "Recent Network Issues",
     sessionActivity: "Session Activity",
     routeVisits: "Route Visits",
+    noActivity: "No user activity recorded",
+    noActivityMsg: "Route visits, quiz metrics, and session data will appear as you use the app.",
+    noActivityHint: "Navigate between screens or start a quiz to generate flow data.",
     allData: "All data collected from real browser signals",
-    ttfb: "TTFB", ttfbDesc: "Time to first byte from server",
-    domLoaded: "DOM Content Loaded", domLoadedDesc: "Time until DOM is parsed",
-    pageLoad: "Full Page Load", pageLoadDesc: "Total page load time",
-    dns: "DNS Lookup", dnsDesc: "Domain name resolution time",
-    tcp: "TCP Connect", tcpDesc: "TCP connection to server",
+    ttfb: "TTFB", ttfbDesc: "Time To First Byte - time to first byte from server",
+    domLoaded: "DOM Content Loaded", domLoadedDesc: "Time until DOM is fully parsed and ready",
+    pageLoad: "Full Page Load", pageLoadDesc: "Total time from navigation start to page ready",
+    dns: "DNS Lookup", dnsDesc: "Domain Name System - domain to IP resolution time",
+    tcp: "TCP Connect", tcpDesc: "Transmission Control Protocol - connection to server",
     unhandled: "Unhandled errors", promiseRej: "Promise rejections",
     failedReq: "Failed requests", slowReq: "Slow requests",
     session: "SESSION", routesVisited: "ROUTES VISITED",
     quizzesStarted: "QUIZZES STARTED", completed: "COMPLETED",
     completionRate: "COMPLETION RATE", retries: "RETRIES",
+    statusIdle: (range) => `המערכת פעילה - אין תעבורה ב-${range}`,
+    statusHealthy: "Healthy", statusDegraded: "Degraded", statusUnhealthy: "Unhealthy",
+    statusHealthyLow: "Healthy (low confidence)",
+    confidenceLow: "Low confidence", confidenceMed: "Medium", confidenceHigh: "High",
+    noTrafficYet: "No traffic observed yet",
+    avg: "Avg", p95: "P95", samples: "Samples",
+    last: "Last",
   },
   he: {
     title: "תובנות ביצועים",
     devOnly: "Dev Only",
-    p95Latency: "P95 LATENCY", p95Desc: "זמן תגובה של 95% מהבקשות",
-    errorRate: "ERROR RATE", errorRateDesc: "אחוז בקשות שנכשלו",
-    traffic: "TRAFFIC", trafficDesc: "כמות בקשות לשנייה",
-    errors: "ERRORS", errorsDesc: "סך שגיאות בחלון הזמן",
-    requestLatency: "זמן תגובה לבקשות",
+    p95Latency: "P95 LATENCY", p95Desc: "95th Percentile - זמן תגובה של 95% מהבקשות",
+    errorRate: "ERROR RATE", errorRateDesc: "אחוז הבקשות שנכשלו",
+    traffic: "TRAFFIC", trafficDesc: "Requests Per Second - בקשות לשנייה",
+    errors: "ERRORS", errorsDesc: "סך שגיאות בחלון הזמן הנבחר",
+    requestLatency: "Request Latency - זמן תגובה",
+    trendUp: "במגמת עלייה", trendDown: "במגמת ירידה", trendStable: "יציב",
+    basedOn: (n, range) => `מבוסס על ${n} בקשות ב-${range}`,
+    lowSample: "מדגם קטן",
+    noRequestsTitle: (range) => `אין בקשות ב-${range}`,
+    noRequestsMsgTimed: (label) => `לא נרשמו בקשות ב-${label} האחרונות. נסו טווח זמן רחב יותר או השתמשו באפליקציה.`,
+    noRequestsMsgSession: "לא נצפתה תעבורה ב-Session הנוכחי.",
+    noRequestsHintShort: "חלונות זמן קצרים עלולים להיות ריקים בזמן חוסר פעילות.",
+    noRequestsHintNav: "נווטו לחידון או נושא כדי ליצור בקשות.",
     insights: "תובנות",
     diagnostics: "אבחון",
-    coreVitals: "Core Web Vitals",
-    navTiming: "זמני ניווט",
+    alertCount: (n) => `${n} התראות`,
+    tabVitals: "Vitals", tabClient: "Client", tabUserFlow: "User Flow",
+    coreVitals: "Core Web Vitals - מדדי ביצועים",
+    vitalsSubtitle: "מדידות Session מול benchmarks גלובליים (CrUX p75)",
+    vitalsEmpty: "Web Vitals עדיין לא נמדדו",
+    vitalsEmptyMsg: "LCP נמדד בטעינה ראשונה. INP ו-CLS דורשים אינטראקציה.",
+    vitalsEmptyHint: "לחצו על כפתורים, גללו, או נווטו כדי להפעיל מדידה.",
+    sessionLabel: "SESSION", globalLabel: "GLOBAL (P75)",
+    good: "תקין", needsWork: "דורש שיפור", poor: "בעייתי",
+    navTiming: "Navigation Timing - זמני ניווט",
     errorCounters: "מונה שגיאות",
+    recentErrors: "שגיאות אחרונות", recentNetwork: "בעיות רשת אחרונות",
     sessionActivity: "פעילות ב-Session",
     routeVisits: "ביקורים לפי מסך",
+    noActivity: "לא נרשמה פעילות משתמש",
+    noActivityMsg: "ביקורים במסכים, מדדי חידון ונתוני Session יופיעו בזמן השימוש באפליקציה.",
+    noActivityHint: "נווטו בין מסכים או התחילו חידון כדי ליצור נתוני זרימה.",
     allData: "כל הנתונים נאספים מאותות דפדפן אמיתיים",
-    ttfb: "TTFB", ttfbDesc: "זמן עד בית ראשון מהשרת",
-    domLoaded: "DOM Content Loaded", domLoadedDesc: "זמן עד טעינת ה-DOM",
-    pageLoad: "Full Page Load", pageLoadDesc: "זמן טעינה מלא של הדף",
-    dns: "DNS Lookup", dnsDesc: "זמן תרגום שם דומיין",
-    tcp: "TCP Connect", tcpDesc: "זמן חיבור TCP לשרת",
-    unhandled: "שגיאות לא מטופלות", promiseRej: "דחיות Promise",
+    ttfb: "TTFB", ttfbDesc: "Time To First Byte - זמן עד ה-byte הראשון מהשרת",
+    domLoaded: "DOM Content Loaded", domLoadedDesc: "זמן עד שה-DOM מוכן ומעובד",
+    pageLoad: "Full Page Load", pageLoadDesc: "זמן כולל מתחילת הניווט עד שהדף מוכן",
+    dns: "DNS Lookup", dnsDesc: "Domain Name System - תרגום שם דומיין לכתובת IP",
+    tcp: "TCP Connect", tcpDesc: "Transmission Control Protocol - חיבור לשרת",
+    unhandled: "שגיאות לא מטופלות", promiseRej: "Promise rejections",
     failedReq: "בקשות שנכשלו", slowReq: "בקשות איטיות",
     session: "SESSION", routesVisited: "מסכים שנצפו",
     quizzesStarted: "חידונים שהתחילו", completed: "הושלמו",
     completionRate: "אחוז השלמה", retries: "ניסיונות חוזרים",
+    statusIdle: (range) => `המערכת פעילה - אין תעבורה ב-${range}`,
+    statusHealthy: "תקין", statusDegraded: "מופחת", statusUnhealthy: "לא תקין",
+    statusHealthyLow: "תקין (מהימנות נמוכה)",
+    confidenceLow: "מהימנות נמוכה", confidenceMed: "בינוני", confidenceHigh: "גבוה",
+    noTrafficYet: "לא נצפתה תעבורה עדיין",
+    avg: "ממוצע", p95: "P95", samples: "דגימות",
+    last: "אחרון",
   },
 };
 
@@ -274,16 +328,16 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
 
   // Time context
   const agoSec = lastUpdated ? Math.max(0, Math.round((Date.now() - lastUpdated.getTime()) / 1000)) : null;
-  const rangeLabel = activeRange.sec != null ? `Last ${activeRange.label}` : "Session";
-  const timeContextText = agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s ago` : rangeLabel;
+  const rangeLabel = activeRange.sec != null ? (lang === "he" ? `${t("last")} ${activeRange.label}` : `Last ${activeRange.label}`) : "Session";
+  const timeContextText = agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s` : rangeLabel;
 
   if (!data) return <Skeleton />;
 
   const hasLatencyData = data.latencyTimeline.length > 0;
   const TABS = [
-    { id: "vitals",   label: "Vitals",    icon: Eye },
-    { id: "client",   label: "Client",    icon: Globe },
-    { id: "userflow", label: "User Flow", icon: Users },
+    { id: "vitals",   label: t("tabVitals"),   icon: Eye },
+    { id: "client",   label: t("tabClient"),   icon: Globe },
+    { id: "userflow", label: t("tabUserFlow"), icon: Users },
   ];
 
   return (
@@ -334,9 +388,9 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
           <div style={{ width: 10, height: 10, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}CC, 0 0 12px ${healthColor}66` }} />
           <span style={{ fontSize: 17, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>
-            {health.status === "unknown" ? `System idle \u00b7 No traffic in ${rangeLabel.toLowerCase()}` : health.status === "healthy" && confidence.level === "low" ? "Healthy (low confidence)" : { healthy: "Healthy", degraded: "Degraded", unhealthy: "Unhealthy" }[health.status]}
+            {health.status === "unknown" ? t("statusIdle")(rangeLabel) : health.status === "healthy" && confidence.level === "low" ? t("statusHealthyLow") : { healthy: t("statusHealthy"), degraded: t("statusDegraded"), unhealthy: t("statusUnhealthy") }[health.status]}
           </span>
-          <ConfidenceBadge level={confidence.level} />
+          <ConfidenceBadge level={confidence.level} t={t} />
         </div>
         <div style={{ fontSize: 14, color: health.status === "unknown" ? "var(--text-muted)" : "var(--text-secondary)", lineHeight: 1.5, marginBottom: 16 }}>{health.reason}</div>
 
@@ -355,7 +409,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
           <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}>
             {alertsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             <AlertTriangle size={12} color={health.status === "unhealthy" ? "#f87171" : "#fbbf24"} />
-            <span>{alerts.length} alert{alerts.length !== 1 ? "s" : ""}</span>
+            <span>{t("alertCount")(alerts.length)}</span>
           </button>
           {alertsOpen && (
             <div style={{ padding: "4px 12px 8px 30px", display: "flex", flexDirection: "column", gap: 4 }}>
@@ -378,14 +432,14 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
           title={<span style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {t("requestLatency")}
             {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? "#fbbf24" : trendDir === "decreasing" ? "#34d399" : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
-              {trendDir === "increasing" ? "Trending up" : trendDir === "decreasing" ? "Trending down" : "Stable"}
+              {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
             </span>}
           </span>}
-          subtitle={hasLatencyData ? `Based on ${data.latencyTimeline.length} request${data.latencyTimeline.length !== 1 ? "s" : ""} in ${rangeLabel.toLowerCase()}${confidence.level === "low" ? " \u00b7 Low sample size" : ""}` : null}
+          subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
         >
           {hasLatencyData
             ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} />
-            : <EmptyChartState title={`No requests in ${rangeLabel.toLowerCase()}`} message={activeRange.sec != null ? `No network requests recorded in the last ${activeRange.label}. Try a wider time range or interact with the app.` : "No traffic has been observed in this session."} hint={activeRange.sec != null && activeRange.sec <= 60 ? "Short windows may be empty during idle periods." : "Navigate to a quiz or topic to generate requests."} />
+            : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={activeRange.sec != null && activeRange.sec <= 60 ? t("noRequestsHintShort") : t("noRequestsHintNav")} />
           }
         </ChartSection>
       </div>
@@ -501,14 +555,14 @@ function VitalsTab({ vitals, navTiming, t }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
-      <ChartSection title={t("coreVitals")} subtitle="Session measurements vs. global benchmarks (CrUX p75)">
+      <ChartSection title={t("coreVitals")} subtitle={t("vitalsSubtitle")}>
         {hasVitals ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {vitalsList.map(v => {
               const sev = severity(v.value, v.threshold);
               const col = sev === "info" ? "#34d399" : SEVERITY_COLORS[sev].text;
               const pct = Math.min((v.value / v.threshold.critical) * 100, 100);
-              const statusLabel = sev === "info" ? "Good" : sev === "warning" ? "Needs work" : "Poor";
+              const statusLabel = sev === "info" ? t("good") : sev === "warning" ? t("needsWork") : t("poor");
               const bench = CRUX_BENCHMARKS[v.metric];
               const comparison = compareToGlobal(v.metric, v.value);
               const compColor = comparison?.verdict === "faster" ? "#34d399" : comparison?.verdict === "within" ? "var(--text-muted)" : "#fbbf24";
@@ -525,12 +579,12 @@ function VitalsTab({ vitals, navTiming, t }) {
                   {/* Values: session vs global */}
                   <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 8 }}>
                     <div>
-                      <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>SESSION</div>
+                      <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>{t("sessionLabel")}</div>
                       <span style={{ fontSize: 22, fontWeight: 700, color: col, fontFamily: MONO }}>{v.value}{v.unit}</span>
                     </div>
                     {bench && (
                       <div style={{ borderLeft: "1px solid var(--glass-4)", paddingLeft: 16 }}>
-                        <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>GLOBAL (P75)</div>
+                        <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>{t("globalLabel")}</div>
                         <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text-muted)", fontFamily: MONO }}>{bench.good}{bench.unit}</span>
                       </div>
                     )}
@@ -552,7 +606,7 @@ function VitalsTab({ vitals, navTiming, t }) {
             })}
           </div>
         ) : (
-          <EmptyChartState title="Web Vitals not yet measured" message="LCP is captured on first meaningful paint. INP and CLS require user interaction." hint="Click buttons, scroll, or navigate to trigger collection." />
+          <EmptyChartState title={t("vitalsEmpty")} message={t("vitalsEmptyMsg")} hint={t("vitalsEmptyHint")} />
         )}
       </ChartSection>
 
@@ -587,7 +641,7 @@ function ClientTab({ client, t }) {
       </ChartSection>
 
       {client.recentErrors.length > 0 && (
-        <ChartSection title="Recent Errors" subtitle={`Last ${Math.min(client.recentErrors.length, 10)} events`}>
+        <ChartSection title={t("recentErrors")} subtitle={`${t("last")} ${Math.min(client.recentErrors.length, 10)}`}>
           <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
             {client.recentErrors.slice(-10).reverse().map((err, i, arr) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
@@ -601,7 +655,7 @@ function ClientTab({ client, t }) {
       )}
 
       {client.recentNetworkLog.length > 0 && (
-        <ChartSection title="Recent Network Issues" subtitle={`Last ${Math.min(client.recentNetworkLog.length, 10)} events`}>
+        <ChartSection title={t("recentNetwork")} subtitle={`${t("last")} ${Math.min(client.recentNetworkLog.length, 10)}`}>
           <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
             {client.recentNetworkLog.slice(-10).reverse().map((entry, i, arr) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
@@ -629,7 +683,7 @@ function UserFlowTab({ userFlow, t }) {
   const sessionSec = userFlow.sessionDuration % 60;
 
   if (!hasActivity) {
-    return <EmptyChartState title="No user activity recorded" message="Route visits, quiz metrics, and session data will appear as you use the app." hint="Navigate between screens or start a quiz to generate flow data." />;
+    return <EmptyChartState title={t("noActivity")} message={t("noActivityMsg")} hint={t("noActivityHint")} />;
   }
 
   const routeItems = userFlow.routeVisits.map(r => ({ label: "/" + r.route, value: r.visits }));
