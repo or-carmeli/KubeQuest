@@ -556,35 +556,26 @@ function RoleScopeDiagram() {
   );
 }
 
-// ── 20. PSA Admission Flow ──────────────────────────────────────────
+// ── 20. PSA Restricted Requirements ─────────────────────────────────
 function PsaAdmissionDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
-        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%" })}>kubectl apply</div>
-        <div style={arrow()}>|</div>
-        <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { width: "100%" })}>API Server</div>
-        <div style={arrow()}>|</div>
-        <div style={box(C.amber, C.amberBg, { width: "100%", padding: "8px 10px" })}>
-          <div style={label(C.amberText, { fontSize: 10, marginBottom: 4 })}>PSA Controller</div>
-          <div style={row({ gap: 4 })}>
-            <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>restricted</div>
-            <div style={smallBox(C.amber, C.amberBg, C.amberText, { fontSize: 8, padding: "3px 6px" })}>baseline</div>
-            <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 6px" })}>privileged</div>
-          </div>
-        </div>
-        <div style={row({ gap: 12 })}>
-          <div style={col({ gap: 2 })}>
-            <div style={arrow({ color: C.greenText })}>|</div>
-            <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 8px" })}>accept</div>
-          </div>
-          <div style={col({ gap: 2 })}>
-            <div style={arrow({ color: C.redText })}>|</div>
-            <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 8px" })}>reject</div>
-          </div>
+      <div style={box(C.red, C.redBg, { width: "100%", maxWidth: 280 })}>
+        <div style={label(C.redText, { marginBottom: 8 })}>restricted</div>
+        <div style={col({ gap: 4 })}>
+          {[
+            ["allowPrivilegeEscalation", "false"],
+            ["runAsNonRoot", "true"],
+            ["seccompProfile", "RuntimeDefault"],
+          ].map(([k, v]) => (
+            <div key={k} style={row({ gap: 6, justifyContent: "space-between", flexWrap: "nowrap", width: "100%" })}>
+              <span style={subLabel({ opacity: 1, fontSize: 9 })}>{k}</span>
+              <span style={{ fontSize: 9, fontFamily: MONO, color: C.greenText, fontWeight: 600 }}>{v}</span>
+            </div>
+          ))}
         </div>
       </div>
-      <div style={caption()}>PSA intercepts before Pod is created</div>
+      <div style={caption()}>all three required to pass PSA restricted</div>
     </div>
   );
 }
