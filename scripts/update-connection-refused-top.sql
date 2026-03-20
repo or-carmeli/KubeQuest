@@ -160,7 +160,7 @@ WHERE topic_id = 'troubleshooting'
 -- ─── PodDisruptionBudget - add YAML example to explanation (Hebrew) ─────────
 UPDATE quiz_questions
 SET
-  explanation = E'PodDisruptionBudget (PDB) מגדיר את מספר ה-Pods המינימלי שחייב להישאר זמין בזמן disruptions מתוכננות, כמו kubectl drain.\n\n```yaml\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata:\n  name: web-pdb\nspec:\n  minAvailable: 2\n  selector:\n    matchLabels:\n      app: web\n```\n\nעם replicas: 3 ו-minAvailable: 2, Kubernetes יאשר פינוי רק אם לפחות 2 Pods נשארים זמינים.\nמגן על זמינות אפליקציות קריטיות בזמן maintenance.'
+  explanation = E'PodDisruptionBudget (PDB) מגדיר את מספר ה-Pods המינימלי שחייב להישאר זמין בזמן disruptions מתוכננות, כמו `kubectl drain`\n\n```yaml\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata:\n  name: web-pdb\nspec:\n  minAvailable: 2\n  selector:\n    matchLabels:\n      app: web\n```\n\nעם replicas: 3 ו-minAvailable: 2, Kubernetes יאשר פינוי רק אם לפחות 2 Pods נשארים זמינים.\nמגן על זמינות אפליקציות קריטיות בזמן maintenance.'
 WHERE topic_id = 'workloads'
   AND level = 'medium'
   AND lang = 'he'
@@ -169,7 +169,7 @@ WHERE topic_id = 'workloads'
 -- ─── PodDisruptionBudget - add YAML example to explanation (English) ────────
 UPDATE quiz_questions
 SET
-  explanation = E'PodDisruptionBudget (PDB) defines the minimum number of Pods that must remain available during voluntary disruptions such as kubectl drain.\n\n```yaml\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata:\n  name: web-pdb\nspec:\n  minAvailable: 2\n  selector:\n    matchLabels:\n      app: web\n```\n\nWith replicas: 3 and minAvailable: 2, Kubernetes will only allow eviction if at least 2 Pods remain available.\nProtects critical application availability during Node maintenance.'
+  explanation = E'PodDisruptionBudget (PDB) defines the minimum number of Pods that must remain available during voluntary disruptions such as `kubectl drain`\n\n```yaml\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata:\n  name: web-pdb\nspec:\n  minAvailable: 2\n  selector:\n    matchLabels:\n      app: web\n```\n\nWith replicas: 3 and minAvailable: 2, Kubernetes will only allow eviction if at least 2 Pods remain available.\nProtects critical application availability during Node maintenance.'
 WHERE topic_id = 'workloads'
   AND level = 'medium'
   AND lang = 'en'
@@ -198,3 +198,21 @@ WHERE topic_id = 'security'
   AND level = 'easy'
   AND lang = 'en'
   AND q LIKE '%runAsNonRoot%';
+
+-- ─── helm rollback - rewrite question with terminal example (Hebrew) ────────
+UPDATE quiz_questions
+SET
+  q = E'מה עושה הפקודה\n\n```\n$ helm rollback\n```'
+WHERE topic_id = 'storage'
+  AND level = 'medium'
+  AND lang = 'he'
+  AND q LIKE '%תפקיד%helm rollback%';
+
+-- ─── helm rollback - rewrite question with terminal example (English) ───────
+UPDATE quiz_questions
+SET
+  q = E'What does this command do?\n\n```\n$ helm rollback\n```'
+WHERE topic_id = 'storage'
+  AND level = 'medium'
+  AND lang = 'en'
+  AND q LIKE '%purpose%helm rollback%';
