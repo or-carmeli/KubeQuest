@@ -2,7 +2,9 @@ import { useState } from "react";
 import { getLocalizedField } from "../utils/i18n";
 import { EXPERIMENTAL_ENABLED } from "../utils/experimentalMode";
 import TopicIcon from "./TopicIcon";
-import { Lock, CheckCircle2 } from "lucide-react";
+import { Lock, CheckCircle2, Zap, Triangle, Flame, RotateCcw } from "lucide-react";
+
+const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: Flame };
 
 const STAGE_SUBTITLES = {
   workloads:       "Pods · Deployments · Jobs · Scheduling",
@@ -167,7 +169,19 @@ export default function RoadmapView({
                 borderRadius:14,
                 padding:"12px 14px",
                 transition:"opacity 0.2s,border-color 0.2s",
+                position:"relative",
               }}>
+
+                {/* Review button – top corner */}
+                {completed&&(
+                  <button onClick={(e)=>{e.stopPropagation();startTopic(topic,"easy");}}
+                    aria-label={t("roadmapReview")}
+                    style={{position:"absolute",top:8,[dir==="rtl"?"left":"right"]:8,background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:8,color:"#10B981",cursor:"pointer",padding:6,display:"flex",alignItems:"center",justifyContent:"center",transition:"transform 0.15s,background 0.15s",zIndex:1}}
+                    onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.background="rgba(16,185,129,0.15)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.background="rgba(16,185,129,0.08)";}}>
+                    <RotateCcw size={14} strokeWidth={2} />
+                  </button>
+                )}
 
                 {/* Stage header */}
                 <button
@@ -199,7 +213,7 @@ export default function RoadmapView({
                   {!locked&&(
                     <div className="roadmap-pct" style={{flexShrink:0,textAlign:"center",minWidth:36}}>
                       <div style={{color:completed?"#10B981":isCurrent?topic.color:"var(--text-muted)",fontWeight:700,fontSize:12}}>{progress}%</div>
-                      <div aria-hidden="true" style={{color:"var(--text-dim)",fontSize:10}}>{isExpanded?"▲":"▼"}</div>
+                      <div aria-hidden="true" style={{color:"var(--text-dim)",fontSize:10}}>{isExpanded?"▼":"▲"}</div>
                     </div>
                   )}
                 </button>
@@ -243,7 +257,7 @@ export default function RoadmapView({
                           disabled={lvlLocked}
                           aria-label={`${getLocalizedField(cfg, "label", lang)}${done?` - ${done.correct}/${done.total}`:""}${lvlLocked?" (locked)":""}`}
                           style={{padding:"10px 8px",background:lvlLocked?"var(--glass-1)":done?`${cfg.color}12`:"var(--glass-3)",border:`1px solid ${lvlLocked?"var(--glass-4)":done?cfg.color+"44":"var(--glass-7)"}`,borderRadius:10,textAlign:"center",opacity:lvlLocked?0.45:1,cursor:lvlLocked?"not-allowed":"pointer"}}>
-                          <div aria-hidden="true" style={{display:"flex",justifyContent:"center"}}>{lvlLocked?<Lock size={14} strokeWidth={1.5} color="var(--text-disabled)" />:<span style={{fontSize:16}}>{cfg.icon}</span>}</div>
+                          <div aria-hidden="true" style={{display:"flex",justifyContent:"center"}}>{lvlLocked?<Lock size={14} strokeWidth={1.5} color="var(--text-disabled)" />:(()=>{const C=LEVEL_ICON_MAP[lvl];return C?<C size={14} strokeWidth={1.5} color={done?cfg.color:"var(--text-muted)"} style={{flexShrink:0}} />:null;})()}</div>
                           <div style={{fontSize:12,fontWeight:700,color:lvlLocked?"var(--text-disabled)":done?cfg.color:"var(--text-muted)"}}>
                             {getLocalizedField(cfg, "label", lang)}
                           </div>

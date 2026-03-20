@@ -1813,16 +1813,16 @@ export const TOPICS = [
                 "Kyverno admission webhook חוסם images שלא מ-gcr.io/. policy-as-code.\nלשנות את ה-image למקור מ-gcr.io/ או לעדכן את ה-policy.\n• API crash = לא הייתה הודעת שגיאה • RBAC = \"forbidden\" לא \"webhook denied\" • Namespace missing = שגיאה אחרת.\nAdmission webhook רץ לפני שמירה ב-etcd ויכול לחסום כל create/update.",
             },
             {
-              q: "ה-PSA מוגדר עם enforce=restricted. Deployment נדחה:\n\n```\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n```\n\nמה מוסיפים ל-spec של ה-container?",
+              q: "Deployment נדחה תחת מדיניות Pod Security 'restricted':\n\n```\nPod violates PodSecurity 'restricted:latest':\nallowPrivilegeEscalation != false\n```\n\nאיזה securityContext מתקן את ה-container spec?",
               options: [
-              "securityContext: {privileged: true, runAsUser: 0, capabilities: {add: [NET_ADMIN]}}",
-              "securityContext: {allowPrivilegeEscalation: false, runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}",
-              "securityContext: {capabilities: {drop: [ALL]}, runAsGroup: 0, privileged: false}",
-              "securityContext: {readOnlyRootFilesystem: true, runAsUser: 1000, hostNetwork: true}",
+              "securityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [NET_ADMIN]",
+              "securityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault",
+              "securityContext:\n  capabilities:\n    drop: [ALL]\n  runAsGroup: 0\n  privileged: false",
+              "securityContext:\n  readOnlyRootFilesystem: true\n  runAsUser: 1000\n  hostNetwork: true",
 ],
               answer: 1,
               explanation:
-                "restricted PSA דורשת הגדרות אבטחה מפורשות בכל container.\nחובה להוסיף allowPrivilegeEscalation: false, runAsNonRoot: true, ו-seccompProfile.\nprivileged: true הוא ההפך. יחמיר את הבעיה במקום לפתור.",
+                "רמת restricted ב-PSA דורשת את שלושת ההגדרות:\n• allowPrivilegeEscalation: false - חוסם הסלמת הרשאות דרך setuid/setgid\n• runAsNonRoot: true - מונע הרצה כ-root (UID 0)\n• seccompProfile: RuntimeDefault - אוכף סינון syscall\nאפשרות A מגדירה privileged: true שזה ההפך. אפשרויות C ו-D חסרים שדות נדרשים.",
             },
         ],
         questionsEn: [
@@ -1911,16 +1911,16 @@ export const TOPICS = [
                 "Kyverno admission webhook blocks images not from gcr.io/. Policy-as-code enforcement.\nChange the image to one from gcr.io/ or update the Kyverno policy.\n• API crash = no structured error message • RBAC = \"forbidden\" not \"webhook denied\" • Missing namespace = different error.\nAdmission webhooks run before etcd save and can block any create/update request.",
             },
             {
-              q: "PSA is set to enforce=restricted. A Deployment is rejected:\n\n```\nPod violates PodSecurity 'restricted:latest': allowPrivilegeEscalation != false\n```\n\nWhat must you add to the container spec?",
+              q: "A Deployment is rejected under Pod Security 'restricted' policy:\n\n```\nPod violates PodSecurity 'restricted:latest':\nallowPrivilegeEscalation != false\n```\n\nWhich securityContext fixes the container spec?",
               options: [
-              "securityContext: {privileged: true, runAsUser: 0, capabilities: {add: [NET_ADMIN]}}",
-              "securityContext: {allowPrivilegeEscalation: false, runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}",
-              "securityContext: {capabilities: {drop: [ALL]}, runAsGroup: 0, privileged: false}",
-              "securityContext: {readOnlyRootFilesystem: true, runAsUser: 1000, hostNetwork: true}",
+              "securityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [NET_ADMIN]",
+              "securityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault",
+              "securityContext:\n  capabilities:\n    drop: [ALL]\n  runAsGroup: 0\n  privileged: false",
+              "securityContext:\n  readOnlyRootFilesystem: true\n  runAsUser: 1000\n  hostNetwork: true",
 ],
               answer: 1,
               explanation:
-                "restricted PSA mandates explicit security hardening in every container.\nMust set allowPrivilegeEscalation: false, runAsNonRoot: true, and seccompProfile.\nprivileged: true is the opposite. It would further violate the policy.",
+                "The restricted PSA level requires all three:\n• allowPrivilegeEscalation: false - blocks privilege escalation via setuid/setgid\n• runAsNonRoot: true - prevents running as root (UID 0)\n• seccompProfile: RuntimeDefault - enforces syscall filtering\nOption A sets privileged: true which is the opposite. Options C and D are missing required fields.",
             },
         ],
       },

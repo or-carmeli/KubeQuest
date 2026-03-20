@@ -265,7 +265,9 @@ export function renderBidi(text, lang, opts) {
 // Regex to detect CLI commands in mixed text.
 // Matches: CLI tool name + one or more argument tokens (excludes Hebrew chars and opening parens
 // so parenthetical explanations like "(see memory usage)" are not captured as part of the command).
-export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|kubelet|crictl|etcdctl|curl|wget)(?:\s+(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)/;
+// The (?![-–—](?:\s|$)) lookahead prevents a standalone dash/en-dash/em-dash separator
+// (e.g. "helm install - deploys…") from being swallowed into the command match.
+export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|kubelet|crictl|etcdctl|curl|wget)(?:\s+(?![-\u2013\u2014](?:\s|$))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)/;
 
 // Splits text on CLI commands and renders commands as LTR code blocks on separate lines.
 export function splitCliParts(text, lang, keyPrefix) {
