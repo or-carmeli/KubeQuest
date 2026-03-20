@@ -1813,16 +1813,17 @@ export const TOPICS = [
                 "Kyverno admission webhook חוסם images שלא מ-gcr.io/. policy-as-code.\nלשנות את ה-image למקור מ-gcr.io/ או לעדכן את ה-policy.\n• API crash = לא הייתה הודעת שגיאה • RBAC = \"forbidden\" לא \"webhook denied\" • Namespace missing = שגיאה אחרת.\nAdmission webhook רץ לפני שמירה ב-etcd ויכול לחסום כל create/update.",
             },
             {
-              q: "Deployment נדחה תחת מדיניות Pod Security 'restricted':\n\n```\nPod violates PodSecurity 'restricted:latest':\nallowPrivilegeEscalation != false\n```\n\nאיזה securityContext מתקן את ה-container spec?",
+              q: "ה-Deployment נדחה על ידי PSA עם policy מסוג restricted.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nאיזה securityContext צריך להגדיר ל-container כדי לעמוד במדיניות?",
+              tags: ["psa-admission"],
               options: [
-              "securityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [NET_ADMIN]",
-              "securityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault",
-              "securityContext:\n  capabilities:\n    drop: [ALL]\n  runAsGroup: 0\n  privileged: false",
-              "securityContext:\n  readOnlyRootFilesystem: true\n  runAsUser: 1000\n  hostNetwork: true",
+              "```yaml\nsecurityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [\"NET_ADMIN\"]\n```",
+              "```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```",
+              "```yaml\nsecurityContext:\n  readOnlyRootFilesystem: true\n  runAsUser: 1000\n```",
+              "```yaml\nsecurityContext:\n  capabilities:\n    drop: [\"ALL\"]\n  runAsGroup: 1000\n  privileged: false\n```",
 ],
               answer: 1,
               explanation:
-                "רמת restricted ב-PSA דורשת את שלושת ההגדרות:\n• allowPrivilegeEscalation: false - חוסם הסלמת הרשאות דרך setuid/setgid\n• runAsNonRoot: true - מונע הרצה כ-root (UID 0)\n• seccompProfile: RuntimeDefault - אוכף סינון syscall\nאפשרות A מגדירה privileged: true שזה ההפך. אפשרויות C ו-D חסרים שדות נדרשים.",
+                "PSA (Pod Security Admission) הוא מנגנון built-in ב-Kubernetes שאוכף מדיניות אבטחה על Pods ברמת ה-Namespace.\n\nרמת restricted דורשת שלוש הגדרות חובה:\n• allowPrivilegeEscalation: false - חוסם הסלמת הרשאות דרך setuid/setgid\n• runAsNonRoot: true - מונע הרצה כ-root (UID 0)\n• seccompProfile: RuntimeDefault - אוכף סינון syscall בסיסי\n\nאפשרות א מגדירה privileged: true - ההפך מ-restricted.\nאפשרות ג חסרה allowPrivilegeEscalation ו-seccompProfile.\nאפשרות ד חסרה runAsNonRoot ו-seccompProfile.",
             },
         ],
         questionsEn: [
@@ -1911,16 +1912,17 @@ export const TOPICS = [
                 "Kyverno admission webhook blocks images not from gcr.io/. Policy-as-code enforcement.\nChange the image to one from gcr.io/ or update the Kyverno policy.\n• API crash = no structured error message • RBAC = \"forbidden\" not \"webhook denied\" • Missing namespace = different error.\nAdmission webhooks run before etcd save and can block any create/update request.",
             },
             {
-              q: "A Deployment is rejected under Pod Security 'restricted' policy:\n\n```\nPod violates PodSecurity 'restricted:latest':\nallowPrivilegeEscalation != false\n```\n\nWhich securityContext fixes the container spec?",
+              q: "A Deployment is rejected by PSA with a restricted policy.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nWhich securityContext must you set on the container to comply?",
+              tags: ["psa-admission"],
               options: [
-              "securityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [NET_ADMIN]",
-              "securityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault",
-              "securityContext:\n  capabilities:\n    drop: [ALL]\n  runAsGroup: 0\n  privileged: false",
-              "securityContext:\n  readOnlyRootFilesystem: true\n  runAsUser: 1000\n  hostNetwork: true",
+              "```yaml\nsecurityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [\"NET_ADMIN\"]\n```",
+              "```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```",
+              "```yaml\nsecurityContext:\n  readOnlyRootFilesystem: true\n  runAsUser: 1000\n```",
+              "```yaml\nsecurityContext:\n  capabilities:\n    drop: [\"ALL\"]\n  runAsGroup: 1000\n  privileged: false\n```",
 ],
               answer: 1,
               explanation:
-                "The restricted PSA level requires all three:\n• allowPrivilegeEscalation: false - blocks privilege escalation via setuid/setgid\n• runAsNonRoot: true - prevents running as root (UID 0)\n• seccompProfile: RuntimeDefault - enforces syscall filtering\nOption A sets privileged: true which is the opposite. Options C and D are missing required fields.",
+                "PSA (Pod Security Admission) is a built-in Kubernetes mechanism that enforces security policies on Pods at the Namespace level.\n\nThe restricted level requires all three:\n• allowPrivilegeEscalation: false - blocks privilege escalation via setuid/setgid\n• runAsNonRoot: true - prevents running as root (UID 0)\n• seccompProfile: RuntimeDefault - enforces basic syscall filtering\n\nOption A sets privileged: true - the opposite of restricted.\nOption C is missing allowPrivilegeEscalation and seccompProfile.\nOption D is missing runAsNonRoot and seccompProfile.",
             },
         ],
       },
