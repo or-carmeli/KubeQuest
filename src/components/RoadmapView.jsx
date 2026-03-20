@@ -183,8 +183,8 @@ export default function RoadmapView({
                   </div>
 
                   {/* Text - takes remaining space, clips instead of wrapping */}
-                  <div style={{flex:1,minWidth:0,direction:"ltr",textAlign:"center"}}>
-                    <div className="roadmap-title" style={{fontWeight:700,color:"var(--text-primary)",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <div style={{flex:1,minWidth:0,textAlign:"center"}}>
+                    <div className="roadmap-title" style={{fontWeight:700,color:"var(--text-primary)",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",justifyContent:"center",gap:4,flexDirection:dir==="rtl"?"row-reverse":"row"}}>
                       <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topic.name}</span>
                       {completed&&<CheckCircle2 size={14} strokeWidth={1.5} color="#10B981" style={{flexShrink:0}} />}
                       {topic.isComingSoon&&<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,letterSpacing:0.5,flexShrink:0,border:"1px solid rgba(234,179,8,0.25)"}}>COMING SOON</span>}
