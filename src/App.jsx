@@ -5313,7 +5313,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
 
       {/* PERFORMANCE INSIGHTS */}
-      {EXPERIMENTAL_ENABLED&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} />}
+      {EXPERIMENTAL_ENABLED&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} lang={lang} dir={dir} />}
 
       {/* STATS */}
       {screen==="stats"&&(

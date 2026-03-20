@@ -19,9 +19,9 @@ import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/r
 
 
 // ─── Component-level guard ─────────────────────────────────────────────────────
-export default function PerformanceInsights({ onBack }) {
+export default function PerformanceInsights({ onBack, lang = "en", dir = "ltr" }) {
   if (!import.meta.env.DEV) return null;
-  return <PerformanceInsightsInner onBack={onBack} />;
+  return <PerformanceInsightsInner onBack={onBack} lang={lang} dir={dir} />;
 }
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
@@ -100,10 +100,13 @@ function HorizontalBarChart({ items, labelWidth = CHART_LABEL_W, valueWidth = CH
 }
 
 /** Summary stat row: label on left, value on right. Use inside a container. */
-function StatRow({ label, value, unit, warn, warnColor, last }) {
+function StatRow({ label, desc, value, unit, warn, warnColor, last }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: CHART_ROW_H, borderBottom: last ? "none" : "1px solid var(--glass-3)" }}>
-      <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: CHART_ROW_H, borderBottom: last ? "none" : "1px solid var(--glass-3)", padding: "6px 0" }}>
+      <div>
+        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
+        {desc && <div style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.3 }}>{desc}</div>}
+      </div>
       <span style={{ fontSize: 12, fontWeight: 600, fontFamily: MONO, color: warn ? (warnColor || "#fbbf24") : "var(--text-primary)" }}>
         {value}{unit || ""}
       </span>
@@ -112,11 +115,12 @@ function StatRow({ label, value, unit, warn, warnColor, last }) {
 }
 
 /** Large metric for the top banner — optimized for screen-share readability. */
-function BannerMetric({ label, value, color, last }) {
+function BannerMetric({ label, desc, value, color, last }) {
   return (
     <div style={{ flex: 1, minWidth: 100, padding: "0 16px", borderRight: last ? "none" : "1px solid var(--glass-3)" }}>
       <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 700, color, fontFamily: MONO, lineHeight: 1 }}>{value}</div>
+      {desc && <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4, lineHeight: 1.3 }}>{desc}</div>}
     </div>
   );
 }
@@ -175,7 +179,66 @@ function Skeleton() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
-function PerformanceInsightsInner({ onBack }) {
+// ─── i18n labels ────────────────────────────────────────────────────────────
+const T = {
+  en: {
+    title: "Performance Insights",
+    devOnly: "Dev Only",
+    p95Latency: "P95 LATENCY", p95Desc: "Response time of 95% of requests",
+    errorRate: "ERROR RATE", errorRateDesc: "Percentage of failed requests",
+    traffic: "TRAFFIC", trafficDesc: "Requests per second",
+    errors: "ERRORS", errorsDesc: "Total errors in time window",
+    requestLatency: "Request Latency",
+    insights: "Insights",
+    diagnostics: "Diagnostics",
+    coreVitals: "Core Web Vitals",
+    navTiming: "Navigation Timing",
+    errorCounters: "Error Counters",
+    sessionActivity: "Session Activity",
+    routeVisits: "Route Visits",
+    allData: "All data collected from real browser signals",
+    ttfb: "TTFB", ttfbDesc: "Time to first byte from server",
+    domLoaded: "DOM Content Loaded", domLoadedDesc: "Time until DOM is parsed",
+    pageLoad: "Full Page Load", pageLoadDesc: "Total page load time",
+    dns: "DNS Lookup", dnsDesc: "Domain name resolution time",
+    tcp: "TCP Connect", tcpDesc: "TCP connection to server",
+    unhandled: "Unhandled errors", promiseRej: "Promise rejections",
+    failedReq: "Failed requests", slowReq: "Slow requests",
+    session: "SESSION", routesVisited: "ROUTES VISITED",
+    quizzesStarted: "QUIZZES STARTED", completed: "COMPLETED",
+    completionRate: "COMPLETION RATE", retries: "RETRIES",
+  },
+  he: {
+    title: "תובנות ביצועים",
+    devOnly: "Dev Only",
+    p95Latency: "P95 LATENCY", p95Desc: "זמן תגובה של 95% מהבקשות",
+    errorRate: "ERROR RATE", errorRateDesc: "אחוז בקשות שנכשלו",
+    traffic: "TRAFFIC", trafficDesc: "כמות בקשות לשנייה",
+    errors: "ERRORS", errorsDesc: "סך שגיאות בחלון הזמן",
+    requestLatency: "זמן תגובה לבקשות",
+    insights: "תובנות",
+    diagnostics: "אבחון",
+    coreVitals: "Core Web Vitals",
+    navTiming: "זמני ניווט",
+    errorCounters: "מונה שגיאות",
+    sessionActivity: "פעילות ב-Session",
+    routeVisits: "ביקורים לפי מסך",
+    allData: "כל הנתונים נאספים מאותות דפדפן אמיתיים",
+    ttfb: "TTFB", ttfbDesc: "זמן עד בית ראשון מהשרת",
+    domLoaded: "DOM Content Loaded", domLoadedDesc: "זמן עד טעינת ה-DOM",
+    pageLoad: "Full Page Load", pageLoadDesc: "זמן טעינה מלא של הדף",
+    dns: "DNS Lookup", dnsDesc: "זמן תרגום שם דומיין",
+    tcp: "TCP Connect", tcpDesc: "זמן חיבור TCP לשרת",
+    unhandled: "שגיאות לא מטופלות", promiseRej: "דחיות Promise",
+    failedReq: "בקשות שנכשלו", slowReq: "בקשות איטיות",
+    session: "SESSION", routesVisited: "מסכים שנצפו",
+    quizzesStarted: "חידונים שהתחילו", completed: "הושלמו",
+    completionRate: "אחוז השלמה", retries: "ניסיונות חוזרים",
+  },
+};
+
+function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
+  const t = (key) => (T[lang] || T.en)[key] || T.en[key] || key;
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState("vitals");
   const [alertsOpen, setAlertsOpen] = useState(false);
@@ -224,15 +287,15 @@ function PerformanceInsightsInner({ onBack }) {
   ];
 
   return (
-    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease" }}>
+    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: dir }}>
 
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
         <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center" }}>
-          <ArrowLeft size={16} />
+          <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>Performance Insights</span>
-        <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>Dev Only</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>{t("title")}</span>
+        <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>{t("devOnly")}</span>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{timeContextText}</span>
           <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center" }} title="Refresh">
@@ -279,10 +342,10 @@ function PerformanceInsightsInner({ onBack }) {
 
         {/* Key metrics row */}
         <div style={{ display: "flex", gap: 0, flexWrap: "wrap", paddingTop: 16, borderTop: "1px solid var(--glass-3)" }}>
-          <BannerMetric label="P95 LATENCY" value={data.p95 != null ? data.p95 + "ms" : (data.totalRequests > 0 ? "Sampling\u2026" : "\u2014")} color={data.p95 != null ? sevColor(data.p95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
-          <BannerMetric label="ERROR RATE" value={data.errorRate != null ? data.errorRate + "%" : (data.totalRequests > 0 ? "0%" : "N/A")} color={data.errorRate != null && data.errorRate >= 2 ? "#f87171" : "var(--text-bright)"} />
-          <BannerMetric label="TRAFFIC" value={data.traffic?.rps != null ? data.traffic.label : (data.totalRequests > 0 ? data.totalRequests + " req" : "\u2014")} color={data.totalRequests > 0 ? "var(--text-bright)" : "var(--text-dim)"} />
-          <BannerMetric label="ERRORS" value={String(data.errorCount)} color={data.errorCount > 0 ? "#f87171" : "var(--text-bright)"} last />
+          <BannerMetric label={t("p95Latency")} desc={t("p95Desc")} value={data.p95 != null ? data.p95 + "ms" : (data.totalRequests > 0 ? "Sampling\u2026" : "\u2014")} color={data.p95 != null ? sevColor(data.p95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
+          <BannerMetric label={t("errorRate")} desc={t("errorRateDesc")} value={data.errorRate != null ? data.errorRate + "%" : (data.totalRequests > 0 ? "0%" : "N/A")} color={data.errorRate != null && data.errorRate >= 2 ? "#f87171" : "var(--text-bright)"} />
+          <BannerMetric label={t("traffic")} desc={t("trafficDesc")} value={data.traffic?.rps != null ? data.traffic.label : (data.totalRequests > 0 ? data.totalRequests + " req" : "\u2014")} color={data.totalRequests > 0 ? "var(--text-bright)" : "var(--text-dim)"} />
+          <BannerMetric label={t("errors")} desc={t("errorsDesc")} value={String(data.errorCount)} color={data.errorCount > 0 ? "#f87171" : "var(--text-bright)"} last />
         </div>
       </div>
 
@@ -313,7 +376,7 @@ function PerformanceInsightsInner({ onBack }) {
       <div style={{ marginTop: 24 }}>
         <ChartSection
           title={<span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            Request Latency
+            {t("requestLatency")}
             {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? "#fbbf24" : trendDir === "decreasing" ? "#34d399" : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
               {trendDir === "increasing" ? "Trending up" : trendDir === "decreasing" ? "Trending down" : "Stable"}
             </span>}
@@ -330,7 +393,7 @@ function PerformanceInsightsInner({ onBack }) {
       {/* Insights */}
       {insights.length > 0 && (
         <div style={{ marginTop: 20 }}>
-          <ChartSection title="Insights">
+          <ChartSection title={t("insights")}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {insights.map((ins, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
@@ -349,7 +412,7 @@ function PerformanceInsightsInner({ onBack }) {
          ZONE 3 — Diagnostics tabs
          ════════════════════════════════════════════════════════════════════════ */}
       <div style={{ marginTop: 28 }}>
-        <ChartSection title="Diagnostics">
+        <ChartSection title={t("diagnostics")}>
           <div style={{ display: "flex", gap: 4, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
             {TABS.map(tab => {
               const Icon = tab.icon;
@@ -370,13 +433,13 @@ function PerformanceInsightsInner({ onBack }) {
           </div>
         </ChartSection>
 
-        {activeTab === "vitals"   && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} />}
-        {activeTab === "client"   && <ClientTab client={data.client} />}
-        {activeTab === "userflow" && <UserFlowTab userFlow={data.userFlow} />}
+        {activeTab === "vitals"   && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} t={t} />}
+        {activeTab === "client"   && <ClientTab client={data.client} t={t} />}
+        {activeTab === "userflow" && <UserFlowTab userFlow={data.userFlow} t={t} />}
       </div>
 
       <div style={{ textAlign: "center", padding: "28px 0 12px", fontSize: 10, color: "var(--text-dim)" }}>
-        All data collected from real browser signals
+        {t("allData")}
       </div>
     </div>
   );
@@ -428,7 +491,7 @@ const LatencyChart = memo(function LatencyChart({ data, baseline, p95 }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // VITALS TAB
 // ═══════════════════════════════════════════════════════════════════════════════
-function VitalsTab({ vitals, navTiming }) {
+function VitalsTab({ vitals, navTiming, t }) {
   const hasVitals = vitals.lcp != null || vitals.inp != null || vitals.cls != null;
   const vitalsList = [
     vitals.lcp != null && { metric: "lcp", key: "LCP", desc: "Largest Contentful Paint", value: vitals.lcp, unit: "ms", threshold: THRESHOLDS.lcp },
@@ -438,7 +501,7 @@ function VitalsTab({ vitals, navTiming }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
-      <ChartSection title="Core Web Vitals" subtitle="Session measurements vs. global benchmarks (CrUX p75)">
+      <ChartSection title={t("coreVitals")} subtitle="Session measurements vs. global benchmarks (CrUX p75)">
         {hasVitals ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {vitalsList.map(v => {
@@ -494,13 +557,13 @@ function VitalsTab({ vitals, navTiming }) {
       </ChartSection>
 
       {navTiming && (
-        <ChartSection title="Navigation Timing">
+        <ChartSection title={t("navTiming")}>
           <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
-            <StatRow label="TTFB" value={navTiming.ttfb} unit="ms" />
-            <StatRow label="DOM Content Loaded" value={navTiming.domContentLoaded} unit="ms" />
-            <StatRow label="Full Page Load" value={navTiming.pageLoad} unit="ms" warn={navTiming.pageLoad > 3000} />
-            <StatRow label="DNS Lookup" value={navTiming.dnsLookup} unit="ms" />
-            <StatRow label="TCP Connect" value={navTiming.tcpConnect} unit="ms" last />
+            <StatRow label={t("ttfb")} desc={t("ttfbDesc")} value={navTiming.ttfb} unit="ms" />
+            <StatRow label={t("domLoaded")} desc={t("domLoadedDesc")} value={navTiming.domContentLoaded} unit="ms" />
+            <StatRow label={t("pageLoad")} desc={t("pageLoadDesc")} value={navTiming.pageLoad} unit="ms" warn={navTiming.pageLoad > 3000} />
+            <StatRow label={t("dns")} desc={t("dnsDesc")} value={navTiming.dnsLookup} unit="ms" />
+            <StatRow label={t("tcp")} desc={t("tcpDesc")} value={navTiming.tcpConnect} unit="ms" last />
           </div>
         </ChartSection>
       )}
@@ -511,15 +574,15 @@ function VitalsTab({ vitals, navTiming }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // CLIENT TAB
 // ═══════════════════════════════════════════════════════════════════════════════
-function ClientTab({ client }) {
+function ClientTab({ client, t }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
-      <ChartSection title="Error Counters">
+      <ChartSection title={t("errorCounters")}>
         <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
-          <StatRow label="Unhandled errors"   value={client.unhandledErrors}   warn={client.unhandledErrors > 0}   warnColor="#f87171" />
-          <StatRow label="Promise rejections" value={client.promiseRejections} warn={client.promiseRejections > 0} warnColor="#f87171" />
-          <StatRow label="Failed requests"    value={client.failedRequests}    warn={client.failedRequests > 0}    warnColor="#f87171" />
-          <StatRow label="Slow requests"      value={client.slowRequests}      warn={client.slowRequests > 0}      warnColor="#fbbf24" last />
+          <StatRow label={t("unhandled")}  value={client.unhandledErrors}   warn={client.unhandledErrors > 0}   warnColor="#f87171" />
+          <StatRow label={t("promiseRej")} value={client.promiseRejections} warn={client.promiseRejections > 0} warnColor="#f87171" />
+          <StatRow label={t("failedReq")}  value={client.failedRequests}    warn={client.failedRequests > 0}    warnColor="#f87171" />
+          <StatRow label={t("slowReq")}    value={client.slowRequests}      warn={client.slowRequests > 0}      warnColor="#fbbf24" last />
         </div>
       </ChartSection>
 
@@ -559,7 +622,7 @@ function ClientTab({ client }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // USER FLOW TAB
 // ═══════════════════════════════════════════════════════════════════════════════
-function UserFlowTab({ userFlow }) {
+function UserFlowTab({ userFlow, t }) {
   const hasActivity = userFlow.routeChanges > 0 || userFlow.quizStarted > 0;
   const completionRate = userFlow.quizStarted > 0 ? Math.round((userFlow.quizCompleted / userFlow.quizStarted) * 100) : null;
   const sessionMin = Math.floor(userFlow.sessionDuration / 60);
@@ -574,20 +637,20 @@ function UserFlowTab({ userFlow }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
       {/* Session stats */}
-      <ChartSection title="Session Activity">
+      <ChartSection title={t("sessionActivity")}>
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <InlineMetric label="SESSION" value={`${sessionMin}m ${sessionSec}s`} color="var(--text-secondary)" />
-          <InlineMetric label="ROUTES VISITED" value={String(userFlow.routeChanges)} color="var(--text-secondary)" />
-          {userFlow.quizStarted > 0 && <InlineMetric label="QUIZZES STARTED" value={String(userFlow.quizStarted)} color="#60a5fa" />}
-          {userFlow.quizCompleted > 0 && <InlineMetric label="COMPLETED" value={String(userFlow.quizCompleted)} color="#34d399" />}
-          {completionRate != null && <InlineMetric label="COMPLETION RATE" value={completionRate + "%"} color={sevColor(completionRate, THRESHOLDS.completionRate)} />}
-          {userFlow.retries > 0 && <InlineMetric label="RETRIES" value={String(userFlow.retries)} color="var(--text-secondary)" />}
+          <InlineMetric label={t("session")} value={`${sessionMin}m ${sessionSec}s`} color="var(--text-secondary)" />
+          <InlineMetric label={t("routesVisited")} value={String(userFlow.routeChanges)} color="var(--text-secondary)" />
+          {userFlow.quizStarted > 0 && <InlineMetric label={t("quizzesStarted")} value={String(userFlow.quizStarted)} color="#60a5fa" />}
+          {userFlow.quizCompleted > 0 && <InlineMetric label={t("completed")} value={String(userFlow.quizCompleted)} color="#34d399" />}
+          {completionRate != null && <InlineMetric label={t("completionRate")} value={completionRate + "%"} color={sevColor(completionRate, THRESHOLDS.completionRate)} />}
+          {userFlow.retries > 0 && <InlineMetric label={t("retries")} value={String(userFlow.retries)} color="var(--text-secondary)" />}
         </div>
       </ChartSection>
 
       {/* Route visits bar chart */}
       {routeItems.length > 0 && (
-        <ChartSection title="Route Visits" subtitle={`${routeItems.length} route${routeItems.length !== 1 ? "s" : ""} visited`}>
+        <ChartSection title={t("routeVisits")} subtitle={`${routeItems.length} route${routeItems.length !== 1 ? "s" : ""} visited`}>
           <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
             <HorizontalBarChart items={routeItems} />
           </div>
