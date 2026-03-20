@@ -185,7 +185,7 @@ export default function StatsView({
     <div className="page-pad" style={{ maxWidth: 660, margin: "0 auto", padding: "20px 16px", animation: "fadeIn 0.3s ease", direction: dir }}>
       {/* ── Back button ─ */}
       <button onClick={onBack} style={backBtnStyle}>
-        {dir === "rtl" ? "→" : "←"} {dir === "rtl" ? "חזרה" : "Back"}
+        {dir === "rtl" ? "→" : "←"}
       </button>
 
       <h2 style={{ fontSize: 20, fontWeight: 800, textAlign: "center", color: "var(--text-primary)", marginBottom: 24, marginTop: 0 }}>
