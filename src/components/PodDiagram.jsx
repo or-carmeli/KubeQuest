@@ -50,12 +50,12 @@ export default function PodDiagram() {
         <div style={{
           display: "flex", gap: 10, justifyContent: "center",
           marginTop: 8, paddingTop: 7,
-          borderTop: "1px dashed rgba(255,255,255,0.08)",
+          borderTop: "1px dashed rgba(255,255,255,0.10)",
         }}>
           {["IP", "Network", "Volumes"].map((r) => (
             <span key={r} style={{
-              fontSize: 9, color: "var(--text-muted)", fontFamily: MONO,
-              letterSpacing: 0.2, opacity: 0.9,
+              fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: MONO,
+              letterSpacing: 0.2,
             }}>
               {r}
             </span>
@@ -64,8 +64,8 @@ export default function PodDiagram() {
       </div>
       {/* Caption */}
       <div style={{
-        fontSize: 10, color: "var(--text-dim)", marginTop: 6,
-        textAlign: "center", opacity: 0.8,
+        fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 6,
+        textAlign: "center",
       }}>
         shared resources
       </div>
