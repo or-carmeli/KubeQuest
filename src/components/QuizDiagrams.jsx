@@ -558,28 +558,31 @@ function RoleScopeDiagram() {
 
 // ── 20. PSA Restricted Requirements ─────────────────────────────────
 function PsaAdmissionDiagram() {
+  const kvRow = (k, v, opts = {}) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding: "0 2px", ...opts.style }}>
+      <span style={{ fontSize: opts.dim ? 8 : 9, fontFamily: MONO, color: opts.dim ? "rgba(255,255,255,0.35)" : C.redText, fontWeight: opts.dim ? 500 : 600 }}>{k}</span>
+      <span style={{ fontSize: opts.dim ? 8 : 9, fontFamily: MONO, color: opts.dim ? "rgba(255,255,255,0.35)" : C.greenText, fontWeight: opts.dim ? 500 : 700 }}>{v}</span>
+    </div>
+  );
   return (
     <div style={wrap}>
-      <div style={box(C.red, C.redBg, { width: "100%", maxWidth: 280 })}>
-        <div style={label(C.redText, { marginBottom: 6 })}>restricted</div>
-        {/* Primary: the rejection reason */}
-        <div style={row({ gap: 6, justifyContent: "space-between", flexWrap: "nowrap", width: "100%", padding: "6px 8px", background: "rgba(239,68,68,0.08)", borderRadius: 6, border: "1px solid rgba(239,68,68,0.15)" })}>
-          <span style={{ fontSize: 9, fontFamily: MONO, color: C.redText, fontWeight: 600 }}>allowPrivilegeEscalation</span>
-          <span style={{ fontSize: 9, fontFamily: MONO, color: C.greenText, fontWeight: 700 }}>false</span>
+      <div style={box(C.red, C.redBg, { width: "100%", maxWidth: 280, padding: "10px 12px 8px" })}>
+        {/* Policy label */}
+        <div style={{ fontSize: 9, fontFamily: MONO, fontWeight: 700, color: C.redText, letterSpacing: 0.8, textTransform: "uppercase", textAlign: "center", marginBottom: 8, opacity: 0.8 }}>restricted</div>
+        {/* Rejection cause — highlighted */}
+        <div style={{ padding: "6px 8px", background: "rgba(239,68,68,0.06)", borderRadius: 6, border: "1px solid rgba(239,68,68,0.18)", marginBottom: 8 }}>
+          {kvRow("allowPrivilegeEscalation", "false")}
         </div>
-        {/* Secondary: other common checks */}
-        <div style={{ ...dashed, marginTop: 8, marginBottom: 6 }} />
-        <div style={subLabel({ opacity: 0.7, fontSize: 8, marginBottom: 4 })}>also required by restricted</div>
-        <div style={col({ gap: 3 })}>
-          {[["runAsNonRoot", "true"], ["seccompProfile", "RuntimeDefault"]].map(([k, v]) => (
-            <div key={k} style={row({ gap: 6, justifyContent: "space-between", flexWrap: "nowrap", width: "100%" })}>
-              <span style={subLabel({ opacity: 0.6, fontSize: 8 })}>{k}</span>
-              <span style={{ fontSize: 8, fontFamily: MONO, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>{v}</span>
-            </div>
-          ))}
+        {/* Other restricted checks — secondary */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6 }}>
+          <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", fontFamily: MONO, letterSpacing: 0.3, marginBottom: 4 }}>other restricted checks</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {kvRow("runAsNonRoot", "true", { dim: true })}
+            {kvRow("seccompProfile", "RuntimeDefault", { dim: true })}
+          </div>
         </div>
       </div>
-      <div style={caption()}>rejection caused by allowPrivilegeEscalation != false</div>
+      <div style={caption()}>rejected: allowPrivilegeEscalation must be set to false</div>
     </div>
   );
 }
