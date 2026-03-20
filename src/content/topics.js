@@ -1762,7 +1762,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Sealed Secrets מצפין Secret ל-SealedSecret עם המפתח הציבורי של ה-Cluster.\nה-SealedSecret המוצפן בטוח לשמירה ב-git. רק ה-controller עם המפתח הפרטי מפענח.\nכל Cluster מחזיק מפתח פרטי ייחודי, כך ש-SealedSecret מ-Cluster אחד לא ניתן לפענוח ב-Cluster אחר.\nההצפנה חלה רק על Secrets בתוך git, לא על תעבורת רשת או יצירת secrets מ-env vars.",
+                "Sealed Secrets הוא controller שמגדיר Custom Resource בשם SealedSecret.\nהוא מצפין Secret רגיל ל-SealedSecret באמצעות המפתח הציבורי של ה-Cluster.\nה-SealedSecret המוצפן בטוח לשמירה ב-git. רק ה-controller עם המפתח הפרטי מפענח ויוצר Secret רגיל בתוך ה-Cluster.\nכל Cluster מחזיק מפתח פרטי ייחודי, כך ש-SealedSecret מ-Cluster אחד לא ניתן לפענוח ב-Cluster אחר.\nההצפנה חלה רק על Secrets בתוך git, לא על תעבורת רשת או יצירת secrets מ-env vars.",
             },
             {
               q: "מה שלוש רמות Pod Security Standards?",
@@ -1861,7 +1861,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Sealed Secrets encrypts a Secret into a SealedSecret using the cluster's public key.\nThe SealedSecret is safe to commit to git. Only the cluster's controller can decrypt it.\nEach cluster holds a unique private key, so a SealedSecret from one cluster cannot be decrypted by another.\nThe encryption applies only to Secrets stored in git, not to network traffic or auto-creation from env vars.",
+                "Sealed Secrets is a controller that defines a Custom Resource called SealedSecret.\nIt encrypts a regular Secret into a SealedSecret using the cluster's public key.\nThe SealedSecret is safe to commit to git. Only the controller with the private key can decrypt it and create a regular Secret inside the cluster.\nEach cluster holds a unique private key, so a SealedSecret from one cluster cannot be decrypted by another.\nThe encryption applies only to Secrets stored in git, not to network traffic or auto-creation from env vars.",
             },
             {
               q: "What are the three Pod Security Standard levels?",
