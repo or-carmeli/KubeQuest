@@ -5272,9 +5272,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* STATUS */}
       {screen==="status"&&<StatusView supabase={supabase} lang={lang} isStatusDomain={isStatusDomain} setScreen={setScreen} APP_VERSION={APP_VERSION} />}
 
-      {/* PERFORMANCE INSIGHTS (dev-only) */}
-      {import.meta.env.DEV&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} />}
-
       {!isStatusDomain && <>
       {/* TOPIC */}
       {screen==="topic"&&selectedTopic&&selectedLevel&&(
