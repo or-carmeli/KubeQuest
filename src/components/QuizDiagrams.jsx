@@ -58,12 +58,12 @@ const smallBox = (border, bg, color, extra) => ({
 });
 
 const caption = (extra) => ({
-  fontSize: 10, color: C.dim, marginTop: 6,
-  textAlign: "center", opacity: 0.8, ...extra,
+  fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 6,
+  textAlign: "center", ...extra,
 });
 
 const arrow = (extra) => ({
-  fontSize: 11, color: C.muted, opacity: 0.5, fontFamily: MONO, ...extra,
+  fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: MONO, ...extra,
 });
 
 const row = (extra) => ({
@@ -75,11 +75,11 @@ const col = (extra) => ({
   display: "flex", flexDirection: "column", alignItems: "center", gap: 6, ...extra,
 });
 
-const dashed = { borderTop: "1px dashed rgba(255,255,255,0.08)" };
+const dashed = { borderTop: "1px dashed rgba(255,255,255,0.10)" };
 
 const subLabel = (extra) => ({
-  fontSize: 9, color: C.muted, fontFamily: MONO,
-  letterSpacing: 0.2, opacity: 0.9, ...extra,
+  fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: MONO,
+  letterSpacing: 0.2, ...extra,
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
