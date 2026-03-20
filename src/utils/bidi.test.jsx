@@ -17,6 +17,7 @@ import {
   renderBidi,
   renderBidiBlock,
 } from "./bidi";
+import { TerminalBlock } from "../components/CodeBlocks";
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -386,12 +387,12 @@ describe("CLI colon-separator regression", () => {
     expect(text).toContain("kubectl describe");
     expect(text).toContain("events");
 
-    // Find cli-command code elements
-    const cliElements = findElements(result, (el) => el.props?.className === "cli-command");
-    expect(cliElements.length).toBe(1);
+    // Find TerminalBlock elements (rendered by splitCliParts for CLI commands)
+    const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
+    expect(termBlocks.length).toBe(1);
 
     // The CLI command should be just "kubectl describe" without trailing colon
-    const cliText = flattenText(cliElements[0]).trim();
+    const cliText = flattenText(termBlocks[0]).trim();
     expect(cliText).toBe("kubectl describe");
   });
 
@@ -399,9 +400,9 @@ describe("CLI colon-separator regression", () => {
     const input = "kubectl logs: לוגים של קונטיינר";
     const result = renderBidiBlock(input, "he");
 
-    const cliElements = findElements(result, (el) => el.props?.className === "cli-command");
-    expect(cliElements.length).toBe(1);
-    const cliText = flattenText(cliElements[0]).trim();
+    const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
+    expect(termBlocks.length).toBe(1);
+    const cliText = flattenText(termBlocks[0]).trim();
     expect(cliText).toBe("kubectl logs");
   });
 
@@ -409,9 +410,10 @@ describe("CLI colon-separator regression", () => {
     const input = "kubectl get pods -A: כל ה-Pods בכל ה-Namespaces";
     const result = renderBidiBlock(input, "he");
 
-    const cliElements = findElements(result, (el) => el.props?.className === "cli-command");
-    expect(cliElements.length).toBe(1);
-    const cliText = flattenText(cliElements[0]).trim();
+    // 4-token command renders as TerminalBlock
+    const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
+    expect(termBlocks.length).toBe(1);
+    const cliText = flattenText(termBlocks[0]).trim();
     expect(cliText).toBe("kubectl get pods -A");
   });
 
