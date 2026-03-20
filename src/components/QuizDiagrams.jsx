@@ -565,7 +565,7 @@ function PsaAdmissionDiagram() {
     </div>
   );
   return (
-    <div style={wrap}>
+    <div dir="ltr" style={{...wrap, direction: "ltr"}}>
       <div style={box("rgba(239,68,68,0.30)", "rgba(239,68,68,0.03)", { width: "100%", maxWidth: 280, padding: "10px 12px 8px" })}>
         <div style={{ fontSize: 9, fontFamily: MONO, fontWeight: 600, color: "rgba(252,165,165,0.7)", letterSpacing: 0.5, textAlign: "center", marginBottom: 8 }}>PSA: restricted</div>
         <div style={{ padding: "5px 6px", background: "rgba(239,68,68,0.05)", borderRadius: 5, border: "1px solid rgba(239,68,68,0.14)", marginBottom: 8 }}>
@@ -579,7 +579,7 @@ function PsaAdmissionDiagram() {
           </div>
         </div>
       </div>
-      <div style={{ fontSize: 9.5, color: "rgba(252,165,165,0.55)", marginTop: 6, textAlign: "center", fontFamily: MONO }}>Error: allowPrivilegeEscalation must be false</div>
+      <div style={{ marginTop: 6, width: "100%", maxWidth: 280, background: "rgba(248,81,73,0.06)", border: "1px solid rgba(248,81,73,0.12)", borderRadius: 5, padding: "4px 10px", fontFamily: MONO, fontSize: 9, color: "#f85149", lineHeight: 1.5 }}>Error: allowPrivilegeEscalation must be false</div>
     </div>
   );
 }

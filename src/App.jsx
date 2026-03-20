@@ -5476,15 +5476,16 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     else if (isChosen)          { borderColor = "#EF4444"; bg = "rgba(239,68,68,0.1)";   color = "#EF4444"; labelBg = "rgba(239,68,68,0.2)";   labelColor = "#EF4444"; }
                   }
                   const optDir = (dir==="rtl" && !hasHebrew(opt)) ? "ltr" : dir;
+                  const isYamlOpt = /^```ya?ml\n/.test(opt);
                   return (
                     <button key={opt} className="opt-btn"
                       onClick={()=>{ if (isEliminated) return; if (tryAgainActive && tryAgainSelected===null) setTryAgainSelected(i); else if (!isInHistoryMode && !tryAgainActive) handleSelectAnswer(i); }}
                       aria-pressed={!dispSubmitted ? i === dispSelectedAnswer : undefined}
                       aria-disabled={isEliminated}
                       dir={optDir}
-                      style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",textAlign:optDir==="rtl"?"right":"left",padding:"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:"center",flexDirection:optDir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46,overflow:"hidden"}}>
-                      <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor}}>{t("optionLabels")[i]}</span>
-                      <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{renderBidi(opt,lang,{noCodeStyle:true})}</span>
+                      style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",textAlign:optDir==="rtl"?"right":"left",padding:isYamlOpt?"6px 8px":"10px 13px",background:bg,border:`1px solid ${borderColor}`,borderRadius:10,color,fontSize:14,cursor:isEliminated?"default":(tryAgainActive?(tryAgainSelected===null?"pointer":"default"):(dispSubmitted?"default":"pointer")),lineHeight:1.55,display:"flex",alignItems:isYamlOpt?"stretch":"center",flexDirection:optDir==="rtl"?"row-reverse":"row",gap:8,transition:"all 0.15s",opacity:isEliminated?0.35:1,textDecoration:isEliminated?"line-through":"none",minHeight:46,overflow:"hidden"}}>
+                      <span aria-hidden="true" style={{flexShrink:0,width:26,height:26,borderRadius:7,background:labelBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:labelColor,alignSelf:isYamlOpt?"flex-start":"center",marginTop:isYamlOpt?6:0}}>{t("optionLabels")[i]}</span>
+                      <span dir={optDir} style={{flex:1,minWidth:0,wordBreak:"break-word",overflowWrap:"anywhere",textAlign:optDir==="rtl"?"right":"left",lineHeight:1.55,unicodeBidi:"isolate"}}>{/^```ya?ml\n/.test(opt)?<YamlBlock>{opt.replace(/^```\w*\n?/,"").replace(/\n?```\s*$/,"").trim()}</YamlBlock>:renderBidi(opt,lang,{noCodeStyle:true})}</span>
                       {dispSubmitted&&!dispAnswerResult&&isChosen&&<span aria-hidden="true" style={{flexShrink:0,width:16,height:16,border:"2px solid #00D4FF44",borderTop:"2px solid #00D4FF",borderRadius:"50%",animation:"spin 0.6s linear infinite"}} />}
                       {dispSubmitted&&dispAnswerResult&&isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✓</span>}
                       {dispSubmitted&&dispAnswerResult&&isChosen&&!isCorrect&&<span aria-hidden="true" style={{flexShrink:0,fontSize:16,lineHeight:1}}>✗</span>}
