@@ -100,15 +100,17 @@ function HorizontalBarChart({ items, labelWidth = CHART_LABEL_W, valueWidth = CH
 }
 
 /** Summary stat row: label on left, value on right. Use inside a container. */
-function StatRow({ label, desc, value, unit, warn, warnColor, last }) {
+function StatRow({ label, desc, value, unit, warn, warnColor, last, zeroLabel }) {
+  const isZero = value === 0 && zeroLabel;
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: CHART_ROW_H, borderBottom: last ? "none" : "1px solid var(--glass-3)", padding: "6px 0" }}>
       <div>
         <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
         {desc && <div style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.3 }}>{desc}</div>}
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: MONO, color: warn ? (warnColor || "#fbbf24") : "var(--text-primary)" }}>
+      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: MONO, color: warn ? (warnColor || "#fbbf24") : isZero ? "var(--text-muted)" : "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
         {value}{unit || ""}
+        {isZero && <span style={{ fontSize: 9, fontWeight: 500, color: "var(--text-dim)", background: "var(--glass-3)", padding: "1px 5px", borderRadius: 4, fontFamily: "inherit" }}>{zeroLabel}</span>}
       </span>
     </div>
   );
@@ -234,6 +236,16 @@ const T = {
     noTrafficYet: "No traffic observed yet",
     avg: "Avg", p95: "P95", samples: "Samples",
     last: "Last",
+    // Section headers
+    trafficObservability: "Traffic Observability",
+    trafficObservabilityDesc: "API request metrics for the selected time window",
+    browserPerformance: "Browser Performance",
+    browserPerformanceDesc: "Page load and rendering metrics from the browser. Available even without API traffic.",
+    pageLoadDiagnostics: "Page Load Diagnostics",
+    pageLoadDiagnosticsDesc: "Navigation Timing API measurements from initial page load",
+    zeroMsCached: "cached",
+    zeroMsReused: "reused",
+    zeroMsNote: "0ms values indicate DNS caching or connection reuse by the browser.",
   },
   he: {
     title: "תובנות ביצועים",
@@ -288,6 +300,16 @@ const T = {
     noTrafficYet: "לא נצפתה תעבורה עדיין",
     avg: "ממוצע", p95: "P95", samples: "דגימות",
     last: "אחרון",
+    // Section headers
+    trafficObservability: "Traffic Observability - מדדי תעבורה",
+    trafficObservabilityDesc: "מדדי בקשות API בחלון הזמן הנבחר",
+    browserPerformance: "Browser Performance - ביצועי דפדפן",
+    browserPerformanceDesc: "מדדי טעינה ורינדור מהדפדפן. זמינים גם ללא תעבורת API.",
+    pageLoadDiagnostics: "Page Load Diagnostics - אבחון טעינה",
+    pageLoadDiagnosticsDesc: "מדידות Navigation Timing API מטעינת הדף הראשונית",
+    zeroMsCached: "cached",
+    zeroMsReused: "reused",
+    zeroMsNote: "ערכי 0ms מעידים על DNS cache או שימוש חוזר בחיבור קיים.",
   },
 };
 
@@ -381,92 +403,95 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════════
-         ZONE 1 — Status banner
+         SECTION 1 — Traffic Observability (API request metrics)
          ════════════════════════════════════════════════════════════════════════ */}
-      <div style={{ background: `rgba(${health.status === "unhealthy" ? "239,68,68" : health.status === "degraded" ? "245,158,11" : health.status === "unknown" ? "148,163,184" : "52,211,153"},0.03)`, border: `1px solid ${healthColor}18`, borderRadius: 12, padding: "18px 20px", marginBottom: 8 }}>
-        {/* Status + confidence */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}CC, 0 0 12px ${healthColor}66` }} />
-          <span style={{ fontSize: 17, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>
-            {health.status === "unknown" ? t("statusIdle")(rangeLabel) : health.status === "healthy" && confidence.level === "low" ? t("statusHealthyLow") : { healthy: t("statusHealthy"), degraded: t("statusDegraded"), unhealthy: t("statusUnhealthy") }[health.status]}
-          </span>
-          <ConfidenceBadge level={confidence.level} t={t} />
-        </div>
-        <div style={{ fontSize: 14, color: health.status === "unknown" ? "var(--text-muted)" : "var(--text-secondary)", lineHeight: 1.5, marginBottom: 16 }}>{health.reason}</div>
-
-        {/* Key metrics row */}
-        <div style={{ display: "flex", gap: 0, flexWrap: "wrap", paddingTop: 16, borderTop: "1px solid var(--glass-3)" }}>
-          <BannerMetric label={t("p95Latency")} desc={t("p95Desc")} value={data.p95 != null ? data.p95 + "ms" : (data.totalRequests > 0 ? "Sampling\u2026" : "\u2014")} color={data.p95 != null ? sevColor(data.p95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
-          <BannerMetric label={t("errorRate")} desc={t("errorRateDesc")} value={data.errorRate != null ? data.errorRate + "%" : (data.totalRequests > 0 ? "0%" : "N/A")} color={data.errorRate != null && data.errorRate >= 2 ? "#f87171" : "var(--text-bright)"} />
-          <BannerMetric label={t("traffic")} desc={t("trafficDesc")} value={data.traffic?.rps != null ? data.traffic.label : (data.totalRequests > 0 ? data.totalRequests + " req" : "\u2014")} color={data.totalRequests > 0 ? "var(--text-bright)" : "var(--text-dim)"} />
-          <BannerMetric label={t("errors")} desc={t("errorsDesc")} value={String(data.errorCount)} color={data.errorCount > 0 ? "#f87171" : "var(--text-bright)"} last />
-        </div>
-      </div>
-
-      {/* Collapsible alerts */}
-      {alerts.length > 0 && (
-        <div style={{ marginBottom: 8 }}>
-          <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}>
-            {alertsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            <AlertTriangle size={12} color={health.status === "unhealthy" ? "#f87171" : "#fbbf24"} />
-            <span>{t("alertCount")(alerts.length)}</span>
-          </button>
-          {alertsOpen && (
-            <div style={{ padding: "4px 12px 8px 30px", display: "flex", flexDirection: "column", gap: 4 }}>
-              {alerts.map((a, i) => (
-                <div key={i} style={{ fontSize: 12, color: SEVERITY_COLORS[a.severity].text, display: "flex", alignItems: "center", gap: 6 }}>
-                  <SeverityDot sev={a.severity} />
-                  {a.message}
-                </div>
-              ))}
+      <div style={{ marginBottom: 28 }}>
+        <ChartSection title={t("trafficObservability")} subtitle={t("trafficObservabilityDesc")}>
+          {/* Status banner */}
+          <div style={{ background: `rgba(${health.status === "unhealthy" ? "239,68,68" : health.status === "degraded" ? "245,158,11" : health.status === "unknown" ? "148,163,184" : "52,211,153"},0.03)`, border: `1px solid ${healthColor}18`, borderRadius: 12, padding: "18px 20px", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}CC, 0 0 12px ${healthColor}66` }} />
+              <span style={{ fontSize: 17, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>
+                {health.status === "unknown" ? t("statusIdle")(rangeLabel) : health.status === "healthy" && confidence.level === "low" ? t("statusHealthyLow") : { healthy: t("statusHealthy"), degraded: t("statusDegraded"), unhealthy: t("statusUnhealthy") }[health.status]}
+              </span>
+              <ConfidenceBadge level={confidence.level} t={t} />
             </div>
-          )}
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════════════
-         ZONE 2 — Latency chart + Insights
-         ════════════════════════════════════════════════════════════════════════ */}
-      <div style={{ marginTop: 24 }}>
-        <ChartSection
-          title={<span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {t("requestLatency")}
-            {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? "#fbbf24" : trendDir === "decreasing" ? "#34d399" : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
-              {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
-            </span>}
-          </span>}
-          subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
-        >
-          {hasLatencyData
-            ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} />
-            : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={activeRange.sec != null && activeRange.sec <= 60 ? t("noRequestsHintShort") : t("noRequestsHintNav")} />
-          }
+            <div style={{ fontSize: 14, color: health.status === "unknown" ? "var(--text-muted)" : "var(--text-secondary)", lineHeight: 1.5, marginBottom: 16 }}>{health.reason}</div>
+            <div style={{ display: "flex", gap: 0, flexWrap: "wrap", paddingTop: 16, borderTop: "1px solid var(--glass-3)" }}>
+              <BannerMetric label={t("p95Latency")} desc={t("p95Desc")} value={data.p95 != null ? data.p95 + "ms" : (data.totalRequests > 0 ? "Sampling\u2026" : "\u2014")} color={data.p95 != null ? sevColor(data.p95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
+              <BannerMetric label={t("errorRate")} desc={t("errorRateDesc")} value={data.errorRate != null ? data.errorRate + "%" : (data.totalRequests > 0 ? "0%" : "N/A")} color={data.errorRate != null && data.errorRate >= 2 ? "#f87171" : "var(--text-bright)"} />
+              <BannerMetric label={t("traffic")} desc={t("trafficDesc")} value={data.traffic?.rps != null ? data.traffic.label : (data.totalRequests > 0 ? data.totalRequests + " req" : "\u2014")} color={data.totalRequests > 0 ? "var(--text-bright)" : "var(--text-dim)"} />
+              <BannerMetric label={t("errors")} desc={t("errorsDesc")} value={String(data.errorCount)} color={data.errorCount > 0 ? "#f87171" : "var(--text-bright)"} last />
+            </div>
+          </div>
         </ChartSection>
-      </div>
 
-      {/* Insights */}
-      {insights.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <ChartSection title={t("insights")}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {insights.map((ins, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
-                  <SeverityDot sev={ins.severity} size={7} />
-                  <span style={{ fontSize: 14, color: ins.severity === "info" ? "var(--text-secondary)" : SEVERITY_COLORS[ins.severity].text, lineHeight: 1.5 }}>
-                    {ins.message}
-                  </span>
-                </div>
-              ))}
-            </div>
+        {/* Collapsible alerts */}
+        {alerts.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}>
+              {alertsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              <AlertTriangle size={12} color={health.status === "unhealthy" ? "#f87171" : "#fbbf24"} />
+              <span>{t("alertCount")(alerts.length)}</span>
+            </button>
+            {alertsOpen && (
+              <div style={{ padding: "4px 12px 8px 30px", display: "flex", flexDirection: "column", gap: 4 }}>
+                {alerts.map((a, i) => (
+                  <div key={i} style={{ fontSize: 12, color: SEVERITY_COLORS[a.severity].text, display: "flex", alignItems: "center", gap: 6 }}>
+                    <SeverityDot sev={a.severity} />
+                    {a.message}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Request latency chart */}
+        <div style={{ marginTop: 16 }}>
+          <ChartSection
+            title={<span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {t("requestLatency")}
+              {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? "#fbbf24" : trendDir === "decreasing" ? "#34d399" : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
+                {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
+              </span>}
+            </span>}
+            subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
+          >
+            {hasLatencyData
+              ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} />
+              : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={activeRange.sec != null && activeRange.sec <= 60 ? t("noRequestsHintShort") : t("noRequestsHintNav")} />
+            }
           </ChartSection>
         </div>
-      )}
+
+        {/* Insights */}
+        {insights.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <ChartSection title={t("insights")}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {insights.map((ins, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
+                    <SeverityDot sev={ins.severity} size={7} />
+                    <span style={{ fontSize: 14, color: ins.severity === "info" ? "var(--text-secondary)" : SEVERITY_COLORS[ins.severity].text, lineHeight: 1.5 }}>
+                      {ins.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </ChartSection>
+          </div>
+        )}
+      </div>
+
+      {/* Divider between sections */}
+      <div style={{ borderTop: "1px solid var(--glass-4)", marginBottom: 28 }} />
 
       {/* ════════════════════════════════════════════════════════════════════════
-         ZONE 3 — Diagnostics tabs
+         SECTION 2 — Browser Performance (page load + rendering metrics)
          ════════════════════════════════════════════════════════════════════════ */}
-      <div style={{ marginTop: 28 }}>
-        <ChartSection title={t("diagnostics")}>
+      <div style={{ marginBottom: 20 }}>
+        <ChartSection title={t("browserPerformance")} subtitle={t("browserPerformanceDesc")}>
           <div style={{ display: "flex", gap: 4, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
             {TABS.map(tab => {
               const Icon = tab.icon;
@@ -611,14 +636,17 @@ function VitalsTab({ vitals, navTiming, t }) {
       </ChartSection>
 
       {navTiming && (
-        <ChartSection title={t("navTiming")}>
+        <ChartSection title={t("pageLoadDiagnostics")} subtitle={t("pageLoadDiagnosticsDesc")}>
           <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
             <StatRow label={t("ttfb")} desc={t("ttfbDesc")} value={navTiming.ttfb} unit="ms" />
             <StatRow label={t("domLoaded")} desc={t("domLoadedDesc")} value={navTiming.domContentLoaded} unit="ms" />
             <StatRow label={t("pageLoad")} desc={t("pageLoadDesc")} value={navTiming.pageLoad} unit="ms" warn={navTiming.pageLoad > 3000} />
-            <StatRow label={t("dns")} desc={t("dnsDesc")} value={navTiming.dnsLookup} unit="ms" />
-            <StatRow label={t("tcp")} desc={t("tcpDesc")} value={navTiming.tcpConnect} unit="ms" last />
+            <StatRow label={t("dns")} desc={t("dnsDesc")} value={navTiming.dnsLookup} unit="ms" zeroLabel={t("zeroMsCached")} />
+            <StatRow label={t("tcp")} desc={t("tcpDesc")} value={navTiming.tcpConnect} unit="ms" zeroLabel={t("zeroMsReused")} last />
           </div>
+          {(navTiming.dnsLookup === 0 || navTiming.tcpConnect === 0) && (
+            <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 6, fontStyle: "italic" }}>{t("zeroMsNote")}</div>
+          )}
         </ChartSection>
       )}
     </div>
