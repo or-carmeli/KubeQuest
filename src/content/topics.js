@@ -1814,6 +1814,7 @@ export const TOPICS = [
             },
             {
               q: "ה-Deployment נדחה על ידי PSA עם policy מסוג restricted.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nאיזה securityContext צריך להגדיר ל-container כדי לעמוד במדיניות?",
+              tags: ["psa-admission"],
               options: [
               "```yaml\nsecurityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [\"NET_ADMIN\"]\n```",
               "```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```",
@@ -1912,6 +1913,7 @@ export const TOPICS = [
             },
             {
               q: "A Deployment is rejected by PSA with a restricted policy.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nWhich securityContext must you set on the container to comply?",
+              tags: ["psa-admission"],
               options: [
               "```yaml\nsecurityContext:\n  privileged: true\n  runAsUser: 0\n  capabilities:\n    add: [\"NET_ADMIN\"]\n```",
               "```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```",

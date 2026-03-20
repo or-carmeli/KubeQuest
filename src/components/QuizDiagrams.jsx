@@ -556,6 +556,39 @@ function RoleScopeDiagram() {
   );
 }
 
+// ── 20. PSA Admission Flow ──────────────────────────────────────────
+function PsaAdmissionDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%" })}>kubectl apply</div>
+        <div style={arrow()}>|</div>
+        <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { width: "100%" })}>API Server</div>
+        <div style={arrow()}>|</div>
+        <div style={box(C.amber, C.amberBg, { width: "100%", padding: "8px 10px" })}>
+          <div style={label(C.amberText, { fontSize: 10, marginBottom: 4 })}>PSA Controller</div>
+          <div style={row({ gap: 4 })}>
+            <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>restricted</div>
+            <div style={smallBox(C.amber, C.amberBg, C.amberText, { fontSize: 8, padding: "3px 6px" })}>baseline</div>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 6px" })}>privileged</div>
+          </div>
+        </div>
+        <div style={row({ gap: 12 })}>
+          <div style={col({ gap: 2 })}>
+            <div style={arrow({ color: C.greenText })}>|</div>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 8px" })}>accept</div>
+          </div>
+          <div style={col({ gap: 2 })}>
+            <div style={arrow({ color: C.redText })}>|</div>
+            <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 8px" })}>reject</div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>PSA intercepts before Pod is created</div>
+    </div>
+  );
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // LAZY RENDERING — only mount diagram when scrolled into view
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -662,6 +695,7 @@ const COMPONENT_MAP = {
   TopologySpreadDiagram,
   ArgoCdSyncDiagram,
   RoleScopeDiagram,
+  PsaAdmissionDiagram,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

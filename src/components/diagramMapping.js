@@ -77,6 +77,7 @@ export const TAG_DIAGRAM_CONFIG = {
   // ── security ────────────────────────────────────────────────────────────
   "rbac-binding":         { component: "RbacDiagram",                score: 4 },
   "role-scope":           { component: "RoleScopeDiagram",           score: 4 },
+  "psa-admission":        { component: "PsaAdmissionDiagram",       score: 4 },
 
   // ── scheduling ──────────────────────────────────────────────────────────
   "taints-tolerations":   { component: "TaintsTolerationsDiagram",   score: 4 },
