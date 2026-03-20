@@ -1758,7 +1758,7 @@ export const TOPICS = [
               "יצירת Kubernetes Secrets אוטומטית מ-environment variables בזמן deploy",
               "שיתוף Secrets מוצפנים בין Clusters שונים באמצעות מפתח משותף",
               "הצפנת תעבורת רשת בין Pods באמצעות מפתחות שנשמרים ב-etcd",
-              "שמירת Secrets מוצפנים ב-git בבטחה כ-SealedSecret resources",
+              "שמירת Secrets מוצפנים ב-git בבטחה כמשאבי SealedSecret",
 ],
               answer: 3,
               explanation:
