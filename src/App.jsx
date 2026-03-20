@@ -399,7 +399,7 @@ const TRANSLATIONS = {
     removeBookmark: "הסרי", removeBookmark_m: "הסר",
     bookmark: "☆ שמרי", bookmarkActive: "★ שמורה",
     bookmark_m: "☆ שמור", bookmarkActive_m: "★ שמור",
-    searchBtn: "חיפוש שאלה", searchPlaceholder: "חפשי לפי מילת מפתח...", searchNoResults: "לא נמצאו תוצאות",
+    searchBtn: "חיפוש", searchPlaceholder: "חיפוש שאלות, פקודות, תרחישים...", searchNoResults: "לא נמצאו תוצאות",
     mistakesBtn: "תרגול טעויות", mistakesEmpty: "אין טעויות! כל הכבוד", mistakesHint: "שאלות שטעית בהן",
     guideBtn: "פקודות", guideSub: "פקודות kubectl מוכנות להעתקה. לחצו לפתיחה", aboutBtn: "אודות האפליקציה",
     privacyBtn: "מדיניות פרטיות", termsBtn: "תנאי שימוש",
@@ -613,7 +613,7 @@ const TRANSLATIONS = {
     startSavedQuiz: "▶ Practice Saved Questions",
     removeBookmark: "Remove",
     bookmark: "☆ Save", bookmarkActive: "★ Saved",
-    searchBtn: "Search Question", searchPlaceholder: "Search by keyword...", searchNoResults: "No results found",
+    searchBtn: "Search", searchPlaceholder: "Search questions, commands, scenarios...", searchNoResults: "No results found",
     mistakesBtn: "My Mistakes", mistakesEmpty: "No mistakes! Great job", mistakesHint: "Questions you answered incorrectly",
     guideBtn: "Commands", guideSub: "Copy-ready kubectl commands. Tap to expand", aboutBtn: "About the App",
     privacyBtn: "Privacy Policy", termsBtn: "Terms of Service",
@@ -4912,30 +4912,67 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           />
           {searchQuery.trim().length>=2&&(()=>{
             const q=searchQuery.toLowerCase();
-            const results=[];
+            const allResults=[];
+
+            // 1. Topic questions
             AVAILABLE_TOPICS.forEach(topic=>(['easy','medium','hard']).forEach(lvl=>{
               const qs=getLocalizedField(topic.levels?.[lvl], "questions", lang);
               (qs||[]).forEach(question=>{
-                if(question.q.toLowerCase().includes(q)) results.push({topic,level:lvl,question});
+                if(question.q.toLowerCase().includes(q)) allResults.push({type:"topic",topic,level:lvl,text:question.q,action:()=>tryStartQuiz(()=>startTopic(topic,lvl),"topic")});
               });
             }));
-            const capped=results.slice(0,25);
+
+            // 2. Daily questions
+            const dailyPool=DAILY_QUESTIONS[lang]||DAILY_QUESTIONS.he;
+            (dailyPool||[]).forEach(question=>{
+              if(question.q.toLowerCase().includes(q)) allResults.push({type:"daily",text:question.q});
+            });
+
+            // 3. Incidents
+            INCIDENTS.forEach(inc=>{
+              const title=getLocalizedField(inc,"title",lang)||inc.title;
+              const desc=getLocalizedField(inc,"description",lang)||inc.description;
+              if((title+desc).toLowerCase().includes(q)) allResults.push({type:"incident",text:title,sub:desc,incident:inc});
+            });
+
+            // 4. Cheatsheet commands
+            CHEATSHEET.forEach(section=>{
+              const secTitle=getLocalizedField(section,"title",lang)||section.title;
+              section.commands.forEach(cmd=>{
+                const cmdDesc=getLocalizedField(cmd,"desc",lang)||cmd.desc;
+                if((cmd.cmd+cmdDesc).toLowerCase().includes(q)) allResults.push({type:"command",text:cmd.cmd,sub:cmdDesc,sectionTitle:secTitle,sectionColor:section.color});
+              });
+            });
+
+            const capped=allResults.slice(0,30);
             if(capped.length===0) return <div style={{color:"var(--text-dim)",fontSize:14,textAlign:"center",padding:"30px 0"}}>{t("searchNoResults")}</div>;
+
+            const typeMeta={
+              topic:{icon:<BookOpen size={14} strokeWidth={1.5}/>,label:lang==="en"?"Quiz":"חידון",color:"#00D4FF"},
+              daily:{icon:<CalendarDays size={14} strokeWidth={1.5}/>,label:lang==="en"?"Daily":"יומי",color:"#F59E0B"},
+              incident:{icon:<Siren size={14} strokeWidth={1.5}/>,label:lang==="en"?"War Room":"War Room",color:"#EF4444"},
+              command:{icon:<Terminal size={14} strokeWidth={1.5}/>,label:lang==="en"?"Command":"פקודה",color:"#10B981"},
+            };
+
             return (<>
-              <div style={{color:"var(--text-muted)",fontSize:12,marginBottom:12}}>{capped.length} {lang==="en"?"results":"תוצאות"}</div>
-              {capped.map(({topic,level,question},i)=>(
-                <div key={i} style={{background:"var(--glass-3)",border:`1px solid ${topic.color}22`,borderRadius:12,padding:"12px 14px",marginBottom:10}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,direction:"ltr"}}>
-                    <TopicIcon name={topic.icon} size={16} color={topic.color} />
-                    <span style={{color:topic.color,fontSize:12,fontWeight:700}}>{topic.name}</span>
-                    <span style={{marginLeft:"auto",background:`${LEVEL_CONFIG[level]?.color}22`,color:LEVEL_CONFIG[level]?.color,fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6}}>{levelLabel(level)}</span>
+              <div style={{color:"var(--text-muted)",fontSize:12,marginBottom:12}}>{capped.length}{allResults.length>30?"+":""} {lang==="en"?"results":"תוצאות"}</div>
+              {capped.map((r,i)=>{
+                const meta=typeMeta[r.type];
+                return (
+                <div key={i} style={{background:"var(--glass-3)",border:`1px solid ${meta.color}22`,borderRadius:12,padding:"12px 14px",marginBottom:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    <span style={{color:meta.color,display:"flex",alignItems:"center",opacity:0.7}}>{meta.icon}</span>
+                    <span style={{fontSize:11,fontWeight:700,color:meta.color,background:`${meta.color}15`,padding:"2px 8px",borderRadius:6}}>{meta.label}</span>
+                    {r.type==="topic"&&r.topic&&<><TopicIcon name={r.topic.icon} size={14} color={r.topic.color} /><span style={{color:r.topic.color,fontSize:11,fontWeight:600}}>{r.topic.name}</span><span style={{marginInlineStart:"auto",background:`${LEVEL_CONFIG[r.level]?.color}22`,color:LEVEL_CONFIG[r.level]?.color,fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:6}}>{levelLabel(r.level)}</span></>}
+                    {r.type==="command"&&<span style={{color:r.sectionColor,fontSize:11,fontWeight:600}}>{r.sectionTitle}</span>}
                   </div>
-                  <div dir={dir} style={{color:"var(--text-light)",fontSize:13,lineHeight:1.5,marginBottom:10}}>{renderBidiBlock(question.q, lang)}</div>
-                  <button onClick={()=>tryStartQuiz(()=>startTopic(topic,level),"topic")} style={{padding:"7px 14px",background:`${topic.color}15`,border:`1px solid ${topic.color}44`,borderRadius:8,color:topic.color,fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                    {lang==="en"?"Go to Topic →":"עבור לנושא →"}
-                  </button>
-                </div>
-              ))}
+                  <div dir={r.type==="command"?"ltr":dir} style={{color:"var(--text-light)",fontSize:13,lineHeight:1.5,...(r.type==="command"?{fontFamily:MONO_FONT,fontSize:12}:{})}}>{renderBidiBlock(r.text, lang)}</div>
+                  {r.sub&&<div dir={dir} style={{color:"var(--text-muted)",fontSize:12,marginTop:4,lineHeight:1.4}}>{r.sub}</div>}
+                  {r.type==="topic"&&r.action&&<button onClick={r.action} style={{marginTop:10,padding:"7px 14px",background:`${r.topic.color}15`,border:`1px solid ${r.topic.color}44`,borderRadius:8,color:r.topic.color,fontSize:12,fontWeight:700,cursor:"pointer"}}>{lang==="en"?"Go to Topic":"עבור לנושא"}</button>}
+                  {r.type==="incident"&&EXPERIMENTAL_ENABLED&&<button onClick={()=>{setSelectedIncident(r.incident);setScreen("incident");}} style={{marginTop:10,padding:"7px 14px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,color:"#EF4444",fontSize:12,fontWeight:700,cursor:"pointer"}}>{lang==="en"?"Start Incident":"התחל תרחיש"}</button>}
+                  {r.type==="command"&&<button onClick={()=>{navigator.clipboard?.writeText(r.text);}} style={{marginTop:10,padding:"7px 14px",background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.3)",borderRadius:8,color:"#10B981",fontSize:12,fontWeight:700,cursor:"pointer"}}>{lang==="en"?"Copy":"העתק"}</button>}
+                </div>);
+              })}
             </>);
           })()}
         </div>
