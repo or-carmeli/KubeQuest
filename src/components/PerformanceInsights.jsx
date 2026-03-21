@@ -15,9 +15,9 @@ import {
   BarChart3, Zap, TrendingUp, TrendingDown, Minus,
 } from "lucide-react";
 import { THRESHOLDS, SEVERITY_COLORS, severity, computeBaseline, CRUX_BENCHMARKS, compareToGlobal } from "../utils/mockTelemetry";
-import { buildSnapshot, TIME_RANGES } from "../utils/hybridTelemetry";
+import { buildSnapshot, TIME_RANGES, computePercentiles } from "../utils/hybridTelemetry";
 import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/realTelemetry";
-import { HISTORICAL_RANGES, startHistoryRecorder, getHistory, aggregateHistory, computeRES, scoreLabel } from "../utils/telemetryHistory";
+import { HISTORICAL_RANGES, startHistoryRecorder, getHistory, aggregateHistory, computeRES, scoreLabel, computeVitalDistribution } from "../utils/telemetryHistory";
 
 
 // ─── Component-level guard ─────────────────────────────────────────────────────
@@ -44,6 +44,22 @@ const GREEN  = "#34d399";
 const BLUE   = "#60a5fa";
 const AMBER  = "#fbbf24";
 const RED    = "#f87171";
+
+// ─── Metric metadata ────────────────────────────────────────────────────────────
+const METRIC_INFO = {
+  lcp:  { acronym: "LCP",  fullName: "Largest Contentful Paint",  desc: "Main content load time" },
+  inp:  { acronym: "INP",  fullName: "Interaction to Next Paint", desc: "Input responsiveness" },
+  cls:  { acronym: "CLS",  fullName: "Cumulative Layout Shift",   desc: "Visual stability" },
+  fcp:  { acronym: "FCP",  fullName: "First Contentful Paint",    desc: "First visible content" },
+  ttfb: { acronym: "TTFB", fullName: "Time to First Byte",       desc: "Server response time" },
+};
+
+const PERCENTILE_OPTIONS = [
+  { key: "p75", label: "P75" },
+  { key: "p90", label: "P90" },
+  { key: "p95", label: "P95" },
+  { key: "p99", label: "P99" },
+];
 
 // ─── Shared chart primitives ───────────────────────────────────────────────────
 
@@ -159,24 +175,33 @@ function Sparkline({ values, width = 52, height = 20, color = "var(--glass-15)",
 }
 
 // ─── Metric Card ───────────────────────────────────────────────────────────────
-function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, sparkValues, sparkColor }) {
+function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, sparkValues, sparkColor, metricKey, samples }) {
   const TrendIcon = trend === "improving" ? TrendingDown : trend === "degrading" ? TrendingUp : Minus;
   const trendColor = trend === "improving" ? GREEN : trend === "degrading" ? RED : "var(--text-dim)";
+  const info = metricKey ? METRIC_INFO[metricKey] : null;
 
   return (
     <div style={{ flex: 1, minWidth: 140, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6, transition: "border-color 0.3s, box-shadow 0.3s" }}>
-      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 5 }}>
-        {tooltip ? (
-          <Tooltip text={tooltip}>
-            <span style={{ cursor: "help", borderBottom: "1px dotted var(--glass-8)" }}>{label}</span>
-          </Tooltip>
-        ) : label}
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>
+          {tooltip ? (
+            <Tooltip text={tooltip}>
+              <span style={{ cursor: "help", borderBottom: "1px dotted var(--glass-8)" }}>{label}</span>
+            </Tooltip>
+          ) : label}
+        </div>
         {status && (
           <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, textTransform: "uppercase", letterSpacing: 0.3 }}>
             {status}
           </span>
         )}
       </div>
+      {info && (
+        <div style={{ marginTop: -3 }}>
+          <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 400, lineHeight: 1.2 }}>{info.fullName}</div>
+          <div style={{ fontSize: 10, color: "var(--text-disabled)", fontWeight: 400, fontStyle: "italic", lineHeight: 1.2 }}>{info.desc}</div>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
           <span style={{ fontSize: 24, fontWeight: 700, color: statusColor || "var(--text-bright)", fontFamily: MONO, lineHeight: 1, transition: "color 0.3s" }}>{value}</span>
@@ -184,12 +209,17 @@ function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, s
         </div>
         <Sparkline values={sparkValues} color={sparkColor || statusColor || "var(--glass-15)"} />
       </div>
-      {trend && (
-        <div style={{ fontSize: 11, color: trendColor, fontWeight: 500, display: "flex", alignItems: "center", gap: 3 }}>
-          <TrendIcon size={11} />
-          {trend}
-        </div>
-      )}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {trend && (
+          <div style={{ fontSize: 11, color: trendColor, fontWeight: 500, display: "flex", alignItems: "center", gap: 3 }}>
+            <TrendIcon size={11} />
+            {trend}
+          </div>
+        )}
+        {samples != null && (
+          <span style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 400 }}>{samples} sample{samples !== 1 ? "s" : ""}</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -432,6 +462,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [histRangeKey, setHistRangeKey] = useState("24h");
   const [aggWindowKey, setAggWindowKey] = useState("session");
+  const [percentileKey, setPercentileKey] = useState("p95");
 
   const activeHistRange = HISTORICAL_RANGES.find(r => r.key === histRangeKey) || HISTORICAL_RANGES[0];
   const isHistorical = histRangeKey !== "live";
@@ -455,11 +486,15 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   useEffect(() => { if (!isHistorical) { const id = setInterval(loadSnapshot, 30_000); return () => clearInterval(id); } }, [loadSnapshot, isHistorical]);
 
   // Historical data
-  const histData = useMemo(() => {
-    if (!isHistorical) return null;
-    const snapshots = getHistory(activeHistRange.ms);
-    return aggregateHistory(snapshots);
+  const histSnapshots = useMemo(() => {
+    if (!isHistorical) return [];
+    return getHistory(activeHistRange.ms);
   }, [isHistorical, activeHistRange]);
+
+  const histData = useMemo(() => {
+    if (!isHistorical || histSnapshots.length === 0) return null;
+    return aggregateHistory(histSnapshots);
+  }, [isHistorical, histSnapshots]);
 
   // Live mode derived state
   const health = data?.health || { status: "unknown", reason: "Initializing telemetry collectors\u2026", score: 0 };
@@ -586,7 +621,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
 
       {/* ── Historical view ── */}
       {isHistorical ? (
-        <HistoricalView data={histData} range={activeHistRange} t={t} liveScore={liveScore} />
+        <HistoricalView data={histData} range={activeHistRange} t={t} liveScore={liveScore} snapshots={histSnapshots} />
       ) : (
         <>
           {/* ── Sub-tabs (live mode only) ── */}
@@ -610,7 +645,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
           </div>
 
           {/* ── Tab content ── */}
-          {activeTab === "overview" && <OverviewTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} health={health} alerts={alerts} alertsOpen={alertsOpen} setAlertsOpen={setAlertsOpen} insights={insights} latencySparkValues={latencySparkValues} />}
+          {activeTab === "overview" && <OverviewTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} health={health} alerts={alerts} alertsOpen={alertsOpen} setAlertsOpen={setAlertsOpen} insights={insights} latencySparkValues={latencySparkValues} liveScore={liveScore} percentileKey={percentileKey} setPercentileKey={setPercentileKey} />}
           {activeTab === "vitals"  && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} t={t} />}
           {activeTab === "network" && <NetworkTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} />}
           {activeTab === "errors"  && <ErrorsTab client={data.client} t={t} totalRequests={data.totalRequests} errorRate={data.errorRate} latencyTimeline={data.latencyTimeline} />}
@@ -628,7 +663,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // HISTORICAL VIEW (Vercel-style)
 // ═══════════════════════════════════════════════════════════════════════════════
-function HistoricalView({ data, range, t, liveScore }) {
+function HistoricalView({ data, range, t, liveScore, snapshots }) {
   if (!data || data.snapshotCount === 0) {
     return (
       <EmptyChartState
@@ -650,37 +685,49 @@ function HistoricalView({ data, range, t, liveScore }) {
     return d.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
+  // Compute distributions from raw snapshots
+  const lcpDist = snapshots?.length > 0 ? computeVitalDistribution(snapshots, "lcp", CRUX_BENCHMARKS.lcp.good, CRUX_BENCHMARKS.lcp.poor) : null;
+  const inpDist = snapshots?.length > 0 ? computeVitalDistribution(snapshots, "inp", CRUX_BENCHMARKS.inp.good, CRUX_BENCHMARKS.inp.poor) : null;
+  const clsDist = snapshots?.length > 0 ? computeVitalDistribution(snapshots, "cls", CRUX_BENCHMARKS.cls.good, CRUX_BENCHMARKS.cls.poor) : null;
+
   return (
     <div style={{ display: "flex", gap: 16 }}>
-      {/* ── Left sidebar: metrics ── */}
+      {/* ── Left column: Web Vitals vertical panel ── */}
       <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-        <HistoricalMetricRow label="LCP" desc="Largest Contentful Paint" value={data.vitals.lcp} unit="ms" threshold={THRESHOLDS.lcp} />
-        <HistoricalMetricRow label="INP" desc="Interaction to Next Paint" value={data.vitals.inp} unit="ms" threshold={THRESHOLDS.inp} />
-        <HistoricalMetricRow label="CLS" desc="Cumulative Layout Shift" value={data.vitals.cls} unit="" threshold={THRESHOLDS.cls} />
-        <HistoricalMetricRow label={t("fcp")} desc={t("fcpDesc")} value={data.nav?.fcp} unit="ms" />
-        <HistoricalMetricRow label={t("ttfb")} desc={t("ttfbDesc")} value={data.nav?.ttfb} unit="ms" />
+        <VitalCard label="LCP" metricKey="lcp" value={data.vitals.lcp} unit="ms" threshold={THRESHOLDS.lcp} />
+        <VitalCard label="INP" metricKey="inp" value={data.vitals.inp} unit="ms" threshold={THRESHOLDS.inp} />
+        <VitalCard label="CLS" metricKey="cls" value={data.vitals.cls} unit="" threshold={THRESHOLDS.cls} />
+        <VitalCard label="FCP" metricKey="fcp" value={data.nav?.fcp} unit="ms" threshold={{ warning: 1800, critical: 3000 }} />
+        <VitalCard label="TTFB" metricKey="ttfb" value={data.nav?.ttfb} unit="ms" threshold={{ warning: 800, critical: 1800 }} />
       </div>
 
-      {/* ── Main area ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
-        {/* RES Score card */}
-        <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 12, padding: "20px 24px", display: "flex", alignItems: "center", gap: 24 }}>
-          {/* Donut chart */}
-          <ScoreDonut score={data.score} color={sc.color} size={80} />
+      {/* ── Right column: Analytics content ── */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* RES Score */}
+        <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 20 }}>
+          <ScoreDonut score={data.score} color={sc.color} size={68} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 4 }}>{t("realExperienceScore")}</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: sc.color, marginBottom: 4 }}>{sc.text}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("resDesc")}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 3 }}>{t("realExperienceScore")}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: sc.color, marginBottom: 2 }}>{sc.text}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("resDesc")}</div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: "var(--text-dim)", marginBottom: 2 }}>{t("snapshots")}</div>
-            <div style={{ fontSize: 14, fontWeight: 600, fontFamily: MONO, color: "var(--text-secondary)" }}>{data.snapshotCount}</div>
+          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 6 }}>
+            <div>
+              <div style={{ fontSize: 9, color: "var(--text-dim)", marginBottom: 1 }}>{t("snapshots")}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, fontFamily: MONO, color: "var(--text-secondary)" }}>{data.snapshotCount}</div>
+            </div>
+            {data.totalRequests > 0 && (
+              <div>
+                <div style={{ fontSize: 9, color: "var(--text-dim)", marginBottom: 1 }}>Requests</div>
+                <div style={{ fontSize: 13, fontWeight: 600, fontFamily: MONO, color: "var(--text-secondary)" }}>{data.totalRequests}</div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Score over time chart */}
+        {/* Score Over Time */}
         {data.scoreSeries.length > 1 && (
-          <ChartSection title={t("scoreOverTime")} subtitle={range.label}>
+          <ChartSection title={t("scoreOverTime")} subtitle={`${range.label} \u00b7 ${data.snapshotCount} snapshots`}>
             <HistoricalLineChart
               series={data.scoreSeries}
               color={sc.color}
@@ -692,7 +739,18 @@ function HistoricalView({ data, range, t, liveScore }) {
           </ChartSection>
         )}
 
-        {/* P95 latency over time chart */}
+        {/* Distributions */}
+        {(lcpDist || inpDist || clsDist) && (
+          <ChartSection title={t("distribution")} subtitle={`Based on ${snapshots.length} snapshots`}>
+            <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+              {lcpDist && <DistributionBar distribution={lcpDist} label="LCP" />}
+              {inpDist && <DistributionBar distribution={inpDist} label="INP" />}
+              {clsDist && <DistributionBar distribution={clsDist} label="CLS" />}
+            </div>
+          </ChartSection>
+        )}
+
+        {/* P95 latency over time */}
         {data.p95Series.length > 1 && (
           <ChartSection title={t("p95OverTime")} subtitle={range.label}>
             <HistoricalLineChart
@@ -700,14 +758,15 @@ function HistoricalView({ data, range, t, liveScore }) {
               color={BLUE}
               formatLabel={formatTimeLabel}
               unit="ms"
+              thresholds={[{ value: THRESHOLDS.p95Latency.warning, color: AMBER, label: "Warning" }, { value: THRESHOLDS.p95Latency.critical, color: RED, label: "Critical" }]}
             />
           </ChartSection>
         )}
 
         {/* Summary stats */}
         <ChartSection title={t("historicalSummary")}>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <MetricCard label={t("totalReqs")} value={String(data.totalRequests)} statusColor="var(--text-bright)" />
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <MetricCard label={t("totalReqs")} value={String(data.totalRequests)} statusColor="var(--text-bright)" samples={data.snapshotCount} />
             <MetricCard label={t("errorRate")} tooltip={t("errorRateTooltip")} value={data.errorRate != null ? data.errorRate + "%" : "\u2014"} statusColor={data.errorRate != null && data.errorRate >= 5 ? RED : data.errorRate != null && data.errorRate >= 2 ? AMBER : GREEN} />
             <MetricCard label={t("p95Latency")} value={data.avgP95 != null ? String(data.avgP95) : "\u2014"} unit={data.avgP95 != null ? "ms" : ""} statusColor={data.avgP95 != null ? sevColor(data.avgP95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
           </div>
@@ -717,24 +776,54 @@ function HistoricalView({ data, range, t, liveScore }) {
   );
 }
 
-// ─── Historical sidebar metric row ────────────────────────────────────────────
-function HistoricalMetricRow({ label, desc, value, unit, threshold }) {
+// ─── Vitals Sidebar Card ─────────────────────────────────────────────────────
+function VitalCard({ label, metricKey, value, unit, threshold }) {
   const sev = threshold && value != null ? severity(value, threshold) : "info";
   const col = value == null ? "var(--text-dim)" : sev === "info" ? GREEN : SEVERITY_COLORS[sev].text;
   const displayVal = value != null ? (unit === "ms" && value >= 1000 ? (value / 1000).toFixed(2) + "s" : value + (unit || "")) : "\u2014";
-
-  // Progress bar: 0-100%
+  const info = metricKey ? METRIC_INFO[metricKey] : null;
+  const statusLabel = value == null ? null : sev === "info" ? "Good" : sev === "warning" ? "Needs work" : "Poor";
   const pct = threshold && value != null ? Math.min((value / (threshold.critical * 1.2)) * 100, 100) : 0;
 
   return (
     <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: "10px 12px" }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: MONO, color: col, lineHeight: 1, marginBottom: 6, transition: "color 0.3s" }}>{displayVal}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{label}</span>
+        {statusLabel && (
+          <span style={{ fontSize: 9, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: `${col}15`, color: col, border: `1px solid ${col}30` }}>{statusLabel}</span>
+        )}
+      </div>
+      {info && (
+        <div style={{ marginBottom: 4 }}>
+          <div style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.2 }}>{info.fullName}</div>
+          <div style={{ fontSize: 9, color: "var(--text-disabled)", fontStyle: "italic", lineHeight: 1.2 }}>{info.desc}</div>
+        </div>
+      )}
+      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: MONO, color: col, lineHeight: 1, marginBottom: 6, transition: "color 0.3s" }}>{displayVal}</div>
       {threshold && (
-        <div style={{ height: 4, borderRadius: 2, background: "var(--glass-3)", overflow: "hidden" }}>
+        <div style={{ height: 3, borderRadius: 2, background: "var(--glass-3)", overflow: "hidden" }}>
           <div style={{ width: `${Math.max(pct, 3)}%`, height: "100%", background: col, borderRadius: 2, transition: "width 0.4s ease" }} />
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Vitals Sidebar ─────────────────────────────────────────────────────────────
+function VitalsSidebar({ vitals, navTiming }) {
+  const lcpVal = vitals?.lcp ?? null;
+  const inpVal = vitals?.inp ?? null;
+  const clsVal = vitals?.cls ?? null;
+  const fcpVal = navTiming?.domContentLoaded ?? navTiming?.fcp ?? null;
+  const ttfbVal = navTiming?.ttfb ?? null;
+
+  return (
+    <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+      <VitalCard label="LCP" metricKey="lcp" value={lcpVal} unit="ms" threshold={THRESHOLDS.lcp} />
+      <VitalCard label="INP" metricKey="inp" value={inpVal} unit="ms" threshold={THRESHOLDS.inp} />
+      <VitalCard label="CLS" metricKey="cls" value={clsVal} unit="" threshold={THRESHOLDS.cls} />
+      <VitalCard label="FCP" metricKey="fcp" value={fcpVal} unit="ms" threshold={{ warning: 1800, critical: 3000 }} />
+      <VitalCard label="TTFB" metricKey="ttfb" value={ttfbVal} unit="ms" threshold={{ warning: 800, critical: 1800 }} />
     </div>
   );
 }
@@ -856,6 +945,299 @@ function Tooltip({ text, children }) {
   );
 }
 
+// ─── Distribution Bar ────────────────────────────────────────────────────────────
+function DistributionBar({ distribution, label }) {
+  if (!distribution) return null;
+  const { good, needsWork, poor, total } = distribution;
+  return (
+    <div style={{ marginBottom: 10 }}>
+      {label && <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 4 }}>{label} <span style={{ color: "var(--text-dim)", fontWeight: 400 }}>{total} sample{total !== 1 ? "s" : ""}</span></div>}
+      <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", gap: 1 }}>
+        {good > 0 && <div style={{ width: `${good}%`, background: GREEN, transition: "width 0.4s ease" }} title={`Good: ${good}%`} />}
+        {needsWork > 0 && <div style={{ width: `${needsWork}%`, background: AMBER, transition: "width 0.4s ease" }} title={`Needs improvement: ${needsWork}%`} />}
+        {poor > 0 && <div style={{ width: `${poor}%`, background: RED, transition: "width 0.4s ease" }} title={`Poor: ${poor}%`} />}
+      </div>
+      <div style={{ display: "flex", gap: 12, marginTop: 4, fontSize: 10 }}>
+        <span style={{ color: GREEN, fontWeight: 500 }}>Good {good}%</span>
+        <span style={{ color: AMBER, fontWeight: 500 }}>Needs improvement {needsWork}%</span>
+        <span style={{ color: RED, fontWeight: 500 }}>Poor {poor}%</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Percentile Selector ─────────────────────────────────────────────────────────
+function PercentileSelector({ value, onChange }) {
+  return (
+    <div style={{ display: "flex", gap: 2, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 6, padding: 2 }}>
+      {PERCENTILE_OPTIONS.map(opt => {
+        const active = opt.key === value;
+        return (
+          <button key={opt.key} onClick={() => onChange(opt.key)} style={{
+            background: active ? "var(--glass-8)" : "transparent",
+            border: "none",
+            color: active ? "var(--text-bright)" : "var(--text-muted)",
+            padding: "3px 8px", borderRadius: 4, cursor: "pointer", fontSize: 10,
+            fontWeight: active ? 700 : 400, fontFamily: MONO,
+            transition: "all 0.15s ease",
+          }}>
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Route Breakdown ─────────────────────────────────────────────────────────────
+function RouteBreakdown({ userFlow, data }) {
+  const routes = userFlow?.routeVisits || [];
+  if (routes.length === 0) return null;
+
+  return (
+    <ChartSection title="Route Performance" subtitle={`${routes.length} route${routes.length !== 1 ? "s" : ""} visited`}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {routes.map((r, i) => {
+          const routeName = "/" + r.route;
+          return (
+            <div key={r.route} style={{ background: "var(--glass-2)", borderRadius: 8, padding: "10px 12px", border: "1px solid var(--glass-4)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", fontFamily: MONO }}>{routeName}</span>
+                <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{r.visits} visit{r.visits !== 1 ? "s" : ""}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </ChartSection>
+  );
+}
+
+// ─── Network Health Section ──────────────────────────────────────────────────
+function NetworkHealthSection({ data }) {
+  const timeline = data?.latencyTimeline || [];
+  const client = data?.client || {};
+  if (timeline.length === 0 && client.unhandledErrors === 0 && client.promiseRejections === 0) return null;
+
+  // Bucket requests into time windows for charts
+  const buckets = useMemo(() => {
+    if (timeline.length < 2) return [];
+    const BUCKET_COUNT = Math.min(20, timeline.length);
+    const minTs = timeline[0].ts;
+    const maxTs = timeline[timeline.length - 1].ts;
+    const range = maxTs - minTs || 1;
+    const bucketSize = range / BUCKET_COUNT;
+
+    const result = Array.from({ length: BUCKET_COUNT }, (_, i) => ({
+      ts: minTs + i * bucketSize,
+      time: new Date(minTs + i * bucketSize).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      ok: 0, clientErr: 0, serverErr: 0, total: 0,
+      latencies: [],
+    }));
+
+    for (const req of timeline) {
+      const idx = Math.min(Math.floor(((req.ts - minTs) / range) * BUCKET_COUNT), BUCKET_COUNT - 1);
+      result[idx].total++;
+      result[idx].latencies.push(req.value);
+      // Infer status category from value context
+      // We don't have status codes in latencyTimeline, use ok indicator from raw data
+    }
+    return result;
+  }, [timeline]);
+
+  // Use raw request data for status breakdown if available
+  const statusBuckets = useMemo(() => {
+    const reqs = data?._rawRequests || [];
+    if (reqs.length < 2) return [];
+    const BUCKET_COUNT = Math.min(20, reqs.length);
+    const minTs = reqs[0].ts;
+    const maxTs = reqs[reqs.length - 1].ts;
+    const range = maxTs - minTs || 1;
+    const bucketSize = range / BUCKET_COUNT;
+
+    const result = Array.from({ length: BUCKET_COUNT }, (_, i) => ({
+      time: new Date(minTs + i * bucketSize).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      s2xx: 0, s4xx: 0, s5xx: 0, sOther: 0,
+      latencies: [],
+    }));
+
+    for (const req of reqs) {
+      const idx = Math.min(Math.floor(((req.ts - minTs) / range) * BUCKET_COUNT), BUCKET_COUNT - 1);
+      result[idx].latencies.push(req.duration);
+      const s = req.status;
+      if (s >= 200 && s < 300) result[idx].s2xx++;
+      else if (s >= 400 && s < 500) result[idx].s4xx++;
+      else if (s >= 500) result[idx].s5xx++;
+      else result[idx].sOther++;
+    }
+    return result;
+  }, [data?._rawRequests]);
+
+  // Error timeline from client error log
+  const errorBuckets = useMemo(() => {
+    const errors = data?.client?.recentErrors || [];
+    if (errors.length === 0) return [];
+    const BUCKET_COUNT = Math.min(12, Math.max(4, errors.length));
+    const timestamps = errors.map(e => new Date(e.timestamp).getTime());
+    const minTs = Math.min(...timestamps);
+    const maxTs = Math.max(...timestamps);
+    const range = maxTs - minTs || 60_000;
+    const bucketSize = range / BUCKET_COUNT;
+
+    const result = Array.from({ length: BUCKET_COUNT }, (_, i) => ({
+      time: new Date(minTs + i * bucketSize).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      jsErrors: 0, rejections: 0, networkFails: 0,
+    }));
+
+    for (const err of errors) {
+      const ts = new Date(err.timestamp).getTime();
+      const idx = Math.min(Math.floor(((ts - minTs) / range) * BUCKET_COUNT), BUCKET_COUNT - 1);
+      if (err.type === "unhandledrejection") result[idx].rejections++;
+      else result[idx].jsErrors++;
+    }
+    // Network failures from client data
+    const netLog = data?.client?.recentNetworkLog || [];
+    for (const entry of netLog) {
+      const ts = new Date(entry.timestamp).getTime();
+      const idx = Math.min(Math.floor(((ts - minTs) / range) * BUCKET_COUNT), BUCKET_COUNT - 1);
+      if (idx >= 0 && idx < BUCKET_COUNT) result[idx].networkFails++;
+    }
+    return result;
+  }, [data?.client?.recentErrors, data?.client?.recentNetworkLog]);
+
+  const hasStatusData = statusBuckets.length > 0;
+  const hasErrors = errorBuckets.length > 0 && errorBuckets.some(b => b.jsErrors + b.rejections + b.networkFails > 0);
+
+  return (
+    <ChartSection title="Network Health" subtitle="Network health metrics from real browser sessions">
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Requests Over Time */}
+        {hasStatusData && (
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+              Requests Over Time
+              <span style={{ fontWeight: 400, fontSize: 10, color: "var(--text-dim)" }}>{data?._rawRequests?.length || 0} total</span>
+            </div>
+            <StackedBarChart buckets={statusBuckets} keys={["s2xx", "s4xx", "s5xx"]} colors={[GREEN, AMBER, RED]} labels={["2xx", "4xx", "5xx"]} height={48} />
+          </div>
+        )}
+
+        {/* API Latency Over Time (P50 / P95) */}
+        {hasStatusData && statusBuckets.some(b => b.latencies.length > 0) && (
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>API Latency Over Time</div>
+            <LatencyPercentilesChart buckets={statusBuckets} height={48} />
+          </div>
+        )}
+
+        {/* Error Rate Over Time */}
+        {hasErrors && (
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Error Rate</div>
+            <StackedBarChart buckets={errorBuckets} keys={["jsErrors", "rejections", "networkFails"]} colors={[RED, AMBER, "#f472b6"]} labels={["JS Errors", "Rejections", "Network"]} height={40} />
+          </div>
+        )}
+      </div>
+    </ChartSection>
+  );
+}
+
+// ─── Stacked Bar Chart ──────────────────────────────────────────────────────────
+function StackedBarChart({ buckets, keys, colors, labels, height = 48 }) {
+  const maxTotal = Math.max(...buckets.map(b => keys.reduce((s, k) => s + (b[k] || 0), 0)), 1);
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height }}>
+        {buckets.map((b, i) => {
+          const total = keys.reduce((s, k) => s + (b[k] || 0), 0);
+          const h = Math.max((total / maxTotal) * 100, 2);
+          return (
+            <div key={i} style={{ flex: 1, height: `${h}%`, display: "flex", flexDirection: "column", justifyContent: "flex-end", minWidth: 3 }} title={keys.map((k, j) => `${labels[j]}: ${b[k] || 0}`).join(", ")}>
+              {keys.map((k, j) => {
+                const val = b[k] || 0;
+                if (val === 0) return null;
+                const segH = (val / total) * 100;
+                return <div key={k} style={{ height: `${segH}%`, background: colors[j], minHeight: val > 0 ? 2 : 0, borderRadius: j === 0 ? "2px 2px 0 0" : j === keys.length - 1 ? "0 0 0 0" : 0 }} />;
+              })}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 9, color: "var(--text-dim)" }}>
+        <span>{buckets[0]?.time}</span>
+        <span>{buckets[buckets.length - 1]?.time}</span>
+      </div>
+      <div style={{ display: "flex", gap: 10, marginTop: 6, fontSize: 10 }}>
+        {labels.map((l, i) => (
+          <span key={l} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+            <span style={{ width: 6, height: 6, borderRadius: 2, background: colors[i] }} />
+            <span style={{ color: "var(--text-muted)" }}>{l}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Latency Percentiles Chart ──────────────────────────────────────────────────
+function LatencyPercentilesChart({ buckets, height = 48 }) {
+  // Compute P50 and P95 per bucket
+  const points = useMemo(() => {
+    return buckets.map(b => {
+      const sorted = [...b.latencies].sort((a, c) => a - c);
+      if (sorted.length === 0) return { p50: null, p95: null };
+      return {
+        p50: sorted[Math.floor(sorted.length * 0.5)] || 0,
+        p95: sorted[Math.min(Math.floor(sorted.length * 0.95), sorted.length - 1)] || 0,
+      };
+    });
+  }, [buckets]);
+
+  const validPoints = points.filter(p => p.p95 != null);
+  if (validPoints.length < 2) return null;
+
+  const maxVal = Math.max(...validPoints.map(p => p.p95), 1);
+  const W = 400;
+  const H = height;
+  const pad = 2;
+
+  const toPath = (key) => {
+    const pts = points.map((p, i) => {
+      if (p[key] == null) return null;
+      const x = pad + (i / (points.length - 1)) * (W - pad * 2);
+      const y = H - pad - ((p[key]) / maxVal) * (H - pad * 2);
+      return { x, y };
+    }).filter(Boolean);
+    return pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  };
+
+  return (
+    <div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
+        <path d={toPath("p95")} fill="none" stroke={RED} strokeWidth={1.5} strokeLinecap="round" opacity={0.7} />
+        <path d={toPath("p50")} fill="none" stroke={BLUE} strokeWidth={1.5} strokeLinecap="round" />
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 9, color: "var(--text-dim)" }}>
+        <span>{buckets[0]?.time}</span>
+        <span>{buckets[buckets.length - 1]?.time}</span>
+      </div>
+      <div style={{ display: "flex", gap: 10, marginTop: 6, fontSize: 10 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <span style={{ width: 12, height: 2, background: BLUE, borderRadius: 1 }} />
+          <span style={{ color: "var(--text-muted)" }}>P50</span>
+          {validPoints.length > 0 && <span style={{ color: BLUE, fontFamily: MONO, fontWeight: 600, fontSize: 10 }}>{validPoints[validPoints.length - 1].p50}ms</span>}
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          <span style={{ width: 12, height: 2, background: RED, borderRadius: 1, opacity: 0.7 }} />
+          <span style={{ color: "var(--text-muted)" }}>P95</span>
+          {validPoints.length > 0 && <span style={{ color: RED, fontFamily: MONO, fontWeight: 600, fontSize: 10, opacity: 0.7 }}>{validPoints[validPoints.length - 1].p95}ms</span>}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Session Timeline ──────────────────────────────────────────────────────────
 function SessionTimeline({ data }) {
   // Build a unified timeline of significant events from the session
@@ -935,7 +1317,7 @@ function SessionTimeline({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════════════════════
-function OverviewTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseline, confidence, health, alerts, alertsOpen, setAlertsOpen, insights, latencySparkValues }) {
+function OverviewTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseline, confidence, health, alerts, alertsOpen, setAlertsOpen, insights, latencySparkValues, liveScore, percentileKey, setPercentileKey }) {
   const hasLatencyData = data.latencyTimeline.length > 0;
   const hasAnyData = data.totalRequests > 0 || data.vitals?.lcp != null || data.vitals?.inp != null || data.vitals?.cls != null;
 
@@ -944,10 +1326,12 @@ function OverviewTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseli
   const inpVal = data.vitals?.inp;
   const clsVal = data.vitals?.cls;
   const errRate = data.errorRate;
+  const navTiming = data.navTiming;
 
-  const lcpStatus = lcpVal != null ? (severity(lcpVal, THRESHOLDS.lcp) === "info" ? t("good") : severity(lcpVal, THRESHOLDS.lcp) === "warning" ? t("needsWork") : t("poor")) : null;
-  const inpStatus = inpVal != null ? (severity(inpVal, THRESHOLDS.inp) === "info" ? t("good") : severity(inpVal, THRESHOLDS.inp) === "warning" ? t("needsWork") : t("poor")) : null;
-  const clsStatus = clsVal != null ? (severity(clsVal, THRESHOLDS.cls) === "info" ? t("good") : severity(clsVal, THRESHOLDS.cls) === "warning" ? t("needsWork") : t("poor")) : null;
+  const statusFor = (val, th) => val != null ? (severity(val, th) === "info" ? t("good") : severity(val, th) === "warning" ? t("needsWork") : t("poor")) : null;
+  const lcpStatus = statusFor(lcpVal, THRESHOLDS.lcp);
+  const inpStatus = statusFor(inpVal, THRESHOLDS.inp);
+  const clsStatus = statusFor(clsVal, THRESHOLDS.cls);
 
   const lcpColor = sevColor(lcpVal, THRESHOLDS.lcp);
   const inpColor = sevColor(inpVal, THRESHOLDS.inp);
@@ -956,6 +1340,16 @@ function OverviewTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseli
 
   // Health color
   const healthColor = health.status === "unhealthy" ? RED : health.status === "degraded" ? AMBER : health.status === "unknown" ? "#64748b" : GREEN;
+
+  // RES score
+  const sc = liveScore != null ? scoreLabel(liveScore) : { text: "No data", color: "#64748b" };
+
+  // Selected percentile value
+  const pctlVal = data.percentiles?.[percentileKey] ?? null;
+
+  // FCP and TTFB from nav timing
+  const fcpVal = navTiming?.domContentLoaded ?? null;
+  const ttfbVal = navTiming?.ttfb ?? null;
 
   if (!hasAnyData) {
     return (
@@ -968,107 +1362,100 @@ function OverviewTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseli
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Health status strip */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: `${healthColor}0A`, border: `1px solid ${healthColor}20`, borderRadius: 10, transition: "background 0.3s, border-color 0.3s" }}>
-        <div style={{ width: 9, height: 9, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}AA`, transition: "background 0.3s" }} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-bright)" }}>
-          {health.status === "unknown" ? t("statusIdle")(rangeLabel) : health.status === "healthy" && confidence.level === "low" ? t("statusHealthyLow") : { healthy: t("statusHealthy"), degraded: t("statusDegraded"), unhealthy: t("statusUnhealthy") }[health.status]}
-        </span>
-        <span style={{ fontSize: 12, color: "var(--text-muted)", flex: 1 }}>{health.reason}</span>
-        {alerts.length > 0 && (
-          <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 11, display: "flex", alignItems: "center", gap: 3, padding: "2px 6px" }}>
-            <AlertTriangle size={11} color={health.status === "unhealthy" ? RED : AMBER} />
-            {alerts.length}
-            {alertsOpen ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
-          </button>
-        )}
-      </div>
+    <div style={{ display: "flex", gap: 16 }}>
+      {/* ── Left column: Web Vitals vertical panel ── */}
+      <VitalsSidebar vitals={data.vitals} navTiming={data.navTiming} />
 
-      {/* Collapsible alerts */}
-      {alertsOpen && alerts.length > 0 && (
-        <div style={{ padding: "4px 12px 4px 28px", display: "flex", flexDirection: "column", gap: 3 }}>
-          {alerts.map((a, i) => (
-            <div key={i} style={{ fontSize: 11, color: SEVERITY_COLORS[a.severity].text, display: "flex", alignItems: "center", gap: 5 }}>
-              <SeverityDot sev={a.severity} size={5} />
-              {a.message}
-            </div>
-          ))}
+      {/* ── Right column: Analytics content ── */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* RES Score */}
+        <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 20 }}>
+          <ScoreDonut score={liveScore} color={sc.color} size={68} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 3 }}>{t("realExperienceScore")}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: sc.color, marginBottom: 2 }}>{sc.text}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("resDesc")}</div>
+          </div>
+          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 4 }}>
+            {data.totalRequests > 0 && (
+              <div>
+                <div style={{ fontSize: 9, color: "var(--text-dim)", marginBottom: 1 }}>Requests</div>
+                <div style={{ fontSize: 13, fontWeight: 600, fontFamily: MONO, color: "var(--text-secondary)" }}>{data.totalRequests}</div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Metric cards row */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <MetricCard
-          label="LCP"
-          tooltip={t("lcpTooltip")}
-          value={lcpVal != null ? lcpVal >= 1000 ? (lcpVal / 1000).toFixed(1) : String(lcpVal) : "\u2014"}
-          unit={lcpVal != null ? (lcpVal >= 1000 ? "s" : "ms") : ""}
-          status={lcpStatus}
-          statusColor={lcpColor}
-          trend={lcpVal != null && lcpVal <= THRESHOLDS.lcp.warning * 0.75 ? "improving" : lcpVal != null && lcpVal >= THRESHOLDS.lcp.critical ? "degrading" : null}
-        />
-        <MetricCard
-          label="INP"
-          tooltip={t("inpTooltip")}
-          value={inpVal != null ? String(inpVal) : "\u2014"}
-          unit={inpVal != null ? "ms" : ""}
-          status={inpStatus}
-          statusColor={inpColor}
-          trend={inpVal != null && inpVal <= THRESHOLDS.inp.warning * 0.5 ? "improving" : inpVal != null && inpVal >= THRESHOLDS.inp.critical ? "degrading" : null}
-        />
-        <MetricCard
-          label="CLS"
-          tooltip={t("clsTooltip")}
-          value={clsVal != null ? clsVal.toFixed(3) : "\u2014"}
-          status={clsStatus}
-          statusColor={clsColor}
-          trend={clsVal != null && clsVal <= THRESHOLDS.cls.warning * 0.5 ? "improving" : clsVal != null && clsVal >= THRESHOLDS.cls.critical ? "degrading" : null}
-        />
-        <MetricCard
-          label={t("errorRate")}
-          tooltip={t("errorRateTooltip")}
-          value={errRate != null ? errRate + "%" : (data.totalRequests > 0 ? "0%" : "\u2014")}
-          statusColor={errColor}
-          sparkValues={latencySparkValues.length > 1 ? latencySparkValues : null}
-          sparkColor={BLUE}
-        />
-      </div>
+        {/* Health status strip */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: `${healthColor}0A`, border: `1px solid ${healthColor}20`, borderRadius: 8, transition: "background 0.3s, border-color 0.3s" }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}AA`, flexShrink: 0 }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-bright)" }}>
+            {health.status === "unknown" ? t("statusIdle")(rangeLabel) : health.status === "healthy" && confidence.level === "low" ? t("statusHealthyLow") : { healthy: t("statusHealthy"), degraded: t("statusDegraded"), unhealthy: t("statusUnhealthy") }[health.status]}
+          </span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", flex: 1 }}>{health.reason}</span>
+          {alerts.length > 0 && (
+            <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 11, display: "flex", alignItems: "center", gap: 3, padding: "2px 6px" }}>
+              <AlertTriangle size={11} color={health.status === "unhealthy" ? RED : AMBER} />
+              {alerts.length}
+              {alertsOpen ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+            </button>
+          )}
+        </div>
 
-      {/* Latency trend chart (compact) */}
-      <ChartSection
-        title={<span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          {t("requestLatency")}
-          {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? AMBER : trendDir === "decreasing" ? GREEN : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
-            {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
-          </span>}
-        </span>}
-        subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
-      >
-        {hasLatencyData
-          ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} compact />
-          : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={activeRange.sec != null && activeRange.sec <= 60 ? t("noRequestsHintShort") : t("noRequestsHintNav")} />
-        }
-      </ChartSection>
-
-      {/* Session timeline */}
-      <SessionTimeline data={data} />
-
-      {/* Insights */}
-      {insights.length > 0 && (
-        <ChartSection title={t("insights")}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {insights.map((ins, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6, padding: "6px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
-                <SeverityDot sev={ins.severity} size={7} />
-                <span style={{ fontSize: 13, color: ins.severity === "info" ? "var(--text-secondary)" : SEVERITY_COLORS[ins.severity].text, lineHeight: 1.4 }}>
-                  {ins.message}
-                </span>
+        {/* Collapsible alerts */}
+        {alertsOpen && alerts.length > 0 && (
+          <div style={{ padding: "4px 12px 4px 24px", display: "flex", flexDirection: "column", gap: 3 }}>
+            {alerts.map((a, i) => (
+              <div key={i} style={{ fontSize: 11, color: SEVERITY_COLORS[a.severity].text, display: "flex", alignItems: "center", gap: 5 }}>
+                <SeverityDot sev={a.severity} size={5} />
+                {a.message}
               </div>
             ))}
           </div>
+        )}
+
+        {/* Latency trend chart with percentile selector */}
+        <ChartSection
+          title={<span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            {t("requestLatency")}
+            {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? AMBER : trendDir === "decreasing" ? GREEN : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
+              {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
+            </span>}
+            <span style={{ marginLeft: "auto" }}><PercentileSelector value={percentileKey} onChange={setPercentileKey} /></span>
+          </span>}
+          subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
+        >
+          {hasLatencyData
+            ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} percentiles={data.percentiles} selectedPercentile={percentileKey} compact />
+            : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={activeRange.sec != null && activeRange.sec <= 60 ? t("noRequestsHintShort") : t("noRequestsHintNav")} />
+          }
         </ChartSection>
-      )}
+
+        {/* Network Health */}
+        <NetworkHealthSection data={data} />
+
+        {/* Route breakdown */}
+        <RouteBreakdown userFlow={data.userFlow} data={data} />
+
+        {/* Session timeline */}
+        <SessionTimeline data={data} />
+
+        {/* Insights */}
+        {insights.length > 0 && (
+          <ChartSection title={t("insights")}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {insights.map((ins, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6, padding: "6px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
+                  <SeverityDot sev={ins.severity} size={7} />
+                  <span style={{ fontSize: 13, color: ins.severity === "info" ? "var(--text-secondary)" : SEVERITY_COLORS[ins.severity].text, lineHeight: 1.4 }}>
+                    {ins.message}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </ChartSection>
+        )}
+      </div>
     </div>
   );
 }
@@ -1076,16 +1463,37 @@ function OverviewTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseli
 // ═══════════════════════════════════════════════════════════════════════════════
 // LATENCY CHART
 // ═══════════════════════════════════════════════════════════════════════════════
-const LatencyChart = memo(function LatencyChart({ data, baseline, p95, compact }) {
+const LatencyChart = memo(function LatencyChart({ data, baseline, p95, percentiles, selectedPercentile, compact }) {
   const max = useMemo(() => Math.max(...data.map(d => d.value), 1), [data]);
   const avg = useMemo(() => Math.round(data.reduce((s, d) => s + d.value, 0) / data.length), [data]);
   const spikeThreshold = baseline ? baseline.baseline * 2 : THRESHOLDS.p95Latency.warning;
   const baselinePct = baseline ? Math.min((baseline.baseline / max) * 100, 92) : null;
   const chartHeight = compact ? 56 : 72;
 
+  // Threshold lines for latency
+  const goodLine = THRESHOLDS.p95Latency.warning;
+  const poorLine = THRESHOLDS.p95Latency.critical;
+  const goodPct = Math.min((goodLine / max) * 100, 95);
+  const poorPct = Math.min((poorLine / max) * 100, 95);
+
+  // Selected percentile value
+  const pctlVal = percentiles?.[selectedPercentile] ?? p95;
+  const pctlLabel = selectedPercentile ? selectedPercentile.toUpperCase() : "P95";
+
   return (
     <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: compact ? "12px 14px" : "14px 16px" }}>
       <div style={{ position: "relative" }}>
+        {/* Threshold lines */}
+        {max > goodLine && (
+          <div style={{ position: "absolute", bottom: `${goodPct}%`, left: 0, right: 0, borderBottom: `1px dashed ${GREEN}40`, zIndex: 1, pointerEvents: "none" }}>
+            <span style={{ position: "absolute", left: 0, top: -12, fontSize: 9, color: `${GREEN}80`, background: "var(--glass-2)", padding: "0 4px", borderRadius: 3 }}>Good {goodLine}ms</span>
+          </div>
+        )}
+        {max > poorLine && (
+          <div style={{ position: "absolute", bottom: `${poorPct}%`, left: 0, right: 0, borderBottom: `1px dashed ${RED}40`, zIndex: 1, pointerEvents: "none" }}>
+            <span style={{ position: "absolute", left: 0, top: -12, fontSize: 9, color: `${RED}80`, background: "var(--glass-2)", padding: "0 4px", borderRadius: 3 }}>Poor {poorLine}ms</span>
+          </div>
+        )}
         {baselinePct !== null && (
           <div style={{ position: "absolute", bottom: `${baselinePct}%`, left: 0, right: 0, borderBottom: "1px dashed var(--glass-10)", zIndex: 1, pointerEvents: "none" }}>
             <span style={{ position: "absolute", right: 0, top: -12, fontSize: 10, color: "var(--text-muted)", background: "var(--glass-2)", padding: "0 5px", borderRadius: 3 }}>avg {baseline.baseline}ms</span>
@@ -1107,7 +1515,7 @@ const LatencyChart = memo(function LatencyChart({ data, baseline, p95, compact }
       </div>
       <div style={{ display: "flex", gap: 16, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--glass-4)", fontSize: 11 }}>
         <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{avg}ms</span></span>
-        {p95 != null && <span style={{ color: "var(--text-muted)" }}>P95 <span style={{ color: sevColor(p95, THRESHOLDS.p95Latency, "var(--text-primary)"), fontFamily: MONO, fontWeight: 600 }}>{p95}ms</span></span>}
+        {pctlVal != null && <span style={{ color: "var(--text-muted)" }}>{pctlLabel} <span style={{ color: sevColor(pctlVal, THRESHOLDS.p95Latency, "var(--text-primary)"), fontFamily: MONO, fontWeight: 600 }}>{pctlVal}ms</span></span>}
         <span style={{ color: "var(--text-muted)" }}>Samples <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{data.length}</span></span>
       </div>
     </div>
@@ -1146,12 +1554,14 @@ function VitalsTab({ vitals, navTiming, t }) {
               const goodPct = (goodEnd / scaleMax) * 100;
               const warnPct = ((poorStart - goodEnd) / scaleMax) * 100;
 
+              const info = METRIC_INFO[v.metric];
               return (
                 <div key={v.key} style={{ background: "var(--glass-2)", borderRadius: 10, padding: "14px 16px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
                     <div>
                       <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{v.key}</span>
                       <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 8 }}>{v.desc}</span>
+                      {info && <span style={{ fontSize: 10, color: "var(--text-disabled)", marginLeft: 6, fontStyle: "italic" }}>{info.desc}</span>}
                     </div>
                     <span style={{ fontSize: 11, color: col, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: `${col}12` }}>{statusLabel}</span>
                   </div>

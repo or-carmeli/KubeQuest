@@ -209,6 +209,30 @@ export function aggregateHistory(snapshots) {
   };
 }
 
+// ─── Distribution computation ────────────────────────────────────────────────
+/**
+ * Compute good / needs-work / poor distribution for a vital across snapshots.
+ * Returns { good, needsWork, poor } as percentages (0-100), plus raw counts.
+ */
+export function computeVitalDistribution(snapshots, vitalKey, goodThreshold, poorThreshold) {
+  const values = snapshots.map(s => s.vitals?.[vitalKey]).filter(v => v != null);
+  if (values.length === 0) return null;
+  let good = 0, needsWork = 0, poor = 0;
+  for (const v of values) {
+    if (v <= goodThreshold) good++;
+    else if (v <= poorThreshold) needsWork++;
+    else poor++;
+  }
+  const total = values.length;
+  return {
+    good: Math.round((good / total) * 100),
+    needsWork: Math.round((needsWork / total) * 100),
+    poor: Math.round((poor / total) * 100),
+    goodCount: good, needsWorkCount: needsWork, poorCount: poor,
+    total,
+  };
+}
+
 // ─── Auto-recording timer ────────────────────────────────────────────────────
 let _recordInterval = null;
 

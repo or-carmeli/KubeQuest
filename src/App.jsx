@@ -29,6 +29,8 @@ import { getDiagramForQuestion } from "./components/QuizDiagrams";
 import { fetchQuizQuestions, fetchMixedQuestions, checkQuizAnswer, fetchTheory, fetchDailyQuestions, checkDailyAnswer, fetchIncidents, fetchIncidentSteps, checkIncidentAnswer, fetchLeaderboard, fetchUserRank, saveUserProgress, fetchQuestionHint, fetchEliminateOption } from "./api/quiz";
 import StatusView from "./components/StatusView";
 import PerformanceInsights from "./components/PerformanceInsights";
+import DevPerfOverlay from "./components/DevPerfOverlay";
+import SystemObservability from "./components/SystemObservability";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
@@ -1157,7 +1159,7 @@ export default function K8sQuestApp() {
       console.info("[KubeQuest:boot] Screen was", s, "- falling back to home (transient state lost on refresh)");
       return "home";
     }
-    if (s && ["home","incidentList","incident","privacy","terms",...(EXPERIMENTAL_ENABLED?["architecture","performanceInsights"]:[])].includes(s)) return s;
+    if (s && ["home","incidentList","incident","privacy","terms",...(EXPERIMENTAL_ENABLED?["architecture","performanceInsights","systemObservability"]:[])].includes(s)) return s;
     return "home";
   });
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -4576,6 +4578,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
           </button>
           )}
+          {import.meta.env.DEV && (
+          <button className="menu-item" onClick={()=>{setScreen("systemObservability");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="systemObservability"?"var(--glass-3)":"none",border:"none",color:screen==="systemObservability"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="systemObservability"?600:400,direction:dir}}>
+            <Activity size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"System Observability":"מעקב מערכת"}
+            <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
+          </button>
+          )}
           <button className="menu-item" onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="about"?"var(--glass-3)":"none",border:"none",color:screen==="about"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="about"?600:400,direction:dir}}>
             <Info size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("aboutBtn")}
@@ -5377,6 +5386,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
       {/* PERFORMANCE INSIGHTS */}
       {EXPERIMENTAL_ENABLED&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} lang={lang} dir={dir} />}
+
+      {/* SYSTEM OBSERVABILITY */}
+      {EXPERIMENTAL_ENABLED&&screen==="systemObservability"&&<SystemObservability onBack={()=>setScreen("home")} lang={lang} dir={dir} />}
 
       {/* STATS */}
       {screen==="stats"&&(
@@ -6561,6 +6573,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       </main>
       <Analytics />
       <SpeedInsights />
+      {import.meta.env.DEV && <DevPerfOverlay />}
     </div>
   );
 }
