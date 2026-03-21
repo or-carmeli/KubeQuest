@@ -2773,6 +2773,7 @@ export default function K8sQuestApp() {
         } catch {}
       }
       const scoreRunId = (isRetryRef.current || skipServerScore) ? null : quizRunIdRef.current;
+      const scoreMode = isDaily ? "daily" : selectedTopic?.id === "mixed" ? "mixed" : "topic";
 
       // Use prefetched answer-check if available and still matches current selection.
       // The prefetch was called without a quizRunId (no scoring), so when we use it
@@ -2791,8 +2792,8 @@ export default function K8sQuestApp() {
         prefetchedAnswerRef.current = null;
         setCheckingAnswer(true);
         const callRpc = () => isDaily
-          ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId)
-          : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId);
+          ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode)
+          : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode);
         try {
           rpcResult = await callRpc();
         } catch (e1) {
@@ -2808,8 +2809,8 @@ export default function K8sQuestApp() {
         // The fallback path already includes scoreRunId, so only do this for prefetch hits.
         if (usedPrefetch && scoreRunId) {
           (isDaily
-            ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId)
-            : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId)
+            ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode)
+            : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode)
           ).catch(() => {});
         }
       } else {
