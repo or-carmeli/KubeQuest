@@ -9,19 +9,24 @@
 const TABLE = "analytics_events";
 const SESSION_KEY = "kq_analytics_session";
 
+function secureRandomId() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+}
+
 // Persist session_id in sessionStorage so it survives page refreshes
 // but resets when the tab/browser is closed (new visit = new session).
 function getSessionId() {
   try {
     let id = sessionStorage.getItem(SESSION_KEY);
     if (!id) {
-      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      id = secureRandomId();
       sessionStorage.setItem(SESSION_KEY, id);
     }
     return id;
   } catch {
-    // sessionStorage blocked (e.g. incognito Safari) — fall back to ephemeral
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    return secureRandomId();
   }
 }
 

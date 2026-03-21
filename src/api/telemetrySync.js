@@ -6,7 +6,7 @@ import { recordSnapshot } from "../utils/telemetryHistory";
 
 const TABLE = "observability_events";
 const FLUSH_INTERVAL_MS = 60_000;
-const SESSION_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
+const SESSION_ID = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
 
 let _queue = [];
 let _flushTimer = null;
