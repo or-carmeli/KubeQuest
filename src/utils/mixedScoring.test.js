@@ -161,4 +161,19 @@ describe("Mixed mode duplicate scoring prevention", () => {
     const { earnPoints } = clientScoringGuard(q, true);
     expect(earnPoints).toBe(true);
   });
+
+  it("handles corrupted JSON in scoredFreeKeys_v1 gracefully", () => {
+    const q = makeMixedQuestion(1, "What is a Pod?");
+    // Store corrupt JSON
+    localStorage.setItem(SCORED_KEY, "not-valid-json{{{");
+    // safeGetJSON removes corrupt key and returns fallback []
+    // so skipServerScore should be false (safe fallback: allow scoring)
+    expect(shouldSkipServerScore(q)).toBe(false);
+    // Client guard should also work and allow scoring
+    const { earnPoints } = clientScoringGuard(q, true);
+    expect(earnPoints).toBe(true);
+    // After scoring, the key should now contain valid JSON
+    const stored = JSON.parse(localStorage.getItem(SCORED_KEY));
+    expect(stored).toContain("What is a Pod?");
+  });
 });
