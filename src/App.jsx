@@ -102,6 +102,10 @@ try {
     // session.user.recovery_sent_at before activating the password reset UI.
     sessionStorage.setItem("kq_recovery_pending", "1");
   }
+  // Newer Supabase email templates may redirect with token_hash + type instead of code.
+  if (urlParams.get("type") === "recovery" && (urlParams.has("token_hash") || urlParams.has("token"))) {
+    sessionStorage.setItem("kq_recovery_pending", "1");
+  }
 } catch { /* ignore */ }
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
@@ -192,7 +196,7 @@ const TRANSLATIONS = {
     loginBtn: "התחברי", signupBtn: "הירשמי", loading: "רגע...",
     emailAlreadySent: "אימייל אימות כבר נשלח! בדקי את תיבת הדואר שלך.",
     emailSent: "נשלח אימייל אימות! בדקי את תיבת הדואר.",
-    otpExpired: "קישור האימות כבר מומש או שפג תוקפו. אם קיבלת את המייל לאחרונה, ייתכן שהאימייל שלך כבר אומת - נסי להתחבר.",
+    otpExpired: "הקישור פג תוקף או כבר מומש. נסי להתחבר.",
     wrongCredentials: "אימייל או סיסמה שגויים",
     serviceUnavailable: "השירות אינו זמין כרגע. נסו שוב מאוחר יותר.",
     didntReceive: "לא קיבלת את המייל?", resendBtn: "שלח שוב",
@@ -202,6 +206,7 @@ const TRANSLATIONS = {
     resetEmailSent: "נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
     resetEmailError: "שגיאה בשליחת קישור איפוס. נסי שוב.",
     resetLinkWrongBrowser: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקשי קישור חדש.",
+    resetLinkExpired: "קישור האיפוס כבר אינו תקף. ניתן לבקש קישור חדש.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
     newPasswordLabel: "סיסמה חדשה", confirmPasswordLabel: "אימות סיסמה",
@@ -285,13 +290,14 @@ const TRANSLATIONS = {
     startPlaying_m: "התחל לשחק כאורח",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
-    otpExpired_m: "קישור האימות כבר מומש או שפג תוקפו. אם קיבלת את המייל לאחרונה, ייתכן שהאימייל שלך כבר אומת - נסה להתחבר.",
+    otpExpired_m: "הקישור פג תוקף או כבר מומש. נסה להתחבר.",
     resendSuccess_m: "אימייל חדש נשלח! בדוק את תיבת הדואר.",
     resendError_m: "שגיאה בשליחה מחדש. נסה שוב.",
     sendResetLink_m: "שלח קישור איפוס",
     resetEmailSent_m: "נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "שגיאה בשליחת קישור איפוס. נסה שוב.",
     resetLinkWrongBrowser_m: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקש קישור חדש.",
+    resetLinkExpired_m: "קישור האיפוס כבר אינו תקף. ניתן לבקש קישור חדש.",
     saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
     guestBanner_m: "הרשם כדי לשמור התקדמות ולהופיע בלוח התוצאות",
@@ -460,7 +466,7 @@ const TRANSLATIONS = {
     loginBtn: "Sign In", signupBtn: "Register", loading: "Loading...",
     emailAlreadySent: "Verification email already sent! Check your inbox.",
     emailSent: "Verification email sent! Check your inbox.",
-    otpExpired: "This verification link was already used or has expired. If you received the email recently, your email may already be verified \u2014 try logging in.",
+    otpExpired: "This link has expired or was already used. Try logging in.",
     wrongCredentials: "Incorrect email or password",
     serviceUnavailable: "Service temporarily unavailable. Please try again later.",
     didntReceive: "Didn't receive the email?", resendBtn: "Resend",
@@ -470,6 +476,7 @@ const TRANSLATIONS = {
     resetEmailSent: "Password reset link sent! Check your inbox.",
     resetEmailError: "Failed to send reset link. Please try again.",
     resetLinkWrongBrowser: "This reset link must be opened in the same browser where you requested it. Please request a new link.",
+    resetLinkExpired: "This reset link is no longer valid. Please request a new one.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
     newPasswordLabel: "New Password", confirmPasswordLabel: "Confirm Password",
@@ -1595,8 +1602,25 @@ export default function K8sQuestApp() {
       const desc = params.get("error_description");
       console.warn("[KubeQuest:auth] verification redirect error:", { error_code: code, error_description: desc });
       if (code === "otp_expired" || code === "access_denied") {
-        setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired); setAuthIsSuccess(false);
-        setAuthScreen("login");
+        // Distinguish password-recovery errors from email-verification errors.
+        // kq_recovery_requested is set when the user requests a password reset,
+        // so if it exists and is recent (<24h) this was a recovery flow.
+        let isRecoveryFlow = false;
+        try {
+          const rts = localStorage.getItem("kq_recovery_requested");
+          if (rts && (Date.now() - Number(rts)) < 86_400_000) isRecoveryFlow = true;
+        } catch {}
+        if (isRecoveryFlow) {
+          try { localStorage.removeItem("kq_recovery_requested"); } catch {}
+          setAuthError(TRANSLATIONS[lang]?.resetLinkExpired || TRANSLATIONS.en.resetLinkExpired);
+          setAuthIsSuccess(false);
+          setAuthScreen("login");
+          // Auto-open the reset modal so the user can immediately request a new link
+          setShowResetModal(true); setResetStatus(""); setResetEmail("");
+        } else {
+          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired); setAuthIsSuccess(false);
+          setAuthScreen("login");
+        }
       }
       window.history.replaceState(null, "", window.location.pathname);
     }
@@ -1625,14 +1649,22 @@ export default function K8sQuestApp() {
     // the recovery session can arrive via INITIAL_SESSION or SIGNED_IN instead.
     const isRecoverySession = (s) => {
       if (!s?.user?.recovery_sent_at) return false;
+      // Check both sessionStorage flag (set when ?code= detected at page load)
+      // and localStorage flag (set when user requested the reset in this browser).
       const pending = sessionStorage.getItem("kq_recovery_pending");
-      if (!pending) return false;
+      let requested = false;
+      try {
+        const rts = localStorage.getItem("kq_recovery_requested");
+        if (rts && (Date.now() - Number(rts)) < 86_400_000) requested = true;
+      } catch {}
+      if (!pending && !requested) return false;
       const elapsed = Date.now() - new Date(s.user.recovery_sent_at).getTime();
-      return elapsed < 600_000; // recovery initiated within 10 min
+      return elapsed < 86_400_000; // recovery initiated within 24 h (matches email expiry)
     };
 
     const activateRecovery = (s) => {
       sessionStorage.removeItem("kq_recovery_pending");
+      try { localStorage.removeItem("kq_recovery_requested"); } catch {}
       try { sessionStorage.setItem("kq_show_password_reset", "1"); } catch {}
       passwordRecoveryRef.current = true;
       setUser(s.user);
@@ -2418,6 +2450,16 @@ export default function K8sQuestApp() {
         redirectTo: window.location.origin,
       });
       if (error) captureError(error, { flow: "password_reset", extra: { error_code: error.code || error.status } });
+      if (!error) {
+        // Persist a recovery-requested timestamp in localStorage (not sessionStorage)
+        // so we can distinguish password-recovery errors from email-verification errors
+        // when the user clicks the reset link. Email clients / security scanners often
+        // prefetch the link, consuming the OTP token before the user actually clicks.
+        // When that happens Supabase redirects with #error=otp_expired and we need to
+        // know the user was in a recovery flow to show the right error + auto-open the
+        // reset modal. localStorage is used because the reset link may open in a new tab.
+        try { localStorage.setItem("kq_recovery_requested", Date.now().toString()); } catch {}
+      }
       setResetStatus(error ? t("resetEmailError") : t("resetEmailSent"));
     } catch (err) {
       console.error("[KubeQuest] resetPassword error:", err.message || "unknown");
@@ -2438,6 +2480,7 @@ export default function K8sQuestApp() {
       setShowPasswordReset(false);
       try { sessionStorage.removeItem("kq_show_password_reset"); } catch {}
       try { sessionStorage.removeItem("kq_recovery_pending"); } catch {}
+      try { localStorage.removeItem("kq_recovery_requested"); } catch {}
       setNewPassword("");
       setConfirmPassword("");
       await supabase.auth.signOut();
