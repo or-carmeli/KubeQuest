@@ -170,3 +170,65 @@ BEGIN
   RETURN result;
 END;
 $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- POST-DEPLOY VERIFICATION QUERIES
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- Run these after both the migration AND the client deploy are live.
+-- They confirm that the mode column is being populated correctly.
+
+-- V1. Mode distribution for recent events (expect: topic, mixed, daily only).
+--     NULL rows = old cached clients still in the wild.
+--     Run at 1h, 24h, and 72h after deploy. NULL count should trend to zero.
+--
+-- SELECT
+--   mode,
+--   source,
+--   COUNT(*) AS event_count,
+--   MIN(created_at) AS earliest,
+--   MAX(created_at) AS latest
+-- FROM score_events
+-- WHERE created_at > now() - interval '24 hours'
+-- GROUP BY mode, source
+-- ORDER BY mode NULLS LAST, source;
+
+-- V2. Detect unexpected NULL mode on new events (after client is fully rolled out).
+--     If this returns rows after 72h, a scoring path is missing the mode param.
+--
+-- SELECT
+--   id, user_id, question_id, quiz_run_id, source, points, created_at
+-- FROM score_events
+-- WHERE mode IS NULL
+--   AND created_at > now() - interval '24 hours'
+-- ORDER BY created_at DESC
+-- LIMIT 20;
+
+-- V3. Validate mode values are from the expected set.
+--     Should return zero rows. If not, a client is sending invalid mode strings.
+--
+-- SELECT DISTINCT mode
+-- FROM score_events
+-- WHERE mode IS NOT NULL
+--   AND mode NOT IN ('topic', 'mixed', 'daily');
+
+-- V4. Spot-check: mixed-mode events should span multiple topics.
+--     If all mixed-mode questions belong to one topic, scoreMode logic is wrong.
+--
+-- SELECT
+--   se.mode,
+--   COUNT(DISTINCT qq.topic_id) AS distinct_topics,
+--   COUNT(*) AS event_count
+-- FROM score_events se
+-- JOIN quiz_questions qq ON qq.id = se.question_id
+-- WHERE se.mode = 'mixed'
+--   AND se.created_at > now() - interval '24 hours'
+-- GROUP BY se.mode;
+
+-- V5. Graduation check: once NULL count hits zero for 72h, the transition is
+--     complete. At that point, mixed-mode duplicates can be audited precisely:
+--
+-- SELECT user_id, question_id, COUNT(*), array_agg(quiz_run_id)
+-- FROM score_events
+-- WHERE mode = 'mixed'
+-- GROUP BY user_id, question_id
+-- HAVING COUNT(*) > 1;
