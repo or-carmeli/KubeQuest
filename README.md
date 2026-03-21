@@ -207,23 +207,21 @@ flowchart LR
 ## Observability
 
 ```mermaid
-flowchart LR
-    CRON["pg_cron<br/>every 60s"] --> EDGE["Edge Function"]
-    EDGE --> DB["DB"]
-    EDGE --> API["API"]
-    EDGE --> QUIZ["Quiz"]
-    EDGE --> LB["Leaderboard"]
-    EDGE --> AUTH["Auth"]
-    EDGE -->|results| STORE[("status tables")]
+flowchart TD
+    CRON["pg_cron · every 60s"] --> EDGE["Edge Function"]
+    EDGE --> DB["DB"] & API["API"] & QUIZ["Quiz"] & LB["Leaderboard"] & AUTH["Auth"]
+    EDGE -->|results| STORE[("Status Tables")]
     STORE -->|polls 30s| UI["Status Page"]
+    UI -.-> USER([User])
     EDGE -.->|incident| RESEND["Resend API"]
-    RESEND -.->|email alert| USER([User])
-    UI -.->|status page| USER
+    RESEND -.->|email alert| USER
 
     style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
     style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
     style STORE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
     style UI fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
+    style RESEND fill:#111827,stroke:#e53e3e,stroke-width:2px,color:#fff
+    style USER fill:#111827,stroke:#9CA3AF,stroke-width:2px,color:#fff
 ```
 
 The core of the observability stack is a **self-monitoring loop** built entirely on Supabase:
