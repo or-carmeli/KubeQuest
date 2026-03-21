@@ -32,6 +32,26 @@ describe("checkQuizAnswer", () => {
     });
   });
 
+  it("includes p_mode when provided", async () => {
+    const sb = mockSupabase();
+    await checkQuizAnswer(sb, 42, 1, "run123", "mixed");
+
+    expect(sb.rpc).toHaveBeenCalledWith("check_quiz_answer", {
+      p_question_id: 42,
+      p_selected: 1,
+      p_quiz_run_id: "run123",
+      p_mode: "mixed",
+    });
+  });
+
+  it("omits p_mode when null", async () => {
+    const sb = mockSupabase();
+    await checkQuizAnswer(sb, 42, 1, "run123", null);
+
+    const args = sb.rpc.mock.calls[0][1];
+    expect(args).not.toHaveProperty("p_mode");
+  });
+
   it("does not send p_level (server derives points from DB)", async () => {
     const sb = mockSupabase();
     await checkQuizAnswer(sb, 10, 2, "run456");
@@ -84,6 +104,18 @@ describe("checkDailyAnswer", () => {
 
     const args = sb.rpc.mock.calls[0][1];
     expect(args).not.toHaveProperty("p_quiz_run_id");
+  });
+
+  it("includes p_mode when provided", async () => {
+    const sb = mockSupabase();
+    await checkDailyAnswer(sb, 7, 3, "dailyRun1", "daily");
+
+    expect(sb.rpc).toHaveBeenCalledWith("check_daily_answer", {
+      p_question_id: 7,
+      p_selected: 3,
+      p_quiz_run_id: "dailyRun1",
+      p_mode: "daily",
+    });
   });
 });
 
