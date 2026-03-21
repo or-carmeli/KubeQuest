@@ -430,11 +430,12 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [timeRangeKey, setTimeRangeKey] = useState("session");
+  const [histRangeKey, setHistRangeKey] = useState("24h");
+  const [aggWindowKey, setAggWindowKey] = useState("session");
 
-  const isHistorical = HISTORICAL_RANGES.some(r => r.key === timeRangeKey);
-  const activeRange = TIME_RANGES.find(r => r.key === timeRangeKey) || TIME_RANGES[TIME_RANGES.length - 1];
-  const activeHistRange = HISTORICAL_RANGES.find(r => r.key === timeRangeKey);
+  const activeHistRange = HISTORICAL_RANGES.find(r => r.key === histRangeKey) || HISTORICAL_RANGES[0];
+  const isHistorical = histRangeKey !== "live";
+  const activeRange = TIME_RANGES.find(r => r.key === aggWindowKey) || TIME_RANGES[TIME_RANGES.length - 1];
 
   useEffect(() => {
     const cleanupTelemetry = initRealTelemetry();
@@ -455,10 +456,10 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
 
   // Historical data
   const histData = useMemo(() => {
-    if (!isHistorical || !activeHistRange) return null;
+    if (!isHistorical) return null;
     const snapshots = getHistory(activeHistRange.ms);
     return aggregateHistory(snapshots);
-  }, [isHistorical, activeHistRange, timeRangeKey]);
+  }, [isHistorical, activeHistRange]);
 
   // Live mode derived state
   const health = data?.health || { status: "unknown", reason: "Initializing telemetry collectors\u2026", score: 0 };
@@ -471,10 +472,10 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const agoSec = lastUpdated ? Math.max(0, Math.round((Date.now() - lastUpdated.getTime()) / 1000)) : null;
   const rangeLabel = isHistorical
     ? activeHistRange?.label || "Historical"
-    : activeRange.sec != null ? `Last ${activeRange.label}` : "Session";
-  const timeContextText = isHistorical
-    ? rangeLabel
-    : agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s` : rangeLabel;
+    : activeRange.sec != null ? `Last ${activeRange.label}` : "Full Session";
+
+  // Session duration for disabling aggregation windows that exceed it
+  const sessionDurationSec = data?.userFlow?.sessionDuration || 0;
 
   // Determine if we have any telemetry at all
   const hasAnyData = data && (data.totalRequests > 0 || data.vitals?.lcp != null || data.vitals?.inp != null || data.vitals?.cls != null || data.userFlow?.routeChanges > 0);
@@ -512,7 +513,9 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
         <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>{t("devOnly")}</span>
         <TelemetryIndicator hasData={hasAnyData} />
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{timeContextText}</span>
+          {!isHistorical && agoSec != null && (
+            <span style={{ fontSize: 11, color: "var(--text-dim)", fontWeight: 500 }}>updated {agoSec}s ago</span>
+          )}
           {!isHistorical && (
             <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center" }} title="Refresh">
               <RefreshCw size={12} />
@@ -521,52 +524,64 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
         </div>
       </div>
 
-      {/* Time range selector — Live | Historical */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
-        {/* Live ranges */}
-        <div style={{ display: "flex", gap: 2, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3 }}>
-          {TIME_RANGES.map(r => {
-            const active = r.key === timeRangeKey;
-            return (
-              <button key={r.key} onClick={() => setTimeRangeKey(r.key)} style={{
-                background: active ? "var(--glass-10)" : "transparent",
-                border: "none",
-                color: active ? "var(--text-bright)" : "var(--text-muted)",
-                padding: "5px 12px",
-                borderRadius: 6,
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: active ? 700 : 400,
-                transition: "all 0.15s ease",
-              }}>
-                {r.label}
-              </button>
-            );
-          })}
+      {/* ── Time controls ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+        {/* Primary: Time Range */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-dim)", letterSpacing: 0.5, textTransform: "uppercase", width: 72, flexShrink: 0 }}>Time Range</span>
+          <div style={{ display: "flex", gap: 2, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3 }}>
+            <button onClick={() => setHistRangeKey("live")} style={{
+              background: !isHistorical ? "var(--glass-10)" : "transparent",
+              border: "none",
+              color: !isHistorical ? "var(--text-bright)" : "var(--text-muted)",
+              padding: "5px 14px", borderRadius: 6, cursor: "pointer", fontSize: 12,
+              fontWeight: !isHistorical ? 700 : 400, transition: "all 0.15s ease",
+            }}>
+              Live Session
+            </button>
+            {HISTORICAL_RANGES.map(r => {
+              const active = isHistorical && r.key === histRangeKey;
+              return (
+                <button key={r.key} onClick={() => setHistRangeKey(r.key)} style={{
+                  background: active ? "rgba(139,92,246,0.20)" : "transparent",
+                  border: "none",
+                  color: active ? "#a78bfa" : "var(--text-muted)",
+                  padding: "5px 14px", borderRadius: 6, cursor: "pointer", fontSize: 12,
+                  fontWeight: active ? 700 : 400, transition: "all 0.15s ease",
+                }}>
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        {/* Separator */}
-        <div style={{ width: 1, height: 24, background: "var(--glass-6)" }} />
-        {/* Historical ranges */}
-        <div style={{ display: "flex", gap: 2, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3 }}>
-          {HISTORICAL_RANGES.map(r => {
-            const active = r.key === timeRangeKey;
-            return (
-              <button key={r.key} onClick={() => setTimeRangeKey(r.key)} style={{
-                background: active ? "rgba(139,92,246,0.20)" : "transparent",
-                border: "none",
-                color: active ? "#a78bfa" : "var(--text-muted)",
-                padding: "5px 12px",
-                borderRadius: 6,
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: active ? 700 : 400,
-                transition: "all 0.15s ease",
-              }}>
-                {r.label}
-              </button>
-            );
-          })}
-        </div>
+
+        {/* Secondary: Aggregation Window (only in live mode) */}
+        {!isHistorical && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-dim)", letterSpacing: 0.5, textTransform: "uppercase", width: 72, flexShrink: 0 }}>Window</span>
+            <div style={{ display: "flex", gap: 2, background: "var(--glass-1)", border: "1px solid var(--glass-3)", borderRadius: 7, padding: 2 }}>
+              {TIME_RANGES.map(r => {
+                const active = r.key === aggWindowKey;
+                const disabled = r.sec != null && r.sec > sessionDurationSec && sessionDurationSec > 0;
+                const label = r.key === "session" ? "Full Session" : r.label;
+                return (
+                  <button key={r.key} onClick={() => !disabled && setAggWindowKey(r.key)} style={{
+                    background: active ? "var(--glass-8)" : "transparent",
+                    border: "none",
+                    color: disabled ? "var(--text-disabled)" : active ? "var(--text-bright)" : "var(--text-muted)",
+                    padding: "4px 10px", borderRadius: 5, fontSize: 11,
+                    fontWeight: active ? 600 : 400, transition: "all 0.15s ease",
+                    cursor: disabled ? "default" : "pointer",
+                    opacity: disabled ? 0.4 : 1,
+                  }} title={disabled ? `Session is only ${sessionDurationSec}s long` : undefined}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Historical view ── */}
