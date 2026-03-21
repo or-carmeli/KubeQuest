@@ -30,8 +30,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@sentry/react": "^10.43.0",
-    "@supabase/supabase-js": "^2.99.2",
+    "@sentry/react": "^10.45.0",
+    "@supabase/supabase-js": "^2.99.3",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^2.0.0",
     "lucide-react": "^0.577.0",

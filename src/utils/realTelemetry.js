@@ -104,12 +104,25 @@ function urlLabel(input) {
 }
 
 // ─── Web Vitals ────────────────────────────────────────────────────────────────
+// Outlier caps: values beyond these thresholds are measurement artifacts
+// (background tabs, long-idle SPAs, delayed reporting) and are discarded.
+const VITALS_CAP = { lcp: 60_000, inp: 10_000, cls: 1 };
+
 async function collectWebVitals() {
   try {
     const { onCLS, onINP, onLCP } = await import("web-vitals");
-    onLCP(({ value, rating }) => { _vitals.lcp = Math.round(value); _vitals.lcpRating = rating; });
-    onINP(({ value, rating }) => { _vitals.inp = Math.round(value); _vitals.inpRating = rating; });
-    onCLS(({ value, rating }) => { _vitals.cls = +value.toFixed(3); _vitals.clsRating = rating; });
+    onLCP(({ value, rating }) => {
+      if (value > VITALS_CAP.lcp) return; // e.g. 13,352,048ms — tab left open
+      _vitals.lcp = Math.round(value); _vitals.lcpRating = rating;
+    });
+    onINP(({ value, rating }) => {
+      if (value > VITALS_CAP.inp) return;
+      _vitals.inp = Math.round(value); _vitals.inpRating = rating;
+    });
+    onCLS(({ value, rating }) => {
+      if (value > VITALS_CAP.cls) return;
+      _vitals.cls = +value.toFixed(3); _vitals.clsRating = rating;
+    });
   } catch {
     // web-vitals not available — vitals stay null
   }
