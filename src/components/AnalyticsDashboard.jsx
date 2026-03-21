@@ -3,10 +3,44 @@
 // Reads from analytics_events table only. Completely isolated.
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown } from "lucide-react";
+import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown, Maximize2, X } from "lucide-react";
 import { fetchAnalytics, fetchOnlineCount, TIME_RANGES } from "../api/analyticsQueries";
 
 const MONO = "'Fira Code','Courier New',monospace";
+
+// ── Vercel-style hover CSS (injected once) ──────────────────────────────────
+
+const HOVER_CSS_ID = "analytics-hover-css";
+function injectHoverCSS() {
+  if (document.getElementById(HOVER_CSS_ID)) return;
+  const style = document.createElement("style");
+  style.id = HOVER_CSS_ID;
+  style.textContent = `
+    .av-row { transition: background .15s ease-out; cursor: default; }
+    .av-row:hover { background: rgba(255,255,255,0.06) !important; }
+    .av-card { transition: border-color .2s, box-shadow .2s; }
+    .av-card:hover { border-color: rgba(255,255,255,0.18) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.18) !important; }
+    .av-btn { transition: background .15s ease-out, color .15s; }
+    .av-btn:hover { background: rgba(255,255,255,0.08) !important; color: var(--text-primary) !important; }
+    .av-dropdown-item { transition: background .12s ease-out; }
+    .av-dropdown-item:hover { background: rgba(255,255,255,0.08) !important; }
+    .av-back:hover { border-color: rgba(255,255,255,0.2) !important; background: rgba(255,255,255,0.08) !important; }
+    .av-back { transition: background .15s, border-color .15s; }
+    .av-trigger { transition: background .15s, border-color .15s; }
+    .av-trigger:hover { border-color: rgba(255,255,255,0.2) !important; background: rgba(255,255,255,0.06) !important; }
+    .av-chart-hover-line { pointer-events: none; }
+    .av-summary { transition: border-color .2s, box-shadow .2s; }
+    .av-summary:hover { border-color: rgba(255,255,255,0.15) !important; }
+    .av-tab { transition: color .15s, border-color .15s; border-bottom: 2px solid transparent; cursor: pointer; }
+    .av-tab:hover { color: var(--text-primary) !important; }
+    .av-tab-active { border-bottom-color: var(--text-primary) !important; color: var(--text-primary) !important; }
+    .av-viewall-btn { transition: opacity .15s; opacity: 0; }
+    .av-card:hover .av-viewall-btn { opacity: 1; }
+    .av-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; }
+    .av-modal { background: #111; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; width: 90vw; max-width: 560px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 16px 48px rgba(0,0,0,0.5); animation: fadeIn 0.15s ease; }
+  `;
+  document.head.appendChild(style);
+}
 
 // ── Country flag emoji lookup ───────────────────────────────────────────────
 
@@ -26,7 +60,7 @@ function countryFlag(name) {
   return COUNTRY_FLAGS[name] || "\u{1F310}";
 }
 
-// ── Referrer icon (favicon via Google S2) ───────────────────────────────────
+// ── Referrer icon ───────────────────────────────────────────────────────────
 
 function ReferrerIcon({ domain }) {
   if (!domain || domain === "(direct)") {
@@ -43,7 +77,7 @@ function ReferrerIcon({ domain }) {
   );
 }
 
-// ── Device / Browser / OS icons ─────────────────────────────────────────────
+// ── Device icons ────────────────────────────────────────────────────────────
 
 const DEVICE_ICONS = {
   "mobile": <Smartphone size={14} strokeWidth={1.5} />,
@@ -66,6 +100,8 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
   const [loading, setLoading] = useState(true);
   const [chartMode, setChartMode] = useState("visitors");
   const [onlineCount, setOnlineCount] = useState(0);
+
+  useEffect(() => { injectHoverCSS(); }, []);
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -97,9 +133,9 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
       animation: "fadeIn 0.3s ease", direction: "ltr",
       minHeight: "calc(100vh - 80px)", display: "flex", flexDirection: "column",
     }}>
-      {/* Header — Vercel style */}
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <button className="back-btn" onClick={onBack} style={{
+        <button className="back-btn av-back" onClick={onBack} style={{
           background: "var(--glass-3)", border: "1px solid var(--glass-6)",
           color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6,
           cursor: "pointer", display: "flex", alignItems: "center",
@@ -114,7 +150,7 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
           border: "1px solid rgba(139,92,246,0.25)", letterSpacing: 0.5,
         }}>DEV</span>
 
-        {/* Online indicator — matches Vercel's "X online" */}
+        {/* Online indicator */}
         <div style={{
           display: "flex", alignItems: "center", gap: 5,
           color: "var(--text-muted)", fontSize: 13,
@@ -128,9 +164,7 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
             boxShadow: onlineCount > 0 ? "0 0 6px rgba(52,211,153,0.5)" : "none",
             flexShrink: 0,
           }} />
-          <span style={{ fontFamily: MONO, fontWeight: 500 }}>
-            {onlineCount}
-          </span>
+          <span style={{ fontFamily: MONO, fontWeight: 500 }}>{onlineCount}</span>
           <span>online</span>
         </div>
 
@@ -172,7 +206,7 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
           </div>
 
           {/* Chart */}
-          <div style={{
+          <div className="av-card" style={{
             background: "var(--glass-2)", border: "1px solid var(--glass-5)",
             borderRadius: 10, padding: "14px 16px", marginBottom: 14,
           }}>
@@ -183,19 +217,28 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
               data={chartMode === "visitors" ? data.visitorsOverTime : data.pageViewsOverTime}
               color={chartMode === "visitors" ? "#a78bfa" : "#60a5fa"}
               rangeKey={range}
+              metricLabel={chartMode === "visitors" ? "Visitors" : "Page Views"}
             />
           </div>
 
-          {/* Breakdown grid */}
+          {/* Breakdown grid — Vercel-style tabbed cards */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <BreakdownCard title="Pages" items={data.topPages} />
-            <BreakdownCard title="Referrers" items={data.referrers} renderIcon={item => <ReferrerIcon domain={item.name} />} />
-            <BreakdownCard title="Countries" items={data.countries}
-              renderIcon={item => <span style={{ fontSize: 14, width: 18, textAlign: "center", flexShrink: 0 }}>{countryFlag(item.name)}</span>} />
-            <BreakdownCard title="Devices" items={data.devices}
-              renderIcon={item => <span style={{ color: "var(--text-dim)", flexShrink: 0, display: "flex" }}>{DEVICE_ICONS[item.name] || <Monitor size={14} />}</span>} />
-            <BreakdownCard title="Browsers" items={data.browsers} />
-            <BreakdownCard title="Operating Systems" items={data.operatingSystems} />
+            <TabbedBreakdownCard tabs={[
+              { label: "Pages", items: data.topPages },
+            ]} />
+            <TabbedBreakdownCard tabs={[
+              { label: "Referrers", items: data.referrers, renderIcon: item => <ReferrerIcon domain={item.name} /> },
+            ]} />
+            <TabbedBreakdownCard tabs={[
+              { label: "Countries", items: data.countries, renderIcon: item => <span style={{ fontSize: 14, width: 18, textAlign: "center", flexShrink: 0 }}>{countryFlag(item.name)}</span> },
+            ]} />
+            <TabbedBreakdownCard tabs={[
+              { label: "Devices", items: data.devices, renderIcon: item => <span style={{ color: "var(--text-dim)", flexShrink: 0, display: "flex" }}>{DEVICE_ICONS[item.name] || <Monitor size={14} />}</span> },
+              { label: "Browsers", items: data.browsers },
+            ]} />
+            <TabbedBreakdownCard tabs={[
+              { label: "Operating Systems", items: data.operatingSystems },
+            ]} />
           </div>
         </>
       )}
@@ -207,7 +250,7 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
 
 function SummaryCard({ icon, label, value, sub, subColor }) {
   return (
-    <div style={{
+    <div className="av-summary" style={{
       flex: 1, minWidth: 120,
       background: "var(--glass-2)", border: "1px solid var(--glass-5)",
       borderRadius: 10, padding: "14px 16px",
@@ -237,7 +280,6 @@ function TimeRangeSelector({ range, onChange }) {
   const ref = useRef(null);
   const current = TIME_RANGES.find(t => t.key === range);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -247,8 +289,7 @@ function TimeRangeSelector({ range, onChange }) {
 
   return (
     <div ref={ref} style={{ position: "relative", userSelect: "none" }}>
-      {/* Trigger button */}
-      <button onClick={() => setOpen(o => !o)} style={{
+      <button className="av-trigger" onClick={() => setOpen(o => !o)} style={{
         display: "flex", alignItems: "center", gap: 8,
         background: "var(--glass-2)", border: "1px solid var(--glass-5)",
         borderRadius: 8, padding: "6px 12px", cursor: "pointer",
@@ -259,24 +300,23 @@ function TimeRangeSelector({ range, onChange }) {
         <ChevronDown size={14} strokeWidth={1.5} style={{
           color: "var(--text-dim)",
           transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          transition: "transform 0.15s ease",
+          transition: "transform 0.2s ease",
         }} />
       </button>
 
-      {/* Dropdown */}
       {open && (
         <div style={{
           position: "absolute", right: 0, top: "calc(100% + 4px)",
-          background: "#1a1a1a", border: "1px solid var(--glass-5)",
+          background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.14)",
           borderRadius: 10, padding: "4px 0", minWidth: 180,
           boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
           zIndex: 100, animation: "fadeIn 0.12s ease",
         }}>
           {TIME_RANGES.map(t => (
-            <button key={t.key} onClick={() => { onChange(t.key); setOpen(false); }} style={{
+            <button key={t.key} className="av-dropdown-item" onClick={() => { onChange(t.key); setOpen(false); }} style={{
               width: "100%", display: "flex", alignItems: "center",
               padding: "8px 14px", border: "none", cursor: "pointer",
-              background: t.key === range ? "var(--glass-5)" : "transparent",
+              background: t.key === range ? "rgba(255,255,255,0.1)" : "transparent",
               color: t.key === range ? "var(--text-bright)" : "var(--text-secondary)",
               fontSize: 13, fontWeight: t.key === range ? 600 : 400,
               textAlign: "left",
@@ -299,7 +339,7 @@ function ChartToggle({ mode, onChange }) {
       borderRadius: 6, padding: 2,
     }}>
       {[{ key: "visitors", label: "Visitors" }, { key: "pageViews", label: "Page Views" }].map(t => (
-        <button key={t.key} onClick={() => onChange(t.key)} style={{
+        <button key={t.key} className="av-btn" onClick={() => onChange(t.key)} style={{
           background: mode === t.key ? "var(--glass-8)" : "transparent",
           border: "none", color: mode === t.key ? "var(--text-primary)" : "var(--text-muted)",
           padding: "3px 10px", borderRadius: 5, cursor: "pointer",
@@ -312,16 +352,19 @@ function ChartToggle({ mode, onChange }) {
   );
 }
 
-// ── SVG Area Chart ──────────────────────────────────────────────────────────
+// ── SVG Area Chart with hover tooltip ───────────────────────────────────────
 
-function AreaChart({ data, color, rangeKey }) {
+function AreaChart({ data, color, rangeKey, metricLabel = "Visitors" }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const svgRef = useRef(null);
+
   if (!data || data.length === 0) return <EmptyChart />;
 
   const W = 880;
-  const H = 200;
+  const H = 220;
   const PAD_LEFT = 40;
   const PAD_BOTTOM = 28;
-  const PAD_TOP = 10;
+  const PAD_TOP = 14;
   const chartW = W - PAD_LEFT;
   const chartH = H - PAD_BOTTOM - PAD_TOP;
 
@@ -342,14 +385,47 @@ function AreaChart({ data, color, rangeKey }) {
   const yLabels = Array.from({ length: yTicks + 1 }, (_, i) => Math.round((max / yTicks) * (yTicks - i)));
 
   const xLabelInterval = Math.max(1, Math.floor(data.length / 6));
-  const formatDate = (ts) => {
+
+  const formatDateShort = (ts) => {
     const d = new Date(ts);
     if (rangeKey === "24h") return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     return d.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
+  const formatDateTooltip = (ts) => {
+    const d = new Date(ts);
+    if (rangeKey === "24h") return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (rangeKey === "7d" || rangeKey === "30d") return d.toLocaleDateString([], { month: "short", day: "numeric", year: "2-digit" });
+    return d.toLocaleDateString([], { month: "short", year: "2-digit" });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * W;
+    const idx = Math.round((x - PAD_LEFT) / step);
+    if (idx >= 0 && idx < points.length) setHoverIdx(idx);
+    else setHoverIdx(null);
+  };
+
+  const hp = hoverIdx !== null ? points[hoverIdx] : null;
+
+  // Tooltip positioning — keep inside chart bounds
+  const TT_W = 120;
+  const TT_H = 44;
+  const ttX = hp ? Math.max(PAD_LEFT, Math.min(hp.x - TT_W / 2, W - TT_W - 4)) : 0;
+  const ttAbove = hp && hp.y > TT_H + 16;
+  const ttY = hp ? (ttAbove ? hp.y - TT_H - 12 : hp.y + 16) : 0;
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }}>
+    <svg
+      ref={svgRef}
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ width: "100%", height: "auto", cursor: "crosshair" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHoverIdx(null)}
+    >
+      {/* Grid lines */}
       {yLabels.map((v, i) => {
         const y = PAD_TOP + (i / yTicks) * chartH;
         return (
@@ -359,6 +435,8 @@ function AreaChart({ data, color, rangeKey }) {
           </g>
         );
       })}
+
+      {/* Area + line */}
       <defs>
         <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity={0.25} />
@@ -367,18 +445,51 @@ function AreaChart({ data, color, rangeKey }) {
       </defs>
       <path d={areaPath} fill={`url(#grad-${color.replace("#", "")})`} />
       <path d={linePath} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" />
-      {points.filter(p => p.count > 0).map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={2.5} fill={color} opacity={0.7} />
-      ))}
+
+      {/* Hover: solid white vertical line + dot + Vercel-style tooltip card */}
+      {hp && (
+        <g className="av-chart-hover-line">
+          {/* Solid white vertical line — full height */}
+          <line x1={hp.x} y1={PAD_TOP} x2={hp.x} y2={PAD_TOP + chartH}
+            stroke="rgba(255,255,255,0.8)" strokeWidth={1} />
+          {/* Dot on data point — filled with outline */}
+          <circle cx={hp.x} cy={hp.y} r={5} fill={color} stroke="#fff" strokeWidth={2} />
+
+          {/* Tooltip card */}
+          <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={8}
+            fill="#1a1a1a" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+          {/* Row 1: color dot + label + value */}
+          <circle cx={ttX + 12} cy={ttY + 16} r={4} fill={color} />
+          <text x={ttX + 22} y={ttY + 20} fill="#a1a1a1" fontSize={11} fontFamily={MONO}>
+            {metricLabel}
+          </text>
+          <text x={ttX + TT_W - 10} y={ttY + 20} textAnchor="end" fill="#ededed" fontSize={12} fontWeight={700} fontFamily={MONO}>
+            {hp.count}
+          </text>
+          {/* Row 2: date */}
+          <text x={ttX + TT_W / 2} y={ttY + 37} textAnchor="middle" fill="#64748b" fontSize={10} fontFamily={MONO}>
+            {formatDateTooltip(hp.ts)}
+          </text>
+        </g>
+      )}
+
+      {/* X-axis labels */}
       {data.map((d, i) => {
         if (i % xLabelInterval !== 0 && i !== data.length - 1) return null;
         const x = PAD_LEFT + i * step;
         return (
           <text key={i} x={x} y={H - 6} textAnchor="middle" fill="var(--text-dim)" fontSize={9} fontFamily={MONO}>
-            {formatDate(d.ts)}
+            {formatDateShort(d.ts)}
           </text>
         );
       })}
+
+      {/* Hover x-axis label replacement */}
+      {hp && (
+        <text x={hp.x} y={H - 6} textAnchor="middle" fill="#ededed" fontSize={9} fontWeight={600} fontFamily={MONO}>
+          {formatDateTooltip(hp.ts)}
+        </text>
+      )}
     </svg>
   );
 }
@@ -394,90 +505,153 @@ function EmptyChart() {
   );
 }
 
-// ── Breakdown Card ──────────────────────────────────────────────────────────
+// ── Tabbed Breakdown Card (Vercel-style) ────────────────────────────────────
 
-function BreakdownCard({ title, items, renderIcon }) {
-  const max = items.length > 0 ? items[0].count : 1;
-  const total = items.reduce((s, i) => s + i.count, 0);
-  const display = items.slice(0, 10);
+function TabbedBreakdownCard({ tabs }) {
+  const [activeTab, setActiveTab] = useState(0);
+  const [viewAll, setViewAll] = useState(false);
+  const current = tabs[activeTab] || tabs[0];
+  const { items, renderIcon } = current;
+  const PREVIEW_COUNT = 5;
 
   return (
-    <div style={{
-      background: "var(--glass-2)", border: "1px solid var(--glass-5)",
-      borderRadius: 10, padding: "14px 16px", minWidth: 0,
-    }}>
-      {/* Header */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 6, marginBottom: 8,
-        borderBottom: "1px solid var(--glass-4)", paddingBottom: 8,
+    <>
+      <div className="av-card" style={{
+        background: "var(--glass-2)", border: "1px solid var(--glass-5)",
+        borderRadius: 10, padding: "14px 16px", minWidth: 0,
       }}>
-        <span style={{
-          fontSize: 13, fontWeight: 600, color: "var(--text-primary)",
-        }}>{title}</span>
-        <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
-          visitors
-        </span>
+        {/* Tab header */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 0, marginBottom: 8,
+          borderBottom: "1px solid var(--glass-4)", position: "relative",
+        }}>
+          <div style={{ display: "flex", gap: 16, flex: 1 }}>
+            {tabs.map((tab, i) => (
+              <button key={i}
+                className={`av-tab ${i === activeTab ? "av-tab-active" : ""}`}
+                onClick={() => setActiveTab(i)}
+                style={{
+                  background: "none", border: "none", padding: "0 0 8px",
+                  fontSize: 13, fontWeight: i === activeTab ? 600 : 400,
+                  color: i === activeTab ? "var(--text-primary)" : "var(--text-muted)",
+                  cursor: "pointer",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, paddingBottom: 8 }}>
+            visitors
+          </span>
+        </div>
+
+        {/* Rows */}
+        {items.length === 0 ? (
+          <div style={{ padding: "24px 0", textAlign: "center", color: "var(--text-dim)", fontSize: 11 }}>
+            No data yet
+          </div>
+        ) : (
+          <BreakdownRows items={items.slice(0, PREVIEW_COUNT)} allItems={items} renderIcon={renderIcon} />
+        )}
+
+        {/* View All button — appears on hover like Vercel */}
+        {items.length > PREVIEW_COUNT && (
+          <button className="av-viewall-btn" onClick={() => setViewAll(true)} style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            background: "none", border: "none", padding: "8px 0 2px",
+            color: "var(--text-muted)", fontSize: 11, cursor: "pointer",
+          }}>
+            <Maximize2 size={11} strokeWidth={2} />
+            View All
+          </button>
+        )}
       </div>
 
-      {items.length === 0 ? (
-        <div style={{
-          padding: "24px 0", textAlign: "center", color: "var(--text-dim)", fontSize: 11,
-        }}>
-          No data yet
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {display.map((item, i) => {
-            const pct = total > 0 ? (item.count / total) * 100 : 0;
-            const pctLabel = pct >= 1 ? `${Math.round(pct)}%` : "<1%";
-            const barPct = Math.max((item.count / max) * 100, 2);
-            return (
-              <div key={i} style={{
-                position: "relative",
-                borderBottom: i < display.length - 1 ? "1px solid var(--glass-3)" : "none",
+      {/* View All modal */}
+      {viewAll && (
+        <div className="av-modal-overlay" onClick={() => setViewAll(false)}>
+          <div className="av-modal" onClick={e => e.stopPropagation()}>
+            {/* Modal header */}
+            <div style={{
+              display: "flex", alignItems: "center", padding: "14px 16px",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+            }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", flex: 1 }}>
+                {current.label}
+              </span>
+              <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 12 }}>
+                visitors
+              </span>
+              <button onClick={() => setViewAll(false)} style={{
+                background: "none", border: "none", color: "var(--text-muted)",
+                cursor: "pointer", padding: 4, display: "flex",
               }}>
-                {/* Background bar */}
-                <div style={{
-                  position: "absolute", left: 0, top: 0, bottom: 0,
-                  width: `${barPct}%`, background: "var(--glass-4)",
-                  borderRadius: 3, transition: "width 0.4s ease",
-                }} />
-                {/* Content row */}
-                <div style={{
-                  position: "relative", display: "flex", alignItems: "center",
-                  padding: "7px 8px", gap: 8, zIndex: 1,
-                }}>
-                  {renderIcon && renderIcon(item)}
-                  <span style={{
-                    flex: 1, fontSize: 12, color: "var(--text-primary)",
-                    fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis",
-                    whiteSpace: "nowrap", minWidth: 0,
-                  }}>
-                    {item.name}
-                  </span>
-                  <span style={{
-                    fontSize: 10, color: "var(--text-dim)", fontFamily: MONO,
-                    flexShrink: 0, minWidth: 28, textAlign: "right",
-                  }}>
-                    {pctLabel}
-                  </span>
-                  <span style={{
-                    fontSize: 12, color: "var(--text-primary)", fontFamily: MONO,
-                    fontWeight: 600, flexShrink: 0, minWidth: 30, textAlign: "right",
-                  }}>
-                    {fmt(item.count)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-          {items.length > 10 && (
-            <div style={{ fontSize: 10, color: "var(--text-dim)", textAlign: "center", paddingTop: 6 }}>
-              +{items.length - 10} more
+                <X size={16} />
+              </button>
             </div>
-          )}
+            {/* All rows */}
+            <div style={{ overflow: "auto", padding: "0 16px 16px" }}>
+              <BreakdownRows items={items} allItems={items} renderIcon={renderIcon} />
+            </div>
+          </div>
         </div>
       )}
+    </>
+  );
+}
+
+// ── Breakdown Rows (shared between card and modal) ──────────────────────────
+
+function BreakdownRows({ items, allItems, renderIcon }) {
+  const max = allItems.length > 0 ? allItems[0].count : 1;
+  const total = allItems.reduce((s, i) => s + i.count, 0);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {items.map((item, i) => {
+        const pct = total > 0 ? (item.count / total) * 100 : 0;
+        const pctLabel = pct >= 1 ? `${Math.round(pct)}%` : "<1%";
+        const barPct = Math.max((item.count / max) * 100, 2);
+        return (
+          <div key={i} className="av-row" style={{
+            position: "relative",
+            borderBottom: i < items.length - 1 ? "1px solid var(--glass-3)" : "none",
+            borderRadius: 4,
+          }}>
+            <div style={{
+              position: "absolute", left: 0, top: 0, bottom: 0,
+              width: `${barPct}%`, background: "var(--glass-4)",
+              borderRadius: 3, transition: "width 0.4s ease",
+            }} />
+            <div style={{
+              position: "relative", display: "flex", alignItems: "center",
+              padding: "7px 8px", gap: 8, zIndex: 1,
+            }}>
+              {renderIcon && renderIcon(item)}
+              <span style={{
+                flex: 1, fontSize: 12, color: "var(--text-primary)",
+                fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis",
+                whiteSpace: "nowrap", minWidth: 0,
+              }}>
+                {item.name}
+              </span>
+              <span style={{
+                fontSize: 10, color: "var(--text-dim)", fontFamily: MONO,
+                flexShrink: 0, minWidth: 28, textAlign: "right",
+              }}>
+                {pctLabel}
+              </span>
+              <span style={{
+                fontSize: 12, color: "var(--text-primary)", fontFamily: MONO,
+                fontWeight: 600, flexShrink: 0, minWidth: 30, textAlign: "right",
+              }}>
+                {fmt(item.count)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
