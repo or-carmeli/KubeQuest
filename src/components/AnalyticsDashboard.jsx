@@ -506,8 +506,12 @@ function EmptyChart() {
 
 function TabbedBreakdownCard({ tabs }) {
   const [activeTab, setActiveTab] = useState(0);
+  const [expanded, setExpanded] = useState(false);
   const current = tabs[activeTab] || tabs[0];
   const { items, renderIcon } = current;
+  const PREVIEW = 5;
+  const hasMore = items.length > PREVIEW;
+  const displayItems = expanded ? items : items.slice(0, PREVIEW);
 
   return (
     <div className="av-card" style={{
@@ -523,7 +527,7 @@ function TabbedBreakdownCard({ tabs }) {
           {tabs.map((tab, i) => (
             <button key={i}
               className={`av-tab ${i === activeTab ? "av-tab-active" : ""}`}
-              onClick={() => setActiveTab(i)}
+              onClick={() => { setActiveTab(i); setExpanded(false); }}
               style={{
                 background: "none", border: "none", padding: "0 0 8px",
                 fontSize: 13, fontWeight: i === activeTab ? 600 : 400,
@@ -546,7 +550,17 @@ function TabbedBreakdownCard({ tabs }) {
           No data yet
         </div>
       ) : (
-        <BreakdownRows items={items} renderIcon={renderIcon} />
+        <BreakdownRows items={displayItems} renderIcon={renderIcon} />
+      )}
+
+      {hasMore && (
+        <button className="av-btn" onClick={() => setExpanded(e => !e)} style={{
+          width: "100%", background: "none", border: "none",
+          padding: "8px 0 0", color: "var(--text-muted)", fontSize: 12,
+          cursor: "pointer", textAlign: "center",
+        }}>
+          {expanded ? "Show less" : "View all"}
+        </button>
       )}
     </div>
   );
