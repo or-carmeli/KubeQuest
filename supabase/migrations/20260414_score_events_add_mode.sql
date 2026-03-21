@@ -13,9 +13,24 @@
 --   - RPC params use DEFAULT NULL, so old clients continue to work
 --   - Running this migration twice is safe (IF NOT EXISTS / CREATE OR REPLACE)
 
--- ── 1. Add column ────────────────────────────────────────────────────────────
+-- ── 1. Add column + constraint + index ────────────────────────────────────────
 
 ALTER TABLE score_events ADD COLUMN IF NOT EXISTS mode TEXT;
+
+-- Only allow known mode values (NULL permitted for legacy rows)
+DO $$
+BEGIN
+  ALTER TABLE score_events ADD CONSTRAINT chk_score_events_mode
+    CHECK (mode IN ('topic', 'mixed', 'daily'));
+EXCEPTION
+  WHEN duplicate_object THEN NULL;  -- constraint already exists
+END $$;
+
+-- Partial index for mixed-mode duplicate audits: covers only mixed rows,
+-- so it stays small and doesn't slow down topic/daily inserts.
+CREATE INDEX IF NOT EXISTS idx_se_mixed_user_question
+  ON score_events (user_id, question_id)
+  WHERE mode = 'mixed';
 
 COMMENT ON COLUMN score_events.mode IS
   'Quiz mode that generated this event: topic, mixed, daily, or NULL (legacy rows)';
