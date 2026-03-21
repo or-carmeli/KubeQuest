@@ -328,9 +328,9 @@ flowchart LR
 ### Publish Pipeline (post-merge)
 
 ```mermaid
-flowchart LR
-    PUSH["Push to main"] --> SCAN["Build &<br/>Trivy Scan"] --> GHCR["Push to<br/>GHCR"] --> ATTEST["SBOM +<br/>Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
+flowchart TD
     BOT["Dependabot"] -.->|weekly PRs| PUSH
+    PUSH["Push to main"] --> SCAN["Build & Trivy Scan"] --> GHCR["Push to GHCR"] --> ATTEST["SBOM + Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
 
     style PUSH fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
     style SCAN fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff
