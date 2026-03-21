@@ -81,7 +81,7 @@ function Row({ label, value, rating }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 function DevPerfOverlay() {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [metrics, setMetrics] = useState(null);
   const cleanupRef = useRef(null);
   const intervalRef = useRef(null);

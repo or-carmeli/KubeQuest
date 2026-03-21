@@ -21,6 +21,7 @@ import { saveQuizState, loadQuizState, clearQuizState, isRecentQuizState } from 
 import { safeGetItem, safeGetJSON, checkDataVersion } from "./utils/storage";
 import { captureError, setUserContext, setScreen as setTelemetryScreen } from "./utils/telemetry";
 import { recordRouteChange } from "./utils/realTelemetry";
+import { initAnalytics, trackPageView } from "./api/analyticsCollector";
 import { EXPERIMENTAL_ENABLED } from "./utils/experimentalMode";
 import { getLocalizedField, warnIfHebrew } from "./utils/i18n";
 import { hasHebrew, K8S_CONCEPT_TERMS, K8S_CODE_TERMS, CODE_SPAN_STYLE, renderBidiInner, HE_PREFIX_TERM_RE, renderHebrewPrefixTerms, renderBidi, CLI_COMMAND_RE, splitCliParts, renderBidiBlock } from "./utils/bidi";
@@ -31,6 +32,7 @@ import StatusView from "./components/StatusView";
 import PerformanceInsights from "./components/PerformanceInsights";
 import DevPerfOverlay from "./components/DevPerfOverlay";
 import SystemObservability from "./components/SystemObservability";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
@@ -1350,6 +1352,10 @@ export default function K8sQuestApp() {
   // ── Telemetry context (safe metadata only) ────────────────────────────────
   useEffect(() => { setUserContext({ isGuest }); }, [isGuest]);
   useEffect(() => { setTelemetryScreen(screen); if (import.meta.env.DEV) recordRouteChange(screen); }, [screen]);
+
+  // ── Web analytics (production only, isolated from telemetry) ─────────────
+  useEffect(() => { initAnalytics(supabase); }, [supabase]);
+  useEffect(() => { trackPageView(screen); }, [screen]);
 
   // ── Rotating search placeholder ──────────────────────────────────────────
   useEffect(() => {
@@ -4757,6 +4763,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
           </button>
           )}
+          {import.meta.env.DEV && (
+          <button className="menu-item" onClick={()=>{setScreen("analytics");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="analytics"?"var(--glass-3)":"none",border:"none",color:screen==="analytics"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="analytics"?600:400,direction:dir}}>
+            <TrendingUp size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"Analytics":"אנליטיקס"}
+            <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
+          </button>
+          )}
           <button className="menu-item" onClick={()=>{setScreen("about");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="about"?"var(--glass-3)":"none",border:"none",color:screen==="about"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="about"?600:400,direction:dir}}>
             <Info size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {t("aboutBtn")}
@@ -5557,10 +5570,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
 
       {/* PERFORMANCE INSIGHTS */}
-      {EXPERIMENTAL_ENABLED&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} lang={lang} dir={dir} />}
+      {EXPERIMENTAL_ENABLED&&screen==="performanceInsights"&&<PerformanceInsights onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} />}
 
       {/* SYSTEM OBSERVABILITY */}
-      {EXPERIMENTAL_ENABLED&&screen==="systemObservability"&&<SystemObservability onBack={()=>setScreen("home")} lang={lang} dir={dir} />}
+      {EXPERIMENTAL_ENABLED&&screen==="systemObservability"&&<SystemObservability onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} />}
+
+      {/* ANALYTICS */}
+      {EXPERIMENTAL_ENABLED&&screen==="analytics"&&<AnalyticsDashboard onBack={()=>setScreen("home")} supabase={supabase} />}
 
       {/* STATS */}
       {screen==="stats"&&(

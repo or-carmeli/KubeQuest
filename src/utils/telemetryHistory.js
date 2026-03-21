@@ -145,7 +145,7 @@ export function scoreLabel(score) {
 
 // ─── Historical data queries ─────────────────────────────────────────────────
 /**
- * Get all snapshots within a time window.
+ * Get all snapshots within a time window (localStorage only, synchronous).
  * @param {number} windowMs - milliseconds to look back
  * @returns {Array} snapshots sorted by timestamp
  */
@@ -153,6 +153,29 @@ export function getHistory(windowMs) {
   const entries = loadRaw();
   const cutoff = Date.now() - windowMs;
   return entries.filter(e => e.ts >= cutoff).sort((a, b) => a.ts - b.ts);
+}
+
+/**
+ * Merge localStorage snapshots with remote (Supabase) snapshots.
+ * Deduplicates by timestamp (within 5s tolerance).
+ * @param {Array} local - localStorage snapshots
+ * @param {Array} remote - Supabase snapshots
+ * @returns {Array} merged and sorted
+ */
+export function mergeSnapshots(local, remote) {
+  if (!remote || remote.length === 0) return local;
+  if (!local || local.length === 0) return remote.sort((a, b) => a.ts - b.ts);
+
+  const seen = new Set(local.map(s => Math.round(s.ts / 5000)));
+  const merged = [...local];
+  for (const r of remote) {
+    const key = Math.round(r.ts / 5000);
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(r);
+    }
+  }
+  return merged.sort((a, b) => a.ts - b.ts);
 }
 
 /**
