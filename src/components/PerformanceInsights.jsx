@@ -17,6 +17,7 @@ import {
 import { THRESHOLDS, SEVERITY_COLORS, severity, computeBaseline, CRUX_BENCHMARKS, compareToGlobal } from "../utils/mockTelemetry";
 import { buildSnapshot, TIME_RANGES } from "../utils/hybridTelemetry";
 import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/realTelemetry";
+import { HISTORICAL_RANGES, startHistoryRecorder, getHistory, aggregateHistory, computeRES, scoreLabel } from "../utils/telemetryHistory";
 
 
 // ─── Component-level guard ─────────────────────────────────────────────────────
@@ -310,6 +311,20 @@ const T = {
     clsTooltip: "Cumulative Layout Shift - visual stability of the page",
     errorRateTooltip: "Percentage of failed network requests",
     distribution: "Distribution",
+    // Historical view
+    realExperienceScore: "Real Experience Score",
+    resDesc: "Composite score based on Web Vitals and navigation timing",
+    scoreOverTime: "Score Over Time",
+    p95OverTime: "P95 Latency Over Time",
+    historicalSummary: "Historical Summary",
+    snapshots: "Snapshots",
+    noHistoryTitle: "No historical data yet",
+    noHistoryMsg: "Historical data is recorded automatically every 60 seconds. Use the app for a while, then check back.",
+    noHistoryHint: "Data persists across page reloads via localStorage.",
+    live: "Live",
+    historical: "Historical",
+    fcp: "FCP",
+    fcpDesc: "First Contentful Paint",
   },
   he: {
     title: "Performance Insights",
@@ -393,6 +408,19 @@ const T = {
     clsTooltip: "Cumulative Layout Shift - visual stability of the page",
     errorRateTooltip: "Percentage of failed network requests",
     distribution: "Distribution",
+    realExperienceScore: "Real Experience Score",
+    resDesc: "Composite score based on Web Vitals and navigation timing",
+    scoreOverTime: "Score Over Time",
+    p95OverTime: "P95 Latency Over Time",
+    historicalSummary: "Historical Summary",
+    snapshots: "Snapshots",
+    noHistoryTitle: "No historical data yet",
+    noHistoryMsg: "Historical data is recorded automatically every 60 seconds. Use the app for a while, then check back.",
+    noHistoryHint: "Data persists across page reloads via localStorage.",
+    live: "Live",
+    historical: "Historical",
+    fcp: "FCP",
+    fcpDesc: "First Contentful Paint",
   },
 };
 
@@ -404,12 +432,15 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [timeRangeKey, setTimeRangeKey] = useState("session");
 
+  const isHistorical = HISTORICAL_RANGES.some(r => r.key === timeRangeKey);
   const activeRange = TIME_RANGES.find(r => r.key === timeRangeKey) || TIME_RANGES[TIME_RANGES.length - 1];
+  const activeHistRange = HISTORICAL_RANGES.find(r => r.key === timeRangeKey);
 
   useEffect(() => {
-    const cleanup = initRealTelemetry();
+    const cleanupTelemetry = initRealTelemetry();
     recordRouteChange("performanceInsights");
-    return cleanup;
+    const cleanupHistory = startHistoryRecorder(getRealMetrics);
+    return () => { cleanupTelemetry(); cleanupHistory(); };
   }, []);
 
   const loadSnapshot = useCallback(() => {
@@ -418,10 +449,18 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
     setLastUpdated(new Date());
   }, [activeRange.sec]);
 
-  useEffect(() => { const t = setTimeout(loadSnapshot, 350); return () => clearTimeout(t); }, [loadSnapshot]);
-  const refresh = useCallback(() => { setData(null); setTimeout(loadSnapshot, 250); }, [loadSnapshot]);
-  useEffect(() => { const id = setInterval(loadSnapshot, 30_000); return () => clearInterval(id); }, [loadSnapshot]);
+  useEffect(() => { if (!isHistorical) { const t = setTimeout(loadSnapshot, 350); return () => clearTimeout(t); } }, [loadSnapshot, isHistorical]);
+  const refresh = useCallback(() => { if (!isHistorical) { setData(null); setTimeout(loadSnapshot, 250); } }, [loadSnapshot, isHistorical]);
+  useEffect(() => { if (!isHistorical) { const id = setInterval(loadSnapshot, 30_000); return () => clearInterval(id); } }, [loadSnapshot, isHistorical]);
 
+  // Historical data
+  const histData = useMemo(() => {
+    if (!isHistorical || !activeHistRange) return null;
+    const snapshots = getHistory(activeHistRange.ms);
+    return aggregateHistory(snapshots);
+  }, [isHistorical, activeHistRange, timeRangeKey]);
+
+  // Live mode derived state
   const health = data?.health || { status: "unknown", reason: "Initializing telemetry collectors\u2026", score: 0 };
   const alerts = data?.alerts || [];
   const insights = data?.insights || [];
@@ -430,15 +469,26 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const trendDir = latencyBaseline?.direction || null;
 
   const agoSec = lastUpdated ? Math.max(0, Math.round((Date.now() - lastUpdated.getTime()) / 1000)) : null;
-  const rangeLabel = activeRange.sec != null ? `Last ${activeRange.label}` : "Session";
-  const timeContextText = agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s` : rangeLabel;
+  const rangeLabel = isHistorical
+    ? activeHistRange?.label || "Historical"
+    : activeRange.sec != null ? `Last ${activeRange.label}` : "Session";
+  const timeContextText = isHistorical
+    ? rangeLabel
+    : agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s` : rangeLabel;
 
   // Determine if we have any telemetry at all
   const hasAnyData = data && (data.totalRequests > 0 || data.vitals?.lcp != null || data.vitals?.inp != null || data.vitals?.cls != null || data.userFlow?.routeChanges > 0);
 
-  if (!data) return <Skeleton />;
+  // Live score from current session
+  const liveScore = useMemo(() => {
+    if (!data) return null;
+    const real = getRealMetrics();
+    return computeRES(real);
+  }, [data]);
 
-  const hasLatencyData = data.latencyTimeline.length > 0;
+  if (!data && !isHistorical) return <Skeleton />;
+
+  const hasLatencyData = data?.latencyTimeline?.length > 0;
   const TABS = [
     { id: "overview",  label: t("tabOverview"),  icon: Activity },
     { id: "vitals",    label: t("tabVitals"),    icon: Eye },
@@ -448,7 +498,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   ];
 
   // Sparkline data derived from latency timeline
-  const latencySparkValues = data.latencyTimeline.slice(-20).map(d => d.value);
+  const latencySparkValues = data?.latencyTimeline?.slice(-20).map(d => d.value) || [];
 
   return (
     <div className="page-pad" style={{ maxWidth: 820, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
@@ -463,63 +513,307 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
         <TelemetryIndicator hasData={hasAnyData} />
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{timeContextText}</span>
-          <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center" }} title="Refresh">
-            <RefreshCw size={12} />
-          </button>
+          {!isHistorical && (
+            <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center" }} title="Refresh">
+              <RefreshCw size={12} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Time range selector */}
-      <div style={{ display: "flex", gap: 2, marginBottom: 14, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3, width: "fit-content" }}>
-        {TIME_RANGES.map(r => {
-          const active = r.key === timeRangeKey;
-          return (
-            <button key={r.key} onClick={() => setTimeRangeKey(r.key)} style={{
-              background: active ? "var(--glass-10)" : "transparent",
-              border: "none",
-              color: active ? "var(--text-bright)" : "var(--text-muted)",
-              padding: "5px 12px",
-              borderRadius: 6,
-              cursor: "pointer",
-              fontSize: 12,
-              fontWeight: active ? 700 : 400,
-              transition: "all 0.15s ease",
-            }}>
-              {r.label}
-            </button>
-          );
-        })}
+      {/* Time range selector — Live | Historical */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
+        {/* Live ranges */}
+        <div style={{ display: "flex", gap: 2, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3 }}>
+          {TIME_RANGES.map(r => {
+            const active = r.key === timeRangeKey;
+            return (
+              <button key={r.key} onClick={() => setTimeRangeKey(r.key)} style={{
+                background: active ? "var(--glass-10)" : "transparent",
+                border: "none",
+                color: active ? "var(--text-bright)" : "var(--text-muted)",
+                padding: "5px 12px",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: active ? 700 : 400,
+                transition: "all 0.15s ease",
+              }}>
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
+        {/* Separator */}
+        <div style={{ width: 1, height: 24, background: "var(--glass-6)" }} />
+        {/* Historical ranges */}
+        <div style={{ display: "flex", gap: 2, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3 }}>
+          {HISTORICAL_RANGES.map(r => {
+            const active = r.key === timeRangeKey;
+            return (
+              <button key={r.key} onClick={() => setTimeRangeKey(r.key)} style={{
+                background: active ? "rgba(139,92,246,0.20)" : "transparent",
+                border: "none",
+                color: active ? "#a78bfa" : "var(--text-muted)",
+                padding: "5px 12px",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: active ? 700 : 400,
+                transition: "all 0.15s ease",
+              }}>
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* ── Sub-tabs ── */}
-      <div style={{ display: "flex", gap: 3, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.id;
-          return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-              background: active ? "var(--glass-6)" : "none",
-              border: active ? "1px solid var(--glass-10)" : "1px solid transparent",
-              color: active ? "var(--text-bright)" : "var(--text-muted)",
-              padding: "6px 12px", borderRadius: 7, cursor: "pointer", fontSize: 12,
-              fontWeight: active ? 600 : 400, display: "flex", alignItems: "center",
-              gap: 5, whiteSpace: "nowrap", transition: "all 0.2s ease",
-            }}>
-              <Icon size={13} />{tab.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* ── Historical view ── */}
+      {isHistorical ? (
+        <HistoricalView data={histData} range={activeHistRange} t={t} liveScore={liveScore} />
+      ) : (
+        <>
+          {/* ── Sub-tabs (live mode only) ── */}
+          <div style={{ display: "flex", gap: 3, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                  background: active ? "var(--glass-6)" : "none",
+                  border: active ? "1px solid var(--glass-10)" : "1px solid transparent",
+                  color: active ? "var(--text-bright)" : "var(--text-muted)",
+                  padding: "6px 12px", borderRadius: 7, cursor: "pointer", fontSize: 12,
+                  fontWeight: active ? 600 : 400, display: "flex", alignItems: "center",
+                  gap: 5, whiteSpace: "nowrap", transition: "all 0.2s ease",
+                }}>
+                  <Icon size={13} />{tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-      {/* ── Tab content ── */}
-      {activeTab === "overview" && <OverviewTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} health={health} alerts={alerts} alertsOpen={alertsOpen} setAlertsOpen={setAlertsOpen} insights={insights} latencySparkValues={latencySparkValues} />}
-      {activeTab === "vitals"  && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} t={t} />}
-      {activeTab === "network" && <NetworkTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} />}
-      {activeTab === "errors"  && <ErrorsTab client={data.client} t={t} totalRequests={data.totalRequests} errorRate={data.errorRate} latencyTimeline={data.latencyTimeline} />}
-      {activeTab === "userflow" && <UserFlowTab userFlow={data.userFlow} t={t} />}
+          {/* ── Tab content ── */}
+          {activeTab === "overview" && <OverviewTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} health={health} alerts={alerts} alertsOpen={alertsOpen} setAlertsOpen={setAlertsOpen} insights={insights} latencySparkValues={latencySparkValues} />}
+          {activeTab === "vitals"  && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} t={t} />}
+          {activeTab === "network" && <NetworkTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} />}
+          {activeTab === "errors"  && <ErrorsTab client={data.client} t={t} totalRequests={data.totalRequests} errorRate={data.errorRate} latencyTimeline={data.latencyTimeline} />}
+          {activeTab === "userflow" && <UserFlowTab userFlow={data.userFlow} t={t} />}
+        </>
+      )}
 
       <div style={{ textAlign: "center", padding: "16px 0 8px", fontSize: 10, color: "var(--text-dim)" }}>
         {t("allData")}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HISTORICAL VIEW (Vercel-style)
+// ═══════════════════════════════════════════════════════════════════════════════
+function HistoricalView({ data, range, t, liveScore }) {
+  if (!data || data.snapshotCount === 0) {
+    return (
+      <EmptyChartState
+        title={t("noHistoryTitle")}
+        message={t("noHistoryMsg")}
+        hint={t("noHistoryHint")}
+      />
+    );
+  }
+
+  const sc = scoreLabel(data.score);
+
+  // Format time axis labels based on range
+  const formatTimeLabel = (ts) => {
+    const d = new Date(ts);
+    if (range.ms <= 24 * 60 * 60_000) {
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 16 }}>
+      {/* ── Left sidebar: metrics ── */}
+      <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+        <HistoricalMetricRow label="LCP" desc="Largest Contentful Paint" value={data.vitals.lcp} unit="ms" threshold={THRESHOLDS.lcp} />
+        <HistoricalMetricRow label="INP" desc="Interaction to Next Paint" value={data.vitals.inp} unit="ms" threshold={THRESHOLDS.inp} />
+        <HistoricalMetricRow label="CLS" desc="Cumulative Layout Shift" value={data.vitals.cls} unit="" threshold={THRESHOLDS.cls} />
+        <HistoricalMetricRow label={t("fcp")} desc={t("fcpDesc")} value={data.nav?.fcp} unit="ms" />
+        <HistoricalMetricRow label={t("ttfb")} desc={t("ttfbDesc")} value={data.nav?.ttfb} unit="ms" />
+      </div>
+
+      {/* ── Main area ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* RES Score card */}
+        <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 12, padding: "20px 24px", display: "flex", alignItems: "center", gap: 24 }}>
+          {/* Donut chart */}
+          <ScoreDonut score={data.score} color={sc.color} size={80} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 4 }}>{t("realExperienceScore")}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: sc.color, marginBottom: 4 }}>{sc.text}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("resDesc")}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 11, color: "var(--text-dim)", marginBottom: 2 }}>{t("snapshots")}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, fontFamily: MONO, color: "var(--text-secondary)" }}>{data.snapshotCount}</div>
+          </div>
+        </div>
+
+        {/* Score over time chart */}
+        {data.scoreSeries.length > 1 && (
+          <ChartSection title={t("scoreOverTime")} subtitle={range.label}>
+            <HistoricalLineChart
+              series={data.scoreSeries}
+              color={sc.color}
+              formatLabel={formatTimeLabel}
+              yMin={0}
+              yMax={100}
+              thresholds={[{ value: 90, color: GREEN, label: "Great" }, { value: 50, color: AMBER, label: "Needs work" }]}
+            />
+          </ChartSection>
+        )}
+
+        {/* P95 latency over time chart */}
+        {data.p95Series.length > 1 && (
+          <ChartSection title={t("p95OverTime")} subtitle={range.label}>
+            <HistoricalLineChart
+              series={data.p95Series}
+              color={BLUE}
+              formatLabel={formatTimeLabel}
+              unit="ms"
+            />
+          </ChartSection>
+        )}
+
+        {/* Summary stats */}
+        <ChartSection title={t("historicalSummary")}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <MetricCard label={t("totalReqs")} value={String(data.totalRequests)} statusColor="var(--text-bright)" />
+            <MetricCard label={t("errorRate")} tooltip={t("errorRateTooltip")} value={data.errorRate != null ? data.errorRate + "%" : "\u2014"} statusColor={data.errorRate != null && data.errorRate >= 5 ? RED : data.errorRate != null && data.errorRate >= 2 ? AMBER : GREEN} />
+            <MetricCard label={t("p95Latency")} value={data.avgP95 != null ? String(data.avgP95) : "\u2014"} unit={data.avgP95 != null ? "ms" : ""} statusColor={data.avgP95 != null ? sevColor(data.avgP95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
+          </div>
+        </ChartSection>
+      </div>
+    </div>
+  );
+}
+
+// ─── Historical sidebar metric row ────────────────────────────────────────────
+function HistoricalMetricRow({ label, desc, value, unit, threshold }) {
+  const sev = threshold && value != null ? severity(value, threshold) : "info";
+  const col = value == null ? "var(--text-dim)" : sev === "info" ? GREEN : SEVERITY_COLORS[sev].text;
+  const displayVal = value != null ? (unit === "ms" && value >= 1000 ? (value / 1000).toFixed(2) + "s" : value + (unit || "")) : "\u2014";
+
+  // Progress bar: 0-100%
+  const pct = threshold && value != null ? Math.min((value / (threshold.critical * 1.2)) * 100, 100) : 0;
+
+  return (
+    <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: "10px 12px" }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: MONO, color: col, lineHeight: 1, marginBottom: 6, transition: "color 0.3s" }}>{displayVal}</div>
+      {threshold && (
+        <div style={{ height: 4, borderRadius: 2, background: "var(--glass-3)", overflow: "hidden" }}>
+          <div style={{ width: `${Math.max(pct, 3)}%`, height: "100%", background: col, borderRadius: 2, transition: "width 0.4s ease" }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Score donut ──────────────────────────────────────────────────────────────
+function ScoreDonut({ score, color, size = 80 }) {
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const pct = score != null ? score / 100 : 0;
+  const dashOffset = circumference * (1 - pct);
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--glass-4)" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={strokeWidth}
+          strokeDasharray={circumference} strokeDashoffset={dashOffset}
+          strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.6s ease" }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: 22, fontWeight: 700, fontFamily: MONO, color }}>{score ?? "\u2014"}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Historical line chart ───────────────────────────────────────────────────
+function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thresholds }) {
+  if (!series || series.length < 2) return null;
+
+  const values = series.map(s => s.value);
+  const min = yMin ?? Math.min(...values) * 0.9;
+  const max = yMax ?? Math.max(...values) * 1.1;
+  const range = max - min || 1;
+
+  const W = 600;
+  const H = 100;
+  const padX = 2;
+  const padY = 4;
+
+  const points = series.map((s, i) => {
+    const x = padX + (i / (series.length - 1)) * (W - padX * 2);
+    const y = H - padY - ((s.value - min) / range) * (H - padY * 2);
+    return { x, y };
+  });
+  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+
+  // Gradient fill
+  const fillD = `${pathD} L ${points[points.length - 1].x} ${H} L ${points[0].x} ${H} Z`;
+
+  // Time labels
+  const firstLabel = formatLabel(series[0].ts);
+  const lastLabel = formatLabel(series[series.length - 1].ts);
+  const midIdx = Math.floor(series.length / 2);
+  const midLabel = series.length > 4 ? formatLabel(series[midIdx].ts) : null;
+
+  return (
+    <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px" }}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
+        <defs>
+          <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.15" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        {/* Threshold lines */}
+        {thresholds?.map((th, i) => {
+          const y = H - padY - ((th.value - min) / range) * (H - padY * 2);
+          return (
+            <g key={i}>
+              <line x1={padX} y1={y} x2={W - padX} y2={y} stroke={th.color} strokeWidth={1} strokeDasharray="4,4" opacity={0.4} />
+              <text x={W - padX - 2} y={y - 3} textAnchor="end" fontSize={8} fill={th.color} opacity={0.6}>{th.label}</text>
+            </g>
+          );
+        })}
+        {/* Fill */}
+        <path d={fillD} fill={`url(#grad-${color.replace("#", "")})`} />
+        {/* Line */}
+        <path d={pathD} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        {/* Latest value dot */}
+        <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={3.5} fill={color} stroke="var(--glass-2)" strokeWidth={2} />
+      </svg>
+      {/* Time axis */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-muted)" }}>
+        <span>{firstLabel}</span>
+        {midLabel && <span>{midLabel}</span>}
+        <span>{lastLabel}</span>
+      </div>
+      {/* Latest value */}
+      <div style={{ display: "flex", gap: 16, marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--glass-3)", fontSize: 11 }}>
+        <span style={{ color: "var(--text-muted)" }}>Latest <span style={{ color, fontFamily: MONO, fontWeight: 600 }}>{values[values.length - 1]}{unit || ""}</span></span>
+        <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{Math.round(values.reduce((a, b) => a + b, 0) / values.length)}{unit || ""}</span></span>
+        <span style={{ color: "var(--text-muted)" }}>Points <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{values.length}</span></span>
       </div>
     </div>
   );
