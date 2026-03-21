@@ -216,7 +216,9 @@ flowchart LR
     EDGE --> AUTH["Auth"]
     EDGE -->|results| STORE[("status tables")]
     STORE -->|polls 30s| UI["Status Page"]
-    UI -.->|alerts| USER([User])
+    EDGE -.->|incident| RESEND["Resend API"]
+    RESEND -.->|email alert| USER([User])
+    UI -.->|status page| USER
 
     style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
     style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
@@ -229,7 +231,7 @@ The core of the observability stack is a **self-monitoring loop** built entirely
 1. **pg_cron** triggers a Supabase Edge Function every 60 seconds
 2. The Edge Function health-checks all 5 services (DB, API, Quiz Engine, Leaderboard, Auth)
 3. Results are written to PostgreSQL status tables (append-only for uptime history)
-4. 3 consecutive failures auto-create an incident
+4. 3 consecutive failures auto-create an incident and send an email alert via Resend
 5. The frontend polls these tables every 30 seconds and renders a live status page
 
 Additional layers: **Sentry** captures client-side errors and Web Vitals, **GitHub Actions** run external uptime checks (every 30min) and synthetic smoke tests (every 6h).
@@ -245,7 +247,7 @@ Additional layers: **Sentry** captures client-side errors and Web Vitals, **GitH
 | Authentication | GoTrue `/auth/v1/health` |
 
 - **Status classification** — operational (<2s), degraded (>2s), down (error)
-- **Auto-incident detection** — 3 consecutive failures trigger automatic incident creation
+- **Auto-incident detection** — 3 consecutive failures trigger automatic incident creation + email alert via Resend
 - **Data retention** — append-only `system_status_history` table for uptime tracking
 
 Full documentation: [docs/monitoring.md](docs/monitoring.md) | Live status: [status.kubequest.online](https://status.kubequest.online)
