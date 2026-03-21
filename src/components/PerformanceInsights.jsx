@@ -12,6 +12,7 @@ import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import {
   ArrowLeft, Activity, AlertTriangle, Clock, Gauge, Users,
   Eye, ChevronDown, ChevronUp, RefreshCw, Globe,
+  BarChart3, Zap, TrendingUp, TrendingDown, Minus,
 } from "lucide-react";
 import { THRESHOLDS, SEVERITY_COLORS, severity, computeBaseline, CRUX_BENCHMARKS, compareToGlobal } from "../utils/mockTelemetry";
 import { buildSnapshot, TIME_RANGES } from "../utils/hybridTelemetry";
@@ -28,19 +29,23 @@ export default function PerformanceInsights({ onBack, lang = "en", dir = "ltr" }
 const MONO = "'Fira Code','Courier New',monospace";
 const COLLECTING = "Collecting\u2026";
 
-// Shared spacing constants
-const CHART_ROW_H    = 28;   // row height for horizontal bar charts
-const CHART_LABEL_W  = 100;  // fixed label column width
-const CHART_VALUE_W  = 56;   // fixed value column width
-const CHART_BAR_H    = 6;    // bar thickness
-const CHART_BAR_R    = 3;    // bar border-radius
-const CHART_GAP      = 0;    // gap between rows (controlled via padding)
-const SECTION_GAP    = 16;   // gap between sections within a tab
-const COL_GAP        = 10;   // gap between columns in a row
+const CHART_ROW_H    = 28;
+const CHART_LABEL_W  = 100;
+const CHART_VALUE_W  = 56;
+const CHART_BAR_H    = 6;
+const CHART_BAR_R    = 3;
+const CHART_GAP      = 0;
+const SECTION_GAP    = 14;
+const COL_GAP        = 10;
+
+// Colors
+const GREEN  = "#34d399";
+const BLUE   = "#60a5fa";
+const AMBER  = "#fbbf24";
+const RED    = "#f87171";
 
 // ─── Shared chart primitives ───────────────────────────────────────────────────
 
-/** Section header used above every chart / data block. */
 function ChartSection({ title, subtitle, children }) {
   return (
     <div style={{ marginBottom: SECTION_GAP }}>
@@ -53,22 +58,16 @@ function ChartSection({ title, subtitle, children }) {
   );
 }
 
-/** Structured empty state for any chart area. */
 function EmptyChartState({ title, message, hint }) {
   return (
-    <div style={{ padding: "32px 24px", textAlign: "center", background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 10 }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>{title || "No data yet"}</div>
-      <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: 420, margin: "0 auto" }}>{message}</div>
-      {hint && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10 }}>{hint}</div>}
+    <div style={{ padding: "28px 24px", textAlign: "center", background: "var(--glass-2)", border: "1px dashed var(--glass-6)", borderRadius: 10 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{title || "No data yet"}</div>
+      <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>{message}</div>
+      {hint && <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 10, fontStyle: "italic" }}>{hint}</div>}
     </div>
   );
 }
 
-/**
- * Horizontal bar chart with strict 3-column layout:
- *   [label (fixed)] [bar (flex)] [value (fixed)]
- * All rows align to the same grid.
- */
 function HorizontalBarChart({ items, labelWidth = CHART_LABEL_W, valueWidth = CHART_VALUE_W }) {
   const maxVal = useMemo(() => Math.max(...items.map(r => r.value), 1), [items]);
   const total = useMemo(() => items.reduce((s, r) => s + r.value, 0), [items]);
@@ -80,17 +79,14 @@ function HorizontalBarChart({ items, labelWidth = CHART_LABEL_W, valueWidth = CH
         const sharePct = total > 0 ? Math.round((item.value / total) * 100) : 0;
         return (
           <div key={item.label} style={{ display: "flex", alignItems: "center", height: CHART_ROW_H, gap: COL_GAP, borderBottom: i < items.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
-            {/* Label column — fixed width, truncated */}
-            <span style={{ width: labelWidth, flexShrink: 0, fontSize: 11, color: "var(--text-secondary)", fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ width: labelWidth, flexShrink: 0, fontSize: 12, color: "var(--text-secondary)", fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {item.label}
             </span>
-            {/* Bar column — flexible */}
             <div style={{ flex: 1, background: "var(--glass-3)", borderRadius: CHART_BAR_R, height: CHART_BAR_H, overflow: "hidden" }}>
-              <div style={{ width: `${Math.max(pct, 2)}%`, height: "100%", background: item.color || "var(--glass-15)", borderRadius: CHART_BAR_R, transition: "width 0.3s ease" }} />
+              <div style={{ width: `${Math.max(pct, 2)}%`, height: "100%", background: item.color || "var(--glass-18)", borderRadius: CHART_BAR_R, transition: "width 0.4s ease" }} />
             </div>
-            {/* Value column — fixed width, right-aligned */}
-            <span style={{ width: valueWidth, flexShrink: 0, textAlign: "right", fontSize: 11, fontFamily: MONO, color: "var(--text-secondary)" }}>
-              {item.value}{item.showPct !== false && total > 1 ? <span style={{ color: "var(--text-disabled)", marginLeft: 3, fontSize: 9 }}>{sharePct}%</span> : ""}
+            <span style={{ width: valueWidth, flexShrink: 0, textAlign: "right", fontSize: 12, fontFamily: MONO, color: "var(--text-secondary)" }}>
+              {item.value}{item.showPct !== false && total > 1 ? <span style={{ color: "var(--text-disabled)", marginLeft: 3, fontSize: 10 }}>{sharePct}%</span> : ""}
             </span>
           </div>
         );
@@ -99,35 +95,22 @@ function HorizontalBarChart({ items, labelWidth = CHART_LABEL_W, valueWidth = CH
   );
 }
 
-/** Summary stat row: label on left, value on right. Use inside a container. */
 function StatRow({ label, desc, value, unit, warn, warnColor, last, zeroLabel }) {
   const isZero = value === 0 && zeroLabel;
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: CHART_ROW_H, borderBottom: last ? "none" : "1px solid var(--glass-3)", padding: "6px 0" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, borderBottom: last ? "none" : "1px solid var(--glass-3)", padding: "6px 0" }}>
       <div>
-        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
-        {desc && <div style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.3 }}>{desc}</div>}
+        <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{label}</span>
+        {desc && <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.3 }}>{desc}</div>}
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: MONO, color: warn ? (warnColor || "#fbbf24") : isZero ? "var(--text-muted)" : "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+      <span style={{ fontSize: 13, fontWeight: 600, fontFamily: MONO, color: warn ? (warnColor || AMBER) : isZero ? "var(--text-muted)" : "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
         {value}{unit || ""}
-        {isZero && <span style={{ fontSize: 9, fontWeight: 500, color: "var(--text-dim)", background: "var(--glass-3)", padding: "1px 5px", borderRadius: 4, fontFamily: "inherit" }}>{zeroLabel}</span>}
+        {isZero && <span style={{ fontSize: 10, fontWeight: 500, color: "var(--text-dim)", background: "var(--glass-3)", padding: "1px 5px", borderRadius: 4, fontFamily: "inherit" }}>{zeroLabel}</span>}
       </span>
     </div>
   );
 }
 
-/** Large metric for the top banner — optimized for screen-share readability. */
-function BannerMetric({ label, desc, value, color, last }) {
-  return (
-    <div style={{ flex: 1, minWidth: 100, padding: "0 16px", borderRight: last ? "none" : "1px solid var(--glass-3)" }}>
-      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 700, color, fontFamily: MONO, lineHeight: 1 }}>{value}</div>
-      {desc && <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4, lineHeight: 1.3 }}>{desc}</div>}
-    </div>
-  );
-}
-
-/** Inline metric for secondary areas (flow stats, etc). */
 function InlineMetric({ label, value, color }) {
   return (
     <div>
@@ -137,43 +120,101 @@ function InlineMetric({ label, value, color }) {
   );
 }
 
-function ConfidenceBadge({ level, t }) {
-  if (level === "none") return null;
-  const cfg = {
-    low:    { bg: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "rgba(251,191,36,0.25)", icon: "\u25CB" },
-    medium: { bg: "rgba(96,165,250,0.10)", color: "#60a5fa", border: "rgba(96,165,250,0.20)", icon: "\u25D1" },
-    high:   { bg: "rgba(52,211,153,0.10)", color: "#34d399", border: "rgba(52,211,153,0.20)", icon: "\u25CF" },
-  };
-  const c = cfg[level] || cfg.low;
-  const label = t ? (level === "low" ? t("confidenceLow") : level === "medium" ? t("confidenceMed") : t("confidenceHigh")) : (level === "low" ? "Low confidence" : level === "medium" ? "Medium" : "High");
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
-      <span style={{ fontSize: 9 }}>{c.icon}</span>
-      {label}
-    </span>
-  );
-}
-
 function SeverityDot({ sev, size = 6 }) {
-  return <span style={{ width: size, height: size, borderRadius: "50%", background: SEVERITY_COLORS[sev]?.text || "#60a5fa", flexShrink: 0, marginTop: 1 }} />;
+  return <span style={{ width: size, height: size, borderRadius: "50%", background: SEVERITY_COLORS[sev]?.text || BLUE, flexShrink: 0, marginTop: 1 }} />;
 }
 
-function sevColor(value, threshold, goodColor = "#34d399") {
+function sevColor(value, threshold, goodColor = GREEN) {
   if (value == null) return "var(--text-dim)";
   const s = severity(value, threshold);
   return s === "info" ? goodColor : SEVERITY_COLORS[s].text;
 }
 
+// ─── SVG Sparkline ─────────────────────────────────────────────────────────────
+function Sparkline({ values, width = 52, height = 20, color = "var(--glass-15)", strokeWidth = 2 }) {
+  if (!values || values.length < 2) {
+    // Placeholder sparkline (flat dashed line)
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block", opacity: 0.4 }}>
+        <line x1={2} y1={height / 2} x2={width - 2} y2={height / 2} stroke="var(--text-dim)" strokeWidth={1} strokeDasharray="3,3" />
+      </svg>
+    );
+  }
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const pad = 2;
+  const points = values.map((v, i) => {
+    const x = pad + (i / (values.length - 1)) * (width - pad * 2);
+    const y = height - pad - ((v - min) / range) * (height - pad * 2);
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}>
+      <polyline points={points} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// ─── Metric Card ───────────────────────────────────────────────────────────────
+function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, sparkValues, sparkColor }) {
+  const TrendIcon = trend === "improving" ? TrendingDown : trend === "degrading" ? TrendingUp : Minus;
+  const trendColor = trend === "improving" ? GREEN : trend === "degrading" ? RED : "var(--text-dim)";
+
+  return (
+    <div style={{ flex: 1, minWidth: 140, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6, transition: "border-color 0.3s, box-shadow 0.3s" }}>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 5 }}>
+        {tooltip ? (
+          <Tooltip text={tooltip}>
+            <span style={{ cursor: "help", borderBottom: "1px dotted var(--glass-8)" }}>{label}</span>
+          </Tooltip>
+        ) : label}
+        {status && (
+          <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, textTransform: "uppercase", letterSpacing: 0.3 }}>
+            {status}
+          </span>
+        )}
+      </div>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+          <span style={{ fontSize: 24, fontWeight: 700, color: statusColor || "var(--text-bright)", fontFamily: MONO, lineHeight: 1, transition: "color 0.3s" }}>{value}</span>
+          {unit && <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>{unit}</span>}
+        </div>
+        <Sparkline values={sparkValues} color={sparkColor || statusColor || "var(--glass-15)"} />
+      </div>
+      {trend && (
+        <div style={{ fontSize: 11, color: trendColor, fontWeight: 500, display: "flex", alignItems: "center", gap: 3 }}>
+          <TrendIcon size={11} />
+          {trend}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Telemetry Status Indicator ────────────────────────────────────────────────
+function TelemetryIndicator({ hasData }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: hasData ? GREEN : "var(--text-dim)", fontWeight: 500 }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: hasData ? GREEN : "var(--text-dim)", boxShadow: hasData ? `0 0 4px ${GREEN}88` : "none", animation: hasData ? "pulse 2s ease-in-out infinite" : "none" }} />
+      {hasData ? "collecting" : "waiting"}
+    </span>
+  );
+}
+
 // ─── Loading skeleton ──────────────────────────────────────────────────────────
 function Skeleton() {
   return (
-    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px" }}>
+    <div className="page-pad" style={{ maxWidth: 820, margin: "0 auto", padding: "12px 14px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
         <div style={{ width: 36, height: 36, background: "var(--glass-3)", borderRadius: 8 }} />
         <div style={{ width: 180, height: 22, background: "var(--glass-3)", borderRadius: 6 }} />
       </div>
-      <div style={{ height: 80, background: "var(--glass-2)", borderRadius: 12, marginBottom: 32, animation: "pulse 1.5s ease-in-out infinite" }} />
-      <div style={{ height: 60, background: "var(--glass-2)", borderRadius: 12, animation: "pulse 1.5s ease-in-out infinite", animationDelay: "0.2s" }} />
+      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+        {[1, 2, 3, 4].map(i => <div key={i} style={{ flex: 1, height: 72, background: "var(--glass-2)", borderRadius: 10, animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />)}
+      </div>
+      <div style={{ height: 100, background: "var(--glass-2)", borderRadius: 10, animation: "pulse 1.5s ease-in-out infinite", animationDelay: "0.5s" }} />
     </div>
   );
 }
@@ -202,7 +243,12 @@ const T = {
     insights: "Insights",
     diagnostics: "Diagnostics",
     alertCount: (n) => `${n} alert${n !== 1 ? "s" : ""}`,
-    tabVitals: "Vitals", tabClient: "Client", tabUserFlow: "User Flow",
+
+    // Tab labels
+    tabOverview: "Overview", tabVitals: "Web Vitals", tabNetwork: "Network",
+    tabErrors: "Errors", tabUserFlow: "User Flow",
+    tabClient: "Client",
+
     coreVitals: "Core Web Vitals",
     vitalsSubtitle: "Session measurements vs. global benchmarks (CrUX p75)",
     vitalsEmpty: "Web Vitals not yet measured",
@@ -236,7 +282,6 @@ const T = {
     noTrafficYet: "No traffic observed yet",
     avg: "Avg", p95: "P95", samples: "Samples",
     last: "Last",
-    // Section headers
     trafficObservability: "Traffic Observability",
     trafficObservabilityDesc: "API request metrics for the selected time window",
     browserPerformance: "Browser Performance",
@@ -246,6 +291,25 @@ const T = {
     zeroMsCached: "cached",
     zeroMsReused: "reused",
     zeroMsNote: "0ms values indicate DNS caching or connection reuse by the browser.",
+    // New labels
+    vitalsTrend: "Vitals & Latency Trend",
+    noTelemetryTitle: "No telemetry collected yet",
+    noTelemetryMsg: "Interact with the app (click, navigate, start a quiz) to generate performance data.",
+    noTelemetryHint: "This dashboard collects real browser telemetry including Web Vitals, network requests, and user flow events.",
+    latencyTrend: "Request Latency Trend",
+    requestStats: "Request Stats",
+    throughput: "Throughput",
+    totalReqs: "Total Requests",
+    errorRateOverTime: "Error Rate",
+    clientErrors: "Client Errors",
+    promiseRejections: "Promise Rejections",
+    quizEvents: "Quiz Events",
+    eventTimeline: "Event Timeline",
+    lcpTooltip: "Largest Contentful Paint - time until the main content is visible",
+    inpTooltip: "Interaction to Next Paint - responsiveness to user input",
+    clsTooltip: "Cumulative Layout Shift - visual stability of the page",
+    errorRateTooltip: "Percentage of failed network requests",
+    distribution: "Distribution",
   },
   he: {
     title: "Performance Insights",
@@ -266,7 +330,9 @@ const T = {
     insights: "Insights",
     diagnostics: "Diagnostics",
     alertCount: (n) => `${n} alert${n !== 1 ? "s" : ""}`,
-    tabVitals: "Vitals", tabClient: "Client", tabUserFlow: "User Flow",
+    tabOverview: "Overview", tabVitals: "Web Vitals", tabNetwork: "Network",
+    tabErrors: "Errors", tabUserFlow: "User Flow",
+    tabClient: "Client",
     coreVitals: "Core Web Vitals",
     vitalsSubtitle: "Session measurements vs. global benchmarks (CrUX p75)",
     vitalsEmpty: "Web Vitals not yet measured",
@@ -309,13 +375,31 @@ const T = {
     zeroMsCached: "cached",
     zeroMsReused: "reused",
     zeroMsNote: "0ms values indicate DNS caching or connection reuse by the browser.",
+    vitalsTrend: "Vitals & Latency Trend",
+    noTelemetryTitle: "No telemetry collected yet",
+    noTelemetryMsg: "Interact with the app (click, navigate, start a quiz) to generate performance data.",
+    noTelemetryHint: "This dashboard collects real browser telemetry including Web Vitals, network requests, and user flow events.",
+    latencyTrend: "Request Latency Trend",
+    requestStats: "Request Stats",
+    throughput: "Throughput",
+    totalReqs: "Total Requests",
+    errorRateOverTime: "Error Rate",
+    clientErrors: "Client Errors",
+    promiseRejections: "Promise Rejections",
+    quizEvents: "Quiz Events",
+    eventTimeline: "Event Timeline",
+    lcpTooltip: "Largest Contentful Paint - time until the main content is visible",
+    inpTooltip: "Interaction to Next Paint - responsiveness to user input",
+    clsTooltip: "Cumulative Layout Shift - visual stability of the page",
+    errorRateTooltip: "Percentage of failed network requests",
+    distribution: "Distribution",
   },
 };
 
 function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const t = (key) => (T[lang] || T.en)[key] || T.en[key] || key;
   const [data, setData] = useState(null);
-  const [activeTab, setActiveTab] = useState("vitals");
+  const [activeTab, setActiveTab] = useState("overview");
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [timeRangeKey, setTimeRangeKey] = useState("session");
@@ -338,39 +422,45 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const refresh = useCallback(() => { setData(null); setTimeout(loadSnapshot, 250); }, [loadSnapshot]);
   useEffect(() => { const id = setInterval(loadSnapshot, 30_000); return () => clearInterval(id); }, [loadSnapshot]);
 
-  // Hooks before early return
   const health = data?.health || { status: "unknown", reason: "Initializing telemetry collectors\u2026", score: 0 };
   const alerts = data?.alerts || [];
   const insights = data?.insights || [];
   const latencyBaseline = data?.latencyBaseline || null;
   const confidence = data?.confidence || { level: "none", label: "No data" };
-  const healthColor = health.status === "unhealthy" ? "#f87171" : health.status === "degraded" ? "#fbbf24" : health.status === "unknown" ? "#64748b" : "#34d399";
   const trendDir = latencyBaseline?.direction || null;
 
-  // Time context
   const agoSec = lastUpdated ? Math.max(0, Math.round((Date.now() - lastUpdated.getTime()) / 1000)) : null;
   const rangeLabel = activeRange.sec != null ? `Last ${activeRange.label}` : "Session";
   const timeContextText = agoSec != null ? `${rangeLabel} \u00b7 ${agoSec}s` : rangeLabel;
+
+  // Determine if we have any telemetry at all
+  const hasAnyData = data && (data.totalRequests > 0 || data.vitals?.lcp != null || data.vitals?.inp != null || data.vitals?.cls != null || data.userFlow?.routeChanges > 0);
 
   if (!data) return <Skeleton />;
 
   const hasLatencyData = data.latencyTimeline.length > 0;
   const TABS = [
-    { id: "vitals",   label: t("tabVitals"),   icon: Eye },
-    { id: "client",   label: t("tabClient"),   icon: Globe },
-    { id: "userflow", label: t("tabUserFlow"), icon: Users },
+    { id: "overview",  label: t("tabOverview"),  icon: Activity },
+    { id: "vitals",    label: t("tabVitals"),    icon: Eye },
+    { id: "network",   label: t("tabNetwork"),   icon: Globe },
+    { id: "errors",    label: t("tabErrors"),    icon: AlertTriangle },
+    { id: "userflow",  label: t("tabUserFlow"),  icon: Users },
   ];
 
+  // Sparkline data derived from latency timeline
+  const latencySparkValues = data.latencyTimeline.slice(-20).map(d => d.value);
+
   return (
-    <div className="page-pad" style={{ maxWidth: 780, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
+    <div className="page-pad" style={{ maxWidth: 820, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
 
       {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", order: dir === "rtl" ? 99 : 0 }}>
           <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>{t("title")}</span>
         <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>{t("devOnly")}</span>
+        <TelemetryIndicator hasData={hasAnyData} />
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{timeContextText}</span>
           <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center" }} title="Refresh">
@@ -380,7 +470,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
       </div>
 
       {/* Time range selector */}
-      <div style={{ display: "flex", gap: 2, marginBottom: 18, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3, width: "fit-content" }}>
+      <div style={{ display: "flex", gap: 2, marginBottom: 14, background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: 3, width: "fit-content" }}>
         {TIME_RANGES.map(r => {
           const active = r.key === timeRangeKey;
           return (
@@ -401,163 +491,312 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
         })}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════════
-         SECTION 1 — Traffic Observability (API request metrics)
-         ════════════════════════════════════════════════════════════════════════ */}
-      <div style={{ marginBottom: 28 }}>
-        <ChartSection title={t("trafficObservability")} subtitle={t("trafficObservabilityDesc")}>
-          {/* Status banner */}
-          <div style={{ background: `rgba(${health.status === "unhealthy" ? "239,68,68" : health.status === "degraded" ? "245,158,11" : health.status === "unknown" ? "148,163,184" : "52,211,153"},0.03)`, border: `1px solid ${healthColor}18`, borderRadius: 12, padding: "18px 20px", marginBottom: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}CC, 0 0 12px ${healthColor}66` }} />
-              <span style={{ fontSize: 17, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>
-                {health.status === "unknown" ? t("statusIdle")(rangeLabel) : health.status === "healthy" && confidence.level === "low" ? t("statusHealthyLow") : { healthy: t("statusHealthy"), degraded: t("statusDegraded"), unhealthy: t("statusUnhealthy") }[health.status]}
-              </span>
-              <ConfidenceBadge level={confidence.level} t={t} />
-            </div>
-            <div style={{ fontSize: 14, color: health.status === "unknown" ? "var(--text-muted)" : "var(--text-secondary)", lineHeight: 1.5, marginBottom: 16 }}>{health.reason}</div>
-            <div style={{ display: "flex", gap: 0, flexWrap: "wrap", paddingTop: 16, borderTop: "1px solid var(--glass-3)" }}>
-              <BannerMetric label={t("p95Latency")} desc={t("p95Desc")} value={data.p95 != null ? data.p95 + "ms" : (data.totalRequests > 0 ? "Sampling\u2026" : "\u2014")} color={data.p95 != null ? sevColor(data.p95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
-              <BannerMetric label={t("errorRate")} desc={t("errorRateDesc")} value={data.errorRate != null ? data.errorRate + "%" : (data.totalRequests > 0 ? "0%" : "N/A")} color={data.errorRate != null && data.errorRate >= 2 ? "#f87171" : "var(--text-bright)"} />
-              <BannerMetric label={t("traffic")} desc={t("trafficDesc")} value={data.traffic?.rps != null ? data.traffic.label : (data.totalRequests > 0 ? data.totalRequests + " req" : "\u2014")} color={data.totalRequests > 0 ? "var(--text-bright)" : "var(--text-dim)"} />
-              <BannerMetric label={t("errors")} desc={t("errorsDesc")} value={String(data.errorCount)} color={data.errorCount > 0 ? "#f87171" : "var(--text-bright)"} last />
-            </div>
-          </div>
-        </ChartSection>
-
-        {/* Collapsible alerts */}
-        {alerts.length > 0 && (
-          <div style={{ marginBottom: 8 }}>
-            <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}>
-              {alertsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-              <AlertTriangle size={12} color={health.status === "unhealthy" ? "#f87171" : "#fbbf24"} />
-              <span>{t("alertCount")(alerts.length)}</span>
+      {/* ── Sub-tabs ── */}
+      <div style={{ display: "flex", gap: 3, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+              background: active ? "var(--glass-6)" : "none",
+              border: active ? "1px solid var(--glass-10)" : "1px solid transparent",
+              color: active ? "var(--text-bright)" : "var(--text-muted)",
+              padding: "6px 12px", borderRadius: 7, cursor: "pointer", fontSize: 12,
+              fontWeight: active ? 600 : 400, display: "flex", alignItems: "center",
+              gap: 5, whiteSpace: "nowrap", transition: "all 0.2s ease",
+            }}>
+              <Icon size={13} />{tab.label}
             </button>
-            {alertsOpen && (
-              <div style={{ padding: "4px 12px 8px 30px", display: "flex", flexDirection: "column", gap: 4 }}>
-                {alerts.map((a, i) => (
-                  <div key={i} style={{ fontSize: 12, color: SEVERITY_COLORS[a.severity].text, display: "flex", alignItems: "center", gap: 6 }}>
-                    <SeverityDot sev={a.severity} />
-                    {a.message}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Request latency chart */}
-        <div style={{ marginTop: 16 }}>
-          <ChartSection
-            title={<span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {t("requestLatency")}
-              {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? "#fbbf24" : trendDir === "decreasing" ? "#34d399" : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
-                {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
-              </span>}
-            </span>}
-            subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
-          >
-            {hasLatencyData
-              ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} />
-              : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={activeRange.sec != null && activeRange.sec <= 60 ? t("noRequestsHintShort") : t("noRequestsHintNav")} />
-            }
-          </ChartSection>
-        </div>
-
-        {/* Insights */}
-        {insights.length > 0 && (
-          <div style={{ marginTop: 12 }}>
-            <ChartSection title={t("insights")}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {insights.map((ins, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
-                    <SeverityDot sev={ins.severity} size={7} />
-                    <span style={{ fontSize: 14, color: ins.severity === "info" ? "var(--text-secondary)" : SEVERITY_COLORS[ins.severity].text, lineHeight: 1.5 }}>
-                      {ins.message}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ChartSection>
-          </div>
-        )}
+          );
+        })}
       </div>
 
-      {/* Divider between sections */}
-      <div style={{ borderTop: "1px solid var(--glass-4)", marginBottom: 28 }} />
+      {/* ── Tab content ── */}
+      {activeTab === "overview" && <OverviewTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} health={health} alerts={alerts} alertsOpen={alertsOpen} setAlertsOpen={setAlertsOpen} insights={insights} latencySparkValues={latencySparkValues} />}
+      {activeTab === "vitals"  && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} t={t} />}
+      {activeTab === "network" && <NetworkTab data={data} t={t} rangeLabel={rangeLabel} activeRange={activeRange} trendDir={trendDir} latencyBaseline={latencyBaseline} confidence={confidence} />}
+      {activeTab === "errors"  && <ErrorsTab client={data.client} t={t} totalRequests={data.totalRequests} errorRate={data.errorRate} latencyTimeline={data.latencyTimeline} />}
+      {activeTab === "userflow" && <UserFlowTab userFlow={data.userFlow} t={t} />}
 
-      {/* ════════════════════════════════════════════════════════════════════════
-         SECTION 2 — Browser Performance (page load + rendering metrics)
-         ════════════════════════════════════════════════════════════════════════ */}
-      <div style={{ marginBottom: 20 }}>
-        <ChartSection title={t("browserPerformance")} subtitle={t("browserPerformanceDesc")}>
-          <div style={{ display: "flex", gap: 4, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
-            {TABS.map(tab => {
-              const Icon = tab.icon;
-              const active = activeTab === tab.id;
-              return (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                  background: active ? "var(--glass-6)" : "none",
-                  border: active ? "1px solid var(--glass-10)" : "1px solid transparent",
-                  color: active ? "var(--text-bright)" : "var(--text-muted)",
-                  padding: "6px 11px", borderRadius: 7, cursor: "pointer", fontSize: 12,
-                  fontWeight: active ? 600 : 400, display: "flex", alignItems: "center",
-                  gap: 5, whiteSpace: "nowrap", transition: "all 0.15s ease",
-                }}>
-                  <Icon size={12} />{tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </ChartSection>
-
-        {activeTab === "vitals"   && <VitalsTab vitals={data.vitals} navTiming={data.navTiming} t={t} />}
-        {activeTab === "client"   && <ClientTab client={data.client} t={t} />}
-        {activeTab === "userflow" && <UserFlowTab userFlow={data.userFlow} t={t} />}
-      </div>
-
-      <div style={{ textAlign: "center", padding: "28px 0 12px", fontSize: 10, color: "var(--text-dim)" }}>
+      <div style={{ textAlign: "center", padding: "16px 0 8px", fontSize: 10, color: "var(--text-dim)" }}>
         {t("allData")}
       </div>
     </div>
   );
 }
 
+// ─── Tooltip wrapper ────────────────────────────────────────────────────────────
+function Tooltip({ text, children }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}
+      onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      {children}
+      {show && text && (
+        <span style={{
+          position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)",
+          background: "var(--bg-elevated)", color: "var(--text-secondary)", fontSize: 11, lineHeight: 1.4,
+          padding: "6px 10px", borderRadius: 6, border: "1px solid var(--glass-6)",
+          whiteSpace: "nowrap", zIndex: 100, pointerEvents: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          animation: "fadeIn 0.15s ease",
+        }}>
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+// ─── Session Timeline ──────────────────────────────────────────────────────────
+function SessionTimeline({ data }) {
+  // Build a unified timeline of significant events from the session
+  const events = useMemo(() => {
+    const ev = [];
+    const now = Date.now();
+
+    // LCP captured
+    if (data.vitals?.lcp != null) {
+      ev.push({ ts: now - (data.userFlow?.sessionDuration || 0) * 1000 + 500, type: "lcp", label: `LCP ${data.vitals.lcp}ms`, color: sevColor(data.vitals.lcp, THRESHOLDS.lcp) });
+    }
+    // INP captured
+    if (data.vitals?.inp != null) {
+      ev.push({ ts: now - (data.userFlow?.sessionDuration || 0) * 1000 + 2000, type: "inp", label: `INP ${data.vitals.inp}ms`, color: sevColor(data.vitals.inp, THRESHOLDS.inp) });
+    }
+    // Errors
+    if (data.client?.recentErrors?.length > 0) {
+      data.client.recentErrors.slice(-5).forEach(err => {
+        ev.push({ ts: new Date(err.timestamp).getTime(), type: "error", label: "Error", color: RED });
+      });
+    }
+    // Network spikes (latency > 2x average)
+    if (data.latencyTimeline?.length > 2) {
+      const avg = data.latencyTimeline.reduce((s, d) => s + d.value, 0) / data.latencyTimeline.length;
+      data.latencyTimeline.filter(d => d.value > avg * 2).slice(-3).forEach(d => {
+        ev.push({ ts: d.ts, type: "spike", label: `${d.value}ms spike`, color: AMBER });
+      });
+    }
+
+    return ev.sort((a, b) => a.ts - b.ts);
+  }, [data]);
+
+  if (events.length === 0) return null;
+
+  const minTs = events[0].ts;
+  const maxTs = events[events.length - 1].ts;
+  const range = maxTs - minTs || 1;
+
+  return (
+    <ChartSection title="Session Timeline" subtitle={`${events.length} event${events.length !== 1 ? "s" : ""} captured`}>
+      <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px" }}>
+        {/* Timeline track */}
+        <div style={{ position: "relative", height: 32, marginBottom: 4 }}>
+          {/* Base line */}
+          <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 2, background: "var(--glass-6)", borderRadius: 1 }} />
+          {/* Event markers */}
+          {events.map((ev, i) => {
+            const pct = events.length === 1 ? 50 : ((ev.ts - minTs) / range) * 90 + 5;
+            return (
+              <div key={i} title={ev.label} style={{
+                position: "absolute", left: `${pct}%`, top: 8, transform: "translateX(-50%)",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+              }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: "50%", background: ev.color,
+                  border: "2px solid var(--glass-2)", boxShadow: `0 0 4px ${ev.color}66`,
+                  transition: "transform 0.2s",
+                }} />
+              </div>
+            );
+          })}
+        </div>
+        {/* Event labels */}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+          {events.map((ev, i) => (
+            <span key={i} style={{ fontSize: 10, color: ev.color, fontWeight: 500, display: "flex", alignItems: "center", gap: 3 }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: ev.color }} />
+              {ev.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </ChartSection>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// LATENCY CHART (vertical bar chart with baseline + summary strip)
+// OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════════════════════
-const LatencyChart = memo(function LatencyChart({ data, baseline, p95 }) {
+function OverviewTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseline, confidence, health, alerts, alertsOpen, setAlertsOpen, insights, latencySparkValues }) {
+  const hasLatencyData = data.latencyTimeline.length > 0;
+  const hasAnyData = data.totalRequests > 0 || data.vitals?.lcp != null || data.vitals?.inp != null || data.vitals?.cls != null;
+
+  // Metric card values
+  const lcpVal = data.vitals?.lcp;
+  const inpVal = data.vitals?.inp;
+  const clsVal = data.vitals?.cls;
+  const errRate = data.errorRate;
+
+  const lcpStatus = lcpVal != null ? (severity(lcpVal, THRESHOLDS.lcp) === "info" ? t("good") : severity(lcpVal, THRESHOLDS.lcp) === "warning" ? t("needsWork") : t("poor")) : null;
+  const inpStatus = inpVal != null ? (severity(inpVal, THRESHOLDS.inp) === "info" ? t("good") : severity(inpVal, THRESHOLDS.inp) === "warning" ? t("needsWork") : t("poor")) : null;
+  const clsStatus = clsVal != null ? (severity(clsVal, THRESHOLDS.cls) === "info" ? t("good") : severity(clsVal, THRESHOLDS.cls) === "warning" ? t("needsWork") : t("poor")) : null;
+
+  const lcpColor = sevColor(lcpVal, THRESHOLDS.lcp);
+  const inpColor = sevColor(inpVal, THRESHOLDS.inp);
+  const clsColor = sevColor(clsVal, THRESHOLDS.cls);
+  const errColor = errRate != null && errRate >= 5 ? RED : errRate != null && errRate >= 2 ? AMBER : GREEN;
+
+  // Health color
+  const healthColor = health.status === "unhealthy" ? RED : health.status === "degraded" ? AMBER : health.status === "unknown" ? "#64748b" : GREEN;
+
+  if (!hasAnyData) {
+    return (
+      <EmptyChartState
+        title={t("noTelemetryTitle")}
+        message={t("noTelemetryMsg")}
+        hint={t("noTelemetryHint")}
+      />
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Health status strip */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: `${healthColor}0A`, border: `1px solid ${healthColor}20`, borderRadius: 10, transition: "background 0.3s, border-color 0.3s" }}>
+        <div style={{ width: 9, height: 9, borderRadius: "50%", background: healthColor, boxShadow: health.status === "unknown" ? "none" : `0 0 6px ${healthColor}AA`, transition: "background 0.3s" }} />
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-bright)" }}>
+          {health.status === "unknown" ? t("statusIdle")(rangeLabel) : health.status === "healthy" && confidence.level === "low" ? t("statusHealthyLow") : { healthy: t("statusHealthy"), degraded: t("statusDegraded"), unhealthy: t("statusUnhealthy") }[health.status]}
+        </span>
+        <span style={{ fontSize: 12, color: "var(--text-muted)", flex: 1 }}>{health.reason}</span>
+        {alerts.length > 0 && (
+          <button onClick={() => setAlertsOpen(!alertsOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 11, display: "flex", alignItems: "center", gap: 3, padding: "2px 6px" }}>
+            <AlertTriangle size={11} color={health.status === "unhealthy" ? RED : AMBER} />
+            {alerts.length}
+            {alertsOpen ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+          </button>
+        )}
+      </div>
+
+      {/* Collapsible alerts */}
+      {alertsOpen && alerts.length > 0 && (
+        <div style={{ padding: "4px 12px 4px 28px", display: "flex", flexDirection: "column", gap: 3 }}>
+          {alerts.map((a, i) => (
+            <div key={i} style={{ fontSize: 11, color: SEVERITY_COLORS[a.severity].text, display: "flex", alignItems: "center", gap: 5 }}>
+              <SeverityDot sev={a.severity} size={5} />
+              {a.message}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Metric cards row */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <MetricCard
+          label="LCP"
+          tooltip={t("lcpTooltip")}
+          value={lcpVal != null ? lcpVal >= 1000 ? (lcpVal / 1000).toFixed(1) : String(lcpVal) : "\u2014"}
+          unit={lcpVal != null ? (lcpVal >= 1000 ? "s" : "ms") : ""}
+          status={lcpStatus}
+          statusColor={lcpColor}
+          trend={lcpVal != null && lcpVal <= THRESHOLDS.lcp.warning * 0.75 ? "improving" : lcpVal != null && lcpVal >= THRESHOLDS.lcp.critical ? "degrading" : null}
+        />
+        <MetricCard
+          label="INP"
+          tooltip={t("inpTooltip")}
+          value={inpVal != null ? String(inpVal) : "\u2014"}
+          unit={inpVal != null ? "ms" : ""}
+          status={inpStatus}
+          statusColor={inpColor}
+          trend={inpVal != null && inpVal <= THRESHOLDS.inp.warning * 0.5 ? "improving" : inpVal != null && inpVal >= THRESHOLDS.inp.critical ? "degrading" : null}
+        />
+        <MetricCard
+          label="CLS"
+          tooltip={t("clsTooltip")}
+          value={clsVal != null ? clsVal.toFixed(3) : "\u2014"}
+          status={clsStatus}
+          statusColor={clsColor}
+          trend={clsVal != null && clsVal <= THRESHOLDS.cls.warning * 0.5 ? "improving" : clsVal != null && clsVal >= THRESHOLDS.cls.critical ? "degrading" : null}
+        />
+        <MetricCard
+          label={t("errorRate")}
+          tooltip={t("errorRateTooltip")}
+          value={errRate != null ? errRate + "%" : (data.totalRequests > 0 ? "0%" : "\u2014")}
+          statusColor={errColor}
+          sparkValues={latencySparkValues.length > 1 ? latencySparkValues : null}
+          sparkColor={BLUE}
+        />
+      </div>
+
+      {/* Latency trend chart (compact) */}
+      <ChartSection
+        title={<span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {t("requestLatency")}
+          {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? AMBER : trendDir === "decreasing" ? GREEN : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
+            {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
+          </span>}
+        </span>}
+        subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
+      >
+        {hasLatencyData
+          ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} compact />
+          : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={activeRange.sec != null && activeRange.sec <= 60 ? t("noRequestsHintShort") : t("noRequestsHintNav")} />
+        }
+      </ChartSection>
+
+      {/* Session timeline */}
+      <SessionTimeline data={data} />
+
+      {/* Insights */}
+      {insights.length > 0 && (
+        <ChartSection title={t("insights")}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {insights.map((ins, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6, padding: "6px 0", borderBottom: i < insights.length - 1 ? "1px solid var(--glass-3)" : "none" }}>
+                <SeverityDot sev={ins.severity} size={7} />
+                <span style={{ fontSize: 13, color: ins.severity === "info" ? "var(--text-secondary)" : SEVERITY_COLORS[ins.severity].text, lineHeight: 1.4 }}>
+                  {ins.message}
+                </span>
+              </div>
+            ))}
+          </div>
+        </ChartSection>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LATENCY CHART
+// ═══════════════════════════════════════════════════════════════════════════════
+const LatencyChart = memo(function LatencyChart({ data, baseline, p95, compact }) {
   const max = useMemo(() => Math.max(...data.map(d => d.value), 1), [data]);
   const avg = useMemo(() => Math.round(data.reduce((s, d) => s + d.value, 0) / data.length), [data]);
   const spikeThreshold = baseline ? baseline.baseline * 2 : THRESHOLDS.p95Latency.warning;
   const baselinePct = baseline ? Math.min((baseline.baseline / max) * 100, 92) : null;
+  const chartHeight = compact ? 56 : 72;
 
   return (
-    <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "14px 16px" }}>
-      {/* Bar area */}
+    <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: compact ? "12px 14px" : "14px 16px" }}>
       <div style={{ position: "relative" }}>
         {baselinePct !== null && (
-          <div style={{ position: "absolute", bottom: `${baselinePct}%`, left: 0, right: 0, borderBottom: "1px dashed var(--glass-8)", zIndex: 1, pointerEvents: "none" }}>
-            <span style={{ position: "absolute", right: 0, top: -11, fontSize: 9, color: "var(--text-dim)", background: "var(--glass-2)", padding: "0 4px", borderRadius: 2 }}>avg {baseline.baseline}ms</span>
+          <div style={{ position: "absolute", bottom: `${baselinePct}%`, left: 0, right: 0, borderBottom: "1px dashed var(--glass-10)", zIndex: 1, pointerEvents: "none" }}>
+            <span style={{ position: "absolute", right: 0, top: -12, fontSize: 10, color: "var(--text-muted)", background: "var(--glass-2)", padding: "0 5px", borderRadius: 3 }}>avg {baseline.baseline}ms</span>
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 1.5, height: 64 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: chartHeight }}>
           {data.map((d, i) => {
             const h = Math.max((d.value / max) * 100, 4);
             const s = severity(d.value, THRESHOLDS.p95Latency);
             const isSpike = d.value > spikeThreshold;
-            const color = s !== "info" ? SEVERITY_COLORS[s].text : isSpike ? "rgba(251,191,36,0.5)" : "var(--glass-12)";
-            return <div key={i} title={`${d.time}: ${d.value}ms`} style={{ flex: 1, height: `${h}%`, background: color, borderRadius: "2px 2px 0 0", minWidth: 2, transition: "height 0.3s ease" }} />;
+            const color = s !== "info" ? SEVERITY_COLORS[s].text : isSpike ? "rgba(251,191,36,0.6)" : "var(--glass-15)";
+            return <div key={i} title={`${d.time}: ${d.value}ms`} style={{ flex: 1, height: `${h}%`, background: color, borderRadius: "2px 2px 0 0", minWidth: 3, transition: "height 0.4s ease" }} />;
           })}
         </div>
       </div>
-      {/* Time axis */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-dim)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-muted)" }}>
         <span>{data[0]?.time}</span>
         <span>{data[data.length - 1]?.time}</span>
       </div>
-      {/* Summary strip */}
-      <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--glass-3)", fontSize: 11 }}>
+      <div style={{ display: "flex", gap: 16, marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--glass-4)", fontSize: 11 }}>
         <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{avg}ms</span></span>
         {p95 != null && <span style={{ color: "var(--text-muted)" }}>P95 <span style={{ color: sevColor(p95, THRESHOLDS.p95Latency, "var(--text-primary)"), fontFamily: MONO, fontWeight: 600 }}>{p95}ms</span></span>}
         <span style={{ color: "var(--text-muted)" }}>Samples <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{data.length}</span></span>
@@ -567,7 +806,7 @@ const LatencyChart = memo(function LatencyChart({ data, baseline, p95 }) {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VITALS TAB
+// WEB VITALS TAB
 // ═══════════════════════════════════════════════════════════════════════════════
 function VitalsTab({ vitals, navTiming, t }) {
   const hasVitals = vitals.lcp != null || vitals.inp != null || vitals.cls != null;
@@ -584,42 +823,53 @@ function VitalsTab({ vitals, navTiming, t }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {vitalsList.map(v => {
               const sev = severity(v.value, v.threshold);
-              const col = sev === "info" ? "#34d399" : SEVERITY_COLORS[sev].text;
-              const pct = Math.min((v.value / v.threshold.critical) * 100, 100);
+              const col = sev === "info" ? GREEN : SEVERITY_COLORS[sev].text;
               const statusLabel = sev === "info" ? t("good") : sev === "warning" ? t("needsWork") : t("poor");
               const bench = CRUX_BENCHMARKS[v.metric];
               const comparison = compareToGlobal(v.metric, v.value);
-              const compColor = comparison?.verdict === "faster" ? "#34d399" : comparison?.verdict === "within" ? "var(--text-muted)" : "#fbbf24";
+              const compColor = comparison?.verdict === "faster" ? GREEN : comparison?.verdict === "within" ? "var(--text-muted)" : AMBER;
+
+              // Distribution bar: show where the value falls on good/needs-work/poor scale
+              const goodEnd = v.threshold.warning;
+              const poorStart = v.threshold.critical;
+              const scaleMax = poorStart * 1.5;
+              const valuePct = Math.min((v.value / scaleMax) * 100, 100);
+              const goodPct = (goodEnd / scaleMax) * 100;
+              const warnPct = ((poorStart - goodEnd) / scaleMax) * 100;
+
               return (
                 <div key={v.key} style={{ background: "var(--glass-2)", borderRadius: 10, padding: "14px 16px" }}>
-                  {/* Header: name + description */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
                     <div>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{v.key}</span>
-                      <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 6 }}>{v.desc}</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{v.key}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 8 }}>{v.desc}</span>
                     </div>
-                    <span style={{ fontSize: 11, color: col, fontWeight: 600 }}>{statusLabel}</span>
+                    <span style={{ fontSize: 11, color: col, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: `${col}12` }}>{statusLabel}</span>
                   </div>
-                  {/* Values: session vs global */}
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 10 }}>
                     <div>
                       <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>{t("sessionLabel")}</div>
-                      <span style={{ fontSize: 22, fontWeight: 700, color: col, fontFamily: MONO }}>{v.value}{v.unit}</span>
+                      <span style={{ fontSize: 24, fontWeight: 700, color: col, fontFamily: MONO, transition: "color 0.3s" }}>{v.value}{v.unit}</span>
                     </div>
                     {bench && (
-                      <div style={{ borderLeft: "1px solid var(--glass-4)", paddingLeft: 16 }}>
+                      <div style={{ borderLeft: "1px solid var(--glass-5)", paddingLeft: 16 }}>
                         <div style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500, marginBottom: 2 }}>{t("globalLabel")}</div>
                         <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text-muted)", fontFamily: MONO }}>{bench.good}{bench.unit}</span>
                       </div>
                     )}
                   </div>
-                  {/* Progress bar */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ flex: 1, background: "var(--glass-3)", borderRadius: CHART_BAR_R, height: CHART_BAR_H, overflow: "hidden" }}>
-                      <div style={{ width: `${Math.max(pct, 3)}%`, height: "100%", background: col, borderRadius: CHART_BAR_R, transition: "width 0.3s ease" }} />
-                    </div>
+                  {/* Distribution bar */}
+                  <div style={{ position: "relative", height: 10, borderRadius: 5, overflow: "hidden", background: "var(--glass-3)", marginBottom: 6 }}>
+                    <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${goodPct}%`, background: `${GREEN}28` }} />
+                    <div style={{ position: "absolute", left: `${goodPct}%`, top: 0, bottom: 0, width: `${warnPct}%`, background: `${AMBER}28` }} />
+                    <div style={{ position: "absolute", left: `${goodPct + warnPct}%`, top: 0, bottom: 0, right: 0, background: `${RED}28` }} />
+                    <div style={{ position: "absolute", left: `${valuePct}%`, top: 0, bottom: 0, width: 4, background: col, borderRadius: 2, transform: "translateX(-50%)", transition: "left 0.4s ease", boxShadow: `0 0 4px ${col}66` }} />
                   </div>
-                  {/* Comparison insight */}
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--text-muted)" }}>
+                    <span>0</span>
+                    <span style={{ color: GREEN }}>{goodEnd}{v.unit}</span>
+                    <span style={{ color: RED }}>{poorStart}{v.unit}</span>
+                  </div>
                   {comparison && (
                     <div style={{ fontSize: 11, color: compColor, marginTop: 6, fontWeight: 500 }}>
                       {comparison.label}
@@ -636,7 +886,7 @@ function VitalsTab({ vitals, navTiming, t }) {
 
       {navTiming && (
         <ChartSection title={t("pageLoadDiagnostics")} subtitle={t("pageLoadDiagnosticsDesc")}>
-          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 12px" }}>
             <StatRow label={t("ttfb")} desc={t("ttfbDesc")} value={navTiming.ttfb} unit="ms" />
             <StatRow label={t("domLoaded")} desc={t("domLoadedDesc")} value={navTiming.domContentLoaded} unit="ms" />
             <StatRow label={t("pageLoad")} desc={t("pageLoadDesc")} value={navTiming.pageLoad} unit="ms" warn={navTiming.pageLoad > 3000} />
@@ -644,7 +894,7 @@ function VitalsTab({ vitals, navTiming, t }) {
             <StatRow label={t("tcp")} desc={t("tcpDesc")} value={navTiming.tcpConnect} unit="ms" zeroLabel={t("zeroMsReused")} last />
           </div>
           {(navTiming.dnsLookup === 0 || navTiming.tcpConnect === 0) && (
-            <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 6, fontStyle: "italic" }}>{t("zeroMsNote")}</div>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4, fontStyle: "italic" }}>{t("zeroMsNote")}</div>
           )}
         </ChartSection>
       )}
@@ -653,48 +903,126 @@ function VitalsTab({ vitals, navTiming, t }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CLIENT TAB
+// NETWORK TAB
 // ═══════════════════════════════════════════════════════════════════════════════
-function ClientTab({ client, t }) {
+function NetworkTab({ data, t, rangeLabel, activeRange, trendDir, latencyBaseline, confidence }) {
+  const hasLatencyData = data.latencyTimeline.length > 0;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
-      <ChartSection title={t("errorCounters")}>
-        <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
-          <StatRow label={t("unhandled")}  value={client.unhandledErrors}   warn={client.unhandledErrors > 0}   warnColor="#f87171" />
-          <StatRow label={t("promiseRej")} value={client.promiseRejections} warn={client.promiseRejections > 0} warnColor="#f87171" />
-          <StatRow label={t("failedReq")}  value={client.failedRequests}    warn={client.failedRequests > 0}    warnColor="#f87171" />
-          <StatRow label={t("slowReq")}    value={client.slowRequests}      warn={client.slowRequests > 0}      warnColor="#fbbf24" last />
+      {/* Latency trend */}
+      <ChartSection
+        title={<span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {t("latencyTrend")}
+          {trendDir && <span style={{ fontSize: 10, fontWeight: 400, color: trendDir === "increasing" ? AMBER : trendDir === "decreasing" ? GREEN : "var(--text-dim)", textTransform: "none", letterSpacing: 0 }}>
+            {trendDir === "increasing" ? t("trendUp") : trendDir === "decreasing" ? t("trendDown") : t("trendStable")}
+          </span>}
+        </span>}
+        subtitle={hasLatencyData ? `${t("basedOn")(data.latencyTimeline.length, rangeLabel)}${confidence.level === "low" ? ` \u00b7 ${t("lowSample")}` : ""}` : null}
+      >
+        {hasLatencyData
+          ? <LatencyChart data={data.latencyTimeline} baseline={latencyBaseline} p95={data.p95} />
+          : <EmptyChartState title={t("noRequestsTitle")(rangeLabel)} message={activeRange.sec != null ? t("noRequestsMsgTimed")(activeRange.label) : t("noRequestsMsgSession")} hint={t("noRequestsHintNav")} />
+        }
+      </ChartSection>
+
+      {/* Request stats */}
+      <ChartSection title={t("requestStats")}>
+        <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 12px" }}>
+          <StatRow label={t("totalReqs")} value={data.totalRequests} />
+          <StatRow label={t("failedReq")} value={data.failedRequests} warn={data.failedRequests > 0} warnColor={RED} />
+          <StatRow label={t("slowReq")} value={data.client?.slowRequests || 0} warn={(data.client?.slowRequests || 0) > 0} warnColor={AMBER} />
+          <StatRow label={t("throughput")} value={data.traffic?.rps != null ? data.traffic.label : "\u2014"} last />
         </div>
       </ChartSection>
 
-      {client.recentErrors.length > 0 && (
-        <ChartSection title={t("recentErrors")} subtitle={`${t("last")} ${Math.min(client.recentErrors.length, 10)}`}>
-          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
-            {client.recentErrors.slice(-10).reverse().map((err, i, arr) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
-                <SeverityDot sev="warning" size={5} />
-                <span style={{ color: "var(--text-dim)", flexShrink: 0, fontFamily: MONO, fontSize: 10, width: 64 }}>{new Date(err.timestamp).toLocaleTimeString()}</span>
-                <span style={{ color: "var(--text-secondary)", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{err.message}</span>
-              </div>
-            ))}
-          </div>
-        </ChartSection>
-      )}
-
-      {client.recentNetworkLog.length > 0 && (
-        <ChartSection title={t("recentNetwork")} subtitle={`${t("last")} ${Math.min(client.recentNetworkLog.length, 10)}`}>
-          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
-            {client.recentNetworkLog.slice(-10).reverse().map((entry, i, arr) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
+      {/* Recent network issues */}
+      {data.client?.recentNetworkLog?.length > 0 && (
+        <ChartSection title={t("recentNetwork")} subtitle={`${t("last")} ${Math.min(data.client.recentNetworkLog.length, 10)}`}>
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 12px" }}>
+            {data.client.recentNetworkLog.slice(-10).reverse().map((entry, i, arr) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
                 <SeverityDot sev={entry.type === "error" ? "critical" : "warning"} size={5} />
-                <span style={{ color: "var(--text-dim)", flexShrink: 0, fontFamily: MONO, fontSize: 10, width: 64 }}>{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                <span style={{ color: "var(--text-dim)", flexShrink: 0, fontFamily: MONO, fontSize: 10, width: 58 }}>{new Date(entry.timestamp).toLocaleTimeString()}</span>
                 <span style={{ color: "var(--text-secondary)", fontFamily: MONO, fontSize: 10, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.url}</span>
-                {entry.status && <span style={{ color: "#f87171", fontFamily: MONO, fontSize: 10, flexShrink: 0 }}>{entry.status}</span>}
+                {entry.status && <span style={{ color: RED, fontFamily: MONO, fontSize: 10, flexShrink: 0 }}>{entry.status}</span>}
                 {entry.duration != null && <span style={{ color: "var(--text-dim)", fontFamily: MONO, fontSize: 10, flexShrink: 0 }}>{entry.duration}ms</span>}
               </div>
             ))}
           </div>
         </ChartSection>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ERRORS TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+function ErrorsTab({ client, t, totalRequests, errorRate, latencyTimeline }) {
+  const hasErrors = client.unhandledErrors > 0 || client.promiseRejections > 0 || client.failedRequests > 0;
+
+  // Build error rate "sparkline" from latency data - show failed vs ok over time
+  const errorSparkValues = useMemo(() => {
+    if (!latencyTimeline || latencyTimeline.length < 2) return null;
+    // Group into ~10 buckets and compute error-like signal (spike = bad)
+    const bucketSize = Math.max(1, Math.floor(latencyTimeline.length / 10));
+    const buckets = [];
+    for (let i = 0; i < latencyTimeline.length; i += bucketSize) {
+      const slice = latencyTimeline.slice(i, i + bucketSize);
+      const avgVal = slice.reduce((s, d) => s + d.value, 0) / slice.length;
+      buckets.push(avgVal);
+    }
+    return buckets;
+  }, [latencyTimeline]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
+      {/* Error rate overview */}
+      <div style={{ display: "flex", gap: 12 }}>
+        <MetricCard
+          label={t("errorRate")}
+          tooltip={t("errorRateTooltip")}
+          value={errorRate != null ? errorRate + "%" : (totalRequests > 0 ? "0%" : "\u2014")}
+          statusColor={errorRate != null && errorRate >= 5 ? RED : errorRate != null && errorRate >= 2 ? AMBER : GREEN}
+          sparkValues={errorSparkValues}
+          sparkColor={RED}
+        />
+        <MetricCard
+          label={t("errors")}
+          value={String(client.unhandledErrors + client.promiseRejections)}
+          statusColor={client.unhandledErrors + client.promiseRejections > 0 ? RED : GREEN}
+        />
+      </div>
+
+      {/* Error counters */}
+      <ChartSection title={t("errorCounters")}>
+        <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 12px" }}>
+          <StatRow label={t("unhandled")}  value={client.unhandledErrors}   warn={client.unhandledErrors > 0}   warnColor={RED} />
+          <StatRow label={t("promiseRej")} value={client.promiseRejections} warn={client.promiseRejections > 0} warnColor={RED} />
+          <StatRow label={t("failedReq")}  value={client.failedRequests}    warn={client.failedRequests > 0}    warnColor={RED} />
+          <StatRow label={t("slowReq")}    value={client.slowRequests}      warn={client.slowRequests > 0}      warnColor={AMBER} last />
+        </div>
+      </ChartSection>
+
+      {/* Recent errors table */}
+      {client.recentErrors.length > 0 ? (
+        <ChartSection title={t("recentErrors")} subtitle={`${t("last")} ${Math.min(client.recentErrors.length, 10)}`}>
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 12px" }}>
+            {client.recentErrors.slice(-10).reverse().map((err, i, arr) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, height: CHART_ROW_H, borderBottom: i < arr.length - 1 ? "1px solid var(--glass-3)" : "none", overflow: "hidden" }}>
+                <SeverityDot sev={err.type === "unhandledrejection" ? "critical" : "warning"} size={5} />
+                <span style={{ color: "var(--text-dim)", flexShrink: 0, fontFamily: MONO, fontSize: 10, width: 58 }}>{new Date(err.timestamp).toLocaleTimeString()}</span>
+                <span style={{ fontSize: 9, color: err.type === "unhandledrejection" ? RED : AMBER, fontWeight: 600, flexShrink: 0, padding: "1px 4px", borderRadius: 3, background: err.type === "unhandledrejection" ? `${RED}15` : `${AMBER}15` }}>
+                  {err.type === "unhandledrejection" ? "PROMISE" : "ERROR"}
+                </span>
+                <span style={{ color: "var(--text-secondary)", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{err.message}</span>
+              </div>
+            ))}
+          </div>
+        </ChartSection>
+      ) : !hasErrors && (
+        <EmptyChartState title="No errors" message="No client errors or unhandled rejections have been captured in this session." hint="Errors will appear here automatically when they occur." />
       )}
     </div>
   );
@@ -719,20 +1047,42 @@ function UserFlowTab({ userFlow, t }) {
     <div style={{ display: "flex", flexDirection: "column", gap: SECTION_GAP }}>
       {/* Session stats */}
       <ChartSection title={t("sessionActivity")}>
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           <InlineMetric label={t("session")} value={`${sessionMin}m ${sessionSec}s`} color="var(--text-secondary)" />
           <InlineMetric label={t("routesVisited")} value={String(userFlow.routeChanges)} color="var(--text-secondary)" />
-          {userFlow.quizStarted > 0 && <InlineMetric label={t("quizzesStarted")} value={String(userFlow.quizStarted)} color="#60a5fa" />}
-          {userFlow.quizCompleted > 0 && <InlineMetric label={t("completed")} value={String(userFlow.quizCompleted)} color="#34d399" />}
+          {userFlow.quizStarted > 0 && <InlineMetric label={t("quizzesStarted")} value={String(userFlow.quizStarted)} color={BLUE} />}
+          {userFlow.quizCompleted > 0 && <InlineMetric label={t("completed")} value={String(userFlow.quizCompleted)} color={GREEN} />}
           {completionRate != null && <InlineMetric label={t("completionRate")} value={completionRate + "%"} color={sevColor(completionRate, THRESHOLDS.completionRate)} />}
           {userFlow.retries > 0 && <InlineMetric label={t("retries")} value={String(userFlow.retries)} color="var(--text-secondary)" />}
         </div>
       </ChartSection>
 
+      {/* Quiz events summary */}
+      {userFlow.quizStarted > 0 && (
+        <ChartSection title={t("quizEvents")}>
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ flex: 1, background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>{t("quizzesStarted")}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, color: BLUE, fontFamily: MONO, transition: "color 0.3s" }}>{userFlow.quizStarted}</div>
+            </div>
+            <div style={{ flex: 1, background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>{t("completed")}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, color: GREEN, fontFamily: MONO, transition: "color 0.3s" }}>{userFlow.quizCompleted}</div>
+            </div>
+            {userFlow.retries > 0 && (
+              <div style={{ flex: 1, background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>{t("retries")}</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: AMBER, fontFamily: MONO, transition: "color 0.3s" }}>{userFlow.retries}</div>
+              </div>
+            )}
+          </div>
+        </ChartSection>
+      )}
+
       {/* Route visits bar chart */}
       {routeItems.length > 0 && (
         <ChartSection title={t("routeVisits")} subtitle={`${routeItems.length} route${routeItems.length !== 1 ? "s" : ""} visited`}>
-          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 14px" }}>
+          <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "4px 12px" }}>
             <HorizontalBarChart items={routeItems} />
           </div>
         </ChartSection>
