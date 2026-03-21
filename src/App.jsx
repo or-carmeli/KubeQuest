@@ -93,76 +93,22 @@ checkDataVersion();
 // destroyed valid sessions for users who hadn't visited recently.
 // The custom supabaseLock() above already prevents the Web Locks deadlock this was meant to fix.
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Auth callback detection (module-level, runs once before React mounts)
-//
-// Supabase sends users back to the app via several distinct URL shapes.
-// We classify the URL into exactly ONE auth flow so that every downstream
-// handler can branch on `authCallback.flow` instead of re-parsing the URL.
-//
-// Flow              URL shape                                SDK auto-handles?
-// ────────────────  ──────────────────────────────────────── ─────────────────
-// pkce_code         ?code=xxx                                Yes (PKCE exchange)
-// token_recovery    ?token_hash=xxx&type=recovery             Needs verifyOtp()
-// token_signup      ?token_hash=xxx&type=signup                Needs verifyOtp()
-// token_email       ?token_hash=xxx&type=email                 Needs verifyOtp()
-// token_magiclink   ?token_hash=xxx&type=magiclink             Needs verifyOtp()
-// token_unknown     ?token_hash=xxx&type=<other>               Needs verifyOtp()
-// hash_error        #error=otp_expired / #error=access_denied  No session
-// session_restore   (no auth params, stored session exists)    Yes
-// guest_restore     (no auth params, guest flag exists)        N/A
-// fresh_visit       (no auth params, no session)               N/A
-// ──────────────────────────────────────────────────────────────────────────────
-function detectAuthCallback() {
-  try {
-    const search = new URLSearchParams(window.location.search);
-    const hash = window.location.hash;
-    const tokenHash = search.get("token_hash");
-    const type = search.get("type");
-
-    // 1. PKCE code exchange (?code=) - SDK handles automatically
-    if (search.has("code")) {
-      // We can't distinguish recovery from signup confirmation at this stage.
-      // Mark as "pending" - onAuthStateChange will confirm via recovery_sent_at.
-      sessionStorage.setItem("kq_recovery_pending", "1");
-      return { flow: "pkce_code" };
-    }
-
-    // 2. Token-hash callbacks (need explicit verifyOtp)
-    if (tokenHash && type === "recovery") {
-      sessionStorage.setItem("kq_recovery_pending", "1");
-      return { flow: "token_recovery", token_hash: tokenHash, type };
-    }
-    if (tokenHash && (type === "signup" || type === "email")) {
-      return { flow: "token_" + type, token_hash: tokenHash, type };
-    }
-    if (tokenHash && type === "magiclink") {
-      return { flow: "token_magiclink", token_hash: tokenHash, type };
-    }
-    // Fallback: token_hash with unrecognized type - attempt verifyOtp anyway
-    if (tokenHash && type) {
-      return { flow: "token_unknown", token_hash: tokenHash, type };
-    }
-
-    // 3. Hash-fragment errors (e.g. #error=otp_expired&error_code=...)
-    if (hash && hash.includes("error=")) {
-      const params = new URLSearchParams(hash.slice(1));
-      return {
-        flow: "hash_error",
-        error_code: params.get("error_code"),
-        error_description: params.get("error_description"),
-      };
-    }
-
-    // 4. No auth params in URL - will be classified as session_restore / guest_restore / fresh_visit
-    //    once onAuthStateChange fires. We don't know yet which one.
-    return { flow: "none" };
-  } catch {
-    return { flow: "none" };
+// Detect if we arrived via a password-recovery redirect (?code= in URL).
+// With PKCE flow, PASSWORD_RECOVERY event may not fire - we use sessionStorage
+// so the recovery state survives the code exchange and any micro-redirects.
+try {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has("code")) {
+    // We can't know yet if this code is for recovery or signup confirmation.
+    // Mark it as "pending" - the onAuthStateChange handler will confirm via
+    // session.user.recovery_sent_at before activating the password reset UI.
+    sessionStorage.setItem("kq_recovery_pending", "1");
   }
-}
-const authCallback = detectAuthCallback();
-console.info("[auth:detect]", authCallback.flow, authCallback.flow !== "none" ? authCallback : "");
+  // Newer Supabase email templates may redirect with token_hash + type instead of code.
+  if (urlParams.get("type") === "recovery" && (urlParams.has("token_hash") || urlParams.has("token"))) {
+    sessionStorage.setItem("kq_recovery_pending", "1");
+  }
+} catch { /* ignore */ }
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -262,7 +208,6 @@ const TRANSLATIONS = {
     resetEmailSent: "נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
     resetEmailError: "שגיאה בשליחת קישור איפוס. נסי שוב.",
     resetLinkWrongBrowser: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקשי קישור חדש.",
-    confirmLinkWrongBrowser: "קישור האימות חייב להיפתח באותו דפדפן שבו נרשמת. אנא התחברי או הירשמי שוב.",
     resetLinkExpired: "קישור האיפוס כבר אינו תקף. ניתן לבקש קישור חדש.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
@@ -354,7 +299,6 @@ const TRANSLATIONS = {
     resetEmailSent_m: "נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "שגיאה בשליחת קישור איפוס. נסה שוב.",
     resetLinkWrongBrowser_m: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקש קישור חדש.",
-    confirmLinkWrongBrowser_m: "קישור האימות חייב להיפתח באותו דפדפן שבו נרשמת. אנא התחבר או הירשם שוב.",
     resetLinkExpired_m: "קישור האיפוס כבר אינו תקף. ניתן לבקש קישור חדש.",
     saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
@@ -534,7 +478,6 @@ const TRANSLATIONS = {
     resetEmailSent: "Password reset link sent! Check your inbox.",
     resetEmailError: "Failed to send reset link. Please try again.",
     resetLinkWrongBrowser: "This reset link must be opened in the same browser where you requested it. Please request a new link.",
-    confirmLinkWrongBrowser: "This confirmation link must be opened in the same browser where you signed up. Please log in or sign up again.",
     resetLinkExpired: "This reset link is no longer valid. Please request a new one.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
@@ -1531,19 +1474,11 @@ export default function K8sQuestApp() {
   const accuracy = stats.total_answered > 0 ? Math.round(stats.total_correct / stats.total_answered * 100) : 0;
 
   const getRankTier = (percentile) => {
-    if (percentile >= 99) return { key: "master", color: "#F59E0B" };
-    if (percentile >= 97) return { key: "platinum", color: "#A78BFA" };
-    if (percentile >= 93) return { key: "gold", color: "#FFD700" };
-    if (percentile >= 80) return { key: "silver", color: "#C0C0C0" };
-    return { key: "bronze", color: "#CD7F32" };
-  };
-  const TierIcon = ({tier, size=14}) => {
-    const props = {size, strokeWidth:1.5, color:tier.color};
-    if (tier.key==="master") return <Crown {...props}/>;
-    if (tier.key==="platinum") return <Star {...props}/>;
-    if (tier.key==="gold") return <Award {...props}/>;
-    if (tier.key==="silver") return <Medal {...props}/>;
-    return <Shield {...props}/>;
+    if (percentile >= 99) return { key: "master", color: "#F59E0B", icon: "\u{1F451}" };
+    if (percentile >= 97) return { key: "platinum", color: "#A78BFA", icon: "\u{1F48E}" };
+    if (percentile >= 93) return { key: "gold", color: "#FFD700", icon: "\u{1F947}" };
+    if (percentile >= 80) return { key: "silver", color: "#C0C0C0", icon: "\u{1F948}" };
+    return { key: "bronze", color: "#CD7F32", icon: "\u{1F949}" };
   };
 
   // ── War Room: sequential unlock - find last consecutively completed index ──
@@ -1651,97 +1586,73 @@ export default function K8sQuestApp() {
     }
   }, []);
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Auth initialization (single useEffect, runs once)
-  //
-  // All auth entry flows are driven by `authCallback.flow` detected at module
-  // level. This useEffect handles:
-  //   1. hash_error     - expired/consumed token errors in URL fragment
-  //   2. Supabase-off   - no Supabase config, go straight to guest
-  //   3. Subscribe to onAuthStateChange (handles INITIAL_SESSION, SIGNED_IN, etc.)
-  //   4. token_* flows  - explicit verifyOtp() for token_hash-based callbacks
-  //
-  // State transitions (final routed screen):
-  //   authCallback.flow     + session outcome            => screen
-  //   ──────────────────────────────────────────────────────────────────
-  //   hash_error (recovery) + n/a                        => login + reset modal
-  //   hash_error (other)    + n/a                        => login (otpExpired msg)
-  //   pkce_code             + recovery session            => password reset UI
-  //   pkce_code             + normal session               => app (loadUserData)
-  //   pkce_code             + null (wrong browser, recov) => login + reset modal
-  //   pkce_code             + null (wrong browser, other) => login (confirm err)
-  //   token_recovery        + verifyOtp ok                => password reset UI
-  //   token_recovery        + verifyOtp fail              => login (otpExpired msg)
-  //   token_signup/email    + verifyOtp ok                => app (SIGNED_IN)
-  //   token_signup/email    + verifyOtp fail              => login (otpExpired msg)
-  //   token_magiclink       + verifyOtp ok                => app (SIGNED_IN)
-  //   token_unknown         + verifyOtp ok                => app (SIGNED_IN)
-  //   token_*               + verifyOtp fail              => login (otpExpired msg)
-  //   none                  + stored session           => app (loadUserData)
-  //   none                  + guest flag               => app (guest mode)
-  //   none                  + nothing                  => auth screen
-  // ────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const flow = authCallback.flow;
-
-    // ── Step 1: Handle hash-fragment errors (#error=otp_expired, etc.) ──────
-    // These arrive when Supabase's server-side verify endpoint fails and
-    // redirects back with an error in the URL hash. No session is created.
-    // Mobile email clients often prefetch links, consuming the OTP token
-    // before the user taps -- so we route to login (not signup) since the
-    // email may already be confirmed by the prefetch.
-    if (flow === "hash_error") {
-      const { error_code, error_description } = authCallback;
-      console.warn("[auth:hash_error]", { error_code, error_description });
-      if (error_code === "otp_expired" || error_code === "access_denied") {
-        // Was this a password-recovery flow? Check the localStorage marker
-        // set when user requested a password reset (survives new-tab opens).
+    // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link).
+    //
+    // Why login instead of signup?
+    // Mobile email clients (Gmail on iOS, etc.) prefetch links in emails.
+    // This prefetch hits Supabase's /auth/v1/verify endpoint, consuming the
+    // one-time OTP token *before* the user taps the link. The verification
+    // actually succeeds (the email IS confirmed), but when the real user
+    // clicks, Supabase returns otp_expired because the token is already used.
+    // Routing to the login tab lets the user sign in immediately instead of
+    // re-registering an already-confirmed account.
+    const hash = window.location.hash;
+    if (hash && hash.includes("error=")) {
+      const params = new URLSearchParams(hash.slice(1));
+      const code = params.get("error_code");
+      const desc = params.get("error_description");
+      console.warn("[KubeQuest:auth] verification redirect error:", { error_code: code, error_description: desc });
+      if (code === "otp_expired" || code === "access_denied") {
+        // Distinguish password-recovery errors from email-verification errors.
+        // kq_recovery_requested is set when the user requests a password reset,
+        // so if it exists and is recent (<24h) this was a recovery flow.
         let isRecoveryFlow = false;
         try {
           const rts = localStorage.getItem("kq_recovery_requested");
           if (rts && (Date.now() - Number(rts)) < 86_400_000) isRecoveryFlow = true;
         } catch {}
         if (isRecoveryFlow) {
-          console.info("[auth:hash_error] routed => login + reset modal (recovery flow)");
           try { localStorage.removeItem("kq_recovery_requested"); } catch {}
           setAuthError(TRANSLATIONS[lang]?.resetLinkExpired || TRANSLATIONS.en.resetLinkExpired);
           setAuthIsSuccess(false);
           setAuthScreen("login");
+          // Auto-open the reset modal so the user can immediately request a new link
           setShowResetModal(true); setResetStatus(""); setResetEmail("");
         } else {
-          console.info("[auth:hash_error] routed => login (email verification, otpExpired)");
-          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.en.otpExpired);
-          setAuthIsSuccess(false);
+          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired); setAuthIsSuccess(false);
           setAuthScreen("login");
         }
       }
       window.history.replaceState(null, "", window.location.pathname);
     }
 
-    // ── Step 2: No Supabase? Go straight to guest mode ─────────────────────
+    // If Supabase is not configured, go straight to guest mode
     if (!supabase) {
-      console.info("[auth:none] Supabase not configured => guest mode");
       setAuthChecked(true);
       setDataLoaded(true);
       return;
     }
 
-    // ── Step 3: Hard timeout - safety net if INITIAL_SESSION never fires ────
-    // Allow extra time when verifyOtp is in flight (network round-trip needed).
-    const needsVerifyOtp = flow.startsWith("token_");
+    // Hard timeout: if INITIAL_SESSION never fires, unblock the UI
     const hardTimeout = setTimeout(() => {
-      console.warn("[auth:timeout] hard timeout => force-unblocking UI");
+      console.warn("[KubeQuest:boot] Auth hard timeout (3 s) - force-unblocking UI");
       setAuthChecked(true);
       setDataLoaded(true);
-    }, needsVerifyOtp ? 8000 : 3000);
+    }, 3000);
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
+    // Use ONLY onAuthStateChange for session initialization.
+    // In Supabase v2, it fires INITIAL_SESSION exactly once when the stored
+    // session is resolved. Using getSession() in parallel creates a race
+    // where loadUserData() is called twice with independent timeouts.
 
-    // Detect recovery session via recovery_sent_at timestamp.
+    // Helper: detect recovery session via recovery_sent_at timestamp.
     // With PKCE flow, PASSWORD_RECOVERY event may not fire separately -
     // the recovery session can arrive via INITIAL_SESSION or SIGNED_IN instead.
     const isRecoverySession = (s) => {
       if (!s?.user?.recovery_sent_at) return false;
+      // Check both sessionStorage flag (set when ?code= detected at page load)
+      // and localStorage flag (set when user requested the reset in this browser).
       const pending = sessionStorage.getItem("kq_recovery_pending");
       let requested = false;
       try {
@@ -1750,11 +1661,10 @@ export default function K8sQuestApp() {
       } catch {}
       if (!pending && !requested) return false;
       const elapsed = Date.now() - new Date(s.user.recovery_sent_at).getTime();
-      return elapsed < 86_400_000;
+      return elapsed < 86_400_000; // recovery initiated within 24 h (matches email expiry)
     };
 
-    const activateRecovery = (s, source) => {
-      console.info(`[auth:recovery] activated via ${source} => password reset UI`);
+    const activateRecovery = (s) => {
       sessionStorage.removeItem("kq_recovery_pending");
       try { localStorage.removeItem("kq_recovery_requested"); } catch {}
       try { sessionStorage.setItem("kq_show_password_reset", "1"); } catch {}
@@ -1765,128 +1675,68 @@ export default function K8sQuestApp() {
       setDataLoaded(true);
     };
 
-    // ── Step 4: Subscribe to onAuthStateChange ──────────────────────────────
-    // Supabase v2 fires INITIAL_SESSION exactly once when the stored session
-    // is resolved. All other events fire as state changes occur.
-    console.info("[auth:init] subscribing to onAuthStateChange, detected flow:", flow);
+    console.info("[KubeQuest:boot] subscribing to onAuthStateChange");
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.info("[auth:event]", event, "session:", !!session, "flow:", flow);
+      console.info("[KubeQuest:boot] auth event:", event, "session:", !!session);
 
       if (event === "INITIAL_SESSION") {
         clearTimeout(hardTimeout);
         if (session) {
-          // Recovery session can arrive via INITIAL_SESSION (PKCE exchanges
-          // the code before this fires, so we get a session with recovery_sent_at).
-          if (isRecoverySession(session)) { activateRecovery(session, "INITIAL_SESSION"); return; }
-
+          // PKCE fix: recovery session may arrive via INITIAL_SESSION
+          if (isRecoverySession(session)) {
+            activateRecovery(session);
+            return;
+          }
           // Page refresh during password reset: passwordRecoveryRef was
           // restored from sessionStorage - keep showing the reset screen.
           if (passwordRecoveryRef.current) {
-            console.info("[auth:session_restore] password reset in progress => keep reset UI");
             setUser(session.user);
             setAuthChecked(true);
             setDataLoaded(true);
             return;
           }
-
-          console.info("[auth:session_restore] existing session => loadUserData");
           setUser(session.user);
           loadUserData(session.user.id, session.user);
         } else {
-          // No stored session. If we're about to call verifyOtp(), don't
-          // unblock the UI yet - wait for the SIGNED_IN that verifyOtp triggers.
-          if (needsVerifyOtp) {
-            console.info("[auth:wait]", flow, "=> INITIAL_SESSION null, verifyOtp pending");
-            return;
-          }
-
-          // PKCE code in URL but exchange produced no session (wrong browser).
-          // Distinguish recovery from signup: kq_recovery_requested is set when
-          // the user requested a password reset in this browser.
-          if (flow === "pkce_code") {
+          // Cross-browser safety: ?code= was in the URL but the PKCE exchange
+          // failed (no code_verifier - user opened the link in a different browser).
+          // Show a clear error instead of silently falling into guest mode.
+          const pendingRecovery = sessionStorage.getItem("kq_recovery_pending");
+          if (pendingRecovery) {
+            console.warn("[KubeQuest:boot] Recovery code detected but PKCE exchange failed (wrong browser?)");
             sessionStorage.removeItem("kq_recovery_pending");
+            // Strip the unconsumed ?code= from the URL
             try { window.history.replaceState(null, "", window.location.pathname); } catch {}
-            let wasRecovery = false;
-            try {
-              const rts = localStorage.getItem("kq_recovery_requested");
-              if (rts && (Date.now() - Number(rts)) < 86_400_000) wasRecovery = true;
-            } catch {}
-            if (wasRecovery) {
-              console.warn("[auth:pkce_code] PKCE exchange failed (wrong browser, recovery flow)");
-              setAuthError(t("resetLinkWrongBrowser")); setAuthIsSuccess(false);
-              setShowResetModal(true);
-            } else {
-              console.warn("[auth:pkce_code] PKCE exchange failed (wrong browser, signup/confirm flow)");
-              setAuthError(t("confirmLinkWrongBrowser")); setAuthIsSuccess(false);
-              setAuthScreen("login");
-            }
+            setAuthError(t("resetLinkWrongBrowser")); setAuthIsSuccess(false);
+            setShowResetModal(true);
           } else if (safeGetItem("k8s_guest_session")) {
-            console.info("[auth:guest_restore] guest flag found => guest mode");
+            // Restore guest session if user previously chose guest mode
             setUser(GUEST_USER);
-          } else {
-            console.info("[auth:fresh_visit] no session, no guest flag => auth screen");
           }
           setDataLoaded(true);
         }
         setAuthChecked(true);
-
       } else if (event === "PASSWORD_RECOVERY") {
-        activateRecovery(session, "PASSWORD_RECOVERY");
-
+        // Supabase versions that fire this event correctly
+        activateRecovery(session);
       } else if (event === "SIGNED_IN") {
         if (passwordRecoveryRef.current) return;
-        if (isRecoverySession(session)) { activateRecovery(session, "SIGNED_IN"); return; }
-        console.info("[auth:signed_in] flow:", flow, "=> loadUserData");
+        // PKCE fix: recovery session may arrive via SIGNED_IN
+        if (isRecoverySession(session)) {
+          activateRecovery(session);
+          return;
+        }
         setDataLoaded(false);
         setUser(session.user);
         loadUserData(session.user.id, session.user);
         setAuthChecked(true);
-
       } else if (event === "SIGNED_OUT") {
-        console.info("[auth:signed_out]");
         setUser(null);
         setAuthChecked(true);
-
       } else if (event === "TOKEN_REFRESHED") {
         if (session) setUser(session.user);
       }
     });
-
-    // ── Step 5: Dispatch verifyOtp for token_hash-based callbacks ───────────
-    // The SDK auto-exchanges ?code= (PKCE) but does NOT auto-exchange
-    // token_hash params. We must call verifyOtp() explicitly.
-    // On success, onAuthStateChange fires SIGNED_IN above.
-    // On failure, we unblock the UI with an appropriate error message.
-    //
-    // Guard: use a module-level flag to prevent React StrictMode (dev only)
-    // from calling verifyOtp twice. The second call would get otp_expired
-    // since the token was already consumed by the first.
-    if (needsVerifyOtp && !authCallback._dispatched) {
-      authCallback._dispatched = true;
-      const { token_hash, type } = authCallback;
-      console.info("[auth:verifyOtp] calling verifyOtp, flow:", flow, "type:", type);
-      supabase.auth.verifyOtp({ token_hash, type }).then(({ data: otpData, error }) => {
-        // Always clean auth params from URL
-        try { window.history.replaceState(null, "", window.location.pathname); } catch {}
-        if (error) {
-          console.warn("[auth:verifyOtp] failed:", error.message, "flow:", flow, "=> login (otpExpired)");
-          // Token already consumed (mobile prefetch) or genuinely expired.
-          // Route to login - if it was prefetch, email is actually confirmed
-          // and the user can sign in with their password.
-          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.en.otpExpired);
-          setAuthIsSuccess(false);
-          setAuthScreen("login");
-          clearTimeout(hardTimeout);
-          setAuthChecked(true);
-          setDataLoaded(true);
-        } else {
-          console.info("[auth:verifyOtp] success, flow:", flow, "session:", !!otpData?.session);
-          // Success: onAuthStateChange SIGNED_IN handler takes over.
-          // For token_recovery the SIGNED_IN handler will detect
-          // isRecoverySession() and route to the password reset UI.
-        }
-      });
-    }
 
     return () => {
       clearTimeout(hardTimeout);
@@ -4598,7 +4448,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:dir,overflowX:"hidden"}}><div style={{position:"relative",marginBottom:20,flexShrink:0}}><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{position:"absolute",top:0,left:0,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",padding:0,lineHeight:1}}>✕</button><div style={{textAlign:"right",direction:"rtl"}}><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",gap:8,direction:"rtl"}}><Trophy size={20} strokeWidth={1.5} style={{color:"#FFD700"}}/>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#FFD700","#C0C0C0","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:i<3?medalColors[i]:"var(--text-dim)"}}>{i<3?<><Trophy size={14} strokeWidth={1.5} color={medalColors[i]} /></>:`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:8,background:`${rTier.color}18`,border:`1px solid ${rTier.color}33`}}><TierIcon tier={rTier} size={13}/><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span></span><span style={{fontSize:10,color:"var(--text-dim)"}}>Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2191"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:dir,overflowX:"hidden"}}><div style={{position:"relative",marginBottom:20,flexShrink:0}}><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{position:"absolute",top:0,left:0,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",padding:0,lineHeight:1}}>✕</button><div style={{textAlign:"right",direction:"rtl"}}><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",gap:8,direction:"rtl"}}><Trophy size={20} strokeWidth={1.5} style={{opacity:0.7,color:"#F59E0B"}}/>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#FFD700","#C0C0C0","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:i<3?medalColors[i]:"var(--text-dim)"}}>{i<3?<span style={{fontSize:16,lineHeight:1}}>{["\u{1F947}","\u{1F948}","\u{1F949}"][i]}</span>:`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:8,background:`${rTier.color}18`,border:`1px solid ${rTier.color}33`}}><span style={{fontSize:13,lineHeight:1}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span></span><span style={{fontSize:10,color:"var(--text-dim)"}}>Top {rTopPct}%</span></div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2193"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
@@ -5002,7 +4852,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </div>
                   {s.sub&&<div style={{fontSize:10,color:_lt?"var(--text-dim)":"rgba(255,255,255,0.45)",lineHeight:1,marginTop:2}}>{s.sub}</div>}
                   {s.rankTier&&<div style={{display:"inline-flex",alignItems:"center",gap:3,marginTop:3,padding:"2px 7px",borderRadius:6,background:`${s.rankTier.color}18`}}>
-                    <TierIcon tier={s.rankTier} size={10}/>
+                    <StatIcon name={s.rankTier.key === "master" ? "trophy" : s.rankTier.key === "platinum" ? "star" : s.rankTier.key === "gold" ? "trophy" : "star"} size={10} color={s.rankTier.color} />
                     <span style={{fontSize:9,fontWeight:700,color:s.rankTier.color,letterSpacing:0.3}}>{t(`rankTier_${s.rankTier.key}`)}</span>
                   </div>}
                   <div style={{width:"85%",marginTop:4}}>
