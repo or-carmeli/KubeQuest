@@ -17,13 +17,14 @@ import {
 import { THRESHOLDS, SEVERITY_COLORS, severity, computeBaseline, CRUX_BENCHMARKS, compareToGlobal } from "../utils/mockTelemetry";
 import { buildSnapshot, TIME_RANGES, computePercentiles } from "../utils/hybridTelemetry";
 import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/realTelemetry";
-import { HISTORICAL_RANGES, startHistoryRecorder, getHistory, aggregateHistory, computeRES, scoreLabel, computeVitalDistribution } from "../utils/telemetryHistory";
+import { HISTORICAL_RANGES, startHistoryRecorder, getHistory, mergeSnapshots, aggregateHistory, computeRES, scoreLabel, computeVitalDistribution } from "../utils/telemetryHistory";
+import { startTelemetrySync, loadHistoryFromSupabase } from "../api/telemetrySync";
 
 
 // ─── Component-level guard ─────────────────────────────────────────────────────
-export default function PerformanceInsights({ onBack, lang = "en", dir = "ltr" }) {
+export default function PerformanceInsights({ onBack, lang = "en", dir = "ltr", supabase = null }) {
   if (!import.meta.env.DEV) return null;
-  return <PerformanceInsightsInner onBack={onBack} lang={lang} dir={dir} />;
+  return <PerformanceInsightsInner onBack={onBack} lang={lang} dir={dir} supabase={supabase} />;
 }
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
@@ -175,10 +176,22 @@ function Sparkline({ values, width = 52, height = 20, color = "var(--glass-15)",
 }
 
 // ─── Metric Card ───────────────────────────────────────────────────────────────
-function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, sparkValues, sparkColor, metricKey, samples }) {
+function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, sparkValues, sparkColor, metricKey, samples, compact }) {
   const TrendIcon = trend === "improving" ? TrendingDown : trend === "degrading" ? TrendingUp : Minus;
   const trendColor = trend === "improving" ? GREEN : trend === "degrading" ? RED : "var(--text-dim)";
   const info = metricKey ? METRIC_INFO[metricKey] : null;
+
+  if (compact) {
+    return (
+      <div style={{ flex: 1, minWidth: 100, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 8, padding: "8px 10px" }}>
+        <div style={{ fontSize: 9, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: 3 }}>{label}</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: statusColor || "var(--text-bright)", fontFamily: MONO, lineHeight: 1 }}>{value}</span>
+          {unit && <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{unit}</span>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ flex: 1, minWidth: 140, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6, transition: "border-color 0.3s, box-shadow 0.3s" }}>
@@ -454,7 +467,7 @@ const T = {
   },
 };
 
-function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
+function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr", supabase = null }) {
   const t = (key) => (T[lang] || T.en)[key] || T.en[key] || key;
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -471,9 +484,9 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   useEffect(() => {
     const cleanupTelemetry = initRealTelemetry();
     recordRouteChange("performanceInsights");
-    const cleanupHistory = startHistoryRecorder(getRealMetrics);
-    return () => { cleanupTelemetry(); cleanupHistory(); };
-  }, []);
+    const cleanupSync = startTelemetrySync(supabase, getRealMetrics);
+    return () => { cleanupTelemetry(); cleanupSync(); };
+  }, [supabase]);
 
   const loadSnapshot = useCallback(() => {
     const real = getRealMetrics();
@@ -485,11 +498,22 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const refresh = useCallback(() => { if (!isHistorical) { setData(null); setTimeout(loadSnapshot, 250); } }, [loadSnapshot, isHistorical]);
   useEffect(() => { if (!isHistorical) { const id = setInterval(loadSnapshot, 30_000); return () => clearInterval(id); } }, [loadSnapshot, isHistorical]);
 
-  // Historical data
-  const histSnapshots = useMemo(() => {
-    if (!isHistorical) return [];
-    return getHistory(activeHistRange.ms);
-  }, [isHistorical, activeHistRange]);
+  // Historical data (localStorage instant + Supabase async merge)
+  const [histSnapshots, setHistSnapshots] = useState([]);
+  useEffect(() => {
+    if (!isHistorical) { setHistSnapshots([]); return; }
+    // Instant: load from localStorage
+    const local = getHistory(activeHistRange.ms);
+    setHistSnapshots(local);
+    // Async: merge with Supabase data
+    if (supabase) {
+      loadHistoryFromSupabase(supabase, activeHistRange.ms).then(remote => {
+        if (remote.length > 0) {
+          setHistSnapshots(prev => mergeSnapshots(prev, remote));
+        }
+      });
+    }
+  }, [isHistorical, activeHistRange, supabase]);
 
   const histData = useMemo(() => {
     if (!isHistorical || histSnapshots.length === 0) return null;
@@ -537,10 +561,10 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
   const latencySparkValues = data?.latencyTimeline?.slice(-20).map(d => d.value) || [];
 
   return (
-    <div className="page-pad" style={{ maxWidth: 820, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
+    <div className="page-pad" style={{ maxWidth: 960, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: "ltr", minHeight: "calc(100vh - 80px)", display: "flex", flexDirection: "column" }}>
 
       {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
         <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", order: dir === "rtl" ? 99 : 0 }}>
           <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
@@ -560,7 +584,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
       </div>
 
       {/* ── Time controls ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
         {/* Primary: Time Range */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-dim)", letterSpacing: 0.5, textTransform: "uppercase", width: 72, flexShrink: 0 }}>Time Range</span>
@@ -620,6 +644,7 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
       </div>
 
       {/* ── Historical view ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       {isHistorical ? (
         <HistoricalView data={histData} range={activeHistRange} t={t} liveScore={liveScore} snapshots={histSnapshots} />
       ) : (
@@ -653,7 +678,8 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr" }) {
         </>
       )}
 
-      <div style={{ textAlign: "center", padding: "16px 0 8px", fontSize: 10, color: "var(--text-dim)" }}>
+      </div>
+      <div style={{ textAlign: "center", padding: "8px 0 4px", fontSize: 10, color: "var(--text-dim)", marginTop: "auto" }}>
         {t("allData")}
       </div>
     </div>
@@ -691,99 +717,116 @@ function HistoricalView({ data, range, t, liveScore, snapshots }) {
   const clsDist = snapshots?.length > 0 ? computeVitalDistribution(snapshots, "cls", CRUX_BENCHMARKS.cls.good, CRUX_BENCHMARKS.cls.poor) : null;
 
   return (
-    <div style={{ display: "flex", gap: 16 }}>
-      {/* ── Left column: Web Vitals vertical panel ── */}
-      <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-        <VitalCard label="LCP" metricKey="lcp" value={data.vitals.lcp} unit="ms" threshold={THRESHOLDS.lcp} />
-        <VitalCard label="INP" metricKey="inp" value={data.vitals.inp} unit="ms" threshold={THRESHOLDS.inp} />
-        <VitalCard label="CLS" metricKey="cls" value={data.vitals.cls} unit="" threshold={THRESHOLDS.cls} />
-        <VitalCard label="FCP" metricKey="fcp" value={data.nav?.fcp} unit="ms" threshold={{ warning: 1800, critical: 3000 }} />
-        <VitalCard label="TTFB" metricKey="ttfb" value={data.nav?.ttfb} unit="ms" threshold={{ warning: 800, critical: 1800 }} />
+    <div style={{ display: "flex", gap: 12, flex: 1 }}>
+      {/* ── Left column: Web Vitals vertical rail (full height) ── */}
+      <div style={{ width: 170, flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 4, background: "var(--glass-1)", border: "1px solid var(--glass-3)", borderRadius: 10, padding: "6px 6px" }}>
+        <VitalCard label="LCP" metricKey="lcp" value={data.vitals.lcp} unit="ms" threshold={THRESHOLDS.lcp} snapshots={snapshots} vitalKey="lcp" compact />
+        <VitalCard label="INP" metricKey="inp" value={data.vitals.inp} unit="ms" threshold={THRESHOLDS.inp} snapshots={snapshots} vitalKey="inp" compact />
+        <VitalCard label="CLS" metricKey="cls" value={data.vitals.cls} unit="" threshold={THRESHOLDS.cls} snapshots={snapshots} vitalKey="cls" compact />
+        <VitalCard label="FCP" metricKey="fcp" value={data.nav?.fcp} unit="ms" threshold={{ warning: 1800, critical: 3000 }} compact />
+        <VitalCard label="TTFB" metricKey="ttfb" value={data.nav?.ttfb} unit="ms" threshold={{ warning: 800, critical: 1800 }} compact />
       </div>
 
-      {/* ── Right column: Analytics content ── */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-        {/* RES Score */}
-        <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 20 }}>
-          <ScoreDonut score={data.score} color={sc.color} size={68} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 3 }}>{t("realExperienceScore")}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: sc.color, marginBottom: 2 }}>{sc.text}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("resDesc")}</div>
-          </div>
-          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 6 }}>
-            <div>
-              <div style={{ fontSize: 9, color: "var(--text-dim)", marginBottom: 1 }}>{t("snapshots")}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, fontFamily: MONO, color: "var(--text-secondary)" }}>{data.snapshotCount}</div>
+      {/* ── Right column: CSS Grid dashboard ── */}
+      <div style={{ flex: 1, minWidth: 0, display: "grid", gridTemplateRows: "1fr auto 1fr", gap: 8 }}>
+        {/* Row 1: Score column + Score Over Time chart */}
+        <div style={{ display: "flex", gap: 8, alignItems: "stretch", minHeight: 0 }}>
+          <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "12px 16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, width: 100, flexShrink: 0 }}>
+            <ScoreDonut score={data.score} color={sc.color} size={52} />
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: sc.color, lineHeight: 1 }}>{sc.text}</div>
+              <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 3 }}>{data.snapshotCount} snapshots</div>
             </div>
-            {data.totalRequests > 0 && (
-              <div>
-                <div style={{ fontSize: 9, color: "var(--text-dim)", marginBottom: 1 }}>Requests</div>
-                <div style={{ fontSize: 13, fontWeight: 600, fontFamily: MONO, color: "var(--text-secondary)" }}>{data.totalRequests}</div>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            {data.scoreSeries.length > 1 ? (
+              <HistoricalLineChart series={data.scoreSeries} color={sc.color} formatLabel={formatTimeLabel} yMin={0} yMax={100}
+                thresholds={[{ value: 90, color: GREEN, label: "Great" }, { value: 50, color: AMBER, label: "Needs work" }]} fill />
+            ) : (
+              <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "10px 14px", flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-dim)", fontSize: 11 }}>
+                {t("realExperienceScore")}
               </div>
             )}
           </div>
         </div>
 
-        {/* Score Over Time */}
-        {data.scoreSeries.length > 1 && (
-          <ChartSection title={t("scoreOverTime")} subtitle={`${range.label} \u00b7 ${data.snapshotCount} snapshots`}>
-            <HistoricalLineChart
-              series={data.scoreSeries}
-              color={sc.color}
-              formatLabel={formatTimeLabel}
-              yMin={0}
-              yMax={100}
-              thresholds={[{ value: 90, color: GREEN, label: "Great" }, { value: 50, color: AMBER, label: "Needs work" }]}
-            />
-          </ChartSection>
-        )}
+        {/* Row 2: Summary stat cards (compact, auto height) */}
+        <div style={{ display: "flex", gap: 8 }}>
+          <MetricCard label={t("totalReqs")} value={String(data.totalRequests)} statusColor="var(--text-bright)" samples={data.snapshotCount} compact />
+          <MetricCard label={t("errorRate")} tooltip={t("errorRateTooltip")} value={data.errorRate != null ? data.errorRate + "%" : "\u2014"} statusColor={data.errorRate != null && data.errorRate >= 5 ? RED : data.errorRate != null && data.errorRate >= 2 ? AMBER : GREEN} compact />
+          <MetricCard label={t("p95Latency")} value={data.avgP95 != null ? String(data.avgP95) : "\u2014"} unit={data.avgP95 != null ? "ms" : ""} statusColor={data.avgP95 != null ? sevColor(data.avgP95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} compact />
+        </div>
 
-        {/* Distributions */}
-        {(lcpDist || inpDist || clsDist) && (
-          <ChartSection title={t("distribution")} subtitle={`Based on ${snapshots.length} snapshots`}>
-            <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-              {lcpDist && <DistributionBar distribution={lcpDist} label="LCP" />}
-              {inpDist && <DistributionBar distribution={inpDist} label="INP" />}
-              {clsDist && <DistributionBar distribution={clsDist} label="CLS" />}
+        {/* Row 3: Distribution + P95 Latency (fills remaining space) */}
+        <div style={{ display: "flex", gap: 8, minHeight: 0 }}>
+          {(lcpDist || inpDist || clsDist) && (
+            <div style={{ flex: 1, minWidth: 0, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column" }}>
+              <div style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, marginBottom: 8 }}>{t("distribution")}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center", flex: 1 }}>
+                {lcpDist && <DistributionBar distribution={lcpDist} label="LCP" compact />}
+                {inpDist && <DistributionBar distribution={inpDist} label="INP" compact />}
+                {clsDist && <DistributionBar distribution={clsDist} label="CLS" compact />}
+              </div>
             </div>
-          </ChartSection>
-        )}
-
-        {/* P95 latency over time */}
-        {data.p95Series.length > 1 && (
-          <ChartSection title={t("p95OverTime")} subtitle={range.label}>
-            <HistoricalLineChart
-              series={data.p95Series}
-              color={BLUE}
-              formatLabel={formatTimeLabel}
-              unit="ms"
-              thresholds={[{ value: THRESHOLDS.p95Latency.warning, color: AMBER, label: "Warning" }, { value: THRESHOLDS.p95Latency.critical, color: RED, label: "Critical" }]}
-            />
-          </ChartSection>
-        )}
-
-        {/* Summary stats */}
-        <ChartSection title={t("historicalSummary")}>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <MetricCard label={t("totalReqs")} value={String(data.totalRequests)} statusColor="var(--text-bright)" samples={data.snapshotCount} />
-            <MetricCard label={t("errorRate")} tooltip={t("errorRateTooltip")} value={data.errorRate != null ? data.errorRate + "%" : "\u2014"} statusColor={data.errorRate != null && data.errorRate >= 5 ? RED : data.errorRate != null && data.errorRate >= 2 ? AMBER : GREEN} />
-            <MetricCard label={t("p95Latency")} value={data.avgP95 != null ? String(data.avgP95) : "\u2014"} unit={data.avgP95 != null ? "ms" : ""} statusColor={data.avgP95 != null ? sevColor(data.avgP95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} />
-          </div>
-        </ChartSection>
+          )}
+          {data.p95Series.length > 1 ? (
+            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              <div style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, marginBottom: 4 }}>{t("p95OverTime")}</div>
+              <HistoricalLineChart series={data.p95Series} color={BLUE} formatLabel={formatTimeLabel} unit="ms"
+                thresholds={[{ value: THRESHOLDS.p95Latency.warning, color: AMBER, label: "Warning" }, { value: THRESHOLDS.p95Latency.critical, color: RED, label: "Critical" }]} fill />
+            </div>
+          ) : <div style={{ flex: 1 }} />}
+        </div>
       </div>
     </div>
   );
 }
 
 // ─── Vitals Sidebar Card ─────────────────────────────────────────────────────
-function VitalCard({ label, metricKey, value, unit, threshold }) {
+function VitalCard({ label, metricKey, value, unit, threshold, snapshots, vitalKey, compact }) {
   const sev = threshold && value != null ? severity(value, threshold) : "info";
   const col = value == null ? "var(--text-dim)" : sev === "info" ? GREEN : SEVERITY_COLORS[sev].text;
   const displayVal = value != null ? (unit === "ms" && value >= 1000 ? (value / 1000).toFixed(2) + "s" : value + (unit || "")) : "\u2014";
   const info = metricKey ? METRIC_INFO[metricKey] : null;
   const statusLabel = value == null ? null : sev === "info" ? "Good" : sev === "warning" ? "Needs work" : "Poor";
   const pct = threshold && value != null ? Math.min((value / (threshold.critical * 1.2)) * 100, 100) : 0;
+
+  // Sparkline from historical snapshots
+  const sparkData = snapshots && vitalKey ? snapshots.map(s => s.vitals?.[vitalKey]).filter(v => v != null) : [];
+
+  // Split numeric value and unit for display (e.g. "232" + "ms", "0.097" + "")
+  const splitDisplay = (() => {
+    if (value == null) return { num: "\u2014", unitStr: "" };
+    if (unit === "ms" && value >= 1000) return { num: (value / 1000).toFixed(2), unitStr: "s" };
+    if (unit === "ms") return { num: String(value), unitStr: "ms" };
+    return { num: String(value), unitStr: unit || "" };
+  })();
+
+  if (compact) {
+    return (
+      <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: "10px 10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", letterSpacing: 0.3 }}>{label}</span>
+          {statusLabel && (
+            <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 4px", borderRadius: 3, background: `${col}15`, color: col, border: `1px solid ${col}30` }}>{statusLabel}</span>
+          )}
+        </div>
+        {info && <div style={{ fontSize: 9, color: "var(--text-dim)", lineHeight: 1.1, marginBottom: 4 }}>{info.fullName}</div>}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, fontFamily: MONO, color: col, lineHeight: 1, transition: "color 0.3s" }}>{splitDisplay.num}</span>
+          {splitDisplay.unitStr && <span style={{ fontSize: 11, fontWeight: 500, color: col, opacity: 0.6 }}>{splitDisplay.unitStr}</span>}
+          <div style={{ marginLeft: "auto" }}>
+            {sparkData.length >= 3 && <VitalSparkline data={sparkData} color={col} />}
+          </div>
+        </div>
+        {threshold && (
+          <div style={{ height: 2, borderRadius: 1, background: "var(--glass-3)", overflow: "hidden", marginTop: 5 }}>
+            <div style={{ width: `${Math.max(pct, 3)}%`, height: "100%", background: col, borderRadius: 1, transition: "width 0.4s ease" }} />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: "10px 12px" }}>
@@ -809,6 +852,23 @@ function VitalCard({ label, metricKey, value, unit, threshold }) {
   );
 }
 
+function VitalSparkline({ data, color }) {
+  const w = 50, h = 14;
+  const max = Math.max(...data, 0.01);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const pts = data.slice(-12).map((v, i, arr) => {
+    const x = (i / (arr.length - 1)) * w;
+    const y = h - 1 - ((v - min) / range) * (h - 2);
+    return `${x},${y}`;
+  });
+  return (
+    <svg width={w} height={h} style={{ flexShrink: 0, opacity: 0.7 }}>
+      <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 // ─── Vitals Sidebar ─────────────────────────────────────────────────────────────
 function VitalsSidebar({ vitals, navTiming }) {
   const lcpVal = vitals?.lcp ?? null;
@@ -830,29 +890,30 @@ function VitalsSidebar({ vitals, navTiming }) {
 
 // ─── Score donut ──────────────────────────────────────────────────────────────
 function ScoreDonut({ score, color, size = 80 }) {
-  const strokeWidth = 6;
+  const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const pct = score != null ? score / 100 : 0;
   const dashOffset = circumference * (1 - pct);
+  const fontSize = Math.round(size * 0.38);
 
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--glass-4)" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} />
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={strokeWidth}
           strokeDasharray={circumference} strokeDashoffset={dashOffset}
           strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.6s ease" }} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 700, fontFamily: MONO, color }}>{score ?? "\u2014"}</span>
+        <span style={{ fontSize, fontWeight: 800, fontFamily: MONO, color: "var(--text-bright)" }}>{score ?? "\u2014"}</span>
       </div>
     </div>
   );
 }
 
 // ─── Historical line chart ───────────────────────────────────────────────────
-function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thresholds }) {
+function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thresholds, compact, fill }) {
   if (!series || series.length < 2) return null;
 
   const values = series.map(s => s.value);
@@ -861,7 +922,7 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
   const range = max - min || 1;
 
   const W = 600;
-  const H = 100;
+  const H = compact ? 80 : 100;
   const padX = 2;
   const padY = 4;
 
@@ -881,44 +942,42 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
   const midIdx = Math.floor(series.length / 2);
   const midLabel = series.length > 4 ? formatLabel(series[midIdx].ts) : null;
 
+  const pad = compact || fill ? "8px 10px" : "12px 14px";
+
   return (
-    <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px" }}>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
+    <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: pad, ...(fill ? { flex: 1, display: "flex", flexDirection: "column" } : {}) }}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={fill ? "xMidYMid meet" : "none"} style={{ display: "block", ...(fill ? { flex: 1, minHeight: 0 } : {}) }}>
         <defs>
           <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity="0.15" />
             <stop offset="100%" stopColor={color} stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        {/* Threshold lines */}
         {thresholds?.map((th, i) => {
           const y = H - padY - ((th.value - min) / range) * (H - padY * 2);
           return (
             <g key={i}>
               <line x1={padX} y1={y} x2={W - padX} y2={y} stroke={th.color} strokeWidth={1} strokeDasharray="4,4" opacity={0.4} />
-              <text x={W - padX - 2} y={y - 3} textAnchor="end" fontSize={8} fill={th.color} opacity={0.6}>{th.label}</text>
+              {!compact && <text x={W - padX - 2} y={y - 3} textAnchor="end" fontSize={8} fill={th.color} opacity={0.6}>{th.label}</text>}
             </g>
           );
         })}
-        {/* Fill */}
         <path d={fillD} fill={`url(#grad-${color.replace("#", "")})`} />
-        {/* Line */}
-        <path d={pathD} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        {/* Latest value dot */}
-        <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={3.5} fill={color} stroke="var(--glass-2)" strokeWidth={2} />
+        <path d={pathD} fill="none" stroke={color} strokeWidth={compact ? 1.5 : 2} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={compact ? 2.5 : 3.5} fill={color} stroke="var(--glass-2)" strokeWidth={2} />
       </svg>
-      {/* Time axis */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-muted)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, fontSize: compact ? 9 : 10, color: "var(--text-muted)" }}>
         <span>{firstLabel}</span>
-        {midLabel && <span>{midLabel}</span>}
+        {!compact && midLabel && <span>{midLabel}</span>}
         <span>{lastLabel}</span>
       </div>
-      {/* Latest value */}
-      <div style={{ display: "flex", gap: 16, marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--glass-3)", fontSize: 11 }}>
-        <span style={{ color: "var(--text-muted)" }}>Latest <span style={{ color, fontFamily: MONO, fontWeight: 600 }}>{values[values.length - 1]}{unit || ""}</span></span>
-        <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{Math.round(values.reduce((a, b) => a + b, 0) / values.length)}{unit || ""}</span></span>
-        <span style={{ color: "var(--text-muted)" }}>Points <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{values.length}</span></span>
-      </div>
+      {!compact && (
+        <div style={{ display: "flex", gap: 16, marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--glass-3)", fontSize: 11 }}>
+          <span style={{ color: "var(--text-muted)" }}>Latest <span style={{ color, fontFamily: MONO, fontWeight: 600 }}>{values[values.length - 1]}{unit || ""}</span></span>
+          <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{Math.round(values.reduce((a, b) => a + b, 0) / values.length)}{unit || ""}</span></span>
+          <span style={{ color: "var(--text-muted)" }}>Points <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{values.length}</span></span>
+        </div>
+      )}
     </div>
   );
 }
@@ -946,22 +1005,25 @@ function Tooltip({ text, children }) {
 }
 
 // ─── Distribution Bar ────────────────────────────────────────────────────────────
-function DistributionBar({ distribution, label }) {
+function DistributionBar({ distribution, label, compact }) {
   if (!distribution) return null;
   const { good, needsWork, poor, total } = distribution;
+  const barH = compact ? 6 : 8;
   return (
-    <div style={{ marginBottom: 10 }}>
-      {label && <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: 4 }}>{label} <span style={{ color: "var(--text-dim)", fontWeight: 400 }}>{total} sample{total !== 1 ? "s" : ""}</span></div>}
-      <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", gap: 1 }}>
+    <div style={{ marginBottom: compact ? 0 : 10 }}>
+      {label && <div style={{ fontSize: compact ? 10 : 11, color: "var(--text-muted)", fontWeight: 500, marginBottom: compact ? 2 : 4 }}>{label} {!compact && <span style={{ color: "var(--text-dim)", fontWeight: 400 }}>{total} sample{total !== 1 ? "s" : ""}</span>}</div>}
+      <div style={{ display: "flex", height: barH, borderRadius: barH / 2, overflow: "hidden", gap: 1 }}>
         {good > 0 && <div style={{ width: `${good}%`, background: GREEN, transition: "width 0.4s ease" }} title={`Good: ${good}%`} />}
         {needsWork > 0 && <div style={{ width: `${needsWork}%`, background: AMBER, transition: "width 0.4s ease" }} title={`Needs improvement: ${needsWork}%`} />}
         {poor > 0 && <div style={{ width: `${poor}%`, background: RED, transition: "width 0.4s ease" }} title={`Poor: ${poor}%`} />}
       </div>
-      <div style={{ display: "flex", gap: 12, marginTop: 4, fontSize: 10 }}>
-        <span style={{ color: GREEN, fontWeight: 500 }}>Good {good}%</span>
-        <span style={{ color: AMBER, fontWeight: 500 }}>Needs improvement {needsWork}%</span>
-        <span style={{ color: RED, fontWeight: 500 }}>Poor {poor}%</span>
-      </div>
+      {!compact && (
+        <div style={{ display: "flex", gap: 12, marginTop: 4, fontSize: 10 }}>
+          <span style={{ color: GREEN, fontWeight: 500 }}>Good {good}%</span>
+          <span style={{ color: AMBER, fontWeight: 500 }}>Needs improvement {needsWork}%</span>
+          <span style={{ color: RED, fontWeight: 500 }}>Poor {poor}%</span>
+        </div>
+      )}
     </div>
   );
 }

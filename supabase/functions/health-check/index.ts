@@ -221,6 +221,10 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Compute rollups for long-term historical views (hourly + daily aggregation)
+  const { error: rollupError } = await adminClient.rpc("compute_status_rollups");
+  if (rollupError) console.error("[health-check] rollup error:", rollupError.message);
+
   return new Response(
     JSON.stringify({
       checked_at: new Date().toISOString(),
