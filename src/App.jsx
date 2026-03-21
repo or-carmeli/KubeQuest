@@ -2760,8 +2760,19 @@ export default function K8sQuestApp() {
     } else if (supabase && q.id) {
       const originalIndex = q._optionMap ? q._optionMap[selectedAnswer] : selectedAnswer;
       const isDaily = selectedTopic?.id === "daily";
-      // Pass quizRunId for server-side scoring (null for retries -> skip scoring)
-      const scoreRunId = isRetryRef.current ? null : quizRunIdRef.current;
+      // Pass quizRunId for server-side scoring (null for retries or already-scored -> skip scoring)
+      // Check scoredFreeKeys BEFORE the RPC so the server doesn't grant duplicate points
+      // when the same question appears in a new mixed/daily run with a fresh quizRunId.
+      let skipServerScore = false;
+      const isMixedOrDailyEarly = selectedTopic?.id === "mixed" || isDaily;
+      if (isMixedOrDailyEarly && !isRetryRef.current) {
+        try {
+          const freeKey = q.q.slice(0, 100);
+          const scored = new Set(safeGetJSON("scoredFreeKeys_v1", []));
+          skipServerScore = scored.has(freeKey);
+        } catch {}
+      }
+      const scoreRunId = (isRetryRef.current || skipServerScore) ? null : quizRunIdRef.current;
 
       // Use prefetched answer-check if available and still matches current selection.
       // The prefetch was called without a quizRunId (no scoring), so when we use it
