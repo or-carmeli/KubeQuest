@@ -93,22 +93,76 @@ checkDataVersion();
 // destroyed valid sessions for users who hadn't visited recently.
 // The custom supabaseLock() above already prevents the Web Locks deadlock this was meant to fix.
 
-// Detect if we arrived via a password-recovery redirect (?code= in URL).
-// With PKCE flow, PASSWORD_RECOVERY event may not fire - we use sessionStorage
-// so the recovery state survives the code exchange and any micro-redirects.
-try {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.has("code")) {
-    // We can't know yet if this code is for recovery or signup confirmation.
-    // Mark it as "pending" - the onAuthStateChange handler will confirm via
-    // session.user.recovery_sent_at before activating the password reset UI.
-    sessionStorage.setItem("kq_recovery_pending", "1");
+// ──────────────────────────────────────────────────────────────────────────────
+// Auth callback detection (module-level, runs once before React mounts)
+//
+// Supabase sends users back to the app via several distinct URL shapes.
+// We classify the URL into exactly ONE auth flow so that every downstream
+// handler can branch on `authCallback.flow` instead of re-parsing the URL.
+//
+// Flow              URL shape                                SDK auto-handles?
+// ────────────────  ──────────────────────────────────────── ─────────────────
+// pkce_code         ?code=xxx                                Yes (PKCE exchange)
+// token_recovery    ?token_hash=xxx&type=recovery             Needs verifyOtp()
+// token_signup      ?token_hash=xxx&type=signup                Needs verifyOtp()
+// token_email       ?token_hash=xxx&type=email                 Needs verifyOtp()
+// token_magiclink   ?token_hash=xxx&type=magiclink             Needs verifyOtp()
+// token_unknown     ?token_hash=xxx&type=<other>               Needs verifyOtp()
+// hash_error        #error=otp_expired / #error=access_denied  No session
+// session_restore   (no auth params, stored session exists)    Yes
+// guest_restore     (no auth params, guest flag exists)        N/A
+// fresh_visit       (no auth params, no session)               N/A
+// ──────────────────────────────────────────────────────────────────────────────
+function detectAuthCallback() {
+  try {
+    const search = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    const tokenHash = search.get("token_hash");
+    const type = search.get("type");
+
+    // 1. PKCE code exchange (?code=) - SDK handles automatically
+    if (search.has("code")) {
+      // We can't distinguish recovery from signup confirmation at this stage.
+      // Mark as "pending" - onAuthStateChange will confirm via recovery_sent_at.
+      sessionStorage.setItem("kq_recovery_pending", "1");
+      return { flow: "pkce_code" };
+    }
+
+    // 2. Token-hash callbacks (need explicit verifyOtp)
+    if (tokenHash && type === "recovery") {
+      sessionStorage.setItem("kq_recovery_pending", "1");
+      return { flow: "token_recovery", token_hash: tokenHash, type };
+    }
+    if (tokenHash && (type === "signup" || type === "email")) {
+      return { flow: "token_" + type, token_hash: tokenHash, type };
+    }
+    if (tokenHash && type === "magiclink") {
+      return { flow: "token_magiclink", token_hash: tokenHash, type };
+    }
+    // Fallback: token_hash with unrecognized type - attempt verifyOtp anyway
+    if (tokenHash && type) {
+      return { flow: "token_unknown", token_hash: tokenHash, type };
+    }
+
+    // 3. Hash-fragment errors (e.g. #error=otp_expired&error_code=...)
+    if (hash && hash.includes("error=")) {
+      const params = new URLSearchParams(hash.slice(1));
+      return {
+        flow: "hash_error",
+        error_code: params.get("error_code"),
+        error_description: params.get("error_description"),
+      };
+    }
+
+    // 4. No auth params in URL - will be classified as session_restore / guest_restore / fresh_visit
+    //    once onAuthStateChange fires. We don't know yet which one.
+    return { flow: "none" };
+  } catch {
+    return { flow: "none" };
   }
-  // Newer Supabase email templates may redirect with token_hash + type instead of code.
-  if (urlParams.get("type") === "recovery" && (urlParams.has("token_hash") || urlParams.has("token"))) {
-    sessionStorage.setItem("kq_recovery_pending", "1");
-  }
-} catch { /* ignore */ }
+}
+const authCallback = detectAuthCallback();
+console.info("[auth:detect]", authCallback.flow, authCallback.flow !== "none" ? authCallback : "");
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -208,6 +262,7 @@ const TRANSLATIONS = {
     resetEmailSent: "נשלח קישור לאיפוס סיסמה! בדקי את תיבת הדואר.",
     resetEmailError: "שגיאה בשליחת קישור איפוס. נסי שוב.",
     resetLinkWrongBrowser: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקשי קישור חדש.",
+    confirmLinkWrongBrowser: "קישור האימות חייב להיפתח באותו דפדפן שבו נרשמת. אנא התחברי או הירשמי שוב.",
     resetLinkExpired: "קישור האיפוס כבר אינו תקף. ניתן לבקש קישור חדש.",
     sendResetLink: "שלחי קישור איפוס",
     resetPasswordTitle: "איפוס סיסמה",
@@ -299,6 +354,7 @@ const TRANSLATIONS = {
     resetEmailSent_m: "נשלח קישור לאיפוס סיסמה! בדוק את תיבת הדואר.",
     resetEmailError_m: "שגיאה בשליחת קישור איפוס. נסה שוב.",
     resetLinkWrongBrowser_m: "קישור האיפוס חייב להיפתח באותו דפדפן שבו ביקשת את האיפוס. אנא בקש קישור חדש.",
+    confirmLinkWrongBrowser_m: "קישור האימות חייב להיפתח באותו דפדפן שבו נרשמת. אנא התחבר או הירשם שוב.",
     resetLinkExpired_m: "קישור האיפוס כבר אינו תקף. ניתן לבקש קישור חדש.",
     saveNewPassword_m: "שמור סיסמה חדשה",
     playingAsGuest_m: "· משחק כאורח",
@@ -478,6 +534,7 @@ const TRANSLATIONS = {
     resetEmailSent: "Password reset link sent! Check your inbox.",
     resetEmailError: "Failed to send reset link. Please try again.",
     resetLinkWrongBrowser: "This reset link must be opened in the same browser where you requested it. Please request a new link.",
+    confirmLinkWrongBrowser: "This confirmation link must be opened in the same browser where you signed up. Please log in or sign up again.",
     resetLinkExpired: "This reset link is no longer valid. Please request a new one.",
     sendResetLink: "Send reset link",
     resetPasswordTitle: "Reset Password",
@@ -1586,73 +1643,97 @@ export default function K8sQuestApp() {
     }
   }, []);
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Auth initialization (single useEffect, runs once)
+  //
+  // All auth entry flows are driven by `authCallback.flow` detected at module
+  // level. This useEffect handles:
+  //   1. hash_error     - expired/consumed token errors in URL fragment
+  //   2. Supabase-off   - no Supabase config, go straight to guest
+  //   3. Subscribe to onAuthStateChange (handles INITIAL_SESSION, SIGNED_IN, etc.)
+  //   4. token_* flows  - explicit verifyOtp() for token_hash-based callbacks
+  //
+  // State transitions (final routed screen):
+  //   authCallback.flow     + session outcome            => screen
+  //   ──────────────────────────────────────────────────────────────────
+  //   hash_error (recovery) + n/a                        => login + reset modal
+  //   hash_error (other)    + n/a                        => login (otpExpired msg)
+  //   pkce_code             + recovery session            => password reset UI
+  //   pkce_code             + normal session               => app (loadUserData)
+  //   pkce_code             + null (wrong browser, recov) => login + reset modal
+  //   pkce_code             + null (wrong browser, other) => login (confirm err)
+  //   token_recovery        + verifyOtp ok                => password reset UI
+  //   token_recovery        + verifyOtp fail              => login (otpExpired msg)
+  //   token_signup/email    + verifyOtp ok                => app (SIGNED_IN)
+  //   token_signup/email    + verifyOtp fail              => login (otpExpired msg)
+  //   token_magiclink       + verifyOtp ok                => app (SIGNED_IN)
+  //   token_unknown         + verifyOtp ok                => app (SIGNED_IN)
+  //   token_*               + verifyOtp fail              => login (otpExpired msg)
+  //   none                  + stored session              => app (loadUserData)
+  //   none                  + guest flag                  => app (guest mode)
+  //   none                  + nothing                     => auth screen
+  // ────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link).
-    //
-    // Why login instead of signup?
-    // Mobile email clients (Gmail on iOS, etc.) prefetch links in emails.
-    // This prefetch hits Supabase's /auth/v1/verify endpoint, consuming the
-    // one-time OTP token *before* the user taps the link. The verification
-    // actually succeeds (the email IS confirmed), but when the real user
-    // clicks, Supabase returns otp_expired because the token is already used.
-    // Routing to the login tab lets the user sign in immediately instead of
-    // re-registering an already-confirmed account.
-    const hash = window.location.hash;
-    if (hash && hash.includes("error=")) {
-      const params = new URLSearchParams(hash.slice(1));
-      const code = params.get("error_code");
-      const desc = params.get("error_description");
-      console.warn("[KubeQuest:auth] verification redirect error:", { error_code: code, error_description: desc });
-      if (code === "otp_expired" || code === "access_denied") {
-        // Distinguish password-recovery errors from email-verification errors.
-        // kq_recovery_requested is set when the user requests a password reset,
-        // so if it exists and is recent (<24h) this was a recovery flow.
+    const flow = authCallback.flow;
+
+    // ── Step 1: Handle hash-fragment errors (#error=otp_expired, etc.) ──────
+    // These arrive when Supabase's server-side verify endpoint fails and
+    // redirects back with an error in the URL hash. No session is created.
+    // Mobile email clients often prefetch links, consuming the OTP token
+    // before the user taps -- so we route to login (not signup) since the
+    // email may already be confirmed by the prefetch.
+    if (flow === "hash_error") {
+      const { error_code, error_description } = authCallback;
+      console.warn("[auth:hash_error]", { error_code, error_description });
+      if (error_code === "otp_expired" || error_code === "access_denied") {
+        // Was this a password-recovery flow? Check the localStorage marker
+        // set when user requested a password reset (survives new-tab opens).
         let isRecoveryFlow = false;
         try {
           const rts = localStorage.getItem("kq_recovery_requested");
           if (rts && (Date.now() - Number(rts)) < 86_400_000) isRecoveryFlow = true;
         } catch {}
         if (isRecoveryFlow) {
+          console.info("[auth:hash_error] routed => login + reset modal (recovery flow)");
           try { localStorage.removeItem("kq_recovery_requested"); } catch {}
           setAuthError(TRANSLATIONS[lang]?.resetLinkExpired || TRANSLATIONS.en.resetLinkExpired);
           setAuthIsSuccess(false);
           setAuthScreen("login");
-          // Auto-open the reset modal so the user can immediately request a new link
           setShowResetModal(true); setResetStatus(""); setResetEmail("");
         } else {
-          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired); setAuthIsSuccess(false);
+          console.info("[auth:hash_error] routed => login (email verification, otpExpired)");
+          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.en.otpExpired);
+          setAuthIsSuccess(false);
           setAuthScreen("login");
         }
       }
       window.history.replaceState(null, "", window.location.pathname);
     }
 
-    // If Supabase is not configured, go straight to guest mode
+    // ── Step 2: No Supabase? Go straight to guest mode ─────────────────────
     if (!supabase) {
+      console.info("[auth:none] Supabase not configured => guest mode");
       setAuthChecked(true);
       setDataLoaded(true);
       return;
     }
 
-    // Hard timeout: if INITIAL_SESSION never fires, unblock the UI
+    // ── Step 3: Hard timeout - safety net if INITIAL_SESSION never fires ────
+    // Allow extra time when verifyOtp is in flight (network round-trip needed).
+    const needsVerifyOtp = flow.startsWith("token_");
     const hardTimeout = setTimeout(() => {
-      console.warn("[KubeQuest:boot] Auth hard timeout (3 s) - force-unblocking UI");
+      console.warn("[auth:timeout] hard timeout => force-unblocking UI");
       setAuthChecked(true);
       setDataLoaded(true);
-    }, 3000);
+    }, needsVerifyOtp ? 8000 : 3000);
 
-    // Use ONLY onAuthStateChange for session initialization.
-    // In Supabase v2, it fires INITIAL_SESSION exactly once when the stored
-    // session is resolved. Using getSession() in parallel creates a race
-    // where loadUserData() is called twice with independent timeouts.
+    // ── Helpers ─────────────────────────────────────────────────────────────
 
-    // Helper: detect recovery session via recovery_sent_at timestamp.
+    // Detect recovery session via recovery_sent_at timestamp.
     // With PKCE flow, PASSWORD_RECOVERY event may not fire separately -
     // the recovery session can arrive via INITIAL_SESSION or SIGNED_IN instead.
     const isRecoverySession = (s) => {
       if (!s?.user?.recovery_sent_at) return false;
-      // Check both sessionStorage flag (set when ?code= detected at page load)
-      // and localStorage flag (set when user requested the reset in this browser).
       const pending = sessionStorage.getItem("kq_recovery_pending");
       let requested = false;
       try {
@@ -1661,10 +1742,11 @@ export default function K8sQuestApp() {
       } catch {}
       if (!pending && !requested) return false;
       const elapsed = Date.now() - new Date(s.user.recovery_sent_at).getTime();
-      return elapsed < 86_400_000; // recovery initiated within 24 h (matches email expiry)
+      return elapsed < 86_400_000;
     };
 
-    const activateRecovery = (s) => {
+    const activateRecovery = (s, source) => {
+      console.info(`[auth:recovery] activated via ${source} => password reset UI`);
       sessionStorage.removeItem("kq_recovery_pending");
       try { localStorage.removeItem("kq_recovery_requested"); } catch {}
       try { sessionStorage.setItem("kq_show_password_reset", "1"); } catch {}
@@ -1675,68 +1757,129 @@ export default function K8sQuestApp() {
       setDataLoaded(true);
     };
 
-    console.info("[KubeQuest:boot] subscribing to onAuthStateChange");
+    // ── Step 4: Subscribe to onAuthStateChange ──────────────────────────────
+    // Supabase v2 fires INITIAL_SESSION exactly once when the stored session
+    // is resolved. All other events fire as state changes occur.
+    console.info("[auth:init] subscribing to onAuthStateChange, detected flow:", flow);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.info("[KubeQuest:boot] auth event:", event, "session:", !!session);
+      console.info("[auth:event]", event, "session:", !!session, "flow:", flow);
 
       if (event === "INITIAL_SESSION") {
         clearTimeout(hardTimeout);
         if (session) {
-          // PKCE fix: recovery session may arrive via INITIAL_SESSION
-          if (isRecoverySession(session)) {
-            activateRecovery(session);
-            return;
-          }
+          // Recovery session can arrive via INITIAL_SESSION (PKCE exchanges
+          // the code before this fires, so we get a session with recovery_sent_at).
+          if (isRecoverySession(session)) { activateRecovery(session, "INITIAL_SESSION"); return; }
+
           // Page refresh during password reset: passwordRecoveryRef was
           // restored from sessionStorage - keep showing the reset screen.
           if (passwordRecoveryRef.current) {
+            console.info("[auth:session_restore] password reset in progress => keep reset UI");
             setUser(session.user);
             setAuthChecked(true);
             setDataLoaded(true);
             return;
           }
+
+          console.info("[auth:session_restore] existing session => loadUserData");
           setUser(session.user);
           loadUserData(session.user.id, session.user);
         } else {
-          // Cross-browser safety: ?code= was in the URL but the PKCE exchange
-          // failed (no code_verifier - user opened the link in a different browser).
-          // Show a clear error instead of silently falling into guest mode.
-          const pendingRecovery = sessionStorage.getItem("kq_recovery_pending");
-          if (pendingRecovery) {
-            console.warn("[KubeQuest:boot] Recovery code detected but PKCE exchange failed (wrong browser?)");
+          // No stored session. If we're about to call verifyOtp(), don't
+          // unblock the UI yet - wait for the SIGNED_IN that verifyOtp triggers.
+          if (needsVerifyOtp) {
+            console.info("[auth:wait]", flow, "=> INITIAL_SESSION null, verifyOtp pending");
+            return;
+          }
+
+          // PKCE code in URL but exchange produced no session (wrong browser).
+          // Distinguish recovery from signup: kq_recovery_requested is set when
+          // the user requested a password reset in this browser.
+          if (flow === "pkce_code") {
             sessionStorage.removeItem("kq_recovery_pending");
-            // Strip the unconsumed ?code= from the URL
             try { window.history.replaceState(null, "", window.location.pathname); } catch {}
-            setAuthError(t("resetLinkWrongBrowser")); setAuthIsSuccess(false);
-            setShowResetModal(true);
+            let wasRecovery = false;
+            try {
+              const rts = localStorage.getItem("kq_recovery_requested");
+              if (rts && (Date.now() - Number(rts)) < 86_400_000) wasRecovery = true;
+            } catch {}
+            if (wasRecovery) {
+              console.warn("[auth:pkce_code] PKCE exchange failed (wrong browser, recovery flow)");
+              setAuthError(t("resetLinkWrongBrowser")); setAuthIsSuccess(false);
+              setShowResetModal(true);
+            } else {
+              console.warn("[auth:pkce_code] PKCE exchange failed (wrong browser, signup/confirm flow)");
+              setAuthError(t("confirmLinkWrongBrowser")); setAuthIsSuccess(false);
+              setAuthScreen("login");
+            }
           } else if (safeGetItem("k8s_guest_session")) {
-            // Restore guest session if user previously chose guest mode
+            console.info("[auth:guest_restore] guest flag found => guest mode");
             setUser(GUEST_USER);
+          } else {
+            console.info("[auth:fresh_visit] no session, no guest flag => auth screen");
           }
           setDataLoaded(true);
         }
         setAuthChecked(true);
+
       } else if (event === "PASSWORD_RECOVERY") {
-        // Supabase versions that fire this event correctly
-        activateRecovery(session);
+        activateRecovery(session, "PASSWORD_RECOVERY");
+
       } else if (event === "SIGNED_IN") {
         if (passwordRecoveryRef.current) return;
-        // PKCE fix: recovery session may arrive via SIGNED_IN
-        if (isRecoverySession(session)) {
-          activateRecovery(session);
-          return;
-        }
+        if (isRecoverySession(session)) { activateRecovery(session, "SIGNED_IN"); return; }
+        console.info("[auth:signed_in] flow:", flow, "=> loadUserData");
         setDataLoaded(false);
         setUser(session.user);
         loadUserData(session.user.id, session.user);
         setAuthChecked(true);
+
       } else if (event === "SIGNED_OUT") {
+        console.info("[auth:signed_out]");
         setUser(null);
         setAuthChecked(true);
+
       } else if (event === "TOKEN_REFRESHED") {
+        console.info("[auth:token_refreshed]");
         if (session) setUser(session.user);
       }
     });
+
+    // ── Step 5: Dispatch verifyOtp for token_hash-based callbacks ───────────
+    // The SDK auto-exchanges ?code= (PKCE) but does NOT auto-exchange
+    // token_hash params. We must call verifyOtp() explicitly.
+    // On success, onAuthStateChange fires SIGNED_IN above.
+    // On failure, we unblock the UI with an appropriate error message.
+    //
+    // Guard: use a module-level flag to prevent React StrictMode (dev only)
+    // from calling verifyOtp twice. The second call would get otp_expired
+    // since the token was already consumed by the first.
+    if (needsVerifyOtp && !authCallback._dispatched) {
+      authCallback._dispatched = true;
+      const { token_hash, type } = authCallback;
+      console.info("[auth:verifyOtp] calling verifyOtp, flow:", flow, "type:", type);
+      supabase.auth.verifyOtp({ token_hash, type }).then(({ data: otpData, error }) => {
+        // Always clean auth params from URL
+        try { window.history.replaceState(null, "", window.location.pathname); } catch {}
+        if (error) {
+          console.warn("[auth:verifyOtp] failed:", error.message, "flow:", flow, "=> login (otpExpired)");
+          // Token already consumed (mobile prefetch) or genuinely expired.
+          // Route to login - if it was prefetch, email is actually confirmed
+          // and the user can sign in with their password.
+          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.en.otpExpired);
+          setAuthIsSuccess(false);
+          setAuthScreen("login");
+          clearTimeout(hardTimeout);
+          setAuthChecked(true);
+          setDataLoaded(true);
+        } else {
+          console.info("[auth:verifyOtp] success, flow:", flow, "session:", !!otpData?.session);
+          // Success: onAuthStateChange SIGNED_IN handler takes over.
+          // For token_recovery the SIGNED_IN handler will detect
+          // isRecoverySession() and route to the password reset UI.
+        }
+      });
+    }
 
     return () => {
       clearTimeout(hardTimeout);
