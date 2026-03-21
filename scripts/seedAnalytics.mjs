@@ -151,6 +151,17 @@ const data = {
     { value: "Firefox Mobile",    weight: 1 },
     { value: "Google Search App", weight: 1 },
   ],
+
+  // Hostnames — exact from Vercel
+  hostnames: [
+    { value: "kubequest.online",                                      weight: 330 },
+    { value: "status.kubequest.online",                               weight: 19 },
+    { value: "kube-quest-lwrinl8vx-or-carmelis-projects.vercel.app",  weight: 1 },
+    { value: "kube-quest-mlo5l6llh-or-carmelis-projects.vercel.app",  weight: 1 },
+    { value: "kube-quest-r46s2918n-or-carmelis-projects.vercel.app",  weight: 1 },
+  ],
+
+  bounceRate: 0.51,  // 51% of sessions should bounce (0-1 page views)
 };
 
 // ── Generate rows ──────────────────────────────────────────────────────────
@@ -169,19 +180,25 @@ for (const day of data.dailyVisitors) {
     const osVal = pickWeighted(data.os);
     const country = pickWeighted(data.countries);
     const referrer = pickWeighted(data.referrers);
+    const hostname = pickWeighted(data.hostnames);
 
     rows.push({
       session_id: sessionId, event_type: "session_start", path: "/",
-      referrer, device_type: device, browser, os: osVal, country,
+      referrer, device_type: device, browser, os: osVal, country, hostname,
       source: "vercel_seed", created_at: ts.toISOString(),
     });
 
-    const pvCount = Math.max(1, Math.round(data.pvsPerVisitor + (Math.random() - 0.5) * 3));
+    // ~51% of visitors bounce (0-1 page views), rest get multiple
+    const bounced = Math.random() < data.bounceRate;
+    const pvCount = bounced
+      ? (Math.random() < 0.5 ? 0 : 1)  // bounced: 0 or 1 page view
+      : Math.max(2, Math.round(10 + (Math.random() - 0.5) * 6));  // engaged: ~7-13 page views
+
     for (let p = 0; p < pvCount; p++) {
       rows.push({
         session_id: sessionId, event_type: "page_view",
         path: pickWeighted(data.pages),
-        device_type: device, browser, os: osVal, country,
+        device_type: device, browser, os: osVal, country, hostname,
         source: "vercel_seed",
         created_at: new Date(ts.getTime() + (p + 1) * 15_000).toISOString(),
       });

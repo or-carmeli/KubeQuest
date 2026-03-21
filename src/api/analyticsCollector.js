@@ -131,6 +131,7 @@ export function initAnalytics(supabase) {
     browser,
     os,
     country: null, // populated server-side if edge function is added later
+    hostname: window.location.hostname,
   });
 }
 
@@ -150,7 +151,7 @@ export function trackPageView(screenName) {
     session_id: SESSION_ID,
     event_type: "page_view",
     path,
-    referrer: null,                           // only relevant on session start
+    referrer: null,
     utm_source: null,
     utm_medium: null,
     utm_campaign: null,
@@ -158,6 +159,7 @@ export function trackPageView(screenName) {
     browser,
     os,
     country: null,
+    hostname: window.location.hostname,
   });
 }
 
@@ -206,14 +208,9 @@ export async function seedAnalyticsFromSnapshot(supabase, data) {
   if (!supabase) { console.warn("[analytics] no supabase client"); return; }
 
   const {
-    dailyVisitors,   // [{ date: "2026-02-20", visitors: 0 }, ...]
-    pvsPerVisitor,   // avg page views per visitor (e.g. 1940/331 ≈ 5.86)
-    pages,           // [{ path, weight }]
-    referrers,       // [{ value, weight }]
-    countries,       // [{ value, weight }]
-    devices,         // [{ value, weight }]
-    os,              // [{ value, weight }]
-    browsers,        // [{ value, weight }]  (estimated)
+    dailyVisitors, pages, referrers, countries, devices, os, browsers,
+    hostnames = [{ value: "kubequest.online", weight: 1 }],
+    bounceRate = 0.51,
   } = data;
 
   const rows = [];
@@ -223,8 +220,7 @@ export async function seedAnalyticsFromSnapshot(supabase, data) {
     const count = day.visitors;
     if (count === 0) continue;
 
-    const secondsInDay = 86400;
-    const gap = Math.floor(secondsInDay / count);
+    const gap = Math.floor(86400 / count);
 
     for (let v = 0; v < count; v++) {
       const sessionId = `vercel_seed_${day.date}_v${v}`;
@@ -234,35 +230,25 @@ export async function seedAnalyticsFromSnapshot(supabase, data) {
       const osVal = pickWeighted(os);
       const country = pickWeighted(countries);
       const referrer = pickWeighted(referrers);
+      const hostname = pickWeighted(hostnames);
 
-      // session_start
       rows.push({
-        session_id: sessionId,
-        event_type: "session_start",
-        path: "/",
-        referrer: referrer,
-        device_type: device,
-        browser: browser,
-        os: osVal,
-        country: country,
-        source: "vercel_seed",
-        created_at: ts.toISOString(),
+        session_id: sessionId, event_type: "session_start", path: "/",
+        referrer, device_type: device, browser, os: osVal, country, hostname,
+        source: "vercel_seed", created_at: ts.toISOString(),
       });
 
-      // page_view events for this session
-      const pvCount = Math.max(1, Math.round(pvsPerVisitor + (Math.random() - 0.5) * 3));
+      const bounced = Math.random() < bounceRate;
+      const pvCount = bounced
+        ? (Math.random() < 0.5 ? 0 : 1)
+        : Math.max(2, Math.round(10 + (Math.random() - 0.5) * 6));
+
       for (let p = 0; p < pvCount; p++) {
         const pvTs = new Date(ts.getTime() + (p + 1) * 15_000);
         rows.push({
-          session_id: sessionId,
-          event_type: "page_view",
-          path: pickWeighted(pages),
-          device_type: device,
-          browser: browser,
-          os: osVal,
-          country: country,
-          source: "vercel_seed",
-          created_at: pvTs.toISOString(),
+          session_id: sessionId, event_type: "page_view",
+          path: pickWeighted(pages), device_type: device, browser, os: osVal,
+          country, hostname, source: "vercel_seed", created_at: pvTs.toISOString(),
         });
       }
     }
@@ -363,4 +349,14 @@ export const seedVercelData = {
     { value: "Chrome Webview", weight: 1 }, { value: "Firefox", weight: 1 },
     { value: "Firefox Mobile", weight: 1 }, { value: "Google Search App", weight: 1 },
   ],
+
+  hostnames: [
+    { value: "kubequest.online", weight: 330 },
+    { value: "status.kubequest.online", weight: 19 },
+    { value: "kube-quest-lwrinl8vx-or-carmelis-projects.vercel.app", weight: 1 },
+    { value: "kube-quest-mlo5l6llh-or-carmelis-projects.vercel.app", weight: 1 },
+    { value: "kube-quest-r46s2918n-or-carmelis-projects.vercel.app", weight: 1 },
+  ],
+
+  bounceRate: 0.51,
 };

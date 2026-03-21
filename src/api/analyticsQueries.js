@@ -25,7 +25,7 @@ async function fetchEvents(supabase, hours, eventType) {
   const since = rangeStart(hours);
   let q = supabase
     .from(TABLE)
-    .select("session_id, event_type, path, referrer, device_type, browser, os, country, source, created_at")
+    .select("session_id, event_type, path, referrer, device_type, browser, os, country, hostname, source, created_at")
     .gte("created_at", since)
     .order("created_at", { ascending: true });
 
@@ -118,6 +118,7 @@ export async function fetchAnalytics(supabase, hours) {
     devices: countByField(sessions, "device_type"),
     browsers: countByField(sessions, "browser"),
     operatingSystems: countByField(sessions, "os"),
+    hostnames: countByField(sessions, "hostname"),
     hasSeededData: sessions.some(r => r.source === "vercel_seed"),
     hasLiveData: sessions.some(r => r.source !== "vercel_seed"),
   };

@@ -3,7 +3,7 @@
 // Reads from analytics_events table only. Completely isolated.
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown, Maximize2, X } from "lucide-react";
+import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown } from "lucide-react";
 import { fetchAnalytics, fetchOnlineCount, TIME_RANGES } from "../api/analyticsQueries";
 
 const MONO = "'Fira Code','Courier New',monospace";
@@ -34,10 +34,6 @@ function injectHoverCSS() {
     .av-tab { transition: color .15s, border-color .15s; border-bottom: 2px solid transparent; cursor: pointer; }
     .av-tab:hover { color: var(--text-primary) !important; }
     .av-tab-active { border-bottom-color: var(--text-primary) !important; color: var(--text-primary) !important; }
-    .av-viewall-btn { transition: opacity .15s; opacity: 0; }
-    .av-card:hover .av-viewall-btn { opacity: 1; }
-    .av-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; }
-    .av-modal { background: #111; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; width: 90vw; max-width: 560px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 16px 48px rgba(0,0,0,0.5); animation: fadeIn 0.15s ease; }
   `;
   document.head.appendChild(style);
 }
@@ -225,6 +221,7 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <TabbedBreakdownCard tabs={[
               { label: "Pages", items: data.topPages },
+              { label: "Hostnames", items: data.hostnames },
             ]} />
             <TabbedBreakdownCard tabs={[
               { label: "Referrers", items: data.referrers, renderIcon: item => <ReferrerIcon domain={item.name} /> },
@@ -509,95 +506,64 @@ function EmptyChart() {
 
 function TabbedBreakdownCard({ tabs }) {
   const [activeTab, setActiveTab] = useState(0);
-  const [viewAll, setViewAll] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const current = tabs[activeTab] || tabs[0];
   const { items, renderIcon } = current;
   const PREVIEW_COUNT = 5;
+  const hasMore = items.length > PREVIEW_COUNT;
+  const displayItems = expanded ? items : items.slice(0, PREVIEW_COUNT);
 
   return (
-    <>
-      <div className="av-card" style={{
-        background: "var(--glass-2)", border: "1px solid var(--glass-5)",
-        borderRadius: 10, padding: "14px 16px", minWidth: 0,
+    <div className="av-card" style={{
+      background: "var(--glass-2)", border: "1px solid var(--glass-5)",
+      borderRadius: 10, padding: "14px 16px", minWidth: 0,
+    }}>
+      {/* Tab header */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 0, marginBottom: 8,
+        borderBottom: "1px solid var(--glass-4)", position: "relative",
       }}>
-        {/* Tab header */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 0, marginBottom: 8,
-          borderBottom: "1px solid var(--glass-4)", position: "relative",
-        }}>
-          <div style={{ display: "flex", gap: 16, flex: 1 }}>
-            {tabs.map((tab, i) => (
-              <button key={i}
-                className={`av-tab ${i === activeTab ? "av-tab-active" : ""}`}
-                onClick={() => setActiveTab(i)}
-                style={{
-                  background: "none", border: "none", padding: "0 0 8px",
-                  fontSize: 13, fontWeight: i === activeTab ? 600 : 400,
-                  color: i === activeTab ? "var(--text-primary)" : "var(--text-muted)",
-                  cursor: "pointer",
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, paddingBottom: 8 }}>
-            visitors
-          </span>
+        <div style={{ display: "flex", gap: 16, flex: 1 }}>
+          {tabs.map((tab, i) => (
+            <button key={i}
+              className={`av-tab ${i === activeTab ? "av-tab-active" : ""}`}
+              onClick={() => { setActiveTab(i); setExpanded(false); }}
+              style={{
+                background: "none", border: "none", padding: "0 0 8px",
+                fontSize: 13, fontWeight: i === activeTab ? 600 : 400,
+                color: i === activeTab ? "var(--text-primary)" : "var(--text-muted)",
+                cursor: "pointer",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-
-        {/* Rows */}
-        {items.length === 0 ? (
-          <div style={{ padding: "24px 0", textAlign: "center", color: "var(--text-dim)", fontSize: 11 }}>
-            No data yet
-          </div>
-        ) : (
-          <BreakdownRows items={items.slice(0, PREVIEW_COUNT)} allItems={items} renderIcon={renderIcon} />
-        )}
-
-        {/* View All button — appears on hover like Vercel */}
-        {items.length > PREVIEW_COUNT && (
-          <button className="av-viewall-btn" onClick={() => setViewAll(true)} style={{
-            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            background: "none", border: "none", padding: "8px 0 2px",
-            color: "var(--text-muted)", fontSize: 11, cursor: "pointer",
-          }}>
-            <Maximize2 size={11} strokeWidth={2} />
-            View All
-          </button>
-        )}
+        <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, paddingBottom: 8 }}>
+          visitors
+        </span>
       </div>
 
-      {/* View All modal */}
-      {viewAll && (
-        <div className="av-modal-overlay" onClick={() => setViewAll(false)}>
-          <div className="av-modal" onClick={e => e.stopPropagation()}>
-            {/* Modal header */}
-            <div style={{
-              display: "flex", alignItems: "center", padding: "14px 16px",
-              borderBottom: "1px solid rgba(255,255,255,0.1)",
-            }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", flex: 1 }}>
-                {current.label}
-              </span>
-              <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 12 }}>
-                visitors
-              </span>
-              <button onClick={() => setViewAll(false)} style={{
-                background: "none", border: "none", color: "var(--text-muted)",
-                cursor: "pointer", padding: 4, display: "flex",
-              }}>
-                <X size={16} />
-              </button>
-            </div>
-            {/* All rows */}
-            <div style={{ overflow: "auto", padding: "0 16px 16px" }}>
-              <BreakdownRows items={items} allItems={items} renderIcon={renderIcon} />
-            </div>
-          </div>
+      {/* Rows */}
+      {items.length === 0 ? (
+        <div style={{ padding: "24px 0", textAlign: "center", color: "var(--text-dim)", fontSize: 11 }}>
+          No data yet
         </div>
+      ) : (
+        <BreakdownRows items={displayItems} allItems={items} renderIcon={renderIcon} />
       )}
-    </>
+
+      {/* View All / Collapse — inline expand like Vercel */}
+      {hasMore && (
+        <button className="av-btn" onClick={() => setExpanded(e => !e)} style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          background: "none", border: "none", padding: "8px 0 2px",
+          color: "var(--text-muted)", fontSize: 12, cursor: "pointer",
+        }}>
+          {expanded ? "Show less" : `View All (${items.length})`}
+        </button>
+      )}
+    </div>
   );
 }
 
