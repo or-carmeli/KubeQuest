@@ -30,7 +30,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@sentry/react": "^10.43.0",
+    "@sentry/react": "^10.45.0",
     "@supabase/supabase-js": "^2.99.2",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^2.0.0",
