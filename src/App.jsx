@@ -331,7 +331,7 @@ const TRANSLATIONS = {
     resumeToast: "ממשיכים מאיפה שהפסקת.", resumeToast_m: "ממשיכים מאיפה שהפסקת.",
     resumeDiscard: "התחילי מחדש", resumeDiscard_m: "התחל מחדש",
     resumeBackLink: "חזרה למסלולים", resumeSaveHint: "החידון נשמר אוטומטית",
-    prevQuestion: "→ שאלה קודמת", backToCurrent: "→ חזרי לחידון", backToCurrent_m: "→ חזור לחידון",
+    prevQuestion: "→", backToCurrent: "→ חזרי לחידון", backToCurrent_m: "→ חזור לחידון",
     reviewing: "📖 סקירה",
     tryAgainBtn: "🔁 נסי שוב", tryAgainBtn_m: "🔁 נסה שוב",
     tryAgainBadge: "לא נספר לניקוד",
@@ -552,7 +552,7 @@ const TRANSLATIONS = {
     resumeToast: "Resuming your quiz where you left off.",
     resumeDiscard: "Start Fresh",
     resumeBackLink: "Back to roadmaps", resumeSaveHint: "Quiz is saved automatically",
-    prevQuestion: "← Previous Question", backToCurrent: "Back to Quiz →",
+    prevQuestion: "←", backToCurrent: "Back to Quiz →",
     reviewing: "📖 Review",
     tryAgainBtn: "🔁 Try Again",
     tryAgainBadge: "Won't count toward score",
@@ -2760,8 +2760,20 @@ export default function K8sQuestApp() {
     } else if (supabase && q.id) {
       const originalIndex = q._optionMap ? q._optionMap[selectedAnswer] : selectedAnswer;
       const isDaily = selectedTopic?.id === "daily";
-      // Pass quizRunId for server-side scoring (null for retries -> skip scoring)
-      const scoreRunId = isRetryRef.current ? null : quizRunIdRef.current;
+      // Pass quizRunId for server-side scoring (null for retries or already-scored -> skip scoring)
+      // Check scoredFreeKeys BEFORE the RPC so the server doesn't grant duplicate points
+      // when the same question appears in a new mixed/daily run with a fresh quizRunId.
+      let skipServerScore = false;
+      const isMixedOrDailyEarly = selectedTopic?.id === "mixed" || isDaily;
+      if (isMixedOrDailyEarly && !isRetryRef.current) {
+        try {
+          const freeKey = q.q.slice(0, 100);
+          const scored = new Set(safeGetJSON("scoredFreeKeys_v1", []));
+          skipServerScore = scored.has(freeKey);
+        } catch {}
+      }
+      const scoreRunId = (isRetryRef.current || skipServerScore) ? null : quizRunIdRef.current;
+      const scoreMode = isDaily ? "daily" : selectedTopic?.id === "mixed" ? "mixed" : "topic";
 
       // Use prefetched answer-check if available and still matches current selection.
       // The prefetch was called without a quizRunId (no scoring), so when we use it
@@ -2780,8 +2792,8 @@ export default function K8sQuestApp() {
         prefetchedAnswerRef.current = null;
         setCheckingAnswer(true);
         const callRpc = () => isDaily
-          ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId)
-          : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId);
+          ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode)
+          : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode);
         try {
           rpcResult = await callRpc();
         } catch (e1) {
@@ -2797,8 +2809,8 @@ export default function K8sQuestApp() {
         // The fallback path already includes scoreRunId, so only do this for prefetch hits.
         if (usedPrefetch && scoreRunId) {
           (isDaily
-            ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId)
-            : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId)
+            ? checkDailyAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode)
+            : checkQuizAnswer(supabase, q.id, originalIndex, scoreRunId, scoreMode)
           ).catch(() => {});
         }
       } else {

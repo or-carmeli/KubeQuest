@@ -38,12 +38,13 @@ export async function fetchMixedQuestions(supabase, lang, limit = 10) {
  * does not influence scoring.
  * Returns: { correct: bool, correct_answer: number, explanation: string }
  */
-export async function checkQuizAnswer(supabase, questionId, selectedIndex, quizRunId = null) {
+export async function checkQuizAnswer(supabase, questionId, selectedIndex, quizRunId = null, mode = null) {
   const params = {
     p_question_id: questionId,
     p_selected: selectedIndex,
   };
   if (quizRunId) params.p_quiz_run_id = quizRunId;
+  if (mode) params.p_mode = mode;
   const { data, error } = await supabase.rpc("check_quiz_answer", params);
   if (error) throw error;
   return data;
@@ -111,12 +112,13 @@ export async function fetchDailyQuestions(supabase, lang, limit = 10) {
  * increments the user's total_score by 15 (idempotent per question+run).
  * Returns: { correct: bool, correct_answer: number, explanation: string }
  */
-export async function checkDailyAnswer(supabase, questionId, selectedIndex, quizRunId = null) {
+export async function checkDailyAnswer(supabase, questionId, selectedIndex, quizRunId = null, mode = null) {
   const params = {
     p_question_id: questionId,
     p_selected: selectedIndex,
   };
   if (quizRunId) params.p_quiz_run_id = quizRunId;
+  if (mode) params.p_mode = mode;
   const { data, error } = await supabase.rpc("check_daily_answer", params);
   if (error) throw error;
   return data;
