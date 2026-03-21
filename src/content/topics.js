@@ -575,10 +575,10 @@ export const TOPICS = [
               q: "What does a DaemonSet guarantee?",
               tags: ["daemonset-topology"],
               options: [
-              "The Pod runs on a fixed schedule. This describes a CronJob, not a DaemonSet",
-              "The Pod runs only on Nodes matching a specific label via nodeSelector",
-              "DaemonSet ensures that one Pod runs on every Node in the cluster",
-              "The Pod runs once to completion and is never restarted. This describes a Job",
+              "The Pod runs on a fixed schedule",
+              "The Pod runs only on Nodes matching a specific label",
+              "One Pod runs on every Node in the cluster",
+              "The Pod runs once to completion and is never restarted",
 ],
               answer: 2,
               explanation:
