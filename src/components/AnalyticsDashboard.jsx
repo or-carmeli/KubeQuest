@@ -3,7 +3,7 @@
 // Reads from analytics_events table only. Completely isolated.
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown, Maximize2 } from "lucide-react";
+import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown, Maximize2, Share2, MoreHorizontal } from "lucide-react";
 import { fetchAnalytics, fetchOnlineCount, TIME_RANGES } from "../api/analyticsQueries";
 
 const MONO = "'Fira Code','Courier New',monospace";
@@ -31,8 +31,8 @@ function injectHoverCSS() {
     .av-chart-hover-line { pointer-events: none; }
     .av-summary { transition: border-color .2s, box-shadow .2s; }
     .av-summary:hover { border-color: rgba(255,255,255,0.15) !important; }
-    .av-row-actions { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); opacity: 0; transition: opacity .12s; z-index: 2; }
-    .av-row:hover .av-row-actions { opacity: 1; }
+    .av-row-actions { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); opacity: 0; transition: opacity .12s; z-index: 2; pointer-events: none; }
+    .av-row:hover .av-row-actions { opacity: 1; pointer-events: auto; }
     .av-tab { transition: color .15s, border-color .15s; border-bottom: 2px solid transparent; cursor: pointer; }
     .av-tab:hover { color: var(--text-primary) !important; }
     .av-tab-active { border-bottom-color: var(--text-primary) !important; color: var(--text-primary) !important; }
@@ -654,19 +654,39 @@ function BreakdownRows({ items, allItems, renderIcon, onViewAll }) {
                 {fmt(item.count)}
               </span>
             </div>
-            {/* Hover action bar — View All trigger on any row */}
+            {/* Hover toolbar — Vercel-style 3-icon pill */}
             {onViewAll && (
               <div className="av-row-actions">
-                <button onClick={onViewAll} title="View All" style={{
-                  background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: 6, padding: "3px 8px", cursor: "pointer",
-                  display: "flex", alignItems: "center", gap: 5,
-                  color: "var(--text-secondary)", fontSize: 11, fontWeight: 500,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                <div style={{
+                  background: "#fff", borderRadius: 8,
+                  display: "flex", alignItems: "center", gap: 0,
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                  overflow: "hidden",
                 }}>
-                  <Maximize2 size={10} strokeWidth={2} />
-                  View All
-                </button>
+                  <button onClick={onViewAll} title="View All" style={{
+                    background: "none", border: "none", padding: "5px 8px",
+                    cursor: "pointer", display: "flex", alignItems: "center",
+                    color: "#111",
+                  }}>
+                    <Maximize2 size={13} strokeWidth={2} />
+                  </button>
+                  <div style={{ width: 1, height: 14, background: "#ddd" }} />
+                  <button title="Share" style={{
+                    background: "none", border: "none", padding: "5px 8px",
+                    cursor: "pointer", display: "flex", alignItems: "center",
+                    color: "#111",
+                  }}>
+                    <Share2 size={13} strokeWidth={2} />
+                  </button>
+                  <div style={{ width: 1, height: 14, background: "#ddd" }} />
+                  <button title="More" style={{
+                    background: "none", border: "none", padding: "5px 8px",
+                    cursor: "pointer", display: "flex", alignItems: "center",
+                    color: "#111",
+                  }}>
+                    <MoreHorizontal size={13} strokeWidth={2} />
+                  </button>
+                </div>
               </div>
             )}
           </div>
