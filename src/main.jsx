@@ -25,44 +25,8 @@ if (import.meta.env.PROD) {
   }).catch(() => {});
 }
 
-// Dev-only: live CLS monitor badge (bottom-left corner)
-if (import.meta.env.DEV && typeof PerformanceObserver !== 'undefined') {
-  let clsValue = 0;
-  let badge = null;
-
-  const createBadge = () => {
-    badge = document.createElement('div');
-    badge.id = 'cls-monitor';
-    badge.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:99999;font:600 11px/1 "SF Mono","Fira Code",monospace;padding:4px 8px;border-radius:6px;pointer-events:none;opacity:0.85;transition:background 0.3s,color 0.3s';
-    document.body.appendChild(badge);
-    updateBadge();
-  };
-
-  const updateBadge = () => {
-    if (!badge) return;
-    const good = clsValue < 0.1;
-    const ok = clsValue < 0.25;
-    badge.style.background = good ? 'rgba(16,185,129,0.15)' : ok ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)';
-    badge.style.color = good ? '#10B981' : ok ? '#F59E0B' : '#EF4444';
-    badge.style.border = `1px solid ${good ? 'rgba(16,185,129,0.3)' : ok ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`;
-    badge.textContent = `CLS ${clsValue.toFixed(3)}`;
-  };
-
-  try {
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value;
-          updateBadge();
-        }
-      }
-    });
-    observer.observe({ type: 'layout-shift', buffered: true });
-    // Create badge after DOM is ready
-    if (document.body) createBadge();
-    else document.addEventListener('DOMContentLoaded', createBadge);
-  } catch { /* PerformanceObserver layout-shift not supported */ }
-}
+// Dev-only: performance overlay is now a React component (DevPerfOverlay)
+// mounted inside App.jsx, replacing the old vanilla DOM CLS badge.
 
 console.info("[KubeQuest:boot] main.jsx module loaded");
 

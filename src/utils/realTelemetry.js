@@ -72,7 +72,8 @@ function collectNetworkMetrics() {
       const response = await originalFetch.apply(this, args);
       const duration = Math.round(performance.now() - start);
       const ok = response.ok;
-      _network.requests.push({ ts, duration, ok });
+      const status = response.status;
+      _network.requests.push({ ts, duration, ok, status });
       if (_network.requests.length > MAX_ENTRIES) _network.requests.shift();
 
       if (duration > SLOW_REQUEST_MS) {

@@ -7,6 +7,13 @@
 
 import { assessHealth, deriveInsights, evaluateAlerts, computeBaseline, getConfidence, computeErrorRate, computeTraffic } from "./mockTelemetry";
 
+/** Compute P75, P90, P95, P99 from a sorted array of numbers. */
+export function computePercentiles(sorted) {
+  if (!sorted || sorted.length === 0) return { p75: null, p90: null, p95: null, p99: null };
+  const p = (pct) => sorted[Math.min(Math.floor(sorted.length * pct), sorted.length - 1)];
+  return { p75: p(0.75), p90: p(0.90), p95: p(0.95), p99: p(0.99) };
+}
+
 /** Time range options in seconds. null = full session. */
 export const TIME_RANGES = [
   { key: "30s",      sec: 30,    label: "30s" },
@@ -41,10 +48,10 @@ export function buildSnapshot(real, windowSec = null) {
   const sessionDuration = real.userFlow?.sessionDuration || 0;
   const windowDuration  = windowSec != null ? Math.min(windowSec, sessionDuration) : sessionDuration;
 
-  // P95 from windowed latencies
+  // Percentiles from windowed latencies
   const latencies = requests.map(r => r.duration).sort((a, b) => a - b);
-  const p95Index  = Math.floor(latencies.length * 0.95);
-  const p95       = latencies.length > 0 ? latencies[Math.min(p95Index, latencies.length - 1)] : null;
+  const pctl = computePercentiles(latencies);
+  const p95 = pctl.p95;
 
   // Latency timeline for chart (formatted for display)
   const latencyTimeline = requests.map(r => ({
@@ -83,6 +90,7 @@ export function buildSnapshot(real, windowSec = null) {
     traffic,
 
     p95,
+    percentiles: pctl,
     totalRequests,
     failedRequests,
     errorCount,
@@ -111,5 +119,8 @@ export function buildSnapshot(real, windowSec = null) {
 
     latencyTimeline,
     latencyBaseline: baseline,
+
+    // Raw request data for status-code-level charts (Network Health)
+    _rawRequests: requests,
   };
 }
