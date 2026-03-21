@@ -8,11 +8,11 @@ const TABLE = "analytics_events";
 // ── Time range helpers ──────────────────────────────────────────────────────
 
 export const TIME_RANGES = [
-  { key: "24h",  label: "24h",  hours: 24 },
-  { key: "7d",   label: "7d",   hours: 168 },
-  { key: "30d",  label: "30d",  hours: 720 },
-  { key: "3mo",  label: "3mo",  hours: 2160 },
-  { key: "12mo", label: "12mo", hours: 8760 },
+  { key: "24h",  label: "Last 24 Hours",  hours: 24 },
+  { key: "7d",   label: "Last 7 Days",    hours: 168 },
+  { key: "30d",  label: "Last 30 Days",   hours: 720 },
+  { key: "3mo",  label: "Last 3 Months",  hours: 2160 },
+  { key: "12mo", label: "Last 12 Months", hours: 8760 },
 ];
 
 function rangeStart(hours) {
@@ -121,4 +121,19 @@ export async function fetchAnalytics(supabase, hours) {
     hasSeededData: sessions.some(r => r.source === "vercel_seed"),
     hasLiveData: sessions.some(r => r.source !== "vercel_seed"),
   };
+}
+
+/**
+ * Count unique sessions active in the last 5 minutes.
+ * Lightweight query — only counts distinct session_ids.
+ */
+export async function fetchOnlineCount(supabase) {
+  const since = new Date(Date.now() - 5 * 60_000).toISOString();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("session_id")
+    .gte("created_at", since)
+    .neq("source", "vercel_seed");
+  if (error || !data) return 0;
+  return new Set(data.map(r => r.session_id)).size;
 }

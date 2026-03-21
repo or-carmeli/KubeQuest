@@ -2,9 +2,9 @@
 // DEV-only Vercel-inspired analytics view.
 // Reads from analytics_events table only. Completely isolated.
 
-import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown } from "lucide-react";
-import { fetchAnalytics, TIME_RANGES } from "../api/analyticsQueries";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown } from "lucide-react";
+import { fetchAnalytics, fetchOnlineCount, TIME_RANGES } from "../api/analyticsQueries";
 
 const MONO = "'Fira Code','Courier New',monospace";
 
@@ -65,17 +65,31 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chartMode, setChartMode] = useState("visitors");
+  const [onlineCount, setOnlineCount] = useState(0);
 
   const load = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
-    const r = TIME_RANGES.find(t => t.key === range);
-    const result = await fetchAnalytics(supabase, r.hours);
+    const [result, online] = await Promise.all([
+      fetchAnalytics(supabase, TIME_RANGES.find(t => t.key === range).hours),
+      fetchOnlineCount(supabase),
+    ]);
     setData(result);
+    setOnlineCount(online);
     setLoading(false);
   }, [supabase, range]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Refresh online count every 30s
+  useEffect(() => {
+    if (!supabase) return;
+    const iv = setInterval(async () => {
+      const n = await fetchOnlineCount(supabase);
+      setOnlineCount(n);
+    }, 30_000);
+    return () => clearInterval(iv);
+  }, [supabase]);
 
   return (
     <div className="page-pad" style={{
@@ -83,7 +97,7 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
       animation: "fadeIn 0.3s ease", direction: "ltr",
       minHeight: "calc(100vh - 80px)", display: "flex", flexDirection: "column",
     }}>
-      {/* Header */}
+      {/* Header — Vercel style */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <button className="back-btn" onClick={onBack} style={{
           background: "var(--glass-3)", border: "1px solid var(--glass-6)",
@@ -99,6 +113,27 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
           background: "rgba(139,92,246,0.15)", color: "#a78bfa",
           border: "1px solid rgba(139,92,246,0.25)", letterSpacing: 0.5,
         }}>DEV</span>
+
+        {/* Online indicator — matches Vercel's "X online" */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 5,
+          color: "var(--text-muted)", fontSize: 13,
+          marginLeft: 4,
+          borderLeft: "1px solid var(--glass-6)",
+          paddingLeft: 12,
+        }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: onlineCount > 0 ? "#34d399" : "#64748b",
+            boxShadow: onlineCount > 0 ? "0 0 6px rgba(52,211,153,0.5)" : "none",
+            flexShrink: 0,
+          }} />
+          <span style={{ fontFamily: MONO, fontWeight: 500 }}>
+            {onlineCount}
+          </span>
+          <span>online</span>
+        </div>
+
         <div style={{ flex: 1 }} />
         <TimeRangeSelector range={range} onChange={setRange} />
       </div>
@@ -195,25 +230,62 @@ function SummaryCard({ icon, label, value, sub, subColor }) {
   );
 }
 
-// ── Time Range Selector ─────────────────────────────────────────────────────
+// ── Time Range Dropdown (Vercel-style) ──────────────────────────────────────
 
 function TimeRangeSelector({ range, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const current = TIME_RANGES.find(t => t.key === range);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
   return (
-    <div style={{
-      display: "flex", gap: 1, background: "var(--glass-2)",
-      border: "1px solid var(--glass-4)", borderRadius: 8, padding: 2,
-    }}>
-      {TIME_RANGES.map(t => (
-        <button key={t.key} onClick={() => onChange(t.key)} style={{
-          background: range === t.key ? "var(--glass-10)" : "transparent",
-          border: "none", color: range === t.key ? "var(--text-bright)" : "var(--text-muted)",
-          padding: "4px 10px", borderRadius: 6, cursor: "pointer",
-          fontSize: 11, fontWeight: range === t.key ? 600 : 400,
-          transition: "all 0.15s ease",
+    <div ref={ref} style={{ position: "relative", userSelect: "none" }}>
+      {/* Trigger button */}
+      <button onClick={() => setOpen(o => !o)} style={{
+        display: "flex", alignItems: "center", gap: 8,
+        background: "var(--glass-2)", border: "1px solid var(--glass-5)",
+        borderRadius: 8, padding: "6px 12px", cursor: "pointer",
+        color: "var(--text-primary)", fontSize: 13, fontWeight: 500,
+      }}>
+        <Calendar size={14} strokeWidth={1.5} style={{ color: "var(--text-dim)" }} />
+        <span>{current?.label}</span>
+        <ChevronDown size={14} strokeWidth={1.5} style={{
+          color: "var(--text-dim)",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.15s ease",
+        }} />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: "absolute", right: 0, top: "calc(100% + 4px)",
+          background: "#1a1a1a", border: "1px solid var(--glass-5)",
+          borderRadius: 10, padding: "4px 0", minWidth: 180,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+          zIndex: 100, animation: "fadeIn 0.12s ease",
         }}>
-          {t.label}
-        </button>
-      ))}
+          {TIME_RANGES.map(t => (
+            <button key={t.key} onClick={() => { onChange(t.key); setOpen(false); }} style={{
+              width: "100%", display: "flex", alignItems: "center",
+              padding: "8px 14px", border: "none", cursor: "pointer",
+              background: t.key === range ? "var(--glass-5)" : "transparent",
+              color: t.key === range ? "var(--text-bright)" : "var(--text-secondary)",
+              fontSize: 13, fontWeight: t.key === range ? 600 : 400,
+              textAlign: "left",
+            }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
