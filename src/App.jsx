@@ -192,7 +192,7 @@ const TRANSLATIONS = {
     loginBtn: "התחברי", signupBtn: "הירשמי", loading: "רגע...",
     emailAlreadySent: "אימייל אימות כבר נשלח! בדקי את תיבת הדואר שלך.",
     emailSent: "נשלח אימייל אימות! בדקי את תיבת הדואר.",
-    otpExpired: "קישור האימות פג תוקף. אנא הירשמי שוב כדי לקבל קישור חדש.",
+    otpExpired: "קישור האימות כבר מומש או שפג תוקפו. אם קיבלת את המייל לאחרונה, ייתכן שהאימייל שלך כבר אומת - נסי להתחבר.",
     wrongCredentials: "אימייל או סיסמה שגויים",
     serviceUnavailable: "השירות אינו זמין כרגע. נסו שוב מאוחר יותר.",
     didntReceive: "לא קיבלת את המייל?", resendBtn: "שלח שוב",
@@ -285,7 +285,7 @@ const TRANSLATIONS = {
     startPlaying_m: "התחל לשחק כאורח",
     loginBtn_m: "התחבר", signupBtn_m: "הירשם",
     emailAlreadySent_m: "אימייל אימות כבר נשלח! בדוק את תיבת הדואר שלך.",
-    otpExpired_m: "קישור האימות פג תוקף. אנא הירשם שוב כדי לקבל קישור חדש.",
+    otpExpired_m: "קישור האימות כבר מומש או שפג תוקפו. אם קיבלת את המייל לאחרונה, ייתכן שהאימייל שלך כבר אומת - נסה להתחבר.",
     resendSuccess_m: "אימייל חדש נשלח! בדוק את תיבת הדואר.",
     resendError_m: "שגיאה בשליחה מחדש. נסה שוב.",
     sendResetLink_m: "שלח קישור איפוס",
@@ -460,7 +460,7 @@ const TRANSLATIONS = {
     loginBtn: "Sign In", signupBtn: "Register", loading: "Loading...",
     emailAlreadySent: "Verification email already sent! Check your inbox.",
     emailSent: "Verification email sent! Check your inbox.",
-    otpExpired: "Verification link has expired. Please sign up again to receive a new link.",
+    otpExpired: "This verification link was already used or has expired. If you received the email recently, your email may already be verified \u2014 try logging in.",
     wrongCredentials: "Incorrect email or password",
     serviceUnavailable: "Service temporarily unavailable. Please try again later.",
     didntReceive: "Didn't receive the email?", resendBtn: "Resend",
@@ -1578,14 +1578,25 @@ export default function K8sQuestApp() {
   }, []);
 
   useEffect(() => {
-    // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link)
+    // Detect Supabase error params redirected back via URL hash (e.g. expired confirmation link).
+    //
+    // Why login instead of signup?
+    // Mobile email clients (Gmail on iOS, etc.) prefetch links in emails.
+    // This prefetch hits Supabase's /auth/v1/verify endpoint, consuming the
+    // one-time OTP token *before* the user taps the link. The verification
+    // actually succeeds (the email IS confirmed), but when the real user
+    // clicks, Supabase returns otp_expired because the token is already used.
+    // Routing to the login tab lets the user sign in immediately instead of
+    // re-registering an already-confirmed account.
     const hash = window.location.hash;
     if (hash && hash.includes("error=")) {
       const params = new URLSearchParams(hash.slice(1));
       const code = params.get("error_code");
+      const desc = params.get("error_description");
+      console.warn("[KubeQuest:auth] verification redirect error:", { error_code: code, error_description: desc });
       if (code === "otp_expired" || code === "access_denied") {
         setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.he.otpExpired); setAuthIsSuccess(false);
-        setAuthScreen("signup");
+        setAuthScreen("login");
       }
       window.history.replaceState(null, "", window.location.pathname);
     }
