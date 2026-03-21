@@ -9,6 +9,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const ALERT_EMAIL = Deno.env.get("ALERT_EMAIL") ?? "contact@kubequest.online";
 
 // Service-key client bypasses RLS - needed for writing to monitoring tables
 const adminClient = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -115,6 +117,32 @@ async function checkAuthentication(): Promise<{ ok: boolean; details?: Record<st
   return { ok, details };
 }
 
+// ── Email Alert ─────────────────────────────────────────────────────────────
+
+async function sendIncidentAlert(serviceName: string, impact: string) {
+  if (!RESEND_API_KEY) return;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "KubeQuest Alerts <alerts@kubequest.online>",
+        to: [ALERT_EMAIL],
+        subject: `[KubeQuest] ${serviceName} - Service Down`,
+        html: `<h2 style="color:#e53e3e">${serviceName} - Service Down</h2>
+<p>${impact}</p>
+<p>Detected at: ${new Date().toISOString()}</p>
+<p><a href="https://status.kubequest.online">View Status Page</a></p>`,
+      }),
+    });
+  } catch (err) {
+    console.error("[alert] failed to send email:", err);
+  }
+}
+
 // ── Main Handler ────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -179,13 +207,15 @@ Deno.serve(async (req) => {
           .limit(1);
 
         if (!existing || existing.length === 0) {
+          const impact = `${r.service_name} has been unreachable for 3+ consecutive health checks.`;
           await adminClient.rpc("manage_incident", {
             p_title: `${r.service_name} - Service Down`,
             p_severity: "high",
             p_status: "investigating",
             p_affected_services: [r.service_name],
-            p_impact: `${r.service_name} has been unreachable for 3+ consecutive health checks.`,
+            p_impact: impact,
           });
+          await sendIncidentAlert(r.service_name, impact);
         }
       }
     }
