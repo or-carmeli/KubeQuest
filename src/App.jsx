@@ -1781,6 +1781,16 @@ export default function K8sQuestApp() {
             return;
           }
 
+          // If a verifyOtp call is pending, don't load data from the stored
+          // session yet. verifyOtp may establish a DIFFERENT session (e.g. user
+          // was logged in as A but clicked B's confirmation link). The SIGNED_IN
+          // event from verifyOtp will load the correct user's data.
+          if (needsVerifyOtp) {
+            console.info("[auth:session_restore] existing session but verifyOtp pending, deferring loadUserData");
+            setUser(session.user);
+            setAuthChecked(true);
+            return;
+          }
           console.info("[auth:session_restore] existing session => loadUserData");
           setUser(session.user);
           loadUserData(session.user.id, session.user);
@@ -1863,15 +1873,27 @@ export default function K8sQuestApp() {
         try { window.history.replaceState(null, "", window.location.pathname); } catch {}
         if (error) {
           console.warn("[auth:verifyOtp] failed:", error.message, "flow:", flow, "=> login (otpExpired)");
-          // Token already consumed (mobile prefetch) or genuinely expired.
-          // Route to login - if it was prefetch, email is actually confirmed
-          // and the user can sign in with their password.
-          setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.en.otpExpired);
-          setAuthIsSuccess(false);
-          setAuthScreen("login");
           clearTimeout(hardTimeout);
-          setAuthChecked(true);
-          setDataLoaded(true);
+          // If a session already existed (user was signed in when they clicked
+          // the link), fall back to loading their data instead of kicking them
+          // to the login screen. The bad link is a no-op for them.
+          supabase.auth.getSession().then(({ data: { session: existing } }) => {
+            if (existing) {
+              console.info("[auth:verifyOtp] failed but existing session found => loadUserData");
+              setUser(existing.user);
+              loadUserData(existing.user.id, existing.user);
+              setAuthChecked(true);
+            } else {
+              // No session - token was consumed (mobile prefetch) or genuinely expired.
+              // Route to login - if it was prefetch, email is actually confirmed
+              // and the user can sign in with their password.
+              setAuthError(TRANSLATIONS[lang]?.otpExpired || TRANSLATIONS.en.otpExpired);
+              setAuthIsSuccess(false);
+              setAuthScreen("login");
+              setAuthChecked(true);
+              setDataLoaded(true);
+            }
+          });
         } else {
           console.info("[auth:verifyOtp] success, flow:", flow, "session:", !!otpData?.session);
           // Success: onAuthStateChange SIGNED_IN handler takes over.
@@ -2655,6 +2677,9 @@ export default function K8sQuestApp() {
       setUser(null);
       setStats({ total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 });
       setCompletedTopics({}); setUnlockedAchievements([]);
+      setTopicStats({});
+      setUserRank(null);
+      setSaveError("");
       achievementsLoaded.current = false;
       loadingDataRef.current = false;
       setDataLoaded(true);
@@ -2668,6 +2693,10 @@ export default function K8sQuestApp() {
     setUser(null);
     setStats({ total_answered:0, total_correct:0, total_score:0, best_score:0, max_streak:0, current_streak:0 });
     setCompletedTopics({}); setUnlockedAchievements([]);
+    setTopicStats({});
+    setUserRank(null);
+    setSaveError("");
+    try { localStorage.removeItem("topicStats_v1"); } catch {}
     achievementsLoaded.current = false;
     loadingDataRef.current = false;
     setDataLoaded(true);
