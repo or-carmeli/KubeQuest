@@ -3,7 +3,7 @@
 // Reads from analytics_events table only. Completely isolated.
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown } from "lucide-react";
+import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown, Maximize2 } from "lucide-react";
 import { fetchAnalytics, fetchOnlineCount, TIME_RANGES } from "../api/analyticsQueries";
 
 const MONO = "'Fira Code','Courier New',monospace";
@@ -31,6 +31,8 @@ function injectHoverCSS() {
     .av-chart-hover-line { pointer-events: none; }
     .av-summary { transition: border-color .2s, box-shadow .2s; }
     .av-summary:hover { border-color: rgba(255,255,255,0.15) !important; }
+    .av-row-actions { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); opacity: 0; transition: opacity .12s; z-index: 2; }
+    .av-row:hover .av-row-actions { opacity: 1; }
     .av-tab { transition: color .15s, border-color .15s; border-bottom: 2px solid transparent; cursor: pointer; }
     .av-tab:hover { color: var(--text-primary) !important; }
     .av-tab-active { border-bottom-color: var(--text-primary) !important; color: var(--text-primary) !important; }
@@ -506,70 +508,107 @@ function EmptyChart() {
 
 function TabbedBreakdownCard({ tabs }) {
   const [activeTab, setActiveTab] = useState(0);
-  const [expanded, setExpanded] = useState(false);
+  const [viewAll, setViewAll] = useState(false);
   const current = tabs[activeTab] || tabs[0];
   const { items, renderIcon } = current;
   const PREVIEW_COUNT = 5;
-  const hasMore = items.length > PREVIEW_COUNT;
-  const displayItems = expanded ? items : items.slice(0, PREVIEW_COUNT);
 
   return (
-    <div className="av-card" style={{
-      background: "var(--glass-2)", border: "1px solid var(--glass-5)",
-      borderRadius: 10, padding: "14px 16px", minWidth: 0,
-    }}>
-      {/* Tab header */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 0, marginBottom: 8,
-        borderBottom: "1px solid var(--glass-4)", position: "relative",
+    <>
+      <div className="av-card" style={{
+        background: "var(--glass-2)", border: "1px solid var(--glass-5)",
+        borderRadius: 10, padding: "14px 16px", minWidth: 0,
       }}>
-        <div style={{ display: "flex", gap: 16, flex: 1 }}>
-          {tabs.map((tab, i) => (
-            <button key={i}
-              className={`av-tab ${i === activeTab ? "av-tab-active" : ""}`}
-              onClick={() => { setActiveTab(i); setExpanded(false); }}
-              style={{
-                background: "none", border: "none", padding: "0 0 8px",
-                fontSize: 13, fontWeight: i === activeTab ? 600 : 400,
-                color: i === activeTab ? "var(--text-primary)" : "var(--text-muted)",
-                cursor: "pointer",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Tab header */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 0, marginBottom: 8,
+          borderBottom: "1px solid var(--glass-4)", position: "relative",
+        }}>
+          <div style={{ display: "flex", gap: 16, flex: 1 }}>
+            {tabs.map((tab, i) => (
+              <button key={i}
+                className={`av-tab ${i === activeTab ? "av-tab-active" : ""}`}
+                onClick={() => { setActiveTab(i); }}
+                style={{
+                  background: "none", border: "none", padding: "0 0 8px",
+                  fontSize: 13, fontWeight: i === activeTab ? 600 : 400,
+                  color: i === activeTab ? "var(--text-primary)" : "var(--text-muted)",
+                  cursor: "pointer",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, paddingBottom: 8 }}>
+            visitors
+          </span>
         </div>
-        <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, paddingBottom: 8 }}>
-          visitors
-        </span>
+
+        {/* Rows — compact preview (no page views column) */}
+        {items.length === 0 ? (
+          <div style={{ padding: "24px 0", textAlign: "center", color: "var(--text-dim)", fontSize: 11 }}>
+            No data yet
+          </div>
+        ) : (
+          <BreakdownRows items={items.slice(0, PREVIEW_COUNT)} allItems={items} renderIcon={renderIcon}
+            onViewAll={items.length > PREVIEW_COUNT ? () => setViewAll(true) : null} />
+        )}
       </div>
 
-      {/* Rows */}
-      {items.length === 0 ? (
-        <div style={{ padding: "24px 0", textAlign: "center", color: "var(--text-dim)", fontSize: 11 }}>
-          No data yet
+      {/* View All modal overlay — Vercel-style full list with Close button */}
+      {viewAll && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "fadeIn 0.15s ease",
+        }} onClick={() => setViewAll(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: "#111", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 12, width: "90vw", maxWidth: 560, maxHeight: "80vh",
+            display: "flex", flexDirection: "column",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.5)", animation: "fadeIn 0.15s ease",
+          }}>
+            {/* Modal header */}
+            <div style={{
+              display: "flex", alignItems: "center", padding: "16px 20px",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+            }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", flex: 1 }}>
+                {current.label}
+              </span>
+              <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginRight: 16 }}>
+                visitors
+              </span>
+              <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: MONO, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                page views
+              </span>
+            </div>
+            {/* All rows with both columns */}
+            <div style={{ overflow: "auto", flex: 1 }}>
+              <BreakdownRowsFull items={items} renderIcon={renderIcon} />
+            </div>
+            {/* Close button */}
+            <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <button className="av-btn" onClick={() => setViewAll(false)} style={{
+                width: "100%", padding: "10px 0", background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
+                color: "var(--text-primary)", fontSize: 13, fontWeight: 500,
+                cursor: "pointer",
+              }}>
+                Close
+              </button>
+            </div>
+          </div>
         </div>
-      ) : (
-        <BreakdownRows items={displayItems} allItems={items} renderIcon={renderIcon} />
       )}
-
-      {/* View All / Collapse — inline expand like Vercel */}
-      {hasMore && (
-        <button className="av-btn" onClick={() => setExpanded(e => !e)} style={{
-          width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-          background: "none", border: "none", padding: "8px 0 2px",
-          color: "var(--text-muted)", fontSize: 12, cursor: "pointer",
-        }}>
-          {expanded ? "Show less" : `View All (${items.length})`}
-        </button>
-      )}
-    </div>
+    </>
   );
 }
 
-// ── Breakdown Rows (shared between card and modal) ──────────────────────────
+// ── Breakdown Rows (compact — card preview, visitors only) ──────────────────
 
-function BreakdownRows({ items, allItems, renderIcon }) {
+function BreakdownRows({ items, allItems, renderIcon, onViewAll }) {
   const max = allItems.length > 0 ? allItems[0].count : 1;
   const total = allItems.reduce((s, i) => s + i.count, 0);
 
@@ -613,6 +652,81 @@ function BreakdownRows({ items, allItems, renderIcon }) {
                 fontWeight: 600, flexShrink: 0, minWidth: 30, textAlign: "right",
               }}>
                 {fmt(item.count)}
+              </span>
+            </div>
+            {/* Hover action bar — View All trigger on any row */}
+            {onViewAll && (
+              <div className="av-row-actions">
+                <button onClick={onViewAll} title="View All" style={{
+                  background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 6, padding: "3px 8px", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 5,
+                  color: "var(--text-secondary)", fontSize: 11, fontWeight: 500,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                }}>
+                  <Maximize2 size={10} strokeWidth={2} />
+                  View All
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Breakdown Rows Full (modal — both visitors + page views columns) ────────
+
+function BreakdownRowsFull({ items, renderIcon }) {
+  const max = items.length > 0 ? items[0].count : 1;
+  const total = items.reduce((s, i) => s + i.count, 0);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {items.map((item, i) => {
+        const pct = total > 0 ? (item.count / total) * 100 : 0;
+        const pctLabel = pct >= 1 ? `${Math.round(pct)}%` : "<0.5%";
+        const barPct = Math.max((item.count / max) * 100, 2);
+        return (
+          <div key={i} className="av-row" style={{
+            position: "relative",
+            borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+          }}>
+            <div style={{
+              position: "absolute", left: 0, top: 0, bottom: 0,
+              width: `${barPct}%`, background: "var(--glass-4)",
+              borderRadius: 3, transition: "width 0.4s ease",
+            }} />
+            <div style={{
+              position: "relative", display: "flex", alignItems: "center",
+              padding: "9px 20px", gap: 8, zIndex: 1,
+            }}>
+              {renderIcon && renderIcon(item)}
+              <span style={{
+                flex: 1, fontSize: 13, color: "var(--text-primary)",
+                fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis",
+                whiteSpace: "nowrap", minWidth: 0,
+              }}>
+                {item.name}
+              </span>
+              <span style={{
+                fontSize: 11, color: "var(--text-dim)", fontFamily: MONO,
+                flexShrink: 0, minWidth: 32, textAlign: "right",
+              }}>
+                {pctLabel}
+              </span>
+              <span style={{
+                fontSize: 13, color: "var(--text-primary)", fontFamily: MONO,
+                fontWeight: 700, flexShrink: 0, minWidth: 36, textAlign: "right",
+              }}>
+                {fmt(item.count)}
+              </span>
+              <span style={{
+                fontSize: 13, color: "var(--text-primary)", fontFamily: MONO,
+                fontWeight: 700, flexShrink: 0, minWidth: 44, textAlign: "right",
+              }}>
+                {fmt(item.pageViews || 0)}
               </span>
             </div>
           </div>

@@ -59,6 +59,23 @@ function countByField(rows, field) {
     .sort((a, b) => b.count - a.count);
 }
 
+function countByFieldDual(sessions, pageViews, field) {
+  const visMap = {};
+  const pvMap = {};
+  for (const r of sessions) {
+    const val = r[field] || "(direct)";
+    visMap[val] = (visMap[val] || 0) + 1;
+  }
+  for (const r of pageViews) {
+    const val = r[field] || "(direct)";
+    pvMap[val] = (pvMap[val] || 0) + 1;
+  }
+  const keys = new Set([...Object.keys(visMap), ...Object.keys(pvMap)]);
+  return [...keys]
+    .map(name => ({ name, count: visMap[name] || 0, pageViews: pvMap[name] || 0 }))
+    .sort((a, b) => b.count - a.count);
+}
+
 function bucketByTime(rows, hours) {
   // Choose bucket size based on range
   let bucketMs;
@@ -112,13 +129,13 @@ export async function fetchAnalytics(supabase, hours) {
     bounceRate,
     visitorsOverTime: bucketByTime(sessions, hours),
     pageViewsOverTime: bucketByTime(pageViews, hours),
-    topPages: countByField(pageViews, "path"),
-    referrers: countByField(sessions, "referrer"),
-    countries: countByField(sessions, "country"),
-    devices: countByField(sessions, "device_type"),
-    browsers: countByField(sessions, "browser"),
-    operatingSystems: countByField(sessions, "os"),
-    hostnames: countByField(sessions, "hostname"),
+    topPages: countByFieldDual(sessions, pageViews, "path"),
+    referrers: countByFieldDual(sessions, pageViews, "referrer"),
+    countries: countByFieldDual(sessions, pageViews, "country"),
+    devices: countByFieldDual(sessions, pageViews, "device_type"),
+    browsers: countByFieldDual(sessions, pageViews, "browser"),
+    operatingSystems: countByFieldDual(sessions, pageViews, "os"),
+    hostnames: countByFieldDual(sessions, pageViews, "hostname"),
     hasSeededData: sessions.some(r => r.source === "vercel_seed"),
     hasLiveData: sessions.some(r => r.source !== "vercel_seed"),
   };
