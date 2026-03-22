@@ -207,21 +207,21 @@ flowchart LR
 ## Observability
 
 ```mermaid
-flowchart LR
-    CRON["pg_cron<br/>every 60s"] --> EDGE["Edge Function"]
-    EDGE --> DB["DB"]
-    EDGE --> API["API"]
-    EDGE --> QUIZ["Quiz"]
-    EDGE --> LB["Leaderboard"]
-    EDGE --> AUTH["Auth"]
-    EDGE -->|results| STORE[("status tables")]
+flowchart TD
+    CRON["pg_cron · every 60s"] --> EDGE["Edge Function"]
+    EDGE --> DB["DB"] & API["API"] & QUIZ["Quiz"] & LB["Leaderboard"] & AUTH["Auth"]
+    EDGE -->|results| STORE[("Status Tables")]
     STORE -->|polls 30s| UI["Status Page"]
-    UI -.->|alerts| USER([User])
+    UI -.-> USER([User])
+    EDGE -.->|incident| RESEND["Resend API"]
+    RESEND -.->|email alert| USER
 
     style CRON fill:#111827,stroke:#A855F7,stroke-width:2px,color:#fff
     style EDGE fill:#111827,stroke:#00D4FF,stroke-width:2px,color:#fff
     style STORE fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
     style UI fill:#111827,stroke:#10B981,stroke-width:2px,color:#fff
+    style RESEND fill:#111827,stroke:#e53e3e,stroke-width:2px,color:#fff
+    style USER fill:#111827,stroke:#9CA3AF,stroke-width:2px,color:#fff
 ```
 
 The core of the observability stack is a **self-monitoring loop** built entirely on Supabase:
@@ -229,7 +229,7 @@ The core of the observability stack is a **self-monitoring loop** built entirely
 1. **pg_cron** triggers a Supabase Edge Function every 60 seconds
 2. The Edge Function health-checks all 5 services (DB, API, Quiz Engine, Leaderboard, Auth)
 3. Results are written to PostgreSQL status tables (append-only for uptime history)
-4. 3 consecutive failures auto-create an incident
+4. 3 consecutive failures auto-create an incident and send an email alert via Resend
 5. The frontend polls these tables every 30 seconds and renders a live status page
 
 Additional layers: **Sentry** captures client-side errors and Web Vitals, **GitHub Actions** run external uptime checks (every 30min) and synthetic smoke tests (every 6h).
@@ -245,7 +245,7 @@ Additional layers: **Sentry** captures client-side errors and Web Vitals, **GitH
 | Authentication | GoTrue `/auth/v1/health` |
 
 - **Status classification** — operational (<2s), degraded (>2s), down (error)
-- **Auto-incident detection** — 3 consecutive failures trigger automatic incident creation
+- **Auto-incident detection** — 3 consecutive failures trigger automatic incident creation + email alert via Resend
 - **Data retention** — append-only `system_status_history` table for uptime tracking
 
 Full documentation: [docs/monitoring.md](docs/monitoring.md) | Live status: [status.kubequest.online](https://status.kubequest.online)
@@ -328,9 +328,9 @@ flowchart LR
 ### Publish Pipeline (post-merge)
 
 ```mermaid
-flowchart LR
-    PUSH["Push to main"] --> SCAN["Build &<br/>Trivy Scan"] --> GHCR["Push to<br/>GHCR"] --> ATTEST["SBOM +<br/>Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
+flowchart TD
     BOT["Dependabot"] -.->|weekly PRs| PUSH
+    PUSH["Push to main"] --> SCAN["Build & Trivy Scan"] --> GHCR["Push to GHCR"] --> ATTEST["SBOM + Provenance"] --> SIGN["Cosign Sign"] --> VERIFY["Verify"]
 
     style PUSH fill:#1a1a2e,stroke:#00D4FF,stroke-width:2px,color:#fff
     style SCAN fill:#1a1a2e,stroke:#EF4444,stroke-width:2px,color:#fff

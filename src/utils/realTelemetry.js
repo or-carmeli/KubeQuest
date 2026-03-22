@@ -66,6 +66,10 @@ function collectNetworkMetrics() {
   const originalFetch = window.fetch;
 
   window.fetch = async function (...args) {
+    // Skip recording telemetry sync requests to avoid self-referencing noise
+    const reqUrl = typeof args[0] === "string" ? args[0] : args[0]?.url || "";
+    if (reqUrl.includes("observability_events")) return originalFetch.apply(this, args);
+
     const start = performance.now();
     const ts = Date.now();
     try {

@@ -584,6 +584,199 @@ function PsaAdmissionDiagram() {
   );
 }
 
+// ── 21. ConfigMap / Secret → Pod mounting ────────────────────────────
+function ConfigMapMountDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+        <div style={row({ gap: 8 })}>
+          <div style={box(C.indigo, C.indigoBg, { padding: "6px 10px" })}>
+            <div style={label(C.indigoText, { fontSize: 10 })}>ConfigMap</div>
+          </div>
+          <div style={box(C.amber, C.amberBg, { padding: "6px 10px" })}>
+            <div style={label(C.amberText, { fontSize: 10 })}>Secret</div>
+          </div>
+        </div>
+        <div style={row({ gap: 16 })}>
+          <div style={col({ gap: 1 })}>
+            <span style={subLabel()}>env vars</span>
+            <div style={arrow()}>↓</div>
+          </div>
+          <div style={col({ gap: 1 })}>
+            <span style={subLabel()}>volume</span>
+            <div style={arrow()}>↓</div>
+          </div>
+        </div>
+        <div style={box(C.green, C.greenBg, { padding: "8px 12px", width: "100%" })}>
+          <div style={label(C.greenText, { fontSize: 10, marginBottom: 4 })}>Pod</div>
+          <div style={row({ gap: 6 })}>
+            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { fontSize: 8, padding: "3px 6px" })}>$DB_HOST</div>
+            <div style={smallBox(C.amber, C.amberBg, C.amberText, { fontSize: 8, padding: "3px 6px" })}>/secrets/</div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>inject config as env vars or mounted files</div>
+    </div>
+  );
+}
+
+// ── 22. Dynamic Provisioning: StorageClass → PVC → PV ───────────────
+function DynamicProvisioningDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%" })}>PVC (request: 10Gi)</div>
+        <div style={col({ gap: 1 })}>
+          <span style={{ fontSize: 8, color: C.amberText, fontFamily: MONO }}>triggers</span>
+          <div style={arrow()}>↓</div>
+        </div>
+        <div style={box(C.amber, C.amberBg, { padding: "6px 10px", width: "100%" })}>
+          <div style={label(C.amberText, { fontSize: 10 })}>StorageClass</div>
+          <div style={subLabel({ marginTop: 3 })}>provisioner: ebs.csi.aws.com</div>
+        </div>
+        <div style={col({ gap: 1 })}>
+          <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>creates</span>
+          <div style={arrow()}>↓</div>
+        </div>
+        <div style={row({ gap: 6 })}>
+          <div style={smallBox(C.purple, C.purpleBg, C.purpleText)}>PV</div>
+          <div style={arrow({ fontSize: 13 })}>→</div>
+          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText)}>EBS Disk</div>
+        </div>
+      </div>
+      <div style={caption()}>automatic provisioning, no manual PV needed</div>
+    </div>
+  );
+}
+
+// ── 23. Sealed Secrets flow ─────────────────────────────────────────
+function SealedSecretsDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+        <div style={row({ gap: 6, flexWrap: "nowrap" })}>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText)}>Secret</div>
+          <div style={col({ gap: 1 })}>
+            <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>kubeseal</span>
+            <div style={arrow({ fontSize: 13 })}>→</div>
+          </div>
+          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText)}>SealedSecret</div>
+        </div>
+        <div style={arrow()}>↓</div>
+        <div style={box(C.purple, C.purpleBg, { padding: "6px 10px", width: "100%" })}>
+          <div style={label(C.purpleText, { fontSize: 10 })}>Git repo</div>
+          <div style={subLabel({ marginTop: 3 })}>safe to commit</div>
+        </div>
+        <div style={arrow()}>↓</div>
+        <div style={row({ gap: 6, flexWrap: "nowrap" })}>
+          <div style={box(C.indigo, C.indigoBg, { padding: "6px 10px" })}>
+            <div style={label(C.indigoText, { fontSize: 10 })}>Controller</div>
+            <div style={subLabel({ marginTop: 3 })}>private key</div>
+          </div>
+          <div style={col({ gap: 1 })}>
+            <span style={{ fontSize: 8, color: C.greenText, fontFamily: MONO }}>decrypt</span>
+            <div style={arrow({ fontSize: 13 })}>→</div>
+          </div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText)}>Secret</div>
+        </div>
+      </div>
+      <div style={caption()}>encrypt for git, decrypt in cluster</div>
+    </div>
+  );
+}
+
+// ── 24. External Secrets Operator flow ──────────────────────────────
+function ESODiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+        <div style={col({ gap: 3 })}>
+          <div style={box(C.amber, C.amberBg, { padding: "6px 10px" })}>
+            <div style={label(C.amberText, { fontSize: 10 })}>AWS SM</div>
+            <div style={subLabel({ marginTop: 3 })}>provider</div>
+          </div>
+        </div>
+        <div style={col({ gap: 1 })}>
+          <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>sync</span>
+          <div style={arrow({ fontSize: 13 })}>→</div>
+        </div>
+        <div style={col({ gap: 3 })}>
+          <div style={box(C.cyan, C.cyanBg, { padding: "6px 8px" })}>
+            <div style={label(C.cyanText, { fontSize: 10 })}>ESO</div>
+          </div>
+          <div style={subLabel()}>ExternalSecret</div>
+        </div>
+        <div style={col({ gap: 1 })}>
+          <span style={{ fontSize: 8, color: C.greenText, fontFamily: MONO }}>create</span>
+          <div style={arrow({ fontSize: 13 })}>→</div>
+        </div>
+        <div style={col({ gap: 3 })}>
+          <div style={box(C.green, C.greenBg, { padding: "6px 10px" })}>
+            <div style={label(C.greenText, { fontSize: 10 })}>Secret</div>
+            <div style={subLabel({ marginTop: 3 })}>K8s</div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>values stay in provider, config in Git</div>
+    </div>
+  );
+}
+
+// ── 25. Helm Chart rendering flow ───────────────────────────────────
+function HelmChartDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+        <div style={box(C.indigo, C.indigoBg, { width: "100%", padding: "8px 10px" })}>
+          <div style={label(C.indigoText, { marginBottom: 6, fontSize: 10 })}>Helm Chart</div>
+          <div style={row({ gap: 6 })}>
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { fontSize: 8, padding: "3px 6px" })}>templates/</div>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>+</span>
+            <div style={smallBox(C.amber, C.amberBg, C.amberText, { fontSize: 8, padding: "3px 6px" })}>values.yaml</div>
+          </div>
+        </div>
+        <div style={col({ gap: 1 })}>
+          <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>helm install</span>
+          <div style={arrow()}>↓</div>
+        </div>
+        <div style={row({ gap: 6 })}>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "4px 6px" })}>Deploy</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "4px 6px" })}>Service</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "4px 6px" })}>ConfigMap</div>
+        </div>
+      </div>
+      <div style={caption()}>templates + values = rendered K8s resources</div>
+    </div>
+  );
+}
+
+// ── 26. CronJob → Job → Pod ─────────────────────────────────────────
+function CronJobDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={box(C.purple, C.purpleBg, { width: "100%", maxWidth: 280 })}>
+        <div style={label(C.purpleText, { marginBottom: 4 })}>CronJob</div>
+        <div style={subLabel({ marginBottom: 6 })}>schedule: "0 */6 * * *"</div>
+        <div style={col({ gap: 4, width: "100%" })}>
+          <div style={box(C.indigo, C.indigoBg, { padding: "6px 10px", width: "100%" })}>
+            <div style={label(C.indigoText, { fontSize: 10, marginBottom: 4 })}>Job (run 1)</div>
+            <div style={row({ gap: 4 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 6px", fontSize: 9 })}>Pod ✓</div>
+            </div>
+          </div>
+          <div style={box(C.indigo, C.indigoBg, { padding: "6px 10px", width: "100%", opacity: 0.5, borderStyle: "dashed" })}>
+            <div style={label(C.indigoText, { fontSize: 10, marginBottom: 4 })}>Job (run 2)</div>
+            <div style={row({ gap: 4 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 6px", fontSize: 9, opacity: 0.6 })}>Pod</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>scheduled Jobs, each creates a Pod</div>
+    </div>
+  );
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // LAZY RENDERING — only mount diagram when scrolled into view
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -691,6 +884,12 @@ const COMPONENT_MAP = {
   ArgoCdSyncDiagram,
   RoleScopeDiagram,
   PsaAdmissionDiagram,
+  ConfigMapMountDiagram,
+  DynamicProvisioningDiagram,
+  SealedSecretsDiagram,
+  ESODiagram,
+  HelmChartDiagram,
+  CronJobDiagram,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

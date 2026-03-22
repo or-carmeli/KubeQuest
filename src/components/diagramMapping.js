@@ -30,9 +30,10 @@ export function domainOf(tag) {
     service: "networking", ingress: "networking", network: "networking",
     headless: "networking",
     storage: "storage", dynamic: "storage",
-    rbac: "security", role: "security",
+    rbac: "security", role: "security", config: "security", sealed: "security", external: "security",
     taints: "scheduling", topology: "scheduling",
     gitops: "gitops",
+    helm: "storage", cronjob: "workloads",
   };
   return map[prefix] || "other";
 }
@@ -85,4 +86,18 @@ export const TAG_DIAGRAM_CONFIG = {
 
   // ── gitops ──────────────────────────────────────────────────────────────
   "gitops-sync":          { component: "ArgoCdSyncDiagram",          score: 4 },
+
+  // ── config ────────────────────────────────────────────────────────────
+  "config-mount":         { component: "ConfigMapMountDiagram",      score: 4 },
+  "sealed-secrets":       { component: "SealedSecretsDiagram",       score: 4 },
+  "external-secrets":     { component: "ESODiagram",                 score: 4 },
+
+  // ── storage (additional) ──────────────────────────────────────────────
+  "dynamic-provisioning": { component: "DynamicProvisioningDiagram", score: 4 },
+
+  // ── helm ──────────────────────────────────────────────────────────────
+  "helm-chart":           { component: "HelmChartDiagram",           score: 4 },
+
+  // ── workloads (additional) ────────────────────────────────────────────
+  "cronjob-hierarchy":    { component: "CronJobDiagram",             score: 4 },
 };
