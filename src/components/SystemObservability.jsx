@@ -11,7 +11,7 @@
  *
  * Triple-gated (DEV only).
  */
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { fetchSystemStatus, fetchHealthCheckHistory, fetchRollupHourly, fetchRollupDaily } from "../api/monitoring";
 
@@ -53,7 +53,7 @@ const TIME_WINDOWS = [
 ];
 
 // ─── Main component ─────────────────────────────────────────────────────────────
-function SystemObservabilityInner({ onBack, supabase }) {
+function SystemObservabilityInner({ onBack, dir = "ltr", supabase }) {
   const [services, setServices] = useState(null);
   const [history, setHistory] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -172,8 +172,8 @@ function SystemObservabilityInner({ onBack, supabase }) {
     <div className="page-pad" style={{ maxWidth: 900, margin: "0 auto", padding: "12px 14px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-        <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center" }}>
-          <ArrowLeft size={16} />
+        <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", order: dir === "rtl" ? 99 : 0 }}>
+          <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>System Observability</span>
         <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>DEV</span>
@@ -305,11 +305,12 @@ function SystemLoadChart({ buckets, serviceNames }) {
 
   return (
     <Panel title="System Load" subtitle="Checks per service">
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
+      <HoverChart W={W} H={H} pad={pad} buckets={buckets} formatValue={b => `${b.totalChecks} checks`}
+        yTicks={[{ pct: 0.5, label: Math.round(maxTotal / 2) }, { pct: 1, label: maxTotal }]}>
         {stacks.map(s => (
           <path key={s.name} d={s.path} fill={s.color} opacity={0.35} />
         ))}
-      </svg>
+      </HoverChart>
       <TimeAxis first={buckets[0]?.time} last={buckets[buckets.length - 1]?.time} />
       <ServiceLegend names={serviceNames} />
     </Panel>
@@ -343,12 +344,12 @@ function ApiReliabilityChart({ buckets }) {
 
   return (
     <Panel title="API Reliability" subtitle="Success vs error rate">
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
-        {/* 100% baseline */}
+      <HoverChart W={W} H={H} pad={pad} buckets={buckets} formatValue={(_b, i) => `OK ${points[i]?.success?.toFixed(1)}% / Err ${points[i]?.error?.toFixed(1)}%`}
+        yTicks={[{ pct: 0.5, label: "50%" }, { pct: 1, label: "100%" }]}>
         <line x1={pad} x2={W - pad} y1={pad} y2={pad} stroke={GREEN} strokeWidth={0.3} strokeDasharray="2,2" opacity={0.3} />
         <path d={toPath("success")} fill="none" stroke={GREEN} strokeWidth={1.5} strokeLinecap="round" />
         <path d={toPath("error")} fill="none" stroke={RED} strokeWidth={1.5} strokeLinecap="round" />
-      </svg>
+      </HoverChart>
       <TimeAxis first={buckets[0]?.time} last={buckets[buckets.length - 1]?.time} />
       <div style={{ display: "flex", gap: 12, marginTop: 4, fontSize: 10 }}>
         <LegendDot color={GREEN} label="Success" value={`${latestSuccess}%`} />
@@ -396,12 +397,15 @@ function LatencyTrendsChart({ buckets, serviceNames, history }) {
 
   return (
     <Panel title="Latency Trends" subtitle="Response time per service">
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
+      <HoverChart W={W} H={H} pad={pad} buckets={buckets} formatValue={b => {
+        const lats = Object.entries(b.perService).filter(([, s]) => s.avgLatency != null).map(([n, s]) => `${n.replace("Authentication","Auth").replace("Content API","API")}: ${s.avgLatency}ms`);
+        return lats.length > 0 ? lats[0] : `${b.totalChecks} checks`;
+      }} yTicks={[{ pct: 0.5, label: `${Math.round(paths.maxLat / 2)}ms` }, { pct: 1, label: `${Math.round(paths.maxLat)}ms` }]}>
         {paths.maxLat > 2000 && <line x1={pad} x2={W - pad} y1={thresholdY} y2={thresholdY} stroke={AMBER} strokeWidth={0.3} strokeDasharray="2,2" opacity={0.4} />}
         {paths.lines.map(p => (
           <path key={p.name} d={p.d} fill="none" stroke={p.color} strokeWidth={1.5} strokeLinecap="round" opacity={0.8} />
         ))}
-      </svg>
+      </HoverChart>
       <TimeAxis first={buckets[0]?.time} last={buckets[buckets.length - 1]?.time} />
       <ServiceLegend names={paths.names} />
     </Panel>
@@ -462,7 +466,8 @@ function CheckFrequencyChart({ buckets }) {
 
   return (
     <Panel title="Check Frequency" subtitle={`${totalChecks} total checks, avg ${avg}/window`}>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
+      <HoverChart W={W} H={H} pad={pad} buckets={buckets} formatValue={b => `${b.totalChecks} checks`}
+        yTicks={[{ pct: 0.5, label: Math.round(maxChecks / 2) }, { pct: 1, label: maxChecks }]}>
         <defs>
           <linearGradient id="freqGrad" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor={PURPLE} stopOpacity="0.2" />
@@ -471,7 +476,7 @@ function CheckFrequencyChart({ buckets }) {
         </defs>
         <path d={fillPath} fill="url(#freqGrad)" />
         <path d={linePath} fill="none" stroke={PURPLE} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      </HoverChart>
       <TimeAxis first={buckets[0]?.time} last={buckets[buckets.length - 1]?.time} />
     </Panel>
   );
@@ -517,6 +522,51 @@ function HealthCheckTimeline({ buckets, serviceNames }) {
   );
 }
 
+// ─── Hover-enabled chart wrapper with optional Y-axis labels ─────────────────────
+function HoverChart({ W, H, pad, buckets, formatValue, yTicks, yUnit, children }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const svgRef = useRef(null);
+  const step = (W - pad * 2) / Math.max(buckets.length - 1, 1);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * W;
+    const idx = Math.round((x - pad) / step);
+    if (idx >= 0 && idx < buckets.length) setHoverIdx(idx);
+    else setHoverIdx(null);
+  }, [W, pad, step, buckets.length]);
+
+  const hx = hoverIdx !== null ? pad + hoverIdx * step : 0;
+  const hb = hoverIdx !== null ? buckets[hoverIdx] : null;
+  const label = hb ? formatValue(hb, hoverIdx) : "";
+  const TT_W = Math.min(Math.max(label.length * 6.5 + 16, 80), 200);
+  const ttX = hb ? Math.max(pad, Math.min(hx - TT_W / 2, W - TT_W - pad)) : 0;
+
+  return (
+    <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", cursor: "crosshair" }}
+      onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIdx(null)}>
+      {/* Subtle grid lines */}
+      {[0.25, 0.5, 0.75].map(pct => {
+        const y = H - pad - pct * (H - pad * 2);
+        return <line key={pct} x1={pad} y1={y} x2={W - pad} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />;
+      })}
+      {/* Y-axis tick labels */}
+      {yTicks && yTicks.map((tick, i) => {
+        const y = H - pad - (tick.pct) * (H - pad * 2);
+        return <text key={i} x={pad + 2} y={y - 2} fontSize={7} fill="var(--text-dim)" fontFamily={MONO} opacity={0.7}>{tick.label}</text>;
+      })}
+      {children}
+      {hb && <>
+        <line x1={hx} y1={pad} x2={hx} y2={H - pad} stroke="rgba(255,255,255,0.6)" strokeWidth={1} />
+        <rect x={ttX} y={4} width={TT_W} height={26} rx={5} fill="#1a1a1a" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+        <text x={ttX + TT_W / 2} y={12} textAnchor="middle" fill="#a1a1a1" fontSize={8} fontFamily={MONO}>{hb.time}</text>
+        <text x={ttX + TT_W / 2} y={24} textAnchor="middle" fill="#ededed" fontSize={9} fontWeight={600} fontFamily={MONO}>{label}</text>
+      </>}
+    </svg>
+  );
+}
+
 // ─── Shared primitives ──────────────────────────────────────────────────────────
 function Panel({ title, subtitle, children }) {
   return (
@@ -543,7 +593,7 @@ function EmptyPanel({ title }) {
 function TimeAxis({ first, last }) {
   if (!first || !last) return null;
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, fontSize: 8, color: "var(--text-dim)" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, fontSize: 9, color: "rgba(203,213,225,0.7)" }}>
       <span>{first}</span>
       <span>{last}</span>
     </div>

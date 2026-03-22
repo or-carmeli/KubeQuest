@@ -33,9 +33,10 @@ import PerformanceInsights from "./components/PerformanceInsights";
 import DevPerfOverlay from "./components/DevPerfOverlay";
 import SystemObservability from "./components/SystemObservability";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import BackendMonitoring from "./components/BackendMonitoring";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
-import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle } from "lucide-react";
+import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle, Server } from "lucide-react";
 import TopicIcon from "./components/TopicIcon";
 import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Gem, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon, Award } from "lucide-react";
 import { Shuffle as ShuffleIcon, CalendarDays as CalendarIcon, ArrowLeft, ArrowRight, CheckCircle, XOctagon, Lightbulb, PartyPopper, Clock } from "lucide-react";
@@ -1220,7 +1221,7 @@ export default function K8sQuestApp() {
       console.info("[KubeQuest:boot] Screen was", s, "- falling back to home (transient state lost on refresh)");
       return "home";
     }
-    if (s && ["home","incidentList","incident","privacy","terms",...(EXPERIMENTAL_ENABLED?["architecture","performanceInsights","systemObservability"]:[])].includes(s)) return s;
+    if (s && ["home","incidentList","incident","privacy","terms",...(EXPERIMENTAL_ENABLED?["architecture","performanceInsights","systemObservability","backendMonitoring"]:[])].includes(s)) return s;
     return "home";
   });
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -4759,6 +4760,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           )}
           {import.meta.env.DEV && (
+          <button className="menu-item" onClick={()=>{setScreen("backendMonitoring");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="backendMonitoring"?"var(--glass-3)":"none",border:"none",color:screen==="backendMonitoring"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="backendMonitoring"?600:400,direction:dir}}>
+            <Server size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"Infrastructure Insights":"\u05EA\u05D5\u05D1\u05E0\u05D5\u05EA \u05EA\u05E9\u05EA\u05D9\u05EA"}
+            <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
+          </button>
+          )}
+          {import.meta.env.DEV && (
           <button className="menu-item" onClick={()=>{setScreen("systemObservability");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="systemObservability"?"var(--glass-3)":"none",border:"none",color:screen==="systemObservability"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="systemObservability"?600:400,direction:dir}}>
             <Activity size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"System Observability":"מעקב מערכת"}
@@ -5578,7 +5586,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {EXPERIMENTAL_ENABLED&&screen==="systemObservability"&&<SystemObservability onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} />}
 
       {/* ANALYTICS */}
-      {EXPERIMENTAL_ENABLED&&screen==="analytics"&&<AnalyticsDashboard onBack={()=>setScreen("home")} supabase={supabase} />}
+      {EXPERIMENTAL_ENABLED&&screen==="analytics"&&<AnalyticsDashboard onBack={()=>setScreen("home")} supabase={supabase} dir={dir} />}
+
+      {/* BACKEND MONITORING */}
+      {EXPERIMENTAL_ENABLED&&screen==="backendMonitoring"&&<BackendMonitoring onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} />}
 
       {/* STATS */}
       {screen==="stats"&&(
