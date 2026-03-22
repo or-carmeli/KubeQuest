@@ -4338,7 +4338,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <label htmlFor="reset-email" style={{color:"var(--text-dim)",fontSize:12,fontWeight:600,display:"block",marginBottom:5}}>{t("email")}</label>
               <input id="reset-email" type="email" name="email" inputMode="email" autoComplete="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} placeholder="you@example.com"
                 style={{width:"100%",padding:"12px 14px",background:"var(--glass-6)",border:"1px solid var(--glass-18)",borderRadius:8,color:"var(--text-primary)",fontSize:14,boxSizing:"border-box",direction:"ltr",marginBottom:14}}/>
-              {resetStatus&&<div style={{marginBottom:12,fontSize:12,padding:"8px 12px",borderRadius:8,color:resetStatus.includes("\u2705")?"#10B981":"#EF4444",background:resetStatus.includes("\u2705")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)"}}>{resetStatus}</div>}
+              {resetStatus&&<div style={{marginBottom:12,fontSize:12,padding:"8px 12px",borderRadius:8,color:resetStatus===t("resetEmailSent")?"#10B981":"#EF4444",background:resetStatus===t("resetEmailSent")?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.08)"}}>{resetStatus}</div>}
               <button type="submit" disabled={!resetEmail||resetLoading}
                 style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#00D4FF88,#A855F788)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",opacity:(!resetEmail||resetLoading)?0.5:1}}>
                 {resetLoading?t("loading"):t("sendResetLink")}
