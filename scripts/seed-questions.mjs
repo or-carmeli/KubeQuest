@@ -4,7 +4,7 @@
 //
 // Prerequisites:
 //   1. Run the SQL migration first (supabase/migrations/20260307_quiz_content.sql)
-//   2. Set VITE_SUPABASE_URL and VITE_SUPABASE_SERVICE_KEY env vars
+//   2. Set VITE_SUPABASE_URL and SUPABASE_SERVICE_KEY env vars
 //      (use the SERVICE ROLE key, not the anon key, to bypass RLS)
 //
 // Usage:
@@ -14,10 +14,10 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.VITE_SUPABASE_SERVICE_KEY; // service role key!
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY; // service role key!
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_SERVICE_KEY env vars");
+  console.error("Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_KEY env vars");
   process.exit(1);
 }
 

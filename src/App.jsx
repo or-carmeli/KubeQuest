@@ -165,7 +165,7 @@ function detectAuthCallback() {
   }
 }
 const authCallback = detectAuthCallback();
-console.info("[auth:detect]", authCallback.flow, authCallback.flow !== "none" ? authCallback : "");
+console.info("[auth:detect]", authCallback.flow);
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -2486,7 +2486,7 @@ export default function K8sQuestApp() {
         topicStats: ts ?? topicStats,
       });
     } catch (err) {
-      console.error("[KubeQuest] saveUserData failed:", err.message, { userId: user?.id, topics: Object.keys(cleanNc).length, code: err?.code, status: err?.status });
+      console.error("[KubeQuest] saveUserData failed:", err.message, { code: err?.code, status: err?.status });
       captureError(err, { flow: "saveUserData", screen, isGuest, topicCount: Object.keys(cleanNc).length });
       const errorKey = classifySaveError(err);
       const errorMsg = t(errorKey);
@@ -3270,7 +3270,7 @@ export default function K8sQuestApp() {
     isRetryRef.current = false; // Only the explicit "retry wrong answers" flow sets this true
     setAnswerResult(null);
     let rawQs, theory;
-    if (supabase) {
+    if (supabase && !isGuest) {
       setLoadingQuestions(true);
       try {
         [rawQs, theory] = await Promise.all([
@@ -3320,7 +3320,7 @@ export default function K8sQuestApp() {
     clearQuizState();
     setAnswerResult(null);
     let rawQs;
-    if (supabase) {
+    if (supabase && !isGuest) {
       setLoadingQuestions(true);
       try {
         rawQs = await fetchMixedQuestions(supabase, lang, 10);
@@ -3375,7 +3375,7 @@ export default function K8sQuestApp() {
     clearQuizState();
     setAnswerResult(null);
     let dailyQs;
-    if (supabase) {
+    if (supabase && !isGuest) {
       setLoadingQuestions(true);
       try {
         dailyQs = await fetchDailyQuestions(supabase, lang, 5);
@@ -3566,7 +3566,7 @@ export default function K8sQuestApp() {
     const step = getIncidentStep(incidentStepIndex);
     let correct, correctAnswer, result;
 
-    if (supabase && step?.id) {
+    if (supabase && !isGuest && step?.id) {
       try {
         const rpcResult = await checkIncidentAnswer(supabase, step.id, ans);
         correct = rpcResult.correct;
@@ -3699,7 +3699,7 @@ export default function K8sQuestApp() {
     (async () => {
       let result;
       try {
-        if (supabase && q.id) {
+        if (supabase && !isGuest && q.id) {
           try {
             const isDaily = capturedTopicId === "daily";
             const rpcResult = isDaily
@@ -6018,7 +6018,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <button onClick={()=>{
                 try {
                 const qs=wrongQs.map(h=>({q:h.q,options:h.options,answer:h.answer,explanation:h.explanation}));
-                console.debug("[RETRY] starting retry", { count: qs.length, hasOptions: qs.every(q=>Array.isArray(q.options)), hasAnswer: qs.every(q=>typeof q.answer==="number") });
+                console.debug("[RETRY] starting retry", { count: qs.length });
                 if (!qs.length) { console.error("[RETRY] no wrong questions to retry"); return; }
                 setMixedQuestions(qs);
                 setRetryMode(true);

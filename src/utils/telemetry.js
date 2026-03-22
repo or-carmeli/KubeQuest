@@ -117,9 +117,9 @@ export function init({ dsn, environment, release }) {
 
   const client = Sentry.getClient();
   if (client) {
-    console.info("[KubeQuest:telemetry] Sentry initialized, DSN:", dsn.substring(0, 30) + "...");
+    console.info("[KubeQuest:telemetry] Sentry initialized");
   } else {
-    console.error("[KubeQuest:telemetry] Sentry.init() ran but NO CLIENT created. DSN was:", dsn);
+    console.error("[KubeQuest:telemetry] Sentry.init() ran but NO CLIENT created");
   }
 }
 

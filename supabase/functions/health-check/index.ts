@@ -76,19 +76,20 @@ async function checkContentAPI(): Promise<{ ok: boolean; details?: Record<string
 
 /** Quiz Engine: check that the answer validation RPC is callable
  *  We call with a non-existent question ID; we expect an error message
- *  "Question not found" which proves the function is running. */
+ *  "Question not found" which proves the function is running.
+ *  "Not authenticated" also proves the function is running (auth guard). */
 async function checkQuizEngine(): Promise<{ ok: boolean; details?: Record<string, unknown> }> {
   const { error } = await adminClient.rpc("check_quiz_answer", {
     p_question_id: -1,
     p_selected: 0,
   });
-  // "Question not found" is the expected error - means the function ran successfully
-  if (error && error.message?.includes("Question not found")) {
-    return { ok: true, details: { note: "RPC reachable (expected error for invalid ID)" } };
-  }
-  // Rate limit error also means the function is running
-  if (error && error.message?.includes("Rate limit")) {
-    return { ok: true, details: { note: "RPC reachable (rate limited)" } };
+  // Any of these errors prove the RPC function executed successfully:
+  // - "Question not found": reached the query, no such ID
+  // - "Not authenticated": auth guard fired (service role has no auth.uid())
+  // - "Rate limit": rate limiter fired
+  const expectedErrors = ["Question not found", "Not authenticated", "Rate limit"];
+  if (error && expectedErrors.some((e) => error.message?.includes(e))) {
+    return { ok: true, details: { note: "RPC reachable", response: error.message } };
   }
   return { ok: false, details: { error: error?.message ?? "unexpected response" } };
 }
