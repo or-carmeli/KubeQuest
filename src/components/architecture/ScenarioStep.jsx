@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
 import { getLocalizedField } from "../../utils/i18n";
 import { getSystemSeverity } from "../../utils/architectureLogic";
-import { Zap, Wallet, ShieldCheck } from "lucide-react";
+import { Zap, Wallet, ShieldCheck, Activity, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import DecisionOption from "./DecisionOption";
 import SystemDashboard from "./SystemDashboard";
 
-export default function ScenarioStep({ step, metrics, systemState, prevSystemState, onDecision, lang, stepNumber, estimatedTotal }) {
+const MONO = "'Fira Code','Courier New',monospace";
+
+export default function ScenarioStep({ step, metrics, systemState, prevSystemState, onDecision, lang, stepNumber, estimatedTotal, interviewMode = false }) {
   const [selected, setSelected] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const confirmingRef = useRef(false);
@@ -16,166 +18,150 @@ export default function ScenarioStep({ step, metrics, systemState, prevSystemSta
   const question = getLocalizedField(step, "question", lang);
   const timeDelta = getLocalizedField(step, "timeDelta", lang);
 
-  const handleConfirm = () => {
-    if (selected == null || confirmingRef.current) return;
-    confirmingRef.current = true;
-    setRevealed(true);
-  };
-
-  const handleNext = () => {
-    onDecision(step.options[selected]);
-  };
+  const handleConfirm = () => { if (selected == null || confirmingRef.current) return; confirmingRef.current = true; setRevealed(true); };
+  const handleNext = () => { onDecision(step.options[selected]); };
 
   const selectedOption = selected != null ? step.options[selected] : null;
   const explanation = selectedOption ? getLocalizedField(selectedOption, "explanation", lang) : "";
   const tag = selectedOption ? getLocalizedField(selectedOption, "tag", lang) : "";
 
   const netImpact = selectedOption
-    ? (selectedOption.impact.performance || 0) + (selectedOption.impact.cost || 0) + (selectedOption.impact.reliability || 0)
-    : 0;
+    ? (selectedOption.impact.performance || 0) + (selectedOption.impact.cost || 0) + (selectedOption.impact.reliability || 0) : 0;
 
-  const outcomeLabel = netImpact > 15
-    ? (en ? "Positive system impact" : "השפעה חיובית על המערכת")
-    : netImpact > 0
-    ? (en ? "Mixed impact" : "השפעה מעורבת")
-    : netImpact > -10
-    ? (en ? "Moderate negative impact" : "השפעה שלילית מתונה")
+  const outcomeLabel = netImpact > 15 ? (en ? "Positive system impact" : "השפעה חיובית על המערכת")
+    : netImpact > 0 ? (en ? "Mixed impact" : "השפעה מעורבת")
+    : netImpact > -10 ? (en ? "Moderate negative impact" : "השפעה שלילית מתונה")
     : (en ? "Significant negative impact" : "השפעה שלילית משמעותית");
 
-  const outcomeColor = netImpact > 15 ? "#15803D" : netImpact > 0 ? "#92400E" : netImpact > -10 ? "#92400E" : "#B91C1C";
-  const outcomeBg = netImpact > 15 ? "rgba(21,128,61,0.06)" : netImpact > 0 ? "rgba(146,64,14,0.04)" : netImpact > -10 ? "rgba(146,64,14,0.04)" : "rgba(185,28,28,0.06)";
-  const outcomeBorder = netImpact > 15 ? "rgba(21,128,61,0.15)" : netImpact > 0 ? "rgba(146,64,14,0.12)" : netImpact > -10 ? "rgba(146,64,14,0.12)" : "rgba(185,28,28,0.15)";
+  const outcomeColor = netImpact > 15 ? "#10B981" : netImpact > 0 ? "#D97706" : netImpact > -10 ? "#D97706" : "#EF4444";
+  const outcomeBg = netImpact > 15 ? "rgba(16,185,129,0.06)" : netImpact > 0 ? "rgba(217,119,6,0.04)" : netImpact > -10 ? "rgba(217,119,6,0.04)" : "rgba(239,68,68,0.06)";
 
-  // Critical state detection for recovery banner
   const severity = systemState ? getSystemSeverity(systemState) : "healthy";
   const prevSeverity = prevSystemState ? getSystemSeverity(prevSystemState) : "healthy";
   const inCritical = severity === "critical";
   const justWentCritical = inCritical && prevSeverity !== "critical";
-
-  // Consequence detection: new issues surfaced by delayed effects
   const newIssues = step.newIssues;
+
+  const statusColor = severity === "critical" ? "#EF4444" : severity === "degraded" ? "#D97706" : "#10B981";
+  const progressPct = estimatedTotal > 0 ? Math.min((stepNumber / estimatedTotal) * 100, 100) : 0;
 
   return (
     <div style={{ animation: "fadeIn 0.3s ease", direction: dir }}>
 
-      {/* ── Score bar + step counter ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-        <span style={{
-          fontSize: 10, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 0.5,
-          background: "var(--glass-3)", padding: "3px 9px", borderRadius: 6,
-        }}>
-          {en ? `Decision ${stepNumber}` : `החלטה ${stepNumber}`}
-          {estimatedTotal > 0 && <span style={{ opacity: 0.5 }}> / ~{estimatedTotal}</span>}
+      {/* ═══ INCIDENT HEADER ═══ */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+        {/* Status */}
+        <div style={{
+          width: 8, height: 8, borderRadius: "50%", background: statusColor,
+          boxShadow: severity !== "healthy" ? `0 0 10px ${statusColor}50` : "none",
+          animation: severity === "critical" ? "pulse 1.5s infinite" : "none",
+          flexShrink: 0,
+        }} />
+        <span style={{ fontSize: 10, fontWeight: 800, color: statusColor, letterSpacing: 1, textTransform: "uppercase" }}>
+          {severity === "critical" ? "INCIDENT" : severity === "degraded" ? "DEGRADING" : "HEALTHY"}
         </span>
-        <div style={{ display: "flex", gap: 6, marginInlineStart: "auto" }}>
-          <ScorePill icon={<Zap size={10} />} value={metrics.performance} />
-          <ScorePill icon={<Wallet size={10} />} value={metrics.cost} />
-          <ScorePill icon={<ShieldCheck size={10} />} value={metrics.reliability} />
+
+        {/* Progress */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <div style={{ flex: 1, height: 2, borderRadius: 1, background: "var(--glass-6)", overflow: "hidden" }}>
+            <div style={{ width: `${progressPct}%`, height: "100%", borderRadius: 1, background: statusColor, transition: "width 0.4s ease" }} />
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-dim)", fontFamily: MONO, flexShrink: 0 }}>
+            {stepNumber}/{estimatedTotal > 0 ? estimatedTotal : "?"}
+          </span>
         </div>
+
+        {/* Score pills */}
+        {!interviewMode && (
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <ScorePill icon={<Zap size={10} />} value={metrics.performance} />
+            <ScorePill icon={<Wallet size={10} />} value={metrics.cost} />
+            <ScorePill icon={<ShieldCheck size={10} />} value={metrics.reliability} />
+          </div>
+        )}
       </div>
 
-      {/* ── System Dashboard (telemetry + alerts + logs) ── */}
+      {/* ═══ KEY SIGNALS + WHAT WE KNOW + LOGS ═══ */}
       <SystemDashboard
         systemState={systemState}
         prevSystemState={prevSystemState}
         alerts={step.alerts}
         logs={step.logs}
         lang={lang}
+        interviewMode={interviewMode}
       />
 
-      {/* ── Time progression line ── */}
+      {/* ═══ TIME PROGRESSION ═══ */}
       {timeDelta && (
-        <div style={{
-          textAlign: "center", padding: "6px 0", marginBottom: 4,
-          fontSize: 11, color: "var(--text-dim)", fontStyle: "italic", letterSpacing: 0.3,
-        }}>
+        <div style={{ textAlign: "center", padding: "4px 0", marginBottom: 8, fontSize: 11, color: "var(--text-dim)", fontStyle: "italic" }}>
           {timeDelta}
         </div>
       )}
 
-      {/* ── New issue surfaced (consequence escalation) ── */}
+      {/* ═══ NEW ISSUES ═══ */}
       {newIssues?.length > 0 && (
-        <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 5 }}>
+        <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 8 }}>
           {newIssues.map((issue, i) => {
             const text = getLocalizedField(issue, "text", lang) || issue.text || issue;
             return (
               <div key={i} style={{
-                background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.10)",
-                borderRadius: 8, padding: "8px 12px", direction: dir,
-                display: "flex", alignItems: "flex-start", gap: 8,
+                fontSize: 11, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8,
+                animation: "fadeIn 0.4s ease",
               }}>
                 <span style={{
-                  flexShrink: 0, fontSize: 9, fontWeight: 800, color: "#DC2626",
-                  background: "rgba(220,38,38,0.1)", padding: "2px 6px", borderRadius: 4,
-                  letterSpacing: 0.5, lineHeight: 1.4,
-                }}>
-                  {en ? "NEW" : "חדש"}
-                </span>
-                <span style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                  {text}
-                </span>
+                  fontSize: 8, fontWeight: 800, color: "#EF4444",
+                  background: "rgba(239,68,68,0.12)", padding: "2px 6px", borderRadius: 3,
+                  animation: "pulse 2s infinite", flexShrink: 0,
+                }}>NEW</span>
+                <span style={{ lineHeight: 1.5 }}>{text}</span>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* ── Critical state recovery banner ── */}
+      {/* ═══ CRITICAL STATE ═══ */}
       {inCritical && (
         <div style={{
-          background: "rgba(185,28,28,0.05)", border: "1px solid rgba(185,28,28,0.12)",
-          borderRadius: 8, padding: "10px 14px", marginBottom: 12,
-          fontSize: 12, color: "#991B1B", lineHeight: 1.6, direction: dir,
+          marginBottom: 16, fontSize: 11, color: "#F87171",
+          display: "flex", alignItems: "flex-start", gap: 8, lineHeight: 1.6,
+          borderInlineStart: "3px solid #EF4444", paddingInlineStart: 12,
         }}>
-          <div style={{ fontWeight: 700, marginBottom: 2 }}>
-            {en ? "System in critical state" : "המערכת במצב קריטי"}
-          </div>
-          <div style={{ fontSize: 11, color: "#7F1D1D", opacity: 0.8 }}>
-            {justWentCritical
-              ? (en
-                ? "Your previous decision escalated the situation. Recovery options may be limited."
-                : "ההחלטה הקודמת החמירה את המצב. אפשרויות ההתאוששות עשויות להיות מוגבלות.")
-              : (en
-                ? "The system remains degraded. Focus on stabilization before scaling."
-                : "המערכת נשארת מופחתת. התמקד בייצוב לפני הרחבה.")}
+          <Activity size={12} style={{ flexShrink: 0, marginTop: 2, animation: "pulse 1.5s infinite" }} />
+          <div>
+            <span style={{ fontWeight: 700 }}>{en ? "System in critical state" : "המערכת במצב קריטי"}</span>
+            {" - "}
+            <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
+              {justWentCritical
+                ? (en ? "Your previous decision escalated the situation." : "ההחלטה הקודמת החמירה את המצב.")
+                : (en ? "Focus on stabilization before scaling." : "התמקד בייצוב לפני הרחבה.")}
+            </span>
           </div>
         </div>
       )}
 
-      {/* ── Situation context ── */}
-      <div style={{
-        background: "var(--glass-2)", border: "1px solid var(--glass-6)", borderRadius: 12,
-        padding: "16px 18px", marginBottom: 24, lineHeight: 1.75,
-      }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", marginBottom: 6, letterSpacing: 0.8, textTransform: "uppercase" }}>
+      {/* ═══ WHAT HAPPENED (situation context) ═══ */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>
           {en ? "Situation" : "סיטואציה"}
         </div>
-        <div style={{ fontSize: 13.5, color: "var(--text-primary)" }}>
+        <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500, lineHeight: 1.8 }}>
           {context}
         </div>
       </div>
 
-      {/* ── Decision area ── */}
-      <div style={{
-        background: "var(--glass-3)", border: "1px solid var(--glass-8)", borderRadius: 14,
-        padding: "20px", marginBottom: 0,
-      }}>
-        <h3 style={{
-          margin: "0 0 18px", fontSize: 16, fontWeight: 800, color: "var(--text-bright)", lineHeight: 1.5,
-        }}>
+      {/* ═══ YOUR DECISION ═══ */}
+      <div>
+        <h3 style={{ margin: "0 0 16px", fontSize: 17, fontWeight: 800, color: "var(--text-bright)", lineHeight: 1.5 }}>
           {question}
         </h3>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
           {step.options.map((opt, i) => (
             <DecisionOption
-              key={i}
-              option={opt}
-              index={i}
-              selected={selected}
-              revealed={revealed}
-              lang={lang}
-              onSelect={setSelected}
+              key={i} option={opt} index={i} selected={selected}
+              revealed={revealed} lang={lang} onSelect={setSelected}
+              interviewMode={interviewMode}
             />
           ))}
         </div>
@@ -185,54 +171,64 @@ export default function ScenarioStep({ step, metrics, systemState, prevSystemSta
             onClick={handleConfirm}
             disabled={selected == null}
             style={{
-              width: "100%", padding: "14px", borderRadius: 10, border: "none",
+              width: "100%", padding: "14px", borderRadius: 12, border: "none",
               background: selected != null ? "linear-gradient(135deg, #7C3AED, #A855F7)" : "var(--glass-6)",
               color: selected != null ? "#fff" : "var(--text-dim)",
               fontSize: 14, fontWeight: 700, cursor: selected != null ? "pointer" : "default",
               transition: "all 0.2s ease",
+              boxShadow: selected != null ? "0 4px 20px rgba(124,58,237,0.2)" : "none",
             }}
           >
             {en ? "Confirm Decision" : "אשר החלטה"}
           </button>
         ) : (
           <>
-            <div style={{
-              background: outcomeBg, border: `1px solid ${outcomeBorder}`,
-              borderRadius: 10, padding: "14px 16px", marginBottom: 14,
-              animation: "fadeIn 0.3s ease",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: outcomeColor }}>
-                  {outcomeLabel}
-                </span>
-                {tag && (
-                  <span style={{ fontSize: 10, fontWeight: 600, color: outcomeColor, letterSpacing: 0.3, opacity: 0.8 }}>
-                    -- {tag}
-                  </span>
-                )}
+            {interviewMode ? (
+              <div style={{
+                padding: "16px", marginBottom: 16, textAlign: "center",
+                fontSize: 13, color: "var(--text-secondary)", fontWeight: 600,
+                background: "var(--glass-3)", borderRadius: 12,
+                animation: "fadeIn 0.3s ease",
+              }}>
+                {en ? "Decision recorded. Continue to the next situation." : "ההחלטה נרשמה. המשך לסיטואציה הבאה."}
               </div>
-
-              <div style={{ fontSize: 13, color: "var(--text-primary)", lineHeight: 1.75 }}>
-                {explanation}
+            ) : (
+              <div style={{
+                background: outcomeBg, borderRadius: 12,
+                padding: "16px", marginBottom: 16,
+                animation: "fadeIn 0.3s ease",
+                borderInlineStart: `3px solid ${outcomeColor}`,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  {netImpact > 15 ? <CheckCircle size={16} strokeWidth={2} style={{ color: outcomeColor, flexShrink: 0 }} />
+                    : netImpact > -10 ? <AlertTriangle size={16} strokeWidth={2} style={{ color: outcomeColor, flexShrink: 0 }} />
+                    : <XCircle size={16} strokeWidth={2} style={{ color: outcomeColor, flexShrink: 0 }} />}
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: outcomeColor }}>{outcomeLabel}</span>
+                    {tag && <span style={{ fontSize: 11, color: "var(--text-muted)", marginInlineStart: 8 }}>{tag}</span>}
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-primary)", lineHeight: 1.75, marginBottom: 12 }}>
+                  {explanation}
+                </div>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", paddingTop: 8, borderTop: "1px solid var(--glass-4)" }}>
+                  <ImpactDelta label={<Zap size={11} />} name="Performance" value={selectedOption.impact.performance} />
+                  <ImpactDelta label={<Wallet size={11} />} name="Cost" value={selectedOption.impact.cost} />
+                  <ImpactDelta label={<ShieldCheck size={11} />} name="Reliability" value={selectedOption.impact.reliability} />
+                </div>
               </div>
-
-              <div style={{ display: "flex", gap: 14, marginTop: 12, flexWrap: "wrap", paddingTop: 10, borderTop: `1px solid ${outcomeBorder}` }}>
-                <ImpactDelta label={<Zap size={11} />} name={en ? "Perf" : "ביצועים"} value={selectedOption.impact.performance} />
-                <ImpactDelta label={<Wallet size={11} />} name={en ? "Cost" : "עלות"} value={selectedOption.impact.cost} />
-                <ImpactDelta label={<ShieldCheck size={11} />} name={en ? "Rel" : "אמינות"} value={selectedOption.impact.reliability} />
-              </div>
-            </div>
+            )}
 
             <button
               onClick={handleNext}
               style={{
-                width: "100%", padding: "14px", borderRadius: 10, border: "none",
+                width: "100%", padding: "14px", borderRadius: 12, border: "none",
                 background: "linear-gradient(135deg, #7C3AED, #A855F7)",
                 color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer",
-                transition: "all 0.2s ease",
+                boxShadow: "0 4px 20px rgba(124,58,237,0.2)",
               }}
             >
-              {en ? "Continue \u2192" : "\u2192 המשך"}
+              {en ? "Continue \u2192" : "המשך \u2190"}
             </button>
           </>
         )}
@@ -242,7 +238,7 @@ export default function ScenarioStep({ step, metrics, systemState, prevSystemSta
 }
 
 function ScorePill({ icon, value }) {
-  const color = value < 35 ? "#B91C1C" : value < 50 ? "#92400E" : "var(--text-muted)";
+  const color = value < 35 ? "#EF4444" : value < 50 ? "#D97706" : "var(--text-muted)";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color, fontWeight: 700 }}>
       <span style={{ display: "flex", alignItems: "center" }}>{icon}</span>
@@ -253,7 +249,7 @@ function ScorePill({ icon, value }) {
 
 function ImpactDelta({ label, name, value }) {
   if (!value) return null;
-  const color = value > 0 ? "#15803D" : "#B91C1C";
+  const color = value > 0 ? "#10B981" : "#EF4444";
   return (
     <span style={{ fontSize: 11, color, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}>
       <span style={{ display: "flex", alignItems: "center" }}>{label}</span>

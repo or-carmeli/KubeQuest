@@ -24,7 +24,21 @@ import {
   getDecisionInsights,
   getNearMiss,
   getNextAction,
+  getQualityTier,
+  generateInterviewFeedback,
+  buildSystemTimeline,
+  buildOptimalTimeline,
 } from "../../utils/architectureLogic";
+import { Eye, EyeOff, Network, Database, TrendingUp, Search, RefreshCw, Zap, Globe, CalendarDays, CheckCircle } from "lucide-react";
+
+const SCENARIO_ICONS = {
+  "rds-latency":      <Database size={18} strokeWidth={1.5} />,
+  "traffic-spike":    <TrendingUp size={18} strokeWidth={1.5} />,
+  "lb-misconfigured": <Search size={18} strokeWidth={1.5} />,
+  "pod-crash-loop":   <RefreshCw size={18} strokeWidth={1.5} />,
+  "cache-stampede":   <Zap size={18} strokeWidth={1.5} />,
+  "cdn-misconfigured": <Globe size={18} strokeWidth={1.5} />,
+};
 import ScenarioCard from "./ScenarioCard";
 import ScenarioStep from "./ScenarioStep";
 import ScoreSummary from "./ScoreSummary";
@@ -40,6 +54,8 @@ export default function ArchitectureView({ lang, onBack }) {
   const [systemState, setSystemState] = useState(null);
   const [prevSystemState, setPrevSystemState] = useState(null);
   const [progress, setProgress] = useState(loadArchitectureProgress);
+  const [interviewMode, setInterviewMode] = useState(false);
+  const [systemStateHistory, setSystemStateHistory] = useState([]);
 
   // ── Session restore ──
   useEffect(() => {
@@ -83,6 +99,7 @@ export default function ArchitectureView({ lang, onBack }) {
     setDecisionHistory([]);
     setSystemState(scenario.initialSystemState || null);
     setPrevSystemState(null);
+    setSystemStateHistory([]);
     setView("playing");
   }, []);
 
@@ -92,9 +109,10 @@ export default function ArchitectureView({ lang, onBack }) {
     setPrevSystemState(systemState);
     const newSystemState = systemState ? evolveSystemState(systemState, option, nextStepId) : null;
     setSystemState(newSystemState);
+    if (newSystemState) setSystemStateHistory(prev => [...prev, newSystemState]);
 
     const severity = newSystemState ? getSystemSeverity(newSystemState) : "healthy";
-    const newHistory = [...decisionHistory, { impact: option.impact, nextStep: nextStepId, tag, systemSeverity: severity }];
+    const newHistory = [...decisionHistory, { impact: option.impact, nextStep: nextStepId, tag, systemSeverity: severity, operationalComplexity: option.operationalComplexity || 0 }];
     setDecisionHistory(newHistory);
 
     const nextStep = activeScenario.steps[nextStepId];
@@ -145,6 +163,13 @@ export default function ArchitectureView({ lang, onBack }) {
   const nearMiss = view === "summary" ? getNearMiss(score) : null;
   const nextAction = view === "summary" && activeScenario
     ? getNextAction(activeScenario.id, progress, ARCHITECTURE_SCENARIOS, lang) : null;
+  const qualityTier = view === "summary" ? getQualityTier(score) : null;
+  const interviewFeedback = view === "summary" && activeScenario
+    ? generateInterviewFeedback(decisionHistory, metrics, currentStep, lang) : null;
+  const sysTimeline = view === "summary" && activeScenario
+    ? buildSystemTimeline(activeScenario.initialSystemState, decisionHistory, systemStateHistory) : null;
+  const optimalData = view === "summary" && activeScenario
+    ? buildOptimalTimeline(activeScenario) : null;
 
   return (
     <div style={{ maxWidth: 780, margin: "0 auto", padding: "24px 20px", animation: "fadeIn 0.3s ease", direction: dir }}>
@@ -165,6 +190,7 @@ export default function ArchitectureView({ lang, onBack }) {
         <>
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+              <Network size={22} strokeWidth={1.5} style={{ color: "#A855F7", opacity: 0.7, flexShrink: 0 }} />
               <h2 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "var(--text-bright)" }}>
                 {en ? "Architecture Scenarios" : "תרחישי ארכיטקטורה"}
               </h2>
@@ -190,6 +216,40 @@ export default function ArchitectureView({ lang, onBack }) {
                 : "סימולציות של קבלת החלטות ארכיטקטוניות מהעולם האמיתי. כל החלטה משפיעה על ביצועים, עלות ואמינות."}
             </p>
           </div>
+
+          {/* Interview Mode Toggle */}
+          <button
+            onClick={() => setInterviewMode(m => !m)}
+            style={{
+              display: "flex", alignItems: "center", gap: 8, marginBottom: 16,
+              padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+              background: interviewMode ? "rgba(168,85,247,0.08)" : "var(--glass-3)",
+              border: `1px solid ${interviewMode ? "rgba(168,85,247,0.25)" : "var(--glass-8)"}`,
+              color: interviewMode ? "#C084FC" : "var(--text-secondary)",
+              fontSize: 12, fontWeight: 600, transition: "all 0.2s ease",
+              direction: en ? "ltr" : "rtl",
+            }}
+          >
+            {interviewMode ? <EyeOff size={14} /> : <Eye size={14} />}
+            <span>{en ? "Interview Mode" : "מצב ראיון"}</span>
+            <span style={{
+              padding: "1px 6px", borderRadius: 4, fontSize: 9, fontWeight: 700,
+              background: interviewMode ? "rgba(168,85,247,0.15)" : "var(--glass-6)",
+              color: interviewMode ? "#C084FC" : "var(--text-dim)",
+            }}>
+              {interviewMode ? "ON" : "OFF"}
+            </span>
+          </button>
+          {interviewMode && (
+            <div style={{
+              fontSize: 11, color: "var(--text-dim)", marginBottom: 14, marginTop: -10,
+              paddingInlineStart: 14,
+            }}>
+              {en
+                ? "Scores and feedback hidden during gameplay. Full analysis revealed in summary."
+                : "ציונים ומשוב מוסתרים במהלך המשחק. ניתוח מלא נחשף בסיכום."}
+            </div>
+          )}
 
           {/* Stats row */}
           {stats.completed > 0 && (
@@ -229,7 +289,7 @@ export default function ArchitectureView({ lang, onBack }) {
             }}
               onClick={dailyDone ? undefined : () => startScenario(ARCHITECTURE_SCENARIOS[dailyIndex])}
             >
-              <span style={{ fontSize: 18 }}>{dailyDone ? "✅" : "📅"}</span>
+              <span style={{ display: "flex", alignItems: "center", color: dailyDone ? "#10B981" : "#F59E0B" }}>{dailyDone ? <CheckCircle size={18} strokeWidth={2} /> : <CalendarDays size={18} strokeWidth={1.5} />}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: dailyDone ? "#10B981" : "#F59E0B" }}>
                   {en ? "Daily Scenario" : "תרחיש יומי"}
@@ -245,19 +305,49 @@ export default function ArchitectureView({ lang, onBack }) {
             </div>
           )}
 
+          {/* Progress indicator */}
+          {(() => {
+            const completed = ARCHITECTURE_SCENARIOS.filter(s => progress[s.id]).length;
+            const total = ARCHITECTURE_SCENARIOS.length;
+            return completed > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>
+                    {en ? "Progress" : "התקדמות"}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Fira Code',monospace" }}>
+                    {completed} / {total}
+                  </span>
+                </div>
+                <div style={{ height: 5, borderRadius: 3, background: "var(--glass-6)", overflow: "hidden" }}>
+                  <div style={{
+                    width: `${(completed / total) * 100}%`, height: "100%", borderRadius: 3,
+                    background: completed === total ? "#10B981" : "#A855F7",
+                    transition: "width 0.4s ease",
+                  }} />
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Scenario cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {ARCHITECTURE_SCENARIOS.map((scenario, i) => (
-              <ScenarioCard
-                key={scenario.id}
-                scenario={scenario}
-                lang={lang}
-                onStart={() => startScenario(scenario)}
-                bestScore={progress[scenario.id]?.score}
-                attempts={progress[scenario.id]?.attempts}
-                isDaily={i === dailyIndex}
-              />
-            ))}
+            {ARCHITECTURE_SCENARIOS.map((scenario, i) => {
+              // Unlock: first scenario always unlocked, others require previous completed
+              const isUnlocked = i === 0 || !!progress[ARCHITECTURE_SCENARIOS[i - 1]?.id];
+              return (
+                <ScenarioCard
+                  key={scenario.id}
+                  scenario={scenario}
+                  lang={lang}
+                  onStart={() => startScenario(scenario)}
+                  bestScore={progress[scenario.id]?.score}
+                  attempts={progress[scenario.id]?.attempts}
+                  isDaily={i === dailyIndex}
+                  locked={!isUnlocked}
+                />
+              );
+            })}
           </div>
         </>
       )}
@@ -270,7 +360,7 @@ export default function ArchitectureView({ lang, onBack }) {
             padding: "10px 16px", background: "var(--glass-3)", borderRadius: 12,
             border: "1px solid var(--glass-6)",
           }}>
-            <span style={{ fontSize: 22 }}>{activeScenario.icon}</span>
+            <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center" }}>{SCENARIO_ICONS[activeScenario.id] || <Database size={18} strokeWidth={1.5} />}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-bright)" }}>
                 {getLocalizedField(activeScenario, "title", lang)}
@@ -288,6 +378,7 @@ export default function ArchitectureView({ lang, onBack }) {
             lang={lang}
             stepNumber={decisionHistory.length + 1}
             estimatedTotal={estimateStepCount(activeScenario)}
+            interviewMode={interviewMode}
           />
         </>
       )}
@@ -322,6 +413,12 @@ export default function ArchitectureView({ lang, onBack }) {
             nearMiss={nearMiss}
             nextAction={nextAction}
             onNextAction={handleStartById}
+            qualityTier={qualityTier}
+            interviewFeedback={interviewFeedback}
+            systemTimeline={sysTimeline}
+            terminalStep={currentStep}
+            decisionHistory={decisionHistory}
+            optimalData={optimalData}
           />
         </>
       )}

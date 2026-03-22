@@ -5189,7 +5189,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               onChange={e=>setSearchQuery(e.target.value)}
               onFocus={()=>setSearchFocused(true)}
               onBlur={()=>setSearchFocused(false)}
-              placeholder={searchQuery?"":t("searchPlaceholder")} dir={dir}
+              placeholder={!searchQuery&&searchFocused?t("searchPlaceholder"):""} dir={dir}
               style={{width:"100%",padding:"12px 14px",boxSizing:"border-box",[dir==="rtl"?"paddingRight":"paddingLeft"]:40,background:searchFocused?"var(--glass-8)":"var(--glass-5)",border:searchFocused?"1px solid var(--glass-20)":"1px solid var(--glass-12)",borderRadius:12,color:"var(--text-primary)",fontSize:14,outline:"none",fontFamily:"inherit",transition:"background 0.2s, border-color 0.2s, box-shadow 0.2s",boxShadow:searchFocused?"0 0 0 3px var(--glass-6)":"none"}}
             />
             {!searchQuery&&!searchFocused&&(
