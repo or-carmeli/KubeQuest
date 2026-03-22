@@ -173,25 +173,25 @@ export function analyzeDecisions(decisionHistory, lang) {
       ? "You built a resilient system but over-invested in redundancy. High reliability is valuable, but the cost overhead may not justify the marginal availability improvement."
       : "בנית מערכת עמידה אבל השקעת יתר ברדונדנטיות. אמינות גבוהה חשובה, אבל תקורת העלות לא בהכרח מצדיקה את שיפור הזמינות השולי.";
     tip = en
-      ? "Balance reliability investment with cost — not every component needs the same SLA."
+      ? "Balance reliability investment with cost - not every component needs the same SLA."
       : "אזן השקעה באמינות עם עלות - לא כל רכיב צריך את אותו SLA.";
   } else if (totalCost < -15) {
     narrative = en
       ? "Your decisions significantly increased infrastructure costs. While the system may function, the spend is disproportionate to the problem severity."
       : "ההחלטות שלך הגדילו משמעותית את עלויות התשתית. למרות שהמערכת עשויה לפעול, ההוצאה אינה פרופורציונלית לחומרת הבעיה.";
     tip = en
-      ? "Always diagnose before scaling — understand the bottleneck before adding resources."
+      ? "Always diagnose before scaling - understand the bottleneck before adding resources."
       : "תמיד אבחן לפני סקיילינג - הבן את צוואר הבקבוק לפני הוספת משאבים.";
   } else if (totalPerf > 20 && totalCost > -5 && totalRel > 10) {
     narrative = en
       ? "Strong engineering decisions. You addressed root causes, balanced trade-offs between performance, cost, and reliability, and chose solutions proportional to the problem."
       : "החלטות הנדסיות חזקות. טיפלת בשורשי הבעיות, איזנת בין ביצועים, עלות ואמינות, ובחרת פתרונות פרופורציונליים לבעיה.";
     tip = en
-      ? "Document this approach as a runbook — it reflects solid incident response methodology."
+      ? "Document this approach as a runbook - it reflects solid incident response methodology."
       : "תעד את הגישה הזו כ-runbook - היא משקפת מתודולוגיית תגובה לתקריות מוצקה.";
   } else if (worstNet < -10) {
     narrative = en
-      ? "A critical misstep set the system back significantly. In production, early wrong turns compound — each suboptimal fix adds operational debt that constrains future options."
+      ? "A critical misstep set the system back significantly. In production, early wrong turns compound - each suboptimal fix adds operational debt that constrains future options."
       : "צעד שגוי קריטי הזיק למערכת משמעותית. בייצור, פניות שגויות מוקדמות מצטברות - כל תיקון תת-אופטימלי מוסיף חוב תפעולי שמגביל אפשרויות עתידיות.";
     tip = en
       ? "When an approach isn't working, pivot early. Sunk cost in a bad path is worse than the delay of course-correcting."
@@ -201,7 +201,7 @@ export function analyzeDecisions(decisionHistory, lang) {
       ? "A mixed set of decisions with some effective moves and some missteps. The system outcome reflects both good instincts and areas where deeper root cause analysis would have helped."
       : "מערכת החלטות מעורבת עם כמה צעדים אפקטיביים וכמה שגיאות. תוצאת המערכת משקפת גם אינסטינקטים טובים וגם תחומים שבהם ניתוח שורש בעיה עמוק יותר היה עוזר.";
     tip = en
-      ? "Start with observability — metrics, logs, and traces — before making infrastructure changes."
+      ? "Start with observability - metrics, logs, and traces - before making infrastructure changes."
       : "התחל עם observability - metrics, logs, ו-traces - לפני ביצוע שינויי תשתית.";
   }
 
@@ -275,6 +275,9 @@ const OPTIMAL_ENDINGS = {
   "rds-latency": "end_optimal",
   "traffic-spike": "end_well_prepared",
   "lb-misconfigured": "end_proper_fix",
+  "pod-crash-loop": "end_optimal",
+  "cache-stampede": "end_optimal",
+  "cdn-misconfigured": "end_optimal",
 };
 
 /**
@@ -399,8 +402,8 @@ export function getDecisionInsights(progress, lang) {
   }
   if (avgRel > avgPerf + 10 && avgRel > avgCost + 10) {
     biases.push(en
-      ? "Reliability is your strongest instinct -- you build for resilience"
-      : "אמינות היא האינסטינקט החזק ביותר שלך -- אתה בונה לעמידות");
+      ? "Reliability is your strongest instinct - you build for resilience"
+      : "אמינות היא האינסטינקט החזק ביותר שלך - אתה בונה לעמידות");
   }
 
   // Reactive vs proactive (based on whether good scores came early or late)
@@ -411,8 +414,8 @@ export function getDecisionInsights(progress, lang) {
     const laterAvg = laterScores.reduce((a, b) => a + b, 0) / laterScores.length;
     if (laterAvg > earlyAvg + 10) {
       biases.push(en
-        ? "You improve significantly on replay -- you learn from experience"
-        : "אתה משתפר משמעותית בהפעלה חוזרת -- אתה לומד מניסיון");
+        ? "You improve significantly on replay - you learn from experience"
+        : "אתה משתפר משמעותית בהפעלה חוזרת - אתה לומד מניסיון");
     }
   }
 
@@ -453,7 +456,7 @@ export function getNextAction(scenarioId, progress, scenarios, lang) {
     };
   }
 
-  // All completed — suggest improving lowest score
+  // All completed - suggest improving lowest score
   let lowestId = null, lowestScore = 101;
   for (const s of scenarios) {
     const p = progress[s.id];
@@ -496,4 +499,209 @@ export function getArchitectureStats(progress) {
   const strongestMetric = maxAvg === avgPerf ? "performance" : maxAvg === avgRel ? "reliability" : "cost";
 
   return { completed: entries.length, avgScore, bestScore, successRate, totalAttempts, strongestMetric };
+}
+
+// ── Interview Simulator: Quality Tiers ────────────────────────────────────
+
+const QUALITY_TIERS = [
+  { threshold: 85, label: "Excellent Architecture", labelHe: "ארכיטקטורה מצוינת", color: "#10B981", icon: "star" },
+  { threshold: 65, label: "Production Ready",       labelHe: "מוכן לפרודקשן",        color: "#3B82F6", icon: "check" },
+  { threshold: 40, label: "Risky Architecture",     labelHe: "ארכיטקטורה מסוכנת",  color: "#F59E0B", icon: "warning" },
+  { threshold: 0,  label: "Failure Architecture",   labelHe: "ארכיטקטורה כושלת",   color: "#EF4444", icon: "critical" },
+];
+
+export { QUALITY_TIERS };
+
+export function getQualityTier(score) {
+  for (const tier of QUALITY_TIERS) {
+    if (score >= tier.threshold) return tier;
+  }
+  return QUALITY_TIERS[QUALITY_TIERS.length - 1];
+}
+
+// ── Interview Simulator: Structured Feedback ──────────────────────────────
+
+export function generateInterviewFeedback(decisionHistory, metrics, terminalStep, lang) {
+  const en = lang !== "he";
+
+  // Dimension scores from existing + optional extended metrics
+  const dimensions = {
+    scalability: metrics.scalability ?? metrics.performance ?? 50,
+    reliability: metrics.reliability ?? 50,
+    costEfficiency: metrics.cost ?? 50,
+    operationalRisk: 100 - Math.round(clamp(
+      decisionHistory.reduce((s, d) => s + (d.operationalComplexity || 0), 0), 0, 100
+    )),
+  };
+
+  // Find turning point: the worst single decision
+  let turningPointIndex = -1;
+  let worstNet = Infinity;
+  for (let i = 0; i < decisionHistory.length; i++) {
+    const d = decisionHistory[i];
+    const net = (d.impact?.performance || 0) + (d.impact?.cost || 0) + (d.impact?.reliability || 0);
+    if (net < worstNet) { worstNet = net; turningPointIndex = i; }
+  }
+
+  // Root cause from terminal step metadata (optional)
+  const rootCause = terminalStep
+    ? (en ? terminalStep.rootCause : terminalStep.rootCauseHe) || null
+    : null;
+  const productionSolution = terminalStep
+    ? (en ? terminalStep.productionSolution : terminalStep.productionSolutionHe) || null
+    : null;
+
+  return {
+    dimensions,
+    turningPointIndex: worstNet < -3 ? turningPointIndex : -1,
+    turningPointTag: turningPointIndex >= 0 ? (decisionHistory[turningPointIndex]?.tag || "") : "",
+    rootCause,
+    productionSolution,
+  };
+}
+
+// ── Interview Simulator: System State Timeline ────────────────────────────
+
+export function buildSystemTimeline(initialSystemState, decisionHistory, stateSnapshots) {
+  if (!initialSystemState || !stateSnapshots?.length) return [];
+
+  const timeline = [
+    { label: "T0", state: initialSystemState, severity: getSystemSeverity(initialSystemState), tag: "" },
+  ];
+
+  for (let i = 0; i < stateSnapshots.length; i++) {
+    const snap = stateSnapshots[i];
+    timeline.push({
+      label: `T${i + 1}`,
+      state: snap,
+      severity: getSystemSeverity(snap),
+      tag: decisionHistory[i]?.tag || "",
+    });
+  }
+
+  return timeline;
+}
+
+// ── Incident Replay: Optimal Path Finder ──────────────────────────────────
+
+/**
+ * Traverse the scenario decision tree to find the path to the optimal ending.
+ * Returns an array of { stepId, optionIndex, option, stepContext } for each decision.
+ */
+export function findOptimalPath(scenario) {
+  const optimalEnd = OPTIMAL_ENDINGS[scenario.id];
+  if (!optimalEnd || !scenario.steps) return null;
+
+  // BFS to find the shortest path to the optimal ending
+  const queue = [{ stepId: "start", path: [] }];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const { stepId, path } = queue.shift();
+    if (visited.has(stepId)) continue;
+    visited.add(stepId);
+
+    const step = scenario.steps[stepId];
+    if (!step) continue;
+
+    if (stepId === optimalEnd) return path;
+
+    if (!step.options?.length) continue;
+
+    for (let i = 0; i < step.options.length; i++) {
+      const opt = step.options[i];
+      queue.push({
+        stepId: opt.nextStep,
+        path: [...path, { stepId, optionIndex: i, option: opt }],
+      });
+    }
+  }
+  return null;
+}
+
+/**
+ * Build the optimal system state evolution for comparison.
+ * Simulates the optimal path and returns timeline snapshots.
+ */
+export function buildOptimalTimeline(scenario) {
+  const path = findOptimalPath(scenario);
+  if (!path || !scenario.initialSystemState) return null;
+
+  const timeline = [{ label: "T0", state: scenario.initialSystemState, severity: getSystemSeverity(scenario.initialSystemState), tag: "" }];
+  let state = JSON.parse(JSON.stringify(scenario.initialSystemState));
+
+  for (let i = 0; i < path.length; i++) {
+    const { option } = path[i];
+    state = evolveSystemState(state, option, option.nextStep);
+    timeline.push({
+      label: `T${i + 1}`,
+      state,
+      severity: getSystemSeverity(state),
+      tag: option.tag || "",
+    });
+  }
+
+  return { path, timeline };
+}
+
+/**
+ * Generate a short impact explanation for a decision by comparing before/after states.
+ */
+export function describeDecisionImpact(stateBefore, stateAfter, lang) {
+  const en = lang !== "he";
+  const changes = [];
+
+  if (stateBefore.latency != null && stateAfter.latency != null) {
+    const diff = stateAfter.latency - stateBefore.latency;
+    if (Math.abs(diff) >= 100) {
+      changes.push(diff < 0
+        ? (en ? `Latency improved by ${Math.abs(diff)}ms` : `השהיה ירדה ב-${Math.abs(diff)}ms`)
+        : (en ? `Latency increased by ${diff}ms` : `השהיה עלתה ב-${diff}ms`));
+    }
+  }
+  if (stateBefore.errorRate != null && stateAfter.errorRate != null) {
+    const diff = stateAfter.errorRate - stateBefore.errorRate;
+    if (Math.abs(diff) >= 1) {
+      changes.push(diff < 0
+        ? (en ? `Error rate dropped by ${Math.abs(diff)}%` : `שיעור שגיאות ירד ב-${Math.abs(diff)}%`)
+        : (en ? `Error rate increased by ${diff}%` : `שיעור שגיאות עלה ב-${diff}%`));
+    }
+  }
+  if (stateBefore.dbLoad != null && stateAfter.dbLoad != null) {
+    const diff = stateAfter.dbLoad - stateBefore.dbLoad;
+    if (Math.abs(diff) >= 5) {
+      changes.push(diff > 0
+        ? (en ? `DB load increased to ${stateAfter.dbLoad}%` : `עומס DB עלה ל-${stateAfter.dbLoad}%`)
+        : (en ? `DB load decreased to ${stateAfter.dbLoad}%` : `עומס DB ירד ל-${stateAfter.dbLoad}%`));
+    }
+  }
+  if (stateBefore.cpuPercent != null && stateAfter.cpuPercent != null) {
+    const diff = stateAfter.cpuPercent - stateBefore.cpuPercent;
+    if (Math.abs(diff) >= 5) {
+      changes.push(diff < 0
+        ? (en ? `CPU utilization dropped to ${stateAfter.cpuPercent}%` : `ניצולת CPU ירדה ל-${stateAfter.cpuPercent}%`)
+        : (en ? `CPU utilization rose to ${stateAfter.cpuPercent}%` : `ניצולת CPU עלתה ל-${stateAfter.cpuPercent}%`));
+    }
+  }
+  if (stateBefore.throughput != null && stateAfter.throughput != null) {
+    const diff = stateAfter.throughput - stateBefore.throughput;
+    if (Math.abs(diff) >= 20) {
+      changes.push(diff > 0
+        ? (en ? `Throughput recovered to ${stateAfter.throughput} RPS` : `תפוקה התאוששה ל-${stateAfter.throughput} RPS`)
+        : (en ? `Throughput dropped to ${stateAfter.throughput} RPS` : `תפוקה ירדה ל-${stateAfter.throughput} RPS`));
+    }
+  }
+  if (stateBefore.queueDepth != null && stateAfter.queueDepth != null) {
+    const diff = stateAfter.queueDepth - stateBefore.queueDepth;
+    if (Math.abs(diff) >= 50) {
+      changes.push(diff > 0
+        ? (en ? `Queue depth grew to ${stateAfter.queueDepth}` : `עומק תור גדל ל-${stateAfter.queueDepth}`)
+        : (en ? `Queue depth reduced to ${stateAfter.queueDepth}` : `עומק תור ירד ל-${stateAfter.queueDepth}`));
+    }
+  }
+
+  if (changes.length === 0) {
+    return en ? "Minimal system impact." : "השפעה מינימלית על המערכת.";
+  }
+  return changes.join(en ? ". " : ". ") + ".";
 }

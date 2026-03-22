@@ -9,6 +9,7 @@ export default {
   description: "Your PostgreSQL RDS instance is choking under a 5x traffic spike. Diagnose and resolve the bottleneck before users start churning.",
   descriptionHe: "מופע ה-PostgreSQL RDS שלך נחנק תחת עלייה של פי 5 בתעבורה. אבחן ופתור את ה-bottleneck לפני שמשתמשים מתחילים לנטוש.",
   difficulty: "medium",
+  order: 2,
   estimatedTime: "5-7 min",
   tags: ["AWS", "RDS", "PostgreSQL", "Scaling"],
   icon: "🗄️",
@@ -49,7 +50,7 @@ export default {
           impact: { performance: 10, cost: -15, reliability: 5 },
           tag: "Symptom treatment",
           tagHe: "טיפול בסימפטום",
-          explanation: "Vertical scaling buys temporary headroom but doesn't address root cause. The db.r5.large to r5.2xlarge upgrade requires a reboot (downtime in single-AZ), costs 2x more per hour, and the CPU/IOPS saturation pattern suggests inefficient queries — not insufficient hardware. You're spending money to run the same bad queries on a bigger machine.",
+          explanation: "Problem: The database is saturated because of bad queries, not because the hardware is too small. What happened: You doubled the cost and took a reboot with downtime in single-AZ, but the same saturation pattern persists. Why this fails: You are paying more to run the same bad SQL on a bigger machine.",
           explanationHe: "שדרוג אנכי קונה מרווח זמני אבל לא מטפל בשורש הבעיה. השדרוג מ-db.r5.large ל-r5.2xlarge דורש reboot (downtime ב-AZ בודד), עולה פי 2 לשעה, ודפוס רוויית CPU/IOPS מרמז על שאילתות לא יעילות - לא חומרה לא מספקת. אתה משלם כדי להריץ את אותן שאילתות גרועות על מכונה גדולה יותר.",
           stateEffect: {
             latency: 1200,
@@ -65,7 +66,7 @@ export default {
           impact: { performance: 5, cost: 0, reliability: 5 },
           tag: "Root cause analysis",
           tagHe: "ניתוח שורש הבעיה",
-          explanation: "Before committing resources, you identify what's actually consuming them. The slow query log reveals 3 unindexed queries responsible for 70% of CPU load: a full table scan on the 50M-row orders table, a 4-table JOIN without covering indexes, and an N+1 pattern from the API layer generating ~150 queries per request. This data-driven approach prevents wasted spend and targets the actual bottleneck.",
+          explanation: "Problem: You do not know what is consuming all the CPU yet. What happened: The slow query log reveals 3 unindexed queries responsible for 70% of CPU, including a full table scan on 50M rows and an N+1 pattern doing ~150 queries per request. Why this works: You get the data first instead of guessing, so every fix you make targets the actual bottleneck.",
           explanationHe: "לפני שמקצים משאבים, אתה מזהה מה בעצם צורך אותם. לוג השאילתות חושף 3 שאילתות ללא אינדקס שאחראיות ל-70% מעומס ה-CPU: סריקה מלאה על טבלת orders עם 50M שורות, JOIN על 4 טבלאות ללא אינדקסים מכסים, ותבנית N+1 מהשכבת API שמייצרת כ-150 שאילתות לכל בקשה. גישה מונעת-נתונים זו מונעת הוצאה מיותרת ומכוונת לצוואר הבקבוק האמיתי.",
           stateEffect: {
             // diagnostic action - no immediate state change
@@ -78,8 +79,8 @@ export default {
           impact: { performance: -5, cost: -8, reliability: -10 },
           tag: "Amplifies bottleneck",
           tagHe: "מגביר את צוואר הבקבוק",
-          explanation: "The bottleneck is the database, not compute capacity. Each new pod opens its own connection pool to RDS. With connections at 180/200, adding pods will push past max_connections within minutes, causing connection refusal errors across all services — not just slower responses, but hard failures. This converts a latency problem into an availability incident.",
-          explanationHe: "צוואר הבקבוק הוא מסד הנתונים, לא כוח חישוב. כל pod חדש פותח מאגר חיבורים משלו ל-RDS. עם חיבורים ב-180/200, הוספת pods תדחוף מעבר ל-max_connections תוך דקות, ויגרום לשגיאות סירוב חיבור בכל השירותים — לא רק תגובות איטיות, אלא כשלים קשיחים. זה ממיר בעיית השהיה לתקרית זמינות.",
+          explanation: "Problem: The bottleneck is the database, not the application layer. What happened: Each new pod opens its own connection pool, pushing past the 180/200 connection limit within minutes. Why this fails: You turned a latency problem into a full availability incident, with hard connection refusal errors across all services.",
+          explanationHe: "צוואר הבקבוק הוא מסד הנתונים, לא כוח חישוב. כל pod חדש פותח מאגר חיבורים משלו ל-RDS. עם חיבורים ב-180/200, הוספת pods תדחוף מעבר ל-max_connections תוך דקות, ויגרום לשגיאות סירוב חיבור בכל השירותים - לא רק תגובות איטיות, אלא כשלים קשיחים. זה ממיר בעיית השהיה לתקרית זמינות.",
           stateEffect: {
             connections: "210/200",
             errorRate: 15,
@@ -94,8 +95,8 @@ export default {
           impact: { performance: 0, cost: -12, reliability: 8 },
           tag: "Misidentified priority",
           tagHe: "סדר עדיפויות שגוי",
-          explanation: "Multi-AZ provides automatic failover to a standby replica in another availability zone, improving disaster recovery. However, the standby is not accessible for read queries — it sits idle until a failover event. This doubles your RDS cost without reducing the CPU/IOPS saturation causing the latency. It solves a problem you don't currently have (single-AZ failure) while ignoring the one you do (query performance).",
-          explanationHe: "Multi-AZ מספק failover אוטומטי לרפליקה ב-AZ אחר, משפר התאוששות מאסון. אבל ה-standby לא נגיש לשאילתות קריאה — הוא יושב בטל עד אירוע failover. זה מכפיל את עלות ה-RDS בלי להפחית את רוויית ה-CPU/IOPS שגורמת להשהיה. זה פותר בעיה שלא קיימת כרגע (כשל AZ בודד) תוך התעלמות מזו שכן (ביצועי שאילתות).",
+          explanation: "Problem: Multi-AZ provides failover, but the standby cannot serve read queries. What happened: You doubled your RDS cost and the standby sits idle while CPU and latency remain unchanged. Why this fails: It solves a problem you do not have right now while ignoring the one you do.",
+          explanationHe: "Multi-AZ מספק failover אוטומטי לרפליקה ב-AZ אחר, משפר התאוששות מאסון. אבל ה-standby לא נגיש לשאילתות קריאה - הוא יושב בטל עד אירוע failover. זה מכפיל את עלות ה-RDS בלי להפחית את רוויית ה-CPU/IOPS שגורמת להשהיה. זה פותר בעיה שלא קיימת כרגע (כשל AZ בודד) תוך התעלמות מזו שכן (ביצועי שאילתות).",
           stateEffect: {
             costPerMonth: 800,
             latency: 2400,
@@ -109,8 +110,8 @@ export default {
       id: "found_queries",
       timeDelta: "15 minutes into investigation...",
       timeDeltaHe: "15 דקות לתוך החקירה...",
-      context: "You found 3 problematic queries: (1) A full table scan on a 50M row `orders` table — no index on the `customer_id` filter column, (2) A JOIN across 4 tables using nested loop joins instead of hash joins due to missing composite indexes, (3) An N+1 query pattern from the API layer — fetching order items one-by-one instead of batch loading. Together they account for 70% of DB CPU.",
-      contextHe: "מצאת 3 שאילתות בעייתיות: (1) סריקה מלאה על טבלת orders עם 50M שורות — אין אינדקס על עמודת הסינון customer_id, (2) JOIN על 4 טבלאות שמשתמש ב-nested loop joins במקום hash joins בגלל אינדקסים מורכבים חסרים, (3) תבנית N+1 מהשכבת API — שליפת פריטי הזמנה אחד-אחד במקום טעינה מרוכזת. ביחד הן אחראיות ל-70% מצריכת CPU של ה-DB.",
+      context: "You found 3 problematic queries: (1) A full table scan on a 50M row `orders` table - no index on the `customer_id` filter column, (2) A JOIN across 4 tables using nested loop joins instead of hash joins due to missing composite indexes, (3) An N+1 query pattern from the API layer - fetching order items one-by-one instead of batch loading. Together they account for 70% of DB CPU.",
+      contextHe: "מצאת 3 שאילתות בעייתיות: (1) סריקה מלאה על טבלת orders עם 50M שורות - אין אינדקס על עמודת הסינון customer_id, (2) JOIN על 4 טבלאות שמשתמש ב-nested loop joins במקום hash joins בגלל אינדקסים מורכבים חסרים, (3) תבנית N+1 מהשכבת API - שליפת פריטי הזמנה אחד-אחד במקום טעינה מרוכזת. ביחד הן אחראיות ל-70% מצריכת CPU של ה-DB.",
       question: "How do you address these query issues?",
       questionHe: "איך תטפל בבעיות השאילתות?",
       alerts: [
@@ -131,8 +132,8 @@ export default {
           impact: { performance: 25, cost: 5, reliability: 10 },
           tag: "Targets root cause",
           tagHe: "מטפל בשורש הבעיה",
-          explanation: "Adding a B-tree index on orders(customer_id) eliminates the full table scan — query time drops from ~8s to ~15ms. Composite indexes on the JOIN tables switch the planner from nested loops to hash joins. Fixing the N+1 at the app layer (batch SELECT with IN clause) reduces per-request query count from ~150 to 2, immediately freeing ~60% of connection pool. Combined effect: CPU drops from 94% to ~45%, latency returns to ~200ms. This is the highest-leverage fix because it reduces load without adding infrastructure cost.",
-          explanationHe: "הוספת אינדקס B-tree על orders(customer_id) מבטלת את הסריקה המלאה — זמן שאילתה יורד מ-8 שניות ל-15ms בערך. אינדקסים מורכבים על טבלאות ה-JOIN מעבירים את ה-planner מ-nested loops ל-hash joins. תיקון ה-N+1 בשכבת האפליקציה (SELECT מרוכז עם IN clause) מפחית מספר שאילתות לבקשה מ-150 ל-2, ומשחרר מיידית 60% ממאגר החיבורים. תוצאה משולבת: CPU יורד מ-94% ל-45% בערך, השהיה חוזרת ל-200ms. זה התיקון עם המינוף הגבוה ביותר כי הוא מפחית עומס ללא עלות תשתית נוספת.",
+          explanation: "Problem: Three unindexed queries and an N+1 pattern are consuming 70% of DB CPU. What happened: Adding indexes drops query time from ~8s to ~15ms, and fixing the N+1 reduces queries per request from ~150 to 2. Why this works: CPU drops to ~45% and latency returns to ~200ms with zero additional infrastructure cost.",
+          explanationHe: "הוספת אינדקס B-tree על orders(customer_id) מבטלת את הסריקה המלאה - זמן שאילתה יורד מ-8 שניות ל-15ms בערך. אינדקסים מורכבים על טבלאות ה-JOIN מעבירים את ה-planner מ-nested loops ל-hash joins. תיקון ה-N+1 בשכבת האפליקציה (SELECT מרוכז עם IN clause) מפחית מספר שאילתות לבקשה מ-150 ל-2, ומשחרר מיידית 60% ממאגר החיבורים. תוצאה משולבת: CPU יורד מ-94% ל-45% בערך, השהיה חוזרת ל-200ms. זה התיקון עם המינוף הגבוה ביותר כי הוא מפחית עומס ללא עלות תשתית נוספת.",
           stateEffect: {
             latency: 200,
             cpuPercent: 45,
@@ -148,8 +149,8 @@ export default {
           impact: { performance: 10, cost: -8, reliability: -3 },
           tag: "Premature optimization",
           tagHe: "אופטימיזציה מוקדמת",
-          explanation: "Caching can reduce DB load for repeated identical queries, but the problematic queries here are user-specific (customer_id filters) and time-varying (recent orders). Expected cache hit rate: ~30%. The 70% cache misses still execute the same unindexed full table scans, so the DB remains saturated during peak traffic. Meanwhile, you've added a new infrastructure dependency (ElastiCache), cache invalidation complexity, and ~$150/month cost — all to mask an indexing problem that costs $0 to fix.",
-          explanationHe: "Caching יכול להפחית עומס DB לשאילתות חוזרות זהות, אבל השאילתות הבעייתיות כאן ספציפיות למשתמש (פילטרי customer_id) ומשתנות בזמן (הזמנות אחרונות). שיעור פגיעות cache צפוי: 30% בערך. 70% ה-cache misses עדיין מריצים את אותן סריקות מלאות ללא אינדקס, כך שה-DB נשאר רווי בשעת שיא. בינתיים, הוספת תלות תשתית חדשה (ElastiCache), מורכבות cache invalidation, ועלות של 150$ לחודש בערך — הכל כדי להסתיר בעיית אינדקס שעולה $0 לתקן.",
+          explanation: "Problem: These queries are user-specific and time-varying, so cache hit rate is only ~30%. What happened: The 70% cache misses still run the same unindexed full table scans, leaving the DB saturated at peak. Why this fails: You added $150/month in infrastructure complexity to mask an indexing problem that costs $0 to fix.",
+          explanationHe: "Caching יכול להפחית עומס DB לשאילתות חוזרות זהות, אבל השאילתות הבעייתיות כאן ספציפיות למשתמש (פילטרי customer_id) ומשתנות בזמן (הזמנות אחרונות). שיעור פגיעות cache צפוי: 30% בערך. 70% ה-cache misses עדיין מריצים את אותן סריקות מלאות ללא אינדקס, כך שה-DB נשאר רווי בשעת שיא. בינתיים, הוספת תלות תשתית חדשה (ElastiCache), מורכבות cache invalidation, ועלות של 150$ לחודש בערך - הכל כדי להסתיר בעיית אינדקס שעולה $0 לתקן.",
           stateEffect: {
             latency: 1800,
             cpuPercent: 80,
@@ -165,8 +166,8 @@ export default {
           impact: { performance: 8, cost: -12, reliability: 3 },
           tag: "Horizontal cost without root fix",
           tagHe: "עלות אופקית ללא תיקון שורשי",
-          explanation: "Read replicas distribute query load across multiple instances, which helps — but the same unoptimized queries run on every replica. A full table scan on 50M rows takes the same CPU whether it runs on the primary or a replica. You're paying for 2x the hardware to run queries that could be 500x faster with proper indexes. The replica does provide read scaling headroom for the future, but right now it's treating the symptom (too much load on one instance) rather than the disease (queries doing 500x more I/O than necessary).",
-          explanationHe: "Read replicas מפזרים עומס שאילתות על מספר מופעים, מה שעוזר — אבל אותן שאילתות לא מותאמות רצות על כל replica. סריקה מלאה על 50M שורות לוקחת אותו CPU בין אם היא רצה על ה-primary או על replica. אתה משלם פי 2 על חומרה להרצת שאילתות שיכולות להיות מהירות פי 500 עם אינדקסים מתאימים. ה-replica כן מספק מרווח סקיילינג קריאה לעתיד, אבל כרגע הוא מטפל בסימפטום (יותר מדי עומס על מופע אחד) ולא במחלה (שאילתות שעושות פי 500 I/O מהנדרש).",
+          explanation: "Problem: The same unoptimized full table scans run on every replica. What happened: You are paying 2x the hardware cost to run queries that could be 500x faster with proper indexes. Why this fails: It treats the symptom instead of the disease, which is queries doing 500x more I/O than necessary.",
+          explanationHe: "Read replicas מפזרים עומס שאילתות על מספר מופעים, מה שעוזר - אבל אותן שאילתות לא מותאמות רצות על כל replica. סריקה מלאה על 50M שורות לוקחת אותו CPU בין אם היא רצה על ה-primary או על replica. אתה משלם פי 2 על חומרה להרצת שאילתות שיכולות להיות מהירות פי 500 עם אינדקסים מתאימים. ה-replica כן מספק מרווח סקיילינג קריאה לעתיד, אבל כרגע הוא מטפל בסימפטום (יותר מדי עומס על מופע אחד) ולא במחלה (שאילתות שעושות פי 500 I/O מהנדרש).",
           stateEffect: {
             latency: 1500,
             cpuPercent: 85,
@@ -180,8 +181,8 @@ export default {
       id: "optimized_queries",
       timeDelta: "45 minutes later. Indexes deployed, N+1 hotfix live.",
       timeDeltaHe: "45 דקות מאוחר יותר. אינדקסים נפרסו, hotfix ל-N+1 חי.",
-      context: "After deploying index fixes and the N+1 hotfix, RDS CPU dropped to 45% and latency is back to 200ms. Connection usage is down to 60/200. But traffic is still growing — your PM says a marketing campaign launches next week expecting another 3x spike on top of current levels.",
-      contextHe: "אחרי פריסת תיקוני האינדקסים וה-hotfix ל-N+1, ה-CPU של RDS ירד ל-45% וההשהיה חזרה ל-200ms. שימוש בחיבורים ירד ל-60/200. אבל התעבורה ממשיכה לגדול — מנהל המוצר אומר שקמפיין שיווקי בשבוע הבא צפוי לעלייה נוספת של פי 3 מעל הרמות הנוכחיות.",
+      context: "After deploying index fixes and the N+1 hotfix, RDS CPU dropped to 45% and latency is back to 200ms. Connection usage is down to 60/200. But traffic is still growing - your PM says a marketing campaign launches next week expecting another 3x spike on top of current levels.",
+      contextHe: "אחרי פריסת תיקוני האינדקסים וה-hotfix ל-N+1, ה-CPU של RDS ירד ל-45% וההשהיה חזרה ל-200ms. שימוש בחיבורים ירד ל-60/200. אבל התעבורה ממשיכה לגדול - מנהל המוצר אומר שקמפיין שיווקי בשבוע הבא צפוי לעלייה נוספת של פי 3 מעל הרמות הנוכחיות.",
       question: "How do you prepare for the upcoming traffic surge?",
       questionHe: "איך תתכונן לגל התעבורה הקרוב?",
       alerts: [
@@ -191,7 +192,7 @@ export default {
         { type: "warning", source: "PM", text: "Marketing campaign launches next week - expecting 3x traffic", textHe: "קמפיין שיווקי מושק בשבוע הבא - צפוי פי 3 תעבורה" },
       ],
       logs: [
-        { level: "info", timestamp: "15:10:22", text: "CREATE INDEX CONCURRENTLY idx_orders_customer_id ON orders(customer_id) -- completed in 42s" },
+        { level: "info", timestamp: "15:10:22", text: "CREATE INDEX CONCURRENTLY idx_orders_customer_id ON orders(customer_id) - completed in 42s" },
         { level: "info", timestamp: "15:10:30", text: "LOG: duration: 14.7 ms  statement: SELECT * FROM orders WHERE customer_id = 4821" },
       ],
       options: [
@@ -202,8 +203,8 @@ export default {
           impact: { performance: 18, cost: -8, reliability: 15 },
           tag: "Production-grade scaling",
           tagHe: "סקיילינג ברמת ייצור",
-          explanation: "With queries now optimized, a read replica actually delivers value — offloading analytics and catalog reads from the primary, reserving write capacity for transactions. PgBouncer in transaction pooling mode multiplexes connections so 60+ pods can share a pool of 50 DB connections, preventing connection exhaustion at 3x scale. Combined cost increase is ~40% (one replica + small PgBouncer pod) while handling 3x traffic — a strong cost/performance ratio. This is the standard production pattern for PostgreSQL horizontal scaling.",
-          explanationHe: "עם שאילתות מותאמות עכשיו, read replica באמת מספק ערך — מפנה שאילתות אנליטיקה וקטלוג מה-primary, שומר קיבולת כתיבה לטרנזקציות. PgBouncer במצב transaction pooling מנהל חיבורים כך ש-60+ pods יכולים לשתף מאגר של 50 חיבורי DB, ומונע מיצוי חיבורים בסקייל פי 3. עליית עלות משולבת היא 40% בערך (replica אחד + pod קטן של PgBouncer) תוך טיפול בפי 3 תעבורה — יחס עלות/ביצועים חזק.",
+          explanation: "Problem: Traffic will grow 3x and the system needs horizontal scaling now that queries are efficient. What happened: A read replica offloads analytics from the primary, and PgBouncer lets 60+ pods share 50 DB connections. Why this works: You handle 3x traffic at only ~40% cost increase, which is the standard production pattern for PostgreSQL scaling.",
+          explanationHe: "עם שאילתות מותאמות עכשיו, read replica באמת מספק ערך - מפנה שאילתות אנליטיקה וקטלוג מה-primary, שומר קיבולת כתיבה לטרנזקציות. PgBouncer במצב transaction pooling מנהל חיבורים כך ש-60+ pods יכולים לשתף מאגר של 50 חיבורי DB, ומונע מיצוי חיבורים בסקייל פי 3. עליית עלות משולבת היא 40% בערך (replica אחד + pod קטן של PgBouncer) תוך טיפול בפי 3 תעבורה - יחס עלות/ביצועים חזק.",
           stateEffect: {
             latency: 60,
             cpuPercent: 45,
@@ -220,7 +221,7 @@ export default {
           impact: { performance: 10, cost: -15, reliability: 5 },
           tag: "High-risk migration under pressure",
           tagHe: "מיגרציה בסיכון גבוה תחת לחץ",
-          explanation: "Aurora Serverless v2 provides automatic read/write scaling and eliminates connection management overhead. However, migrating a production PostgreSQL instance to Aurora requires: (1) schema compatibility validation, (2) pg_dump/restore or DMS migration with downtime or replication lag, (3) testing for Aurora-specific behavioral differences (e.g., storage I/O model, failover behavior). Doing this in one week while a campaign launches introduces significant risk of production disruption. Aurora is a strong long-term choice, but the timing creates unnecessary operational risk.",
+          explanation: "Problem: Migrating to Aurora requires schema validation, DMS migration with downtime, and testing for behavioral differences. What happened: Doing this in one week before a campaign launch creates significant risk of production disruption. Why this fails: Aurora is a strong long-term choice, but safer scaling options are available right now without the migration risk.",
           explanationHe: "Aurora Serverless v2 מספק סקיילינג אוטומטי ומבטל תקורת ניהול חיבורים. אבל, מיגרציה של מופע PostgreSQL בייצור ל-Aurora דורשת: (1) אימות תאימות סכמה, (2) מיגרציה עם pg_dump/restore או DMS עם downtime או replication lag, (3) בדיקות להבדלי התנהגות ספציפיים ל-Aurora. לעשות את זה בשבוע אחד כשקמפיין מושק מכניס סיכון משמעותי של שיבוש ייצור. Aurora היא בחירה חזקה לטווח ארוך, אבל התזמון יוצר סיכון תפעולי מיותר.",
           stateEffect: {
             latency: 200,
@@ -237,8 +238,8 @@ export default {
           impact: { performance: 8, cost: -20, reliability: 0 },
           tag: "Vertical scaling ceiling",
           tagHe: "תקרת שדרוג אנכי",
-          explanation: "Vertical scaling has a hard ceiling (db.r5.24xlarge is the max) and costs grow faster than linearly — 4xlarge is 4x the cost but gives only ~3x the capacity due to memory bus contention and PostgreSQL's single-writer architecture. At 3x the upcoming traffic spike, you'll consume ~135% of the 4xlarge capacity, hitting the same wall again with fewer options and a much larger bill. Without horizontal scaling (replicas, connection pooling), you're locked into an increasingly expensive single point of failure.",
-          explanationHe: "לשדרוג אנכי יש תקרה קשיחה (db.r5.24xlarge הוא המקסימום) והעלויות גדלות מהר יותר מלינארית — 4xlarge עולה פי 4 אבל נותן רק פי 3 בערך קיבולת בגלל memory bus contention וארכיטקטורת single-writer של PostgreSQL. בפי 3 תעבורה הצפויה, תצרוך כ-135% מקיבולת ה-4xlarge, ותפגע באותו קיר שוב עם פחות אפשרויות וחשבון גדול בהרבה.",
+          explanation: "Problem: Vertical scaling has a hard ceiling, and 4xlarge costs 4x but gives only ~3x the capacity. What happened: At the upcoming 3x traffic spike, you will consume ~135% of 4xlarge capacity and hit the same wall again. Why this fails: You are locked into a single point of failure that gets more expensive with every upgrade and still cannot keep pace with traffic growth.",
+          explanationHe: "לשדרוג אנכי יש תקרה קשיחה (db.r5.24xlarge הוא המקסימום) והעלויות גדלות מהר יותר מלינארית - 4xlarge עולה פי 4 אבל נותן רק פי 3 בערך קיבולת בגלל memory bus contention וארכיטקטורת single-writer של PostgreSQL. בפי 3 תעבורה הצפויה, תצרוך כ-135% מקיבולת ה-4xlarge, ותפגע באותו קיר שוב עם פחות אפשרויות וחשבון גדול בהרבה.",
           stateEffect: {
             latency: 150,
             cpuPercent: 45,
@@ -252,8 +253,8 @@ export default {
       id: "scaled_rds",
       timeDelta: "20 minutes later. Instance upgrade completed after reboot.",
       timeDeltaHe: "20 דקות מאוחר יותר. שדרוג מופע הושלם אחרי reboot.",
-      context: "You scaled to db.r5.2xlarge. CPU dropped to 60% but latency is still at 1.2s — the unindexed queries are faster with more CPU but still fundamentally inefficient. The bill jumped from $400/month to $800/month. Your CTO is asking why costs spiked without proportional performance improvement.",
-      contextHe: "שדרגת ל-db.r5.2xlarge. ה-CPU ירד ל-60% אבל ההשהיה עדיין 1.2 שניות — השאילתות ללא אינדקס מהירות יותר עם יותר CPU אבל עדיין לא יעילות ביסודן. החשבון קפץ מ-$400 ל-$800 לחודש. ה-CTO שואל למה העלויות זינקו ללא שיפור ביצועים פרופורציונלי.",
+      context: "You scaled to db.r5.2xlarge. CPU dropped to 60% but latency is still at 1.2s - the unindexed queries are faster with more CPU but still fundamentally inefficient. The bill jumped from $400/month to $800/month. Your CTO is asking why costs spiked without proportional performance improvement.",
+      contextHe: "שדרגת ל-db.r5.2xlarge. ה-CPU ירד ל-60% אבל ההשהיה עדיין 1.2 שניות - השאילתות ללא אינדקס מהירות יותר עם יותר CPU אבל עדיין לא יעילות ביסודן. החשבון קפץ מ-$400 ל-$800 לחודש. ה-CTO שואל למה העלויות זינקו ללא שיפור ביצועים פרופורציונלי.",
       question: "Latency is still high despite the upgrade. What now?",
       questionHe: "ההשהיה עדיין גבוהה למרות השדרוג. מה עכשיו?",
       alerts: [
@@ -274,8 +275,8 @@ export default {
           impact: { performance: 0, cost: 0, reliability: 0 },
           tag: "Course correction",
           tagHe: "תיקון מסלול",
-          explanation: "The right diagnostic step — should have been first. The 2xlarge upgrade bought headroom (CPU 60% vs 94%) but the persistent high latency proves the problem isn't hardware capacity. Slow query analysis will reveal the real bottleneck. The $400/month extra spend wasn't wasted entirely — it stabilized the system — but it would have been unnecessary had you started here.",
-          explanationHe: "צעד האבחון הנכון — היה צריך להיות ראשון. השדרוג ל-2xlarge קנה מרווח (CPU 60% לעומת 94%) אבל ההשהיה הגבוהה המתמשכת מוכיחה שהבעיה היא לא קיבולת חומרה. ניתוח שאילתות איטיות יחשוף את צוואר הבקבוק האמיתי. ההוצאה הנוספת של $400 לחודש לא בוזבזה לחלוטין — היא ייצבה את המערכת — אבל הייתה מיותרת אם היית מתחיל כאן.",
+          explanation: "Problem: Latency is still 1.2s despite the upgrade, which proves the issue is not hardware capacity. What happened: The extra $400/month stabilized CPU but the unindexed queries are still fundamentally slow. Why this works: Slow query analysis will reveal the real bottleneck and should have been the first step.",
+          explanationHe: "צעד האבחון הנכון - היה צריך להיות ראשון. השדרוג ל-2xlarge קנה מרווח (CPU 60% לעומת 94%) אבל ההשהיה הגבוהה המתמשכת מוכיחה שהבעיה היא לא קיבולת חומרה. ניתוח שאילתות איטיות יחשוף את צוואר הבקבוק האמיתי. ההוצאה הנוספת של $400 לחודש לא בוזבזה לחלוטין - היא ייצבה את המערכת - אבל הייתה מיותרת אם היית מתחיל כאן.",
           stateEffect: {
             // diagnostic action - no immediate state change
           }
@@ -287,8 +288,8 @@ export default {
           impact: { performance: 5, cost: -22, reliability: 0 },
           tag: "Diminishing returns",
           tagHe: "תשואה פוחתת",
-          explanation: "Doubling hardware again without understanding why latency persists is an escalating cost spiral. The 2xlarge dropped CPU by 34% but latency only improved by 50% — this sublinear relationship means the 4xlarge will drop latency to maybe 800ms at 4x the original cost. You're treating a software problem (missing indexes, N+1 patterns) with hardware, paying exponentially more for each marginal improvement. Your AWS bill is now $1,600/month for what a $0 index fix could solve.",
-          explanationHe: "הכפלת חומרה שוב בלי להבין למה ההשהיה נמשכת היא ספירלת עלויות מתגברת. ה-2xlarge הוריד CPU ב-34% אבל השהיה השתפרה רק ב-50% — יחס תת-לינארי זה אומר שה-4xlarge יוריד השהיה אולי ל-800ms בעלות פי 4 מהמקור. אתה מטפל בבעיית תוכנה (אינדקסים חסרים, תבניות N+1) עם חומרה, ומשלם אקספוננציאלית יותר על כל שיפור שולי.",
+          explanation: "Problem: Doubling hardware again without understanding why latency persists creates a cost spiral. What happened: The 4xlarge drops latency to maybe 800ms at $1,600/month for something a $0 index fix could solve. Why this fails: You are throwing hardware at a software problem and paying exponentially more for each marginal improvement.",
+          explanationHe: "הכפלת חומרה שוב בלי להבין למה ההשהיה נמשכת היא ספירלת עלויות מתגברת. ה-2xlarge הוריד CPU ב-34% אבל השהיה השתפרה רק ב-50% - יחס תת-לינארי זה אומר שה-4xlarge יוריד השהיה אולי ל-800ms בעלות פי 4 מהמקור. אתה מטפל בבעיית תוכנה (אינדקסים חסרים, תבניות N+1) עם חומרה, ומשלם אקספוננציאלית יותר על כל שיפור שולי.",
           stateEffect: {
             latency: 800,
             cpuPercent: 40,
@@ -328,7 +329,7 @@ export default {
           impact: { performance: 8, cost: 3, reliability: 8 },
           tag: "Stabilization + investigation",
           tagHe: "ייצוב + חקירה",
-          explanation: "Scaling back to 8 pods immediately stops the connection hemorrhage. PgBouncer in transaction pooling mode allows even 20 pods to share a pool of ~50 actual DB connections, since most connections are idle between queries. This stabilizes the system and restores availability. Now you can safely investigate the actual database bottleneck without the pressure of a SEV-1 outage. The connection pooler also becomes permanent infrastructure — it's valuable regardless of what the root cause turns out to be.",
+          explanation: "Problem: Connections hit 200/200 and pods are crash-looping. What happened: Scaling back to 8 pods stops the bleeding immediately, and PgBouncer lets 20 pods share ~50 actual DB connections since most are idle between queries. Why this works: It restores availability first, then gives you space to investigate the real database bottleneck without SEV-1 pressure.",
           explanationHe: "הקטנה חזרה ל-8 pods עוצרת מיידית את דימום החיבורים. PgBouncer במצב transaction pooling מאפשר אפילו ל-20 pods לשתף מאגר של 50 חיבורי DB בפועל בערך, כי רוב החיבורים בטלים בין שאילתות. זה מייצב את המערכת ומשקם זמינות. עכשיו אפשר לחקור בבטחה את צוואר הבקבוק של ה-DB ללא לחץ של תקרית SEV-1.",
           stateEffect: {
             connections: "80/200",
@@ -345,7 +346,7 @@ export default {
           impact: { performance: -8, cost: 0, reliability: -15 },
           tag: "Memory exhaustion risk",
           tagHe: "סיכון מיצוי זיכרון",
-          explanation: "Each PostgreSQL backend process consumes 5-10MB of RAM for work_mem, temp_buffers, and connection overhead. On an r5.large (16GB RAM), 500 connections would consume 2.5-5GB just for connection overhead, leaving significantly less memory for shared_buffers (query cache) and OS page cache. PostgreSQL performance degrades sharply when shared_buffers can't hold the working set — queries that were hitting cache start doing disk I/O. At high connection counts, you'll also see lock contention on ProcArrayLock and WAL insertion locks. The likely outcome: OOM killer terminates backends, or the instance starts swapping and latency jumps to 10s+.",
+          explanation: "Problem: Each PostgreSQL backend uses 5-10MB of RAM, so 500 connections on a 16GB instance consume 2.5-5GB just for overhead. What happened: Shared_buffers and page cache get starved, causing cache misses that turn into disk I/O and likely trigger the OOM killer. Why this fails: The real issue is the N+1 pattern using too many connections per request, not an insufficient connection limit.",
           explanationHe: "כל תהליך backend של PostgreSQL צורך 5-10MB RAM ל-work_mem, temp_buffers, ותקורת חיבור. על r5.large (16GB RAM), 500 חיבורים יצרכו 2.5-5GB רק לתקורת חיבורים, ישאירו פחות זיכרון משמעותית ל-shared_buffers (query cache) ו-OS page cache. ביצועי PostgreSQL מתדרדרים בחדות כש-shared_buffers לא יכולים להכיל את ה-working set. התוצאה הסבירה: OOM killer יהרוג תהליכי backend, או שהמופע יתחיל swapping והשהיה תקפוץ ל-10 שניות+.",
           stateEffect: {
             maxConnections: 500,
@@ -362,8 +363,8 @@ export default {
       id: "multi_az_first",
       timeDelta: "30 minutes later. Multi-AZ standby provisioning complete.",
       timeDeltaHe: "30 דקות מאוחר יותר. הקצאת standby של Multi-AZ הושלמה.",
-      context: "Multi-AZ is now enabled. Your monthly RDS bill increased by ~$400 (standby instance). The standby is running but not serving traffic — Multi-AZ standbys are not accessible for read queries. Latency remains at 2.4s. Users are still complaining.",
-      contextHe: "Multi-AZ מופעל. חשבון ה-RDS החודשי עלה ב-$400 בערך (מופע standby). ה-standby רץ אבל לא משרת תעבורה — standby של Multi-AZ לא נגיש לשאילתות קריאה. ההשהיה נשארת 2.4 שניות. משתמשים עדיין מתלוננים.",
+      context: "Multi-AZ is now enabled. Your monthly RDS bill increased by ~$400 (standby instance). The standby is running but not serving traffic - Multi-AZ standbys are not accessible for read queries. Latency remains at 2.4s. Users are still complaining.",
+      contextHe: "Multi-AZ מופעל. חשבון ה-RDS החודשי עלה ב-$400 בערך (מופע standby). ה-standby רץ אבל לא משרת תעבורה - standby של Multi-AZ לא נגיש לשאילתות קריאה. ההשהיה נשארת 2.4 שניות. משתמשים עדיין מתלוננים.",
       question: "Multi-AZ didn't help with performance. What's your next move?",
       questionHe: "Multi-AZ לא עזר לביצועים. מה הצעד הבא שלך?",
       alerts: [
@@ -384,8 +385,8 @@ export default {
           impact: { performance: 0, cost: 0, reliability: 0 },
           tag: "Course correction",
           tagHe: "תיקון מסלול",
-          explanation: "The Multi-AZ detour cost time and money but the system is still functional. Slow query analysis is the correct next step — it will reveal the actual bottleneck (unindexed queries) that Multi-AZ was never designed to address. The $400/month Multi-AZ spend isn't entirely wasted — you'll want it eventually for HA — but it was the wrong priority for an active latency incident.",
-          explanationHe: "העיקוף של Multi-AZ עלה זמן וכסף אבל המערכת עדיין פונקציונלית. ניתוח שאילתות איטיות הוא הצעד הנכון הבא — הוא יחשוף את צוואר הבקבוק האמיתי (שאילתות ללא אינדקס) ש-Multi-AZ מעולם לא תוכנן לטפל בו. ההוצאה של $400 לחודש על Multi-AZ לא בוזבזה לחלוטין — תרצה את זה בסופו של דבר ל-HA — אבל זה היה סדר עדיפויות שגוי לתקרית השהיה פעילה.",
+          explanation: "Problem: The Multi-AZ detour cost time and $400/month but did nothing for latency. What happened: The system is still functional, and slow query analysis will now reveal the actual bottleneck. Why this works: You are correcting course to find the root cause, and the Multi-AZ spend is not entirely wasted since you will want it eventually for HA.",
+          explanationHe: "העיקוף של Multi-AZ עלה זמן וכסף אבל המערכת עדיין פונקציונלית. ניתוח שאילתות איטיות הוא הצעד הנכון הבא - הוא יחשוף את צוואר הבקבוק האמיתי (שאילתות ללא אינדקס) ש-Multi-AZ מעולם לא תוכנן לטפל בו. ההוצאה של $400 לחודש על Multi-AZ לא בוזבזה לחלוטין - תרצה את זה בסופו של דבר ל-HA - אבל זה היה סדר עדיפויות שגוי לתקרית השהיה פעילה.",
           stateEffect: {
             // diagnostic action - no immediate state change
           }
@@ -397,8 +398,8 @@ export default {
           impact: { performance: 10, cost: -15, reliability: 5 },
           tag: "Compounding cost without diagnosis",
           tagHe: "עלות מצטברת ללא אבחון",
-          explanation: "You've already added $400/month for Multi-AZ. Now adding another instance size upgrade compounds the cost without diagnosing why latency persists. Each remediation attempt without root cause analysis is a bet that hardware is the problem — but the 94% CPU with maxed IOPS pattern is characteristic of full table scans, not capacity limitations. The more infrastructure you add before diagnosing, the harder it becomes to justify the spend when the real fix turns out to be a 3-line index migration.",
-          explanationHe: "כבר הוספת $400 לחודש על Multi-AZ. עכשיו הוספת שדרוג מופע נוסף מגדילה את העלות ללא אבחון למה ההשהיה נמשכת. כל ניסיון תיקון ללא ניתוח שורש הבעיה הוא הימור שחומרה היא הבעיה — אבל דפוס ה-94% CPU עם IOPS מקסימלי אופייני לסריקות טבלה מלאות, לא מגבלות קיבולת.",
+          explanation: "Problem: You already added $400/month for Multi-AZ and now another upgrade compounds cost without any diagnosis. What happened: Each fix attempt without root cause analysis increases the bill while the same saturation pattern persists. Why this fails: The 94% CPU with maxed IOPS is characteristic of full table scans, not capacity limitations. The real fix is a $0 index migration.",
+          explanationHe: "כבר הוספת $400 לחודש על Multi-AZ. עכשיו הוספת שדרוג מופע נוסף מגדילה את העלות ללא אבחון למה ההשהיה נמשכת. כל ניסיון תיקון ללא ניתוח שורש הבעיה הוא הימור שחומרה היא הבעיה - אבל דפוס ה-94% CPU עם IOPS מקסימלי אופייני לסריקות טבלה מלאות, לא מגבלות קיבולת.",
           stateEffect: {
             latency: 1200,
             cpuPercent: 60,
@@ -424,19 +425,19 @@ export default {
       ],
       logs: [
         { level: "info", timestamp: "14:50:33", text: "Redis: GET orders:customer:4821 -> MISS (key not found)" },
-        { level: "warn", timestamp: "14:50:34", text: "LOG: duration: 8102.44 ms  statement: SELECT * FROM orders WHERE customer_id = 4821 -- cache miss fallback" },
+        { level: "warn", timestamp: "14:50:34", text: "LOG: duration: 8102.44 ms  statement: SELECT * FROM orders WHERE customer_id = 4821 - cache miss fallback" },
         { level: "info", timestamp: "14:50:35", text: "Redis: SET orders:customer:4821 TTL=300 -> OK (12.4KB)" },
       ],
       options: [
         {
-          text: "Go back to basics — check and fix the slow queries",
-          textHe: "חזור ליסודות — בדוק ותקן את השאילתות האיטיות",
+          text: "Go back to basics - check and fix the slow queries",
+          textHe: "חזור ליסודות - בדוק ותקן את השאילתות האיטיות",
           nextStep: "found_queries",
           impact: { performance: 0, cost: 0, reliability: 0 },
           tag: "Course correction",
           tagHe: "תיקון מסלול",
-          explanation: "The cache was premature optimization — it added complexity before the underlying performance issue was understood. With a 30% hit rate, the cache is absorbing only a fraction of the load while adding operational overhead (monitoring, invalidation logic, failure handling). Fix the queries first, then re-evaluate: with indexed queries running in 15ms, you may not need a cache at all, or you may want one for a different reason (reducing total DB connections, not query speed).",
-          explanationHe: "ה-cache היה אופטימיזציה מוקדמת — הוסיף מורכבות לפני שבעיית הביצועים הבסיסית הובנה. עם שיעור פגיעות של 30%, ה-cache סופג רק חלק קטן מהעומס תוך הוספת תקורה תפעולית. תקן את השאילתות קודם, ואז הערך מחדש: עם שאילתות מאונדקסות שרצות ב-15ms, ייתכן שלא תצטרך cache בכלל.",
+          explanation: "Problem: The cache was premature optimization that added complexity before the real issue was understood. What happened: With a 30% hit rate, the cache absorbs only a fraction of load while adding monitoring and invalidation overhead. Why this works: Fixing the queries first may eliminate the need for a cache entirely, since indexed queries running in 15ms rarely need caching.",
+          explanationHe: "ה-cache היה אופטימיזציה מוקדמת - הוסיף מורכבות לפני שבעיית הביצועים הבסיסית הובנה. עם שיעור פגיעות של 30%, ה-cache סופג רק חלק קטן מהעומס תוך הוספת תקורה תפעולית. תקן את השאילתות קודם, ואז הערך מחדש: עם שאילתות מאונדקסות שרצות ב-15ms, ייתכן שלא תצטרך cache בכלל.",
           stateEffect: {
             // diagnostic action - no immediate state change
           }
@@ -448,8 +449,8 @@ export default {
           impact: { performance: 3, cost: -15, reliability: -3 },
           tag: "Wrong layer to optimize",
           tagHe: "שכבה שגויה לאופטימיזציה",
-          explanation: "Redis throughput isn't the constraint — a single ElastiCache node handles 100K+ ops/sec, far more than your query volume. The problem is that the data you're trying to cache isn't cacheable — it's user-specific, time-varying, and has too many unique key combinations for reasonable hit rates. A bigger cache just has more empty slots. You're now running an expensive RDS + expensive Redis cluster, each underutilized for different reasons, while the actual bottleneck (unindexed queries) remains untouched.",
-          explanationHe: "תפוקת Redis אינה האילוץ — node בודד של ElastiCache מטפל ב-100K+ ops/sec, הרבה יותר מנפח השאילתות שלך. הבעיה היא שהנתונים שאתה מנסה לאחסן אינם ניתנים לאחסון — הם ספציפיים למשתמש, משתנים בזמן, ויש להם יותר מדי שילובי מפתחות ייחודיים. cache גדול יותר פשוט יש לו יותר slots ריקים.",
+          explanation: "Problem: Redis throughput is not the constraint since a single node handles 100K+ ops/sec, far more than your volume. What happened: A bigger cache just has more empty slots while you pay for expensive RDS plus expensive Redis. Why this fails: The data has too many unique key combinations for reasonable hit rates, and the actual bottleneck of unindexed queries remains untouched.",
+          explanationHe: "תפוקת Redis אינה האילוץ - node בודד של ElastiCache מטפל ב-100K+ ops/sec, הרבה יותר מנפח השאילתות שלך. הבעיה היא שהנתונים שאתה מנסה לאחסן אינם ניתנים לאחסון - הם ספציפיים למשתמש, משתנים בזמן, ויש להם יותר מדי שילובי מפתחות ייחודיים. cache גדול יותר פשוט יש לו יותר slots ריקים.",
           stateEffect: {
             latency: 1800,
             cpuPercent: 78,
@@ -464,8 +465,8 @@ export default {
       id: "replicas_without_fix",
       timeDelta: "35 minutes later. Read replica synchronized and accepting traffic.",
       timeDeltaHe: "35 דקות מאוחר יותר. Read replica מסונכרן ומקבל תעבורה.",
-      context: "Read replica is up and routing read queries. Latency improved to 1.5s (from 2.4s) because load is split across two instances. But the replica is also at 85% CPU — it's running the same unoptimized queries. Monthly cost doubled. You now need to manage replication lag monitoring.",
-      contextHe: "Read replica עובד ומנתב שאילתות קריאה. ההשהיה ירדה ל-1.5 שניות (מ-2.4) כי העומס מפוצל על שני מופעים. אבל גם ה-replica ב-85% CPU — הוא מריץ את אותן שאילתות לא מותאמות. עלות חודשית הוכפלה. עכשיו צריך לנהל ניטור replication lag.",
+      context: "Read replica is up and routing read queries. Latency improved to 1.5s (from 2.4s) because load is split across two instances. But the replica is also at 85% CPU - it's running the same unoptimized queries. Monthly cost doubled. You now need to manage replication lag monitoring.",
+      contextHe: "Read replica עובד ומנתב שאילתות קריאה. ההשהיה ירדה ל-1.5 שניות (מ-2.4) כי העומס מפוצל על שני מופעים. אבל גם ה-replica ב-85% CPU - הוא מריץ את אותן שאילתות לא מותאמות. עלות חודשית הוכפלה. עכשיו צריך לנהל ניטור replication lag.",
       question: "The replica is also struggling under the same query patterns. What now?",
       questionHe: "גם ה-replica מתקשה תחת אותן תבניות שאילתות. מה עכשיו?",
       alerts: [
@@ -480,14 +481,14 @@ export default {
       ],
       options: [
         {
-          text: "Fix the underlying queries — the replicas are just running bad SQL",
-          textHe: "תקן את השאילתות — ה-replicas פשוט מריצים SQL גרוע",
+          text: "Fix the underlying queries - the replicas are just running bad SQL",
+          textHe: "תקן את השאילתות - ה-replicas פשוט מריצים SQL גרוע",
           nextStep: "found_queries",
           impact: { performance: 0, cost: 0, reliability: 0 },
           tag: "Root cause identified",
           tagHe: "שורש הבעיה זוהה",
-          explanation: "The replica reaching 85% CPU proves the issue is query efficiency, not hardware capacity. If the queries were well-indexed, a single r5.large could handle this traffic — the replica would be a luxury, not a necessity. Fix the queries first; the replica then becomes a genuine scaling lever for future growth rather than an expensive band-aid. Both primary and replica benefit from the same index additions simultaneously (indexes replicate automatically).",
-          explanationHe: "ה-replica שמגיע ל-85% CPU מוכיח שהבעיה היא יעילות שאילתות, לא קיבולת חומרה. אם השאילתות היו מאונדקסות היטב, r5.large בודד יכול היה לטפל בתעבורה — ה-replica היה מותרות, לא הכרח. תקן את השאילתות קודם; ה-replica אז הופך למנוף סקיילינג אמיתי לצמיחה עתידית ולא לפלסטר יקר.",
+          explanation: "Problem: The replica hitting 85% CPU proves the issue is query efficiency, not hardware capacity. What happened: If the queries were well-indexed, a single r5.large could handle this traffic alone. Why this works: Fixing the queries turns the replica from an expensive band-aid into a genuine scaling lever, and indexes replicate automatically to both instances.",
+          explanationHe: "ה-replica שמגיע ל-85% CPU מוכיח שהבעיה היא יעילות שאילתות, לא קיבולת חומרה. אם השאילתות היו מאונדקסות היטב, r5.large בודד יכול היה לטפל בתעבורה - ה-replica היה מותרות, לא הכרח. תקן את השאילתות קודם; ה-replica אז הופך למנוף סקיילינג אמיתי לצמיחה עתידית ולא לפלסטר יקר.",
           stateEffect: {
             // diagnostic action - no immediate state change
           }
@@ -499,8 +500,8 @@ export default {
           impact: { performance: 3, cost: -18, reliability: -2 },
           tag: "Linear cost scaling for sublinear gains",
           tagHe: "סקיילינג עלות לינארי לרווחים תת-לינאריים",
-          explanation: "Three database instances all running the same unoptimized queries. Monthly bill tripled (~$1,200/month for RDS alone). Latency might improve to ~1.2s — a marginal gain for 3x cost. Each additional replica also increases replication lag risk during write-heavy periods, adds monitoring overhead, and makes connection routing more complex. You're scaling cost linearly while the performance improvement diminishes with each replica — classic diminishing returns without addressing the root cause.",
-          explanationHe: "שלושה מופעי מסד נתונים שכולם מריצים את אותן שאילתות לא מותאמות. חשבון חודשי שולש (כ-$1,200 לחודש ל-RDS בלבד). ההשהיה אולי תשתפר ל-1.2 שניות בערך — רווח שולי עבור עלות פי 3. כל replica נוסף גם מגדיל סיכון replication lag, מוסיף תקורת ניטור, ומסבך ניתוב חיבורים.",
+          explanation: "Problem: Three database instances are all running the same unoptimized queries, tripling the bill to ~$1,200/month. What happened: Latency might improve to ~1.2s, which is a marginal gain for 3x cost. Why this fails: You are scaling cost linearly while performance gains diminish with each replica, and each one adds replication lag risk and routing complexity.",
+          explanationHe: "שלושה מופעי מסד נתונים שכולם מריצים את אותן שאילתות לא מותאמות. חשבון חודשי שולש (כ-$1,200 לחודש ל-RDS בלבד). ההשהיה אולי תשתפר ל-1.2 שניות בערך - רווח שולי עבור עלות פי 3. כל replica נוסף גם מגדיל סיכון replication lag, מוסיף תקורת ניטור, ומסבך ניתוב חיבורים.",
           stateEffect: {
             latency: 1200,
             cpuPercent: 75,
@@ -526,32 +527,32 @@ export default {
     },
     end_vertical: {
       id: "end_vertical",
-      context: "Running on db.r5.4xlarge at 4x the original cost ($1,600/month). Handles current traffic at 45% CPU. But at 3x the campaign spike, projected CPU usage: ~135%. No horizontal scaling strategy in place. When the campaign traffic hits, you'll need to scale up again — and you're running out of cost-effective instance sizes. The CTO is questioning the scaling strategy.",
-      contextHe: "רץ על db.r5.4xlarge בעלות פי 4 מהמקור ($1,600 לחודש). מטפל בתעבורה נוכחית ב-45% CPU. אבל בפי 3 של גל הקמפיין, שימוש CPU צפוי: 135% בערך. אין אסטרטגיית סקיילינג אופקי. כשתעבורת הקמפיין תגיע, תצטרך לשדרג שוב — ונגמרים הגדלים החסכוניים.",
+      context: "Running on db.r5.4xlarge at 4x the original cost ($1,600/month). Handles current traffic at 45% CPU. But at 3x the campaign spike, projected CPU usage: ~135%. No horizontal scaling strategy in place. When the campaign traffic hits, you'll need to scale up again - and you're running out of cost-effective instance sizes. The CTO is questioning the scaling strategy.",
+      contextHe: "רץ על db.r5.4xlarge בעלות פי 4 מהמקור ($1,600 לחודש). מטפל בתעבורה נוכחית ב-45% CPU. אבל בפי 3 של גל הקמפיין, שימוש CPU צפוי: 135% בערך. אין אסטרטגיית סקיילינג אופקי. כשתעבורת הקמפיין תגיע, תצטרך לשדרג שוב - ונגמרים הגדלים החסכוניים.",
       question: null, options: []
     },
     end_money_pit: {
       id: "end_money_pit",
-      context: "Scaled up twice without root cause analysis. AWS bill: $1,600/month (was $400). The 4xlarge handles current load at 40% CPU, but the marketing campaign's 3x spike will push it past capacity again. When you finally check the slow query logs, you find that 3 missing indexes and an N+1 fix would have solved the problem at $0 infrastructure cost. The optimization work still needs to be done — now with a $1,200/month excess bill running in the background.",
+      context: "Scaled up twice without root cause analysis. AWS bill: $1,600/month (was $400). The 4xlarge handles current load at 40% CPU, but the marketing campaign's 3x spike will push it past capacity again. When you finally check the slow query logs, you find that 3 missing indexes and an N+1 fix would have solved the problem at $0 infrastructure cost. The optimization work still needs to be done - now with a $1,200/month excess bill running in the background.",
       contextHe: "שדרגת פעמיים בלי ניתוח שורש הבעיה. חשבון AWS: $1,600 לחודש (היה $400). ה-4xlarge מטפל בעומס נוכחי ב-40% CPU, אבל גל פי 3 של הקמפיין ידחוף שוב מעבר לקיבולת. כשסוף סוף בודקים את לוג השאילתות, מגלים ש-3 אינדקסים חסרים ותיקון N+1 היו פותרים את הבעיה ב-$0 עלות תשתית.",
       question: null, options: []
     },
     end_oom: {
       id: "end_oom",
-      context: "RDS with 500 max_connections: shared_buffers reduced to fit memory budget, causing cache hit ratio to drop from 99% to 72%. Queries that were hitting buffer cache now do physical disk reads. PostgreSQL OOM killer terminated 12 backend processes during a traffic spike, causing a 12-minute full outage. Post-mortem required. The root cause was never the connection limit — it was the queries consuming too many connections per request (N+1 pattern).",
-      contextHe: "RDS עם 500 max_connections: shared_buffers הוקטן כדי להתאים לתקציב הזיכרון, וגרם ליחס cache hit לרדת מ-99% ל-72%. שאילתות שפגעו ב-buffer cache עכשיו עושות קריאות דיסק פיזיות. OOM killer של PostgreSQL הרג 12 תהליכי backend בזמן גל תעבורה, וגרם לנפילה מלאה של 12 דקות. שורש הבעיה מעולם לא היה מגבלת חיבורים — היו השאילתות שצרכו יותר מדי חיבורים לכל בקשה (תבנית N+1).",
+      context: "RDS with 500 max_connections: shared_buffers reduced to fit memory budget, causing cache hit ratio to drop from 99% to 72%. Queries that were hitting buffer cache now do physical disk reads. PostgreSQL OOM killer terminated 12 backend processes during a traffic spike, causing a 12-minute full outage. Post-mortem required. The root cause was never the connection limit - it was the queries consuming too many connections per request (N+1 pattern).",
+      contextHe: "RDS עם 500 max_connections: shared_buffers הוקטן כדי להתאים לתקציב הזיכרון, וגרם ליחס cache hit לרדת מ-99% ל-72%. שאילתות שפגעו ב-buffer cache עכשיו עושות קריאות דיסק פיזיות. OOM killer של PostgreSQL הרג 12 תהליכי backend בזמן גל תעבורה, וגרם לנפילה מלאה של 12 דקות. שורש הבעיה מעולם לא היה מגבלת חיבורים - היו השאילתות שצרכו יותר מדי חיבורים לכל בקשה (תבנית N+1).",
       question: null, options: []
     },
     end_over_engineered: {
       id: "end_over_engineered",
-      context: "Running ElastiCache cluster ($300/month) + original undersized RDS ($400/month). Total infrastructure: $700/month (was $400). Cache hit rate: still 30%. Latency: 1.8s (marginal improvement). The team now debugs two systems instead of one. A new developer accidentally deployed a change that bypassed the cache layer, causing a brief latency spike — revealing how fragile the architecture has become. The underlying query problem remains unsolved.",
-      contextHe: "מפעיל ElastiCache cluster ($300 לחודש) + RDS מקורי ($400 לחודש). תשתית כוללת: $700 לחודש (היה $400). שיעור פגיעת cache: עדיין 30%. השהיה: 1.8 שניות (שיפור שולי). הצוות מדבג שתי מערכות במקום אחת. מפתח חדש בטעות פרס שינוי שעקף את שכבת ה-cache, וגרם לקפיצת השהיה — חושף כמה שברירית הארכיטקטורה הפכה.",
+      context: "Running ElastiCache cluster ($300/month) + original undersized RDS ($400/month). Total infrastructure: $700/month (was $400). Cache hit rate: still 30%. Latency: 1.8s (marginal improvement). The team now debugs two systems instead of one. A new developer accidentally deployed a change that bypassed the cache layer, causing a brief latency spike - revealing how fragile the architecture has become. The underlying query problem remains unsolved.",
+      contextHe: "מפעיל ElastiCache cluster ($300 לחודש) + RDS מקורי ($400 לחודש). תשתית כוללת: $700 לחודש (היה $400). שיעור פגיעת cache: עדיין 30%. השהיה: 1.8 שניות (שיפור שולי). הצוות מדבג שתי מערכות במקום אחת. מפתח חדש בטעות פרס שינוי שעקף את שכבת ה-cache, וגרם לקפיצת השהיה - חושף כמה שברירית הארכיטקטורה הפכה.",
       question: null, options: []
     },
     end_replica_farm: {
       id: "end_replica_farm",
-      context: "Three database instances running unoptimized queries. Monthly RDS cost: ~$1,200 (3x original). Each replica at 75% CPU. Latency: 1.2s — a 50% improvement for 200% more cost. Replication lag during write spikes: 500ms-2s, causing stale read issues for users. Connection routing added application complexity. When you finally index the queries, all three instances drop to 15% CPU — revealing that two of the three replicas were unnecessary all along.",
-      contextHe: "שלושה מופעי מסד נתונים מריצים שאילתות לא מותאמות. עלות RDS חודשית: כ-$1,200 (פי 3 מהמקור). כל replica ב-75% CPU. השהיה: 1.2 שניות — שיפור של 50% עבור 200% יותר עלות. replication lag בזמן גלי כתיבה: 500ms-2s, גורם לבעיות קריאה ישנה. כשסוף סוף מאנדקסים את השאילתות, כל שלושת המופעים יורדים ל-15% CPU — חושף ששניים מהשלושה היו מיותרים מההתחלה.",
+      context: "Three database instances running unoptimized queries. Monthly RDS cost: ~$1,200 (3x original). Each replica at 75% CPU. Latency: 1.2s - a 50% improvement for 200% more cost. Replication lag during write spikes: 500ms-2s, causing stale read issues for users. Connection routing added application complexity. When you finally index the queries, all three instances drop to 15% CPU - revealing that two of the three replicas were unnecessary all along.",
+      contextHe: "שלושה מופעי מסד נתונים מריצים שאילתות לא מותאמות. עלות RDS חודשית: כ-$1,200 (פי 3 מהמקור). כל replica ב-75% CPU. השהיה: 1.2 שניות - שיפור של 50% עבור 200% יותר עלות. replication lag בזמן גלי כתיבה: 500ms-2s, גורם לבעיות קריאה ישנה. כשסוף סוף מאנדקסים את השאילתות, כל שלושת המופעים יורדים ל-15% CPU - חושף ששניים מהשלושה היו מיותרים מההתחלה.",
       question: null, options: []
     }
   }

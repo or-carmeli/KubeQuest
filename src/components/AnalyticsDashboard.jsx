@@ -42,7 +42,7 @@ function injectHoverCSS() {
 
 const COUNTRY_FLAGS = {
   "Israel": "\u{1F1EE}\u{1F1F1}", "France": "\u{1F1EB}\u{1F1F7}", "India": "\u{1F1EE}\u{1F1F3}",
-  "Morocco": "\u{1F1F2}\u{1F1E6}", "United States": "\u{1F1FA}\u{1F1F8}", "Canada": "\u{1F1E8}\u{1F1E6}",
+  "Morocco": "\u{1F1F2}\u{1F1E6}", "United States": "\u{1F1FA}\u{1F1F8}", "United States of America": "\u{1F1FA}\u{1F1F8}", "Canada": "\u{1F1E8}\u{1F1E6}",
   "Thailand": "\u{1F1F9}\u{1F1ED}", "Turkiye": "\u{1F1F9}\u{1F1F7}", "Turkey": "\u{1F1F9}\u{1F1F7}",
   "Germany": "\u{1F1E9}\u{1F1EA}", "United Kingdom": "\u{1F1EC}\u{1F1E7}", "Japan": "\u{1F1EF}\u{1F1F5}",
   "Brazil": "\u{1F1E7}\u{1F1F7}", "Australia": "\u{1F1E6}\u{1F1FA}", "Netherlands": "\u{1F1F3}\u{1F1F1}",
@@ -197,8 +197,6 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
             <SummaryCard icon={<TrendingDown size={14} />} label="Bounce Rate" value={`${data.bounceRate}%`}
               sub={data.bounceRate > 70 ? "high" : data.bounceRate > 40 ? "moderate" : "low"}
               subColor={data.bounceRate > 70 ? "#f87171" : data.bounceRate > 40 ? "#fbbf24" : "#34d399"} />
-            <SummaryCard icon={<BarChart3 size={14} />} label="Pages/Visit"
-              value={data.totalVisitors > 0 ? (data.totalPageViews / data.totalVisitors).toFixed(1) : "0"} />
           </div>
 
           {/* Chart */}
@@ -221,10 +219,12 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <TabbedBreakdownCard tabs={[
               { label: "Pages", items: data.topPages },
+              { label: "Routes", items: data.routes },
               { label: "Hostnames", items: data.hostnames },
             ]} />
             <TabbedBreakdownCard tabs={[
               { label: "Referrers", items: data.referrers, renderIcon: item => <ReferrerIcon domain={item.name} /> },
+              { label: "UTM Parameters", items: data.utmParams },
             ]} />
             <TabbedBreakdownCard tabs={[
               { label: "Countries", items: data.countries, renderIcon: item => <span style={{ fontSize: 14, width: 18, textAlign: "center", flexShrink: 0 }}>{countryFlag(item.name)}</span> },

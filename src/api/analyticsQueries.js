@@ -25,7 +25,7 @@ async function fetchEvents(supabase, hours, eventType) {
   const since = rangeStart(hours);
   let q = supabase
     .from(TABLE)
-    .select("session_id, event_type, path, referrer, device_type, browser, os, country, hostname, source, created_at")
+    .select("session_id, event_type, path, referrer, device_type, browser, os, country, hostname, source, utm_source, utm_medium, utm_campaign, created_at")
     .gte("created_at", since)
     .order("created_at", { ascending: true });
 
@@ -48,31 +48,44 @@ async function fetchEvents(supabase, hours, eventType) {
 
 // ── Aggregation helpers ─────────────────────────────────────────────────────
 
-function countByField(rows, field) {
+/**
+ * Count unique visitors (distinct session_ids) per field value.
+ * This matches Vercel's counting logic — everything is by unique visitor.
+ */
+const FIELD_FALLBACKS = {
+  referrer: "(direct)",
+  country: "(unknown)",
+  path: "(unknown)",
+};
+
+function countUniqueVisitors(rows, field) {
   const map = {};
   for (const r of rows) {
-    const val = r[field] || "(direct)";
-    map[val] = (map[val] || 0) + 1;
+    const val = r[field] || FIELD_FALLBACKS[field] || "(unknown)";
+    if (!map[val]) map[val] = new Set();
+    map[val].add(r.session_id);
   }
   return Object.entries(map)
-    .map(([name, count]) => ({ name, count }))
+    .map(([name, sessions]) => ({ name, count: sessions.size }))
     .sort((a, b) => b.count - a.count);
 }
 
-function countByFieldDual(sessions, pageViews, field) {
-  const visMap = {};
-  const pvMap = {};
-  for (const r of sessions) {
-    const val = r[field] || "(direct)";
-    visMap[val] = (visMap[val] || 0) + 1;
+/**
+ * Count unique visitors for UTM parameters.
+ * Combines utm_source/medium/campaign into a single label.
+ * Only includes rows that have at least one UTM param set.
+ */
+function countUTMParams(rows) {
+  const map = {};
+  for (const r of rows) {
+    const parts = [r.utm_source, r.utm_medium, r.utm_campaign].filter(Boolean);
+    if (parts.length === 0) continue;
+    const val = parts.join(" / ");
+    if (!map[val]) map[val] = new Set();
+    map[val].add(r.session_id);
   }
-  for (const r of pageViews) {
-    const val = r[field] || "(direct)";
-    pvMap[val] = (pvMap[val] || 0) + 1;
-  }
-  const keys = new Set([...Object.keys(visMap), ...Object.keys(pvMap)]);
-  return [...keys]
-    .map(name => ({ name, count: visMap[name] || 0, pageViews: pvMap[name] || 0 }))
+  return Object.entries(map)
+    .map(([name, sessions]) => ({ name, count: sessions.size }))
     .sort((a, b) => b.count - a.count);
 }
 
@@ -123,19 +136,24 @@ export async function fetchAnalytics(supabase, hours) {
   }
   const bounceRate = totalVisitors > 0 ? Math.round((bouncedCount / totalVisitors) * 100) : 0;
 
+  // Combine all events for page-level unique visitor counting
+  const allEvents = [...sessions, ...pageViews];
+
   return {
     totalVisitors,
     totalPageViews,
     bounceRate,
     visitorsOverTime: bucketByTime(sessions, hours),
     pageViewsOverTime: bucketByTime(pageViews, hours),
-    topPages: countByFieldDual(sessions, pageViews, "path"),
-    referrers: countByFieldDual(sessions, pageViews, "referrer"),
-    countries: countByFieldDual(sessions, pageViews, "country"),
-    devices: countByFieldDual(sessions, pageViews, "device_type"),
-    browsers: countByFieldDual(sessions, pageViews, "browser"),
-    operatingSystems: countByFieldDual(sessions, pageViews, "os"),
-    hostnames: countByFieldDual(sessions, pageViews, "hostname"),
+    topPages: countUniqueVisitors(allEvents, "path"),
+    routes: countUniqueVisitors(pageViews, "path"),
+    referrers: countUniqueVisitors(sessions, "referrer"),
+    utmParams: countUTMParams(sessions),
+    countries: countUniqueVisitors(sessions, "country"),
+    devices: countUniqueVisitors(sessions, "device_type"),
+    browsers: countUniqueVisitors(sessions, "browser"),
+    operatingSystems: countUniqueVisitors(sessions, "os"),
+    hostnames: countUniqueVisitors(allEvents, "hostname"),
     hasSeededData: sessions.some(r => r.source === "vercel_seed"),
     hasLiveData: sessions.some(r => r.source !== "vercel_seed"),
   };
