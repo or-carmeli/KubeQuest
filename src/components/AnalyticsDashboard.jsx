@@ -83,14 +83,14 @@ const DEVICE_ICONS = {
 
 // ── Guard ───────────────────────────────────────────────────────────────────
 
-export default function AnalyticsDashboard({ onBack, supabase = null }) {
+export default function AnalyticsDashboard({ onBack, supabase = null, dir = "ltr" }) {
   if (!import.meta.env.DEV) return null;
-  return <AnalyticsDashboardInner onBack={onBack} supabase={supabase} />;
+  return <AnalyticsDashboardInner onBack={onBack} supabase={supabase} dir={dir} />;
 }
 
 // ── Inner ───────────────────────────────────────────────────────────────────
 
-function AnalyticsDashboardInner({ onBack, supabase }) {
+function AnalyticsDashboardInner({ onBack, supabase, dir }) {
   const [range, setRange] = useState("30d");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,8 +135,9 @@ function AnalyticsDashboardInner({ onBack, supabase }) {
           background: "var(--glass-3)", border: "1px solid var(--glass-6)",
           color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6,
           cursor: "pointer", display: "flex", alignItems: "center",
+          order: dir === "rtl" ? 99 : 0,
         }}>
-          <ArrowLeft size={16} />
+          <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
         <BarChart3 size={18} strokeWidth={1.5} style={{ color: "#a78bfa", opacity: 0.7 }} />
         <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Analytics</span>

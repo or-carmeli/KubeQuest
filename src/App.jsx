@@ -5586,10 +5586,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {EXPERIMENTAL_ENABLED&&screen==="systemObservability"&&<SystemObservability onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} />}
 
       {/* ANALYTICS */}
-      {EXPERIMENTAL_ENABLED&&screen==="analytics"&&<AnalyticsDashboard onBack={()=>setScreen("home")} supabase={supabase} />}
+      {EXPERIMENTAL_ENABLED&&screen==="analytics"&&<AnalyticsDashboard onBack={()=>setScreen("home")} supabase={supabase} dir={dir} />}
 
       {/* BACKEND MONITORING */}
-      {EXPERIMENTAL_ENABLED&&screen==="backendMonitoring"&&<BackendMonitoring onBack={()=>setScreen("home")} lang={lang} dir={dir} />}
+      {EXPERIMENTAL_ENABLED&&screen==="backendMonitoring"&&<BackendMonitoring onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} />}
 
       {/* STATS */}
       {screen==="stats"&&(

@@ -8,7 +8,7 @@
  *
  * 100% real data. No simulated metrics.
  */
-import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import {
   ArrowLeft, Activity, AlertTriangle, Clock, Gauge, Users,
   Eye, ChevronDown, ChevronUp, RefreshCw, Globe,
@@ -914,6 +914,19 @@ function ScoreDonut({ score, color, size = 80 }) {
 
 // ─── Historical line chart ───────────────────────────────────────────────────
 function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thresholds, compact, fill }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const svgRef = useRef(null);
+  const handleMouseMove = useCallback((e) => {
+    if (!svgRef.current || compact || !series || series.length < 2) return;
+    const W = 600, padX = 2;
+    const step = (W - padX * 2) / Math.max(series.length - 1, 1);
+    const rect = svgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * W;
+    const idx = Math.round((x - padX) / step);
+    if (idx >= 0 && idx < series.length) setHoverIdx(idx);
+    else setHoverIdx(null);
+  }, [series, compact]);
+
   if (!series || series.length < 2) return null;
 
   const values = series.map(s => s.value);
@@ -929,14 +942,11 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
   const points = series.map((s, i) => {
     const x = padX + (i / (series.length - 1)) * (W - padX * 2);
     const y = H - padY - ((s.value - min) / range) * (H - padY * 2);
-    return { x, y };
+    return { x, y, value: s.value, ts: s.ts };
   });
   const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-
-  // Gradient fill
   const fillD = `${pathD} L ${points[points.length - 1].x} ${H} L ${points[0].x} ${H} Z`;
 
-  // Time labels
   const firstLabel = formatLabel(series[0].ts);
   const lastLabel = formatLabel(series[series.length - 1].ts);
   const midIdx = Math.floor(series.length / 2);
@@ -944,9 +954,16 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
 
   const pad = compact || fill ? "8px 10px" : "12px 14px";
 
+  const hp = hoverIdx !== null ? points[hoverIdx] : null;
+  const TT_W = 120, TT_H = 40;
+  const ttX = hp ? Math.max(padX, Math.min(hp.x - TT_W / 2, W - TT_W - 2)) : 0;
+  const ttAbove = hp && hp.y > TT_H + 12;
+  const ttY = hp ? (ttAbove ? hp.y - TT_H - 8 : hp.y + 12) : 0;
+
   return (
     <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: pad, ...(fill ? { flex: 1, display: "flex", flexDirection: "column" } : {}) }}>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={fill ? "xMidYMid meet" : "none"} style={{ display: "block", ...(fill ? { flex: 1, minHeight: 0 } : {}) }}>
+      <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={fill ? "xMidYMid meet" : "none"} style={{ display: "block", cursor: compact ? "default" : "crosshair", ...(fill ? { flex: 1, minHeight: 0 } : {}) }}
+        onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIdx(null)}>
         <defs>
           <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity="0.15" />
@@ -955,18 +972,37 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
         </defs>
         {thresholds?.map((th, i) => {
           const y = H - padY - ((th.value - min) / range) * (H - padY * 2);
+          if (y < 0 || y > H) return null;
+          const lblW = th.label.length * 5.5 + 10;
+          const lblX = W - padX - 6 - lblW;
+          const lblY = y - 14;
           return (
             <g key={i}>
-              <line x1={padX} y1={y} x2={W - padX} y2={y} stroke={th.color} strokeWidth={1} strokeDasharray="4,4" opacity={0.4} />
-              {!compact && <text x={W - padX - 2} y={y - 3} textAnchor="end" fontSize={8} fill={th.color} opacity={0.6}>{th.label}</text>}
+              <line x1={padX} y1={y} x2={W - padX} y2={y} stroke={th.color} strokeWidth={1} strokeDasharray="4,4" opacity={0.35} />
+              {!compact && <>
+                <rect x={lblX} y={lblY} width={lblW} height={16} rx={4} fill="rgba(10,15,30,0.92)" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+                <text x={lblX + lblW / 2} y={lblY + 11.5} textAnchor="middle" fontSize={9} fontWeight={600} fill={th.color} fontFamily={MONO}>{th.label}</text>
+              </>}
             </g>
           );
         })}
         <path d={fillD} fill={`url(#grad-${color.replace("#", "")})`} />
         <path d={pathD} fill="none" stroke={color} strokeWidth={compact ? 1.5 : 2} strokeLinecap="round" strokeLinejoin="round" />
         <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={compact ? 2.5 : 3.5} fill={color} stroke="var(--glass-2)" strokeWidth={2} />
+        {/* Hover interaction */}
+        {hp && !compact && (
+          <g style={{ pointerEvents: "none" }}>
+            <line x1={hp.x} y1={padY} x2={hp.x} y2={H - padY} stroke="rgba(255,255,255,0.7)" strokeWidth={1} />
+            <circle cx={hp.x} cy={hp.y} r={4} fill={color} stroke="#fff" strokeWidth={2} />
+            <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={6} fill="#1a1a1a" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+            <text x={ttX + TT_W / 2} y={ttY + 16} textAnchor="middle" fill="#ededed" fontSize={11} fontWeight={700} fontFamily={MONO}>
+              {typeof hp.value === "number" ? (Number.isInteger(hp.value) ? hp.value : hp.value.toFixed(2)) : hp.value}{unit || ""}
+            </text>
+            <text x={ttX + TT_W / 2} y={ttY + 32} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily={MONO}>{formatLabel(hp.ts)}</text>
+          </g>
+        )}
       </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3, fontSize: compact ? 9 : 10, color: "var(--text-muted)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, padding: "0 8px 0 4px", fontSize: compact ? 9 : 11, color: "rgba(203,213,225,0.9)" }}>
         <span>{firstLabel}</span>
         {!compact && midLabel && <span>{midLabel}</span>}
         <span>{lastLabel}</span>

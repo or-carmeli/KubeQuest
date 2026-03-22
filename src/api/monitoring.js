@@ -72,6 +72,30 @@ export async function fetchRollupDaily(supabase, days = 90) {
 }
 
 /**
+ * Fetch infrastructure metrics snapshots (from collect-metrics edge function).
+ * Returns: [{ collected_at, db_connections_active, db_connections_idle,
+ *             db_connections_total, db_max_connections, db_xact_commit,
+ *             db_xact_rollback, db_blks_hit, db_blks_read, db_deadlocks,
+ *             db_size_bytes, slow_query_count, top_slow_query, top_slow_query_ms,
+ *             db_latency_ms, auth_latency_ms, api_latency_ms }]
+ */
+export async function fetchInfraMetrics(supabase, minutes = 60) {
+  const { data, error } = await supabase.rpc("get_infra_metrics", { p_minutes: minutes });
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Fetch the latest infrastructure metrics snapshot.
+ * Returns: [single row] or []
+ */
+export async function fetchInfraMetricsLatest(supabase) {
+  const { data, error } = await supabase.rpc("get_infra_metrics_latest");
+  if (error) throw error;
+  return data?.[0] || null;
+}
+
+/**
  * Fetch active and upcoming maintenance windows.
  * Returns: [{ id, title, title_he, description, description_he,
  *             starts_at, ends_at, affected_services, created_at }]
