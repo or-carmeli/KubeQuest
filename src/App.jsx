@@ -4768,7 +4768,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           {import.meta.env.DEV && (
           <button className="menu-item" onClick={()=>{setScreen("analytics");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="analytics"?"var(--glass-3)":"none",border:"none",color:screen==="analytics"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="analytics"?600:400,direction:dir}}>
             <TrendingUp size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
-            {lang==="en"?"Analytics":"אנליטיקס"}
+            {lang==="en"?"Analytics":"אנליטיקות"}
             <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
           </button>
           )}
@@ -5181,7 +5181,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               onChange={e=>setSearchQuery(e.target.value)}
               onFocus={()=>setSearchFocused(true)}
               onBlur={()=>setSearchFocused(false)}
-              placeholder={searchQuery?"":t("searchPlaceholder")} dir={dir}
+              placeholder={!searchQuery&&searchFocused?t("searchPlaceholder"):""} dir={dir}
               style={{width:"100%",padding:"12px 14px",boxSizing:"border-box",[dir==="rtl"?"paddingRight":"paddingLeft"]:40,background:searchFocused?"var(--glass-8)":"var(--glass-5)",border:searchFocused?"1px solid var(--glass-20)":"1px solid var(--glass-12)",borderRadius:12,color:"var(--text-primary)",fontSize:14,outline:"none",fontFamily:"inherit",transition:"background 0.2s, border-color 0.2s, box-shadow 0.2s",boxShadow:searchFocused?"0 0 0 3px var(--glass-6)":"none"}}
             />
             {!searchQuery&&!searchFocused&&(

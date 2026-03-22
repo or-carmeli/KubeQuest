@@ -1,249 +1,186 @@
 import { getSystemSeverity } from "../../utils/architectureLogic";
-import { getLocalizedField } from "../../utils/i18n";
+import { AlertTriangle } from "lucide-react";
+
+const MONO = "'Fira Code','Courier New',monospace";
 
 /**
- * Live system dashboard — visual hierarchy:
- *   1. Status dot + severity (single indicator, no duplication)
- *   2. Gauges (neutral by default, color only when warning/critical)
- *   3. Escalation/cost banners (rare, high-signal)
- *   4. Alerts (primary focus — strongest visual weight)
- *   5. Logs (secondary — quiet, technical, background texture)
+ * SystemDashboard - renders three distinct sections:
+ *   1. Key Signals (compact metric row)
+ *   2. What We Know (alerts as investigation clues)
+ *   3. Logs (terminal evidence)
+ *
+ * Each section is a separate div so ScenarioStep can place them
+ * in the investigation flow layout.
  */
-export default function SystemDashboard({ systemState, prevSystemState, alerts, logs, lang }) {
+export default function SystemDashboard({ systemState, prevSystemState, alerts, logs, lang, interviewMode = false }) {
   if (!systemState) return null;
-  const dir = lang === "he" ? "rtl" : "ltr";
   const severity = getSystemSeverity(systemState);
-  const severityColor = severity === "critical" ? "#EF4444" : severity === "degraded" ? "#D97706" : "#6B7280";
 
-  // ── Escalation / cost spike detection ──
   const escalation = detectEscalation(systemState, prevSystemState);
   const costSpike = detectCostSpike(systemState, prevSystemState);
 
+  // Key metrics - only show non-null values
+  const signals = [];
+  if (systemState.latency != null) signals.push({ label: "Latency", value: formatLatency(systemState.latency), severity: latencySeverity(systemState.latency) });
+  if (systemState.errorRate != null) signals.push({ label: "Errors", value: `${systemState.errorRate}%`, severity: errorSeverity(systemState.errorRate) });
+  if (systemState.cpuPercent != null) signals.push({ label: "CPU", value: `${systemState.cpuPercent}%`, severity: cpuSeverity(systemState.cpuPercent) });
+  if (systemState.connections != null) signals.push({ label: "Conns", value: systemState.connections, severity: connSeverity(systemState.connections, systemState.maxConnections) });
+  if (systemState.throughput != null) signals.push({ label: "RPS", value: systemState.throughput, severity: rpsSeverity(systemState.throughput) });
+  if (systemState.dbLoad != null) signals.push({ label: "DB Load", value: `${systemState.dbLoad}%`, severity: cpuSeverity(systemState.dbLoad) });
+  if (systemState.queueDepth != null) signals.push({ label: "Queue", value: systemState.queueDepth, severity: queueSeverity(systemState.queueDepth) });
+
+  // Clues from alerts
+  const clues = [];
+  if (alerts?.length) {
+    for (const alert of alerts) {
+      const text = alert.text || alert;
+      const type = alert.type || "warning";
+      clues.push({ text, type, source: alert.source, noise: alert.noise });
+    }
+  }
+
   return (
-    <div style={{ marginBottom: 20, animation: "fadeIn 0.3s ease" }}>
+    <div style={{ marginBottom: 24 }}>
 
-      {/* ── Telemetry strip: status + gauges + cost ── */}
-      <div style={{
-        background: "var(--glass-2)",
-        border: `1px solid ${severity === "critical" ? "rgba(239,68,68,0.12)" : "var(--glass-6)"}`,
-        borderRadius: 10, padding: "10px 14px",
-      }}>
-        {/* Status line */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <div style={{
-            width: 6, height: 6, borderRadius: "50%", background: severityColor,
-            boxShadow: severity === "critical" ? `0 0 6px ${severityColor}50` : "none",
-            animation: severity === "critical" ? "pulse 2s infinite" : "none",
-            flexShrink: 0,
-          }} />
-          <span style={{ fontSize: 9, fontWeight: 700, color: severityColor, letterSpacing: 0.8, textTransform: "uppercase" }}>
-            {severity === "critical"
-              ? (lang === "he" ? "קריטי" : "CRITICAL")
-              : severity === "degraded"
-              ? (lang === "he" ? "מופחת" : "DEGRADED")
-              : (lang === "he" ? "תקין" : "HEALTHY")}
-          </span>
-          {systemState.timeRemaining && (
-            <span style={{ fontSize: 9, color: "var(--text-dim)", marginInlineStart: 2 }}>
-              {systemState.timeRemaining}
-            </span>
-          )}
-          {systemState.costPerMonth != null && (
-            <CostDisplay cost={systemState.costPerMonth} prevCost={prevSystemState?.costPerMonth} />
-          )}
+      {/* ── KEY SIGNALS ── */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+          Key Signals
         </div>
-
-        {/* Gauge row — calm by default, color only escalates */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
-          <Gauge
-            label={lang === "he" ? "השהיה" : "Latency"}
-            value={formatLatency(systemState.latency)}
-            severity={latencySeverity(systemState.latency)}
-            trend={trendArrow(systemState.latency, prevSystemState?.latency)}
-          />
-          <Gauge
-            label={lang === "he" ? "שגיאות" : "Errors"}
-            value={`${systemState.errorRate ?? 0}%`}
-            severity={errorSeverity(systemState.errorRate)}
-            trend={trendArrow(systemState.errorRate, prevSystemState?.errorRate)}
-          />
-          <Gauge
-            label="CPU"
-            value={`${systemState.cpuPercent ?? 0}%`}
-            severity={cpuSeverity(systemState.cpuPercent)}
-            trend={trendArrow(systemState.cpuPercent, prevSystemState?.cpuPercent)}
-          />
-          <Gauge
-            label={lang === "he" ? "חיבורים" : "Conns"}
-            value={systemState.connections ?? "\u2014"}
-            severity={connSeverity(systemState.connections, systemState.maxConnections)}
-          />
-        </div>
-      </div>
-
-      {/* ── Escalation / cost banners (rare, high-signal) ── */}
-      {(escalation || costSpike) && (
-        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
-          {escalation && (
-            <div style={{
-              background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)",
-              borderRadius: 8, padding: "7px 12px",
-              fontSize: 11, fontWeight: 600, color: "#DC2626",
-              display: "flex", alignItems: "center", gap: 8, direction: dir,
-            }}>
-              <span style={{ fontSize: 12, lineHeight: 1, flexShrink: 0 }}>📈</span>
-              <span>{getEscalationText(escalation, lang)}</span>
-            </div>
-          )}
-          {costSpike && (
-            <div style={{
-              background: "rgba(217,119,6,0.04)", border: "1px solid rgba(217,119,6,0.12)",
-              borderRadius: 8, padding: "7px 12px",
-              fontSize: 11, fontWeight: 600, color: "#B45309",
-              display: "flex", alignItems: "center", gap: 8, direction: dir,
-            }}>
-              <span style={{ fontSize: 12, lineHeight: 1, flexShrink: 0 }}>💸</span>
-              <span>{getCostSpikeText(costSpike, lang)}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Alerts — primary visual focus ── */}
-      {alerts?.length > 0 && (
-        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5 }}>
-          {alerts.map((alert, i) => {
-            const text = getLocalizedField(alert, "text", lang) || alert.text || alert;
-            const type = alert.type || "warning";
-            const noise = alert.noise;
-            // Muted color palette — strong enough to read, not neon
-            const color = type === "critical" ? "#DC2626"
-              : type === "warning" ? "#B45309"
-              : type === "resolved" ? "#15803D"
-              : "#6B7280";
-            const bg = type === "critical" ? "rgba(220,38,38,0.06)"
-              : type === "warning" ? "rgba(180,83,9,0.04)"
-              : type === "resolved" ? "rgba(21,128,61,0.04)"
-              : "rgba(107,114,128,0.04)";
-            const icon = type === "critical" ? "!!" : type === "warning" ? "!" : type === "resolved" ? "\u2713" : "\u2022";
-            const prefix = alert.source || "Alert";
+        <div style={{ display: "flex", gap: 0, flexWrap: "wrap" }}>
+          {signals.map((s, i) => {
+            const color = interviewMode ? "var(--text-primary)"
+              : s.severity === "critical" ? "#EF4444"
+              : s.severity === "warning" ? "#D97706"
+              : "var(--text-primary)";
             return (
               <div key={i} style={{
-                background: bg, border: `1px solid ${type === "critical" ? "rgba(220,38,38,0.12)" : "var(--glass-6)"}`,
-                borderRadius: 8, padding: "7px 12px", fontSize: 12, direction: dir,
-                display: "flex", alignItems: "flex-start", gap: 8,
-                opacity: noise ? 0.5 : 1,
+                flex: "1 1 0", minWidth: 64, padding: "8px 0",
+                borderInlineEnd: i < signals.length - 1 ? "1px solid var(--glass-4)" : "none",
+                textAlign: "center",
               }}>
-                <span style={{
-                  flexShrink: 0, width: 16, height: 16, borderRadius: 4,
-                  background: type === "critical" ? "rgba(220,38,38,0.15)" : type === "warning" ? "rgba(180,83,9,0.1)" : "var(--glass-4)",
-                  color, fontSize: 9, fontWeight: 900,
-                  display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
+                <div style={{
+                  fontSize: 17, fontWeight: 800, color, fontFamily: MONO, lineHeight: 1,
+                  textShadow: s.severity === "critical" && !interviewMode ? `0 0 12px ${color}25` : "none",
+                  transition: "color 0.3s",
                 }}>
-                  {icon}
-                </span>
-                <div style={{ flex: 1, minWidth: 0, lineHeight: 1.5 }}>
-                  <span style={{ fontWeight: 700, fontSize: 10, color: "var(--text-muted)", letterSpacing: 0.3 }}>{prefix} </span>
-                  <span style={{ fontWeight: 500, color: type === "critical" ? "#EF4444" : "var(--text-light)" }}>{text}</span>
+                  {s.value}
+                </div>
+                <div style={{ fontSize: 9, color: "var(--text-dim)", fontWeight: 600, marginTop: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  {s.label}
                 </div>
               </div>
             );
           })}
         </div>
+      </div>
+
+      {/* ── Escalation warnings ── */}
+      {!interviewMode && (escalation || costSpike) && (
+        <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+          {escalation && (
+            <div style={{ padding: "0 2px", fontSize: 11, fontWeight: 600, color: "#F87171", display: "flex", alignItems: "center", gap: 8 }}>
+              <AlertTriangle size={11} style={{ flexShrink: 0 }} />
+              {getEscalationText(escalation)}
+            </div>
+          )}
+          {costSpike && (
+            <div style={{ padding: "0 2px", fontSize: 11, fontWeight: 600, color: "#FBBF24", display: "flex", alignItems: "center", gap: 8 }}>
+              <AlertTriangle size={11} style={{ flexShrink: 0 }} />
+              {getCostSpikeText(costSpike)}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* ── Logs — quiet, secondary, technical texture ── */}
+      {/* ── WHAT WE KNOW (alerts as investigation clues) ── */}
+      {clues.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+            What We Know
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {clues.map((clue, i) => {
+              const color = clue.type === "critical" ? "#F87171"
+                : clue.type === "resolved" ? "#10B981"
+                : "var(--text-primary)";
+              const dotColor = clue.type === "critical" ? "#EF4444"
+                : clue.type === "warning" ? "#D97706"
+                : clue.type === "resolved" ? "#10B981"
+                : "#6B7280";
+              return (
+                <div key={i} style={{
+                  display: "flex", alignItems: "flex-start", gap: 8,
+                  padding: "4px 0", opacity: clue.noise ? 0.4 : 1,
+                  direction: "ltr", textAlign: "left",
+                }}>
+                  <div style={{
+                    width: 5, height: 5, borderRadius: "50%", background: dotColor,
+                    flexShrink: 0, marginTop: 6,
+                    boxShadow: clue.type === "critical" ? `0 0 6px ${dotColor}50` : "none",
+                  }} />
+                  <div style={{ fontSize: 12, lineHeight: 1.6, color }}>
+                    {clue.source && <span style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: 10, marginInlineEnd: 4 }}>{clue.source}</span>}
+                    {clue.text}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── LOGS (terminal evidence) ── */}
       {logs?.length > 0 && (
-        <div style={{
-          marginTop: 8,
-          background: "rgba(13,17,23,0.6)", border: "1px solid var(--glass-4)", borderRadius: 8,
-          padding: "8px 12px", fontFamily: "'JetBrains Mono','Fira Code','Cascadia Code',monospace",
-          fontSize: 10, lineHeight: 1.7, overflowX: "auto", direction: "ltr",
-        }}>
-          {logs.map((log, i) => {
-            const text = getLocalizedField(log, "text", lang) || log.text || log;
-            const ts = log.timestamp || "";
-            const noise = log.noise;
-            const color = log.level === "error" ? "#E07070" : log.level === "warn" ? "#D4A050" : "#8B949E";
-            return (
-              <div key={i} style={{ color, whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: noise ? 0.5 : 1 }}>
-                {ts && <span style={{ color: "#6B7280" }}>{ts} </span>}
-                {text}
-              </div>
-            );
-          })}
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+            Recent Logs
+          </div>
+          <div style={{
+            background: "var(--code-bg)", borderRadius: 8,
+            padding: "10px 14px", fontFamily: MONO,
+            fontSize: 11, lineHeight: 1.8, direction: "ltr", textAlign: "left",
+          }}>
+            {logs.map((log, i) => {
+              const text = log.text || log;
+              const ts = log.timestamp || "";
+              const color = log.level === "error" ? "#F87171" : log.level === "warn" ? "#FBBF24" : "#9CA3AF";
+              return (
+                <div key={i} style={{ color, whiteSpace: "pre-wrap", wordBreak: "break-word", opacity: log.noise ? 0.4 : 1 }}>
+                  {ts && <span style={{ color: "#4B5563" }}>{ts} </span>}
+                  {text}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// ── Gauge — neutral by default, color only when degraded/critical ─────────
-
-function Gauge({ label, value, severity, trend }) {
-  // Neutral for "ok", restrained color only for warning/critical
-  const color = severity === "critical" ? "#DC2626"
-    : severity === "warning" ? "#B45309"
-    : "var(--text-secondary)";
-  const weight = severity === "ok" ? 700 : 800;
-
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 13, fontWeight: weight, color, lineHeight: 1.3 }}>
-        {value}
-        {trend && <span style={{ fontSize: 9, opacity: 0.6, marginInlineStart: 1 }}>{trend}</span>}
-      </div>
-      <div style={{ fontSize: 8, color: "var(--text-dim)", fontWeight: 600, marginTop: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-    </div>
-  );
-}
-
-// ── Cost display ──────────────────────────────────────────────────────────
-
-function CostDisplay({ cost, prevCost }) {
-  const spiked = prevCost != null && cost > prevCost * 1.5;
-  return (
-    <span style={{
-      fontSize: 9, marginInlineStart: "auto",
-      color: spiked ? "#DC2626" : "var(--text-dim)",
-      fontWeight: spiked ? 700 : 400,
-    }}>
-      ${cost.toLocaleString()}/mo
-      {spiked && <span style={{ marginInlineStart: 3 }}>({Math.round((cost / prevCost - 1) * 100)}%+)</span>}
-    </span>
-  );
-}
-
-// ── Detection helpers (unchanged logic) ───────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────
 
 function detectEscalation(state, prev) {
   if (!prev) return null;
-  // Error rate spiking
   if (state.errorRate > (prev.errorRate || 0) + 8) return "error_spike";
-  // Latency nearly doubling
   if (state.latency > 0 && prev.latency > 0 && state.latency >= prev.latency * 1.8) return "latency_surge";
-  // Severity escalated to critical
-  const prevSev = getSystemSeverity(prev);
-  const curSev = getSystemSeverity(state);
-  if (curSev === "critical" && prevSev !== "critical") return "critical_escalation";
-  // Connection saturation (string format "180/200" or numeric)
+  if (getSystemSeverity(state) === "critical" && getSystemSeverity(prev) !== "critical") return "critical_escalation";
   if (typeof state.connections === "string" && state.connections.includes("/")) {
     const [cur, max] = state.connections.split("/").map(Number);
     if (max > 0 && cur >= max) return "conn_exhausted";
   }
-  // Stability went from healthy to degraded
   if (state.stability === "degraded" && prev.stability === "healthy") return "stability_degraded";
   return null;
 }
 
-function getEscalationText(type, lang) {
-  const en = lang !== "he";
+function getEscalationText(type) {
   switch (type) {
-    case "error_spike": return en ? "Error rate increasing rapidly -- SLA at risk" : "שיעור שגיאות עולה במהירות -- SLA בסיכון";
-    case "latency_surge": return en ? "Latency escalating -- user experience degrading" : "השהיה מחמירה -- חוויית משתמש מתדרדרת";
-    case "critical_escalation": return en ? "System escalated to CRITICAL -- immediate action required" : "המערכת הסלימה לקריטי -- נדרשת פעולה מיידית";
-    case "conn_exhausted": return en ? "Connection pool exhausted -- new requests being refused" : "מאגר חיבורים נוצל -- בקשות חדשות נדחות";
-    case "stability_degraded": return en ? "System stability degraded -- monitoring closely" : "יציבות המערכת ירדה -- מנטרים מקרוב";
+    case "error_spike": return "Error rate increasing rapidly - SLA at risk";
+    case "latency_surge": return "Latency escalating - user experience degrading";
+    case "critical_escalation": return "System escalated to CRITICAL - immediate action required";
+    case "conn_exhausted": return "Connection pool exhausted - new requests being refused";
+    case "stability_degraded": return "System stability degraded - monitoring closely";
     default: return "";
   }
 }
@@ -257,58 +194,16 @@ function detectCostSpike(state, prev) {
   return null;
 }
 
-function getCostSpikeText(spike, lang) {
-  const en = lang !== "he";
-  if (spike.level === "extreme") {
-    return en
-      ? `Cost spike: +$${spike.increase.toLocaleString()}/mo (${spike.pct}% increase) -- budget review needed`
-      : `קפיצת עלות: +$${spike.increase.toLocaleString()}/חודש (${spike.pct}% עלייה) -- נדרשת בדיקת תקציב`;
-  }
-  return en
-    ? `Cost increased by $${spike.increase.toLocaleString()}/mo (${spike.pct}% increase)`
-    : `עלות עלתה ב-$${spike.increase.toLocaleString()}/חודש (${spike.pct}% עלייה)`;
+function getCostSpikeText(spike) {
+  if (spike.level === "extreme") return `Cost spike: +$${spike.increase.toLocaleString()}/mo (${spike.pct}% increase) - budget review needed`;
+  return `Cost increased by $${spike.increase.toLocaleString()}/mo (${spike.pct}% increase)`;
 }
 
-// ── Trend + severity helpers ──────────────────────────────────────────────
-
-function trendArrow(current, previous) {
-  if (current == null || previous == null) return null;
-  const diff = current - previous;
-  if (Math.abs(diff) < 1) return null;
-  return diff > 0 ? "\u2191" : "\u2193";
-}
-
-function formatLatency(ms) {
-  if (ms == null) return "\u2014";
-  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${ms}ms`;
-}
-
-function latencySeverity(ms) {
-  if (ms == null) return "ok";
-  if (ms >= 3000) return "critical";
-  if (ms >= 1000) return "warning";
-  return "ok";
-}
-
-function errorSeverity(rate) {
-  if (rate == null) return "ok";
-  if (rate >= 15) return "critical";
-  if (rate >= 3) return "warning";
-  return "ok";
-}
-
-function cpuSeverity(pct) {
-  if (pct == null) return "ok";
-  if (pct >= 90) return "critical";
-  if (pct >= 70) return "warning";
-  return "ok";
-}
-
-function connSeverity(current, max) {
-  if (current == null || max == null) return "ok";
-  const ratio = typeof current === "string" ? 0 : current / max;
-  if (ratio >= 0.95) return "critical";
-  if (ratio >= 0.8) return "warning";
-  return "ok";
-}
+function trendArrow(cur, prev) { if (cur == null || prev == null) return null; const d = cur - prev; return Math.abs(d) < 1 ? null : d > 0 ? "\u2191" : "\u2193"; }
+function formatLatency(ms) { if (ms == null) return "\u2014"; return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`; }
+function latencySeverity(ms) { if (ms == null) return "ok"; return ms >= 3000 ? "critical" : ms >= 1000 ? "warning" : "ok"; }
+function errorSeverity(r) { if (r == null) return "ok"; return r >= 15 ? "critical" : r >= 3 ? "warning" : "ok"; }
+function cpuSeverity(p) { if (p == null) return "ok"; return p >= 90 ? "critical" : p >= 70 ? "warning" : "ok"; }
+function connSeverity(c, m) { if (c == null || m == null) return "ok"; const r = typeof c === "string" ? 0 : c / m; return r >= 0.95 ? "critical" : r >= 0.8 ? "warning" : "ok"; }
+function rpsSeverity(r) { if (r == null) return "ok"; return r <= 10 ? "critical" : r <= 50 ? "warning" : "ok"; }
+function queueSeverity(d) { if (d == null) return "ok"; return d >= 1000 ? "critical" : d >= 100 ? "warning" : "ok"; }
