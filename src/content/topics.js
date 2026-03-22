@@ -120,6 +120,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין Job ל-CronJob?",
+              tags: ["cronjob-hierarchy"],
               options: [
               "Job רץ פעם אחת עד להשלמה, CronJob מתזמן Jobs לפי לוח זמנים",
               "Job מריץ משימות במקביל על כל Node, CronJob מריץ משימות רק על Node אחד",
@@ -220,6 +221,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between a Job and a CronJob?",
+              tags: ["cronjob-hierarchy"],
               options: [
               "A Job schedules tasks on a cron schedule; a CronJob runs a single task to completion",
               "A Job runs once until completion; a CronJob schedules Jobs on a recurring basis",
@@ -735,7 +737,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\n\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n\nכל Pod עם label של app: my-app ייכנס לרשימת ה-Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
+                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n```\n\nכל Pod עם label של app: my-app ייכנס לרשימת ה-Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
             },
             {
               q: "מה ההבדל בין port ל-targetPort ב-Service?",
@@ -840,7 +842,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "A Service defines a label selector. The Endpoints controller finds matching Pods.\n\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n\nEvery Pod with the label app: my-app is added to the Endpoints list.\nkube-proxy routes traffic to one of the healthy endpoints.",
+                "A Service defines a label selector. The Endpoints controller finds matching Pods.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n```\n\nEvery Pod with the label app: my-app is added to the Endpoints list.\nkube-proxy routes traffic to one of the healthy endpoints.",
             },
             {
               q: "What is the difference between port and targetPort in a Service?",
@@ -1346,6 +1348,7 @@ export const TOPICS = [
             },
             {
               q: "כיצד משתמשים ב-ConfigMap ב-Pod?",
+              tags: ["config-mount"],
               options: [
               "רק כ-env variables ישירות ב-spec של ה-containers ולא בצורות אחרות",
               "רק כקובץ. מוסיפים דרך volume ואין דרך אחרת לגשת לנתונים",
@@ -1444,6 +1447,7 @@ export const TOPICS = [
             },
             {
               q: "How can a ConfigMap be used in a Pod?",
+              tags: ["config-mount"],
               options: [
               "Only as env variables injected directly in the containers spec",
               "Not possible. A Pod accesses ConfigMap data only via Kubernetes API calls",
@@ -1610,15 +1614,16 @@ export const TOPICS = [
             },
             {
               q: "איך מושכים Secrets מ-AWS Secrets Manager לתוך Kubernetes?",
+              tags: ["external-secrets"],
               options: [
-              "External Secrets Operator - מגדיר SecretStore ו-ExternalSecret CR",
+              "External Secrets Operator - מגדיר SecretStore ומשאב ExternalSecret",
               "Vault Agent Injector - sidecar שמזריק secrets ישירות לתוך ה-Pod",
               "SOPS operator - מפענח קבצי YAML מוצפנים ויוצר K8s Secrets",
               "Sealed Secrets - מצפין Secrets ושומר אותם ב-Git בצורה בטוחה",
 ],
               answer: 0,
               explanation:
-                "ESO מושך secrets מ-AWS/GCP/Vault ויוצר K8s Secrets אוטומטית.\nSecretStore מגדיר את החיבור ל-provider.\nExternalSecret מגדיר אילו secrets למשוך.\nה-Secrets לא נשמרים ב-Git ולא מנוהלים ידנית.",
+                "External Secrets Operator (ESO) מסנכרן secrets מ-provider חיצוני (כמו AWS Secrets Manager) לתוך Kubernetes Secrets באופן אוטומטי.\nהערכים עצמם נשארים ב-provider - רק ההגדרות נשמרות ב-Git.\n\nשלושת המשאבים המרכזיים:\n• SecretStore - מגדיר את החיבור ל-provider החיצוני (AWS, GCP, Vault וכו׳)\n• ExternalSecret - מגדיר איזה secret למשוך ואיך למפות אותו\n• Kubernetes Secret - נוצר אוטומטית בתוך ה-Cluster על ידי ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n  - secretKey: password\n    remoteRef:\n      key: prod/db/password\n```",
             },
         ],
         questionsEn: [
@@ -1712,15 +1717,16 @@ export const TOPICS = [
             },
             {
               q: "How do you sync a Secret from AWS Secrets Manager?",
+              tags: ["external-secrets"],
               options: [
               "Sealed Secrets controller: encrypts Secrets and stores them in Git",
-              "External Secrets Operator: SecretStore + ExternalSecret CR",
+              "External Secrets Operator: SecretStore + ExternalSecret resources",
               "Vault Agent Injector: a sidecar that injects secrets directly into Pods",
               "SOPS operator: decrypts encrypted YAML files and creates K8s Secrets",
 ],
               answer: 1,
               explanation:
-                "ESO syncs secrets from AWS/GCP/Vault into K8s Secrets automatically.\nSecretStore = provider connection. ExternalSecret = what to sync.\nSecrets never managed manually or stored in git.",
+                "External Secrets Operator (ESO) syncs secrets from an external provider (like AWS Secrets Manager) into Kubernetes Secrets automatically.\nThe actual secret values stay in the provider - only the configuration resources are stored in Git.\n\nThree key resources:\n• SecretStore - defines the connection to the external provider (AWS, GCP, Vault, etc.)\n• ExternalSecret - defines which secret to pull and how to map it\n• Kubernetes Secret - created automatically inside the cluster by ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n  - secretKey: password\n    remoteRef:\n      key: prod/db/password\n```",
             },
         ],
       },
@@ -1754,11 +1760,12 @@ export const TOPICS = [
             },
             {
               q: "מה Sealed Secrets מאפשר?",
+              tags: ["sealed-secrets"],
               options: [
               "יצירת Kubernetes Secrets אוטומטית מ-environment variables בזמן deploy",
               "שיתוף Secrets מוצפנים בין Clusters שונים באמצעות מפתח משותף",
               "הצפנת תעבורת רשת בין Pods באמצעות מפתחות שנשמרים ב-etcd",
-              "שמירת Secrets מוצפנים ב-git בבטחה כמשאבי SealedSecret",
+              "שמירת Secrets מוצפנים ב-git בבטחה כמשאבים מסוג SealedSecret",
 ],
               answer: 3,
               explanation:
@@ -1853,6 +1860,7 @@ export const TOPICS = [
             },
             {
               q: "What does Sealed Secrets allow?",
+              tags: ["sealed-secrets"],
               options: [
               "Sharing encrypted Secrets between different Clusters using a shared key",
               "Storing encrypted secrets in git safely as SealedSecret resources",
@@ -1967,6 +1975,7 @@ export const TOPICS = [
             },
             {
               q: "מה תפקיד Helm Chart\u200F?",
+              tags: ["helm-chart"],
               options: [
               "שכבת רשת וירטואלית שמחברת Pods ב-Cluster דרך CNI plugin",
               "Docker image מותאם שכולל Kubernetes manifests בתוך ה-layers שלו",
@@ -1987,7 +1996,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "`helm install` מתקין Chart ויוצר Release שנשמר כ-Secret ב-Cluster.\n`helm upgrade` משנה Release קיים. `helm template` מרנדר YAML בלי להתקין. `helm create` יוצר scaffold של Chart חדש.\nאפשר לעקוף ערכים עם --set key=value או -f myvalues.yaml.",
+                "`helm install` מתקין Chart ויוצר Release שנשמר כ-Secret ב-Cluster.\n`helm upgrade` משנה Release קיים. `helm template` מרנדר YAML בלי להתקין. `helm create` יוצר scaffold של Chart חדש.\nאפשר לעקוף ערכים עם `--set key=value` או `\u200E-f myvalues.yaml`.",
             },
             {
               q: "מה Volume מסוג emptyDir?",
@@ -2035,7 +2044,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "values.yaml מכיל ברירות מחדל לכל ה-template variables של Chart.\nאפשר לעקוף ערכים עם --set key=value או להחליף קובץ עם -f my-values.yaml.\nכך Chart אחד משרת סביבות שונות (dev, staging, production).",
+                "values.yaml מכיל ברירות מחדל לכל ה-template variables של Chart.\nאפשר לעקוף ערכים עם `--set key=value` או להחליף קובץ עם `\u200E-f my-values.yaml`.\nכך Chart אחד משרת סביבות שונות (dev, staging, production).",
             },
         ],
         questionsEn: [
@@ -2066,6 +2075,7 @@ export const TOPICS = [
             },
             {
               q: "What is a Helm Chart?",
+              tags: ["helm-chart"],
               options: [
               "A Docker image that bundles Kubernetes manifests inside its layers",
               "A package of Kubernetes manifests with templates and configurable defaults",
