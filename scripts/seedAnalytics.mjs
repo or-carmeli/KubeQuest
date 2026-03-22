@@ -30,12 +30,32 @@ if (!url || !key) { console.error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_AN
 const supabase = createClient(url, key);
 const TABLE = "analytics_events";
 
-// ── Weighted random ────────────────────────────────────────────────────────
+// ── Weighted random (for fields where exact counts don't matter) ──────────
 function pickWeighted(items) {
   const total = items.reduce((s, i) => s + i.weight, 0);
   let r = Math.random() * total;
   for (const item of items) { r -= item.weight; if (r <= 0) return item.value; }
   return items[items.length - 1].value;
+}
+
+// ── Deterministic distribution (for fields that must match Vercel exactly) ─
+// Builds a flat array with exact counts, shuffles it, then pops one per visitor.
+function buildExactPool(items, totalNeeded) {
+  const total = items.reduce((s, i) => s + i.weight, 0);
+  const pool = [];
+  for (const item of items) {
+    const count = Math.round((item.weight / total) * totalNeeded);
+    for (let i = 0; i < count; i++) pool.push(item.value);
+  }
+  // Adjust pool size to match totalNeeded (rounding may over/under-produce)
+  while (pool.length < totalNeeded) pool.push(items[0].value);
+  while (pool.length > totalNeeded) pool.pop();
+  // Shuffle (Fisher-Yates)
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
 }
 
 // ── Vercel snapshot data (Last 12 Months / all-time) ───────────────────────
@@ -115,7 +135,7 @@ const data = {
     { value: "France",              weight: 5 },
     { value: "India",               weight: 2 },
     { value: "Morocco",             weight: 2 },
-    { value: "United States",       weight: 2 },
+    { value: "United States of America", weight: 2 },
     { value: "Canada",              weight: 1 },
     { value: "Thailand",            weight: 1 },
     { value: "Turkiye",             weight: 1 },
@@ -167,6 +187,10 @@ const data = {
 // ── Generate rows ──────────────────────────────────────────────────────────
 const rows = [];
 
+const totalVisitors = data.dailyVisitors.reduce((s, d) => s + d.visitors, 0);
+const countryPool = buildExactPool(data.countries, totalVisitors);
+let visitorIdx = 0;
+
 for (const day of data.dailyVisitors) {
   if (day.visitors === 0) continue;
   const dayBase = new Date(day.date + "T00:00:00Z");
@@ -178,7 +202,7 @@ for (const day of data.dailyVisitors) {
     const device = pickWeighted(data.devices);
     const browser = pickWeighted(data.browsers);
     const osVal = pickWeighted(data.os);
-    const country = pickWeighted(data.countries);
+    const country = countryPool[visitorIdx++];
     const referrer = pickWeighted(data.referrers);
     const hostname = pickWeighted(data.hostnames);
 

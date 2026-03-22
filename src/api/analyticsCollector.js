@@ -79,6 +79,23 @@ function parseUTM() {
   }
 }
 
+// ── Geolocation (free, no API key) ──────────────────────────────────────────
+
+let _cachedCountry = undefined; // undefined = not fetched yet, null = failed
+
+async function fetchCountry() {
+  if (_cachedCountry !== undefined) return _cachedCountry;
+  try {
+    const res = await fetch("https://ipapi.co/country_name/", { cache: "force-cache" });
+    if (!res.ok) throw new Error(res.status);
+    const name = (await res.text()).trim();
+    _cachedCountry = name || null;
+  } catch {
+    _cachedCountry = null;
+  }
+  return _cachedCountry;
+}
+
 function getReferrer() {
   try {
     const ref = document.referrer;
@@ -123,20 +140,22 @@ export function initAnalytics(supabase) {
 
   _lastPath = path;
 
-  // session_start event
-  insertEvent({
-    session_id: SESSION_ID,
-    event_type: "session_start",
-    path,
-    referrer,
-    utm_source,
-    utm_medium,
-    utm_campaign,
-    device_type,
-    browser,
-    os,
-    country: null, // populated server-side if edge function is added later
-    hostname: window.location.hostname,
+  // session_start event — fetch country in parallel, don't block
+  fetchCountry().then(country => {
+    insertEvent({
+      session_id: SESSION_ID,
+      event_type: "session_start",
+      path,
+      referrer,
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      device_type,
+      browser,
+      os,
+      country,
+      hostname: window.location.hostname,
+    });
   });
 }
 
@@ -152,19 +171,21 @@ export function trackPageView(screenName) {
 
   const { device_type, browser, os } = parseUserAgent();
 
-  insertEvent({
-    session_id: SESSION_ID,
-    event_type: "page_view",
-    path,
-    referrer: null,
-    utm_source: null,
-    utm_medium: null,
-    utm_campaign: null,
-    device_type,
-    browser,
-    os,
-    country: null,
-    hostname: window.location.hostname,
+  fetchCountry().then(country => {
+    insertEvent({
+      session_id: SESSION_ID,
+      event_type: "page_view",
+      path,
+      referrer: null,
+      utm_source: null,
+      utm_medium: null,
+      utm_campaign: null,
+      device_type,
+      browser,
+      os,
+      country,
+      hostname: window.location.hostname,
+    });
   });
 }
 
@@ -192,7 +213,6 @@ export function trackCustomEvent(eventName, path) {
 // ── Seed helper (DEV only) ──────────────────────────────────────────────────
 
 function pickWeighted(items) {
-  // items: [{ value, weight }]  — weights are relative (e.g. percentages)
   const total = items.reduce((s, i) => s + i.weight, 0);
   let r = Math.random() * total;
   for (const item of items) {
@@ -202,12 +222,26 @@ function pickWeighted(items) {
   return items[items.length - 1].value;
 }
 
+function buildExactPool(items, totalNeeded) {
+  const total = items.reduce((s, i) => s + i.weight, 0);
+  const pool = [];
+  for (const item of items) {
+    const count = Math.round((item.weight / total) * totalNeeded);
+    for (let i = 0; i < count; i++) pool.push(item.value);
+  }
+  while (pool.length < totalNeeded) pool.push(items[0].value);
+  while (pool.length > totalNeeded) pool.pop();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+}
+
 /**
  * Seed analytics_events from a Vercel Analytics snapshot.
  * All rows are marked with source = "vercel_seed".
- *
- * @param {object} supabase - Supabase client
- * @param {object} data - Structured snapshot (see seedVercelData below)
+ * Countries use exact distribution to match Vercel counts.
  */
 export async function seedAnalyticsFromSnapshot(supabase, data) {
   if (!supabase) { console.warn("[analytics] no supabase client"); return; }
@@ -217,6 +251,10 @@ export async function seedAnalyticsFromSnapshot(supabase, data) {
     hostnames = [{ value: "kubequest.online", weight: 1 }],
     bounceRate = 0.51,
   } = data;
+
+  const totalVisitors = dailyVisitors.reduce((s, d) => s + d.visitors, 0);
+  const countryPool = buildExactPool(countries, totalVisitors);
+  let visitorIdx = 0;
 
   const rows = [];
 
@@ -233,7 +271,7 @@ export async function seedAnalyticsFromSnapshot(supabase, data) {
       const device = pickWeighted(devices);
       const browser = pickWeighted(browsers);
       const osVal = pickWeighted(os);
-      const country = pickWeighted(countries);
+      const country = countryPool[visitorIdx++];
       const referrer = pickWeighted(referrers);
       const hostname = pickWeighted(hostnames);
 
@@ -332,7 +370,7 @@ export const seedVercelData = {
   countries: [
     { value: "Israel", weight: 317 }, { value: "France", weight: 5 },
     { value: "India", weight: 2 }, { value: "Morocco", weight: 2 },
-    { value: "United States", weight: 2 }, { value: "Canada", weight: 1 },
+    { value: "United States of America", weight: 2 }, { value: "Canada", weight: 1 },
     { value: "Thailand", weight: 1 }, { value: "Turkiye", weight: 1 },
   ],
 

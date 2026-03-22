@@ -165,7 +165,7 @@ function detectAuthCallback() {
   }
 }
 const authCallback = detectAuthCallback();
-console.info("[auth:detect]", authCallback.flow, authCallback.flow !== "none" ? authCallback : "");
+console.info("[auth:detect]", authCallback.flow);
 console.info(
   `[KubeQuest] build: ${typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "dev"}` +
   ` | data-v: ${typeof __APP_DATA_VERSION__ !== "undefined" ? __APP_DATA_VERSION__ : "dev"}` +
@@ -1129,7 +1129,7 @@ function shuffleOptions(questions) {
       result.answer = indices.indexOf(q.answer);
       // Verify shuffle consistency: answer text must match after remap
       if (result.options[result.answer] !== correctText) {
-        console.error("[QUIZ_DEBUG] SHUFFLE MISMATCH!", { original: q.options, shuffled: result.options, originalAnswer: q.answer, remappedAnswer: result.answer, expectedText: correctText, actualText: result.options[result.answer] });
+        console.error("[QUIZ] shuffle mismatch detected");
       }
     }
     return result;
@@ -2486,7 +2486,7 @@ export default function K8sQuestApp() {
         topicStats: ts ?? topicStats,
       });
     } catch (err) {
-      console.error("[KubeQuest] saveUserData failed:", err.message, { userId: user?.id, topics: Object.keys(cleanNc).length, code: err?.code, status: err?.status });
+      console.error("[KubeQuest] saveUserData failed:", err.message, { code: err?.code, status: err?.status });
       captureError(err, { flow: "saveUserData", screen, isGuest, topicCount: Object.keys(cleanNc).length });
       const errorKey = classifySaveError(err);
       const errorMsg = t(errorKey);
@@ -3063,19 +3063,10 @@ export default function K8sQuestApp() {
       result = { correct: selectedAnswer === q.answer, correctIndex: q.answer, explanation: q.explanation };
     }
 
-    // Runtime consistency check: verify the correct answer text matches expectations
+    // Runtime consistency check (no answer data logged)
     if (q._correctText && typeof result.correctIndex === "number" && q.options[result.correctIndex] !== q._correctText) {
-      console.error("[QUIZ_DEBUG] ANSWER MISMATCH at submit!", {
-        question: q.q, correctIndex: result.correctIndex,
-        optionAtIndex: q.options[result.correctIndex], expectedText: q._correctText,
-        allOptions: q.options, answerField: q.answer,
-      });
+      console.error("[QUIZ] answer index mismatch detected");
     }
-    console.debug("[QUIZ_DEBUG] handleSubmit", {
-      question: q.q?.slice(0, 60), selectedAnswer, selectedText: q.options[selectedAnswer],
-      correctIndex: result.correctIndex, correctText: q.options[result.correctIndex],
-      storedCorrectText: q._correctText, isCorrect: result.correct,
-    });
 
     setAnswerResult(result);
     setCheckingAnswer(false);
@@ -3161,7 +3152,6 @@ export default function K8sQuestApp() {
   };
 
   const nextQuestion = async () => {
-    console.debug("[FINISH_DEBUG] nextQuestion called", { questionIndex, total: currentQuestions.length, retryMode, isLast: questionIndex >= currentQuestions.length - 1 });
     const isLast = questionIndex >= currentQuestions.length - 1;
     if (isLast) {
       const finalCorrect = topicCorrectRef.current;
@@ -3191,7 +3181,7 @@ export default function K8sQuestApp() {
               ...unlockedAchievements,
               ...ACHIEVEMENTS.filter(a => !unlockedAchievements.includes(a.id) && a.condition(stats, newCompleted)).map(a => a.id),
             ];
-            try { if (!isFreeMode(selectedTopic.id)) await saveUserData(stats, newCompleted, retryAch); } catch (e) { console.error("[FINISH_DEBUG] saveUserData error (retry):", e.message); }
+            try { if (!isFreeMode(selectedTopic.id)) await saveUserData(stats, newCompleted, retryAch); } catch (e) { console.error("[QUIZ] save error (retry):", e.message); }
             loadUserRank();
           }
           setAllowNextLevel(true);
@@ -3200,7 +3190,6 @@ export default function K8sQuestApp() {
         }
         submittingRef.current = false;
         updateDailyStreak();
-        console.debug("[FINISH_DEBUG] setScreen topicComplete (retry path)");
         setScreen("topicComplete");
         return;
       }
@@ -3239,7 +3228,7 @@ export default function K8sQuestApp() {
       }
       setCompletedTopics(newCompleted); setStats(newStats); setUnlockedAchievements(newAch);
       if (!isFreeMode(selectedTopic.id)) {
-        try { await saveUserData(newStats, newCompleted, newAch); } catch (e) { console.error("[FINISH_DEBUG] saveUserData error:", e.message); }
+        try { await saveUserData(newStats, newCompleted, newAch); } catch (e) { console.error("[QUIZ] save error:", e.message); }
         loadUserRank();
         const allPerfect = LEVEL_ORDER.every(lvl => {
           const r = newCompleted[`${selectedTopic.id}_${lvl}`];
@@ -3251,11 +3240,10 @@ export default function K8sQuestApp() {
       window.va?.track?.("quiz_completed", { score: finalCorrect, totalQuestions: currentQuestions.length, topic: selectedTopic?.name || selectedTopic?.id });
       if (finalCorrect < currentQuestions.length) window.va?.track?.("quiz_failed", { score: finalCorrect, topic: selectedTopic?.name || selectedTopic?.id });
       } catch (err) {
-        console.error("[FINISH_DEBUG] nextQuestion error:", err.message);
+        console.error("[QUIZ] nextQuestion error:", err.message);
         captureError(err, { flow: "nextQuestion", screen, isGuest, extra: { topic: selectedTopic?.id, level: selectedLevel, questionIndex } });
         submittingRef.current = false;
       }
-      console.debug("[FINISH_DEBUG] setScreen topicComplete (normal path)");
       setScreen("topicComplete");
     } else {
       submittingRef.current = false;
@@ -3282,7 +3270,7 @@ export default function K8sQuestApp() {
     isRetryRef.current = false; // Only the explicit "retry wrong answers" flow sets this true
     setAnswerResult(null);
     let rawQs, theory;
-    if (supabase) {
+    if (supabase && !isGuest) {
       setLoadingQuestions(true);
       try {
         [rawQs, theory] = await Promise.all([
@@ -3332,7 +3320,7 @@ export default function K8sQuestApp() {
     clearQuizState();
     setAnswerResult(null);
     let rawQs;
-    if (supabase) {
+    if (supabase && !isGuest) {
       setLoadingQuestions(true);
       try {
         rawQs = await fetchMixedQuestions(supabase, lang, 10);
@@ -3387,7 +3375,7 @@ export default function K8sQuestApp() {
     clearQuizState();
     setAnswerResult(null);
     let dailyQs;
-    if (supabase) {
+    if (supabase && !isGuest) {
       setLoadingQuestions(true);
       try {
         dailyQs = await fetchDailyQuestions(supabase, lang, 5);
@@ -3578,7 +3566,7 @@ export default function K8sQuestApp() {
     const step = getIncidentStep(incidentStepIndex);
     let correct, correctAnswer, result;
 
-    if (supabase && step?.id) {
+    if (supabase && !isGuest && step?.id) {
       try {
         const rpcResult = await checkIncidentAnswer(supabase, step.id, ans);
         correct = rpcResult.correct;
@@ -3711,7 +3699,7 @@ export default function K8sQuestApp() {
     (async () => {
       let result;
       try {
-        if (supabase && q.id) {
+        if (supabase && !isGuest && q.id) {
           try {
             const isDaily = capturedTopicId === "daily";
             const rpcResult = isDaily
@@ -5754,7 +5742,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   const isChosen  = i===dispSelectedAnswer;
                   // Runtime consistency: verify green highlight matches expected correct text
                   if (dispSubmitted && dispAnswerResult && isCorrect && q_cur?._correctText && opt !== q_cur._correctText) {
-                    console.error("[QUIZ_DEBUG] GREEN HIGHLIGHT MISMATCH!", { position: i, displayedOption: opt, expectedCorrect: q_cur._correctText, correctIndex: dispAnswerResult.correctIndex, answerField: q_cur.answer, allOptions: q_cur.options });
+                    console.error("[QUIZ] highlight mismatch detected");
                   }
                   const isEliminated = !dispSubmitted && eliminatedOption === i;
                   let borderColor = "var(--glass-9)", bg = "var(--glass-2)", color = "var(--text-light)", labelBg = "var(--glass-7)", labelColor = "var(--text-secondary)";
@@ -6030,7 +6018,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <button onClick={()=>{
                 try {
                 const qs=wrongQs.map(h=>({q:h.q,options:h.options,answer:h.answer,explanation:h.explanation}));
-                console.debug("[RETRY] starting retry", { count: qs.length, hasOptions: qs.every(q=>Array.isArray(q.options)), hasAnswer: qs.every(q=>typeof q.answer==="number") });
+                console.debug("[RETRY] starting retry", { count: qs.length });
                 if (!qs.length) { console.error("[RETRY] no wrong questions to retry"); return; }
                 setMixedQuestions(qs);
                 setRetryMode(true);

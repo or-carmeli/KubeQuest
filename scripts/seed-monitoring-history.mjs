@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // Seeds 30 days of system_status_history via Supabase API.
-// Usage: VITE_SUPABASE_URL=... VITE_SUPABASE_SERVICE_KEY=... node scripts/seed-monitoring-history.mjs
+// Usage: VITE_SUPABASE_URL=... SUPABASE_SERVICE_KEY=... node scripts/seed-monitoring-history.mjs
 
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.VITE_SUPABASE_SERVICE_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_SERVICE_KEY");
+  console.error("Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_KEY");
   process.exit(1);
 }
 
