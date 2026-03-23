@@ -133,8 +133,10 @@ body {
   background: var(--bg-body);
 }
 
-/* Dashboard font boost — scales all dev dashboard text up */
-.page-pad {
-  font-size: 16px;
-  zoom: 1.18;
+/* Dashboard font boost — scales dev dashboard text up on desktop only */
+@media (min-width: 768px) {
+  .page-pad {
+    font-size: 16px;
+    zoom: 1.18;
+  }
 }

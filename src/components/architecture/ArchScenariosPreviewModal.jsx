@@ -126,15 +126,14 @@ export default function ArchScenariosPreviewModal({
     }).catch(() => { setSending(false); onError(); });
   };
 
-  // Preview is always rendered in English / LTR
-  const isEn = true;
+  const isEn = lang === "en";
   const sel = selectedOption !== null ? PREVIEW_OPTIONS[selectedOption] : null;
 
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: "16px 20px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
+    <div style={{ maxWidth: 780, margin: "0 auto", padding: "16px 20px", animation: "fadeIn 0.3s ease", direction: dir }}>
       {/* Back button */}
       <button onClick={onBack} style={{ background: "var(--glass-4)", border: "1px solid var(--glass-9)", color: "var(--text-secondary)", width: 36, height: 36, borderRadius: 8, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-        <span aria-hidden="true">{"\u2190"}</span>
+        <span aria-hidden="true">{dir === "rtl" ? "\u2192" : "\u2190"}</span>
       </button>
 
       {/* Main card */}
@@ -160,20 +159,20 @@ export default function ArchScenariosPreviewModal({
             borderRadius: 20, letterSpacing: 1.4, marginBottom: 6, textTransform: "uppercase",
             border: "1px solid rgba(168,85,247,0.15)",
           }}>
-            {isEn ? "Advanced Lab" : "מעבדה מתקדמת"}
+            Advanced Lab
           </div>
 
           <h2 style={{ margin: "0 0 3px", color: "var(--text-bright)", fontSize: 20, fontWeight: 900 }}>
             {isEn ? "Architecture Scenarios" : "תרחישי ארכיטקטורה"}
           </h2>
           <p style={{ margin: "0 0 1px", color: "var(--text-secondary)", fontSize: 12, fontWeight: 500 }}>
-            {isEn ? "Train real infrastructure decision making" : "אימון קבלת החלטות תשתית אמיתיות"}
+            {isEn ? "Train real infrastructure decision making" : "סימולציות החלטות בארכיטקטורת מערכות"}
           </p>
           <p style={{ margin: "0 0 10px", color: "var(--text-dim)", fontSize: 10, opacity: 0.5 }}>
             {isEn ? "Designed for DevOps and SRE engineers" : "מיועד למהנדסי DevOps ו-SRE"}
           </p>
 
-          {/* ── Scenario simulation block ── */}
+          {/* ── Scenario simulation block (always English / LTR) ── */}
           <div style={{
             background: "rgba(168,85,247,0.03)",
             border: "1px solid rgba(168,85,247,0.12)",
@@ -181,15 +180,16 @@ export default function ArchScenariosPreviewModal({
             padding: "12px 14px 10px",
             marginBottom: 10,
             textAlign: "left",
+            direction: "ltr",
             boxShadow: "inset 0 1px 12px rgba(168,85,247,0.04)",
           }}>
             {/* Progress indicator */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 9, fontWeight: 700, color: "#C084FC", letterSpacing: 1.2, textTransform: "uppercase", opacity: 0.8 }}>
-                {isEn ? "Scenario Preview" : "תצוגה מקדימה"}
+                Scenario Preview
               </span>
               <span style={{ fontSize: 9, color: "var(--text-dim)", opacity: 0.5, fontWeight: 600 }}>
-                {isEn ? "Scenario 1 of 5" : "תרחיש 1 מתוך 5"}
+                Scenario 1 of 5
               </span>
             </div>
 
@@ -204,14 +204,14 @@ export default function ArchScenariosPreviewModal({
               padding: "8px 10px", marginBottom: 10,
             }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, opacity: 0.6 }}>
-                {isEn ? "System context" : "הקשר מערכתי"}
+                System context
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "3px 14px" }}>
                 {CONTEXT_ITEMS.map((item, i) => (
                   <span key={i} style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.6 }}>
-                    <span style={{ opacity: 0.5 }}>{isEn ? item.labelEn : item.labelHe}: </span>
+                    <span style={{ opacity: 0.5 }}>{item.labelEn}: </span>
                     <span style={{ color: "var(--text-secondary)", fontWeight: 600, fontFamily: "monospace", fontSize: 10 }}>
-                      {isEn ? item.valueEn : item.valueHe}
+                      {item.valueEn}
                     </span>
                   </span>
                 ))}
@@ -220,10 +220,10 @@ export default function ArchScenariosPreviewModal({
 
             {/* Scenario title */}
             <p style={{ margin: "0 0 2px", color: "var(--text-bright)", fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>
-              {isEn ? "K8s traffic spike hitting your cluster" : "עומס תעבורה פוגע באשכול ה-K8s שלך"}
+              K8s traffic spike hitting your cluster
             </p>
             <p style={{ margin: "0 0 8px", color: "var(--text-dim)", fontSize: 11, opacity: 0.55 }}>
-              {isEn ? "Choose the best architectural response" : "בחר את התגובה הארכיטקטונית הטובה ביותר"}
+              Choose the best architectural response
             </p>
 
             {/* Options */}
@@ -269,11 +269,11 @@ export default function ArchScenariosPreviewModal({
                       flexShrink: 0, transition: "all 0.2s",
                     }} />
                     <span style={{ color: isSelected ? "var(--text-bright)" : "var(--text-secondary)", fontSize: 12, fontWeight: 600 }}>
-                      {isEn ? opt.en : opt.he}
+                      {opt.en}
                     </span>
                   </div>
                   <div style={{ color: "var(--text-dim)", fontSize: 10, opacity: 0.45, marginTop: 1, paddingLeft: 22 }}>
-                    {isEn ? opt.hintEn : opt.hintHe}
+                    {opt.hintEn}
                   </div>
                 </div>
               );
@@ -292,24 +292,22 @@ export default function ArchScenariosPreviewModal({
                     fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1,
                     color: sel.correct ? "#4ADE80" : "#EF4444",
                   }}>
-                    {isEn ? "Decision analysis" : "ניתוח החלטה"}
+                    Decision analysis
                   </span>
                   <span style={{
                     fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5,
                     color: sel.correct ? "#4ADE80" : "#EF4444", opacity: 0.7,
                   }}>
-                    {sel.correct
-                      ? (isEn ? "Best choice" : "בחירה מיטבית")
-                      : (isEn ? "Not optimal" : "לא אופטימלי")}
+                    {sel.correct ? "Best choice" : "Not optimal"}
                   </span>
                 </div>
                 <p style={{ margin: "0 0 8px", fontSize: 11, lineHeight: 1.5, color: "var(--text-secondary)" }}>
-                  {isEn ? sel.feedbackEn : sel.feedbackHe}
+                  {sel.feedbackEn}
                 </p>
 
                 {/* Impact indicators tied to selected option */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                  {(isEn ? sel.impactEn : sel.impactHe).map((imp, i) => (
+                  {sel.impactEn.map((imp, i) => (
                     <span key={i} style={{
                       fontSize: 10, fontWeight: 600,
                       color: `rgba(${imp.c},0.9)`,
