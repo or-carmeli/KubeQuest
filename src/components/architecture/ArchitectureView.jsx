@@ -172,14 +172,15 @@ export default function ArchitectureView({ lang, onBack }) {
     ? buildOptimalTimeline(activeScenario) : null;
 
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: "24px 20px", animation: "fadeIn 0.3s ease", direction: dir }}>
+    <div className="page-pad" style={{ maxWidth: 660, margin: "0 auto", padding: "20px 16px", animation: "fadeIn 0.3s ease", direction: dir }}>
 
       <button
+        className="back-btn"
         onClick={view === "list" ? onBack : handleBackToList}
         style={{
           background: "var(--glass-4)", border: "1px solid var(--glass-9)", color: "var(--text-secondary)",
-          width: 36, height: 36, borderRadius: 8, cursor: "pointer", fontSize: 16,
-          display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20,
+          padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13,
+          display: "flex", alignItems: "center", gap: 6, marginBottom: 20,
         }}
       >
         <span aria-hidden="true">{dir === "rtl" ? "→" : "←"}</span>
@@ -188,10 +189,10 @@ export default function ArchitectureView({ lang, onBack }) {
       {/* ── LIST VIEW ── */}
       {view === "list" && (
         <>
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
-              <Network size={22} strokeWidth={1.5} style={{ color: "#A855F7", opacity: 0.7, flexShrink: 0 }} />
-              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "var(--text-bright)" }}>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+              <Network size={32} strokeWidth={1.5} style={{ color: "#ffffff", opacity: 0.9, flexShrink: 0 }} />
+              <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "#ffffff" }}>
                 {en ? "Architecture Scenarios" : "תרחישי ארכיטקטורה"}
               </h2>
               {/* Architecture Level badge */}
@@ -210,7 +211,7 @@ export default function ArchitectureView({ lang, onBack }) {
                 </span>
               )}
             </div>
-            <p style={{ margin: 0, fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+            <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 20 }}>
               {en
                 ? "Real-world infrastructure decision simulations. Every choice affects performance, cost, and reliability."
                 : "סימולציות של קבלת החלטות ארכיטקטוניות מהעולם האמיתי. כל החלטה משפיעה על ביצועים, עלות ואמינות."}

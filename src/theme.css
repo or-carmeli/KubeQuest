@@ -14,13 +14,13 @@
 
   /* Text */
   --text-bright: #f8fafc;
-  --text-primary: #e2e8f0;
-  --text-light: #cbd5e1;
-  --text-secondary: #a8b8cc;
-  --text-muted: #8896a8;
-  --text-dim: #6b7d90;
-  --text-disabled: #566878;
-  --text-faint: #3d4f5f;
+  --text-primary: #e8ecf2;
+  --text-light: #d4dce6;
+  --text-secondary: #b4c4d4;
+  --text-muted: #97a8ba;
+  --text-dim: #7e92a6;
+  --text-disabled: #64788c;
+  --text-faint: #4a5e72;
 
   /* Code & links */
   --code-text: #7dd3fc;
@@ -131,4 +131,10 @@
 
 body {
   background: var(--bg-body);
+}
+
+/* Dashboard font boost — scales all dev dashboard text up */
+.page-pad {
+  font-size: 16px;
+  zoom: 1.18;
 }

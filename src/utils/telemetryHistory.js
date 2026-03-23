@@ -228,7 +228,7 @@ export function aggregateHistory(snapshots) {
     snapshotCount: snapshots.length,
     // Time series for charts
     scoreSeries: snapshots.filter(s => s.score != null).map(s => ({ ts: s.ts, value: s.score })),
-    p95Series: snapshots.filter(s => s.net?.p95 != null).map(s => ({ ts: s.ts, value: s.net.p95 })),
+    p95Series: snapshots.filter(s => s.net?.p95 != null).map(s => ({ ts: s.ts, value: s.net.p95, samples: s.net.total || 0 })),
   };
 }
 

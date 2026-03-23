@@ -34,8 +34,9 @@ const wrap = {
   padding: "14px 12px 10px", margin: "4px 0 2px",
   background: "rgba(255,255,255,0.02)",
   border: "1px solid rgba(255,255,255,0.06)",
-  borderRadius: 12, maxWidth: 300, width: "100%", alignSelf: "center",
+  borderRadius: 12, maxWidth: 360, width: "100%", alignSelf: "center",
   boxSizing: "border-box", overflow: "hidden",
+  direction: "ltr",
 };
 
 const box = (border, bg, extra) => ({
@@ -101,7 +102,7 @@ const subLabel = (extra) => ({
 function DeploymentHierarchyDiagram() {
   return (
     <div style={wrap}>
-      <div style={box(C.indigo, C.indigoBg, { minWidth: 220, maxWidth: 280, width: "100%" })}>
+      <div style={box(C.indigo, C.indigoBg, { minWidth: 220, maxWidth: 330, width: "100%" })}>
         <div style={label(C.indigoText, { marginBottom: 8 })}>Deployment</div>
         <div style={box(C.purple, C.purpleBg, { padding: "8px 10px 6px" })}>
           <div style={label(C.purpleText, { marginBottom: 6, fontSize: 10 })}>ReplicaSet</div>
@@ -145,7 +146,7 @@ function ServiceTypesDiagram() {
 function IngressRoutingDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 330 })}>
         <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%" })}>Client</div>
         <div style={arrow()}>|</div>
         <div style={box(C.cyan, C.cyanBg, { width: "100%", padding: "8px 10px" })}>
@@ -173,7 +174,7 @@ function IngressRoutingDiagram() {
 function ServiceEndpointsDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={col({ gap: 3, flex: "0 0 auto" })}>
           <div style={box(C.indigo, C.indigoBg, { padding: "8px 10px" })}>
             <div style={label(C.indigoText, { fontSize: 10 })}>Service</div>
@@ -202,7 +203,7 @@ function ServiceEndpointsDiagram() {
 function PvPvcDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 8, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 8, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={col({ gap: 3 })}>
           <div style={smallBox(C.green, C.greenBg, C.greenText)}>Pod</div>
           <div style={arrow()}>|</div>
@@ -233,7 +234,7 @@ function PvPvcDiagram() {
 function RollingUpdateDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 5, width: "100%", maxWidth: 280 })}>
+      <div style={col({ gap: 5, width: "100%", maxWidth: 330 })}>
         <div style={row({ gap: 6 })}>
           <div style={smallBox(C.red, C.redBg, C.redText)}>v1</div>
           <div style={smallBox(C.red, C.redBg, C.redText)}>v1</div>
@@ -261,7 +262,7 @@ function RollingUpdateDiagram() {
 function DaemonSetDiagram() {
   return (
     <div style={wrap}>
-      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 330 })}>
         <div style={label(C.indigoText, { marginBottom: 8 })}>Cluster</div>
         <div style={row({ gap: 6 })}>
           {["Node 1", "Node 2", "Node 3"].map((n) => (
@@ -281,7 +282,7 @@ function DaemonSetDiagram() {
 function StatefulSetDiagram() {
   return (
     <div style={wrap}>
-      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 330 })}>
         <div style={label(C.indigoText, { marginBottom: 8 })}>StatefulSet</div>
         <div style={row({ gap: 6 })}>
           {[0, 1, 2].map((i) => (
@@ -301,7 +302,7 @@ function StatefulSetDiagram() {
 function RbacDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={box(C.green, C.greenBg, { padding: "6px 10px", flex: "0 0 auto" })}>
           <div style={label(C.greenText, { fontSize: 10 })}>Subject</div>
           <div style={subLabel({ marginTop: 3 })}>User / SA</div>
@@ -325,7 +326,7 @@ function RbacDiagram() {
 function NetworkPolicyDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 10, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 10, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={col({ gap: 4 })}>
           <div style={smallBox(C.green, C.greenBg, C.greenText)}>Pod A</div>
           <div style={subLabel()}>frontend</div>
@@ -353,7 +354,7 @@ function NetworkPolicyDiagram() {
 function HpaDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={col({ gap: 3 })}>
           <div style={smallBox(C.cyan, C.cyanBg, C.cyanText)}>metrics</div>
           <div style={arrow()}>|</div>
@@ -380,7 +381,7 @@ function HpaDiagram() {
 function ProbesDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 10, width: "100%", maxWidth: 280 })}>
+      <div style={row({ gap: 10, width: "100%", maxWidth: 330 })}>
         <div style={col({ gap: 3, flex: 1 })}>
           <div style={label(C.greenText, { fontSize: 10 })}>Readiness</div>
           <div style={box(C.green, C.greenBg, { padding: "6px 8px", width: "100%" })}>
@@ -409,7 +410,7 @@ function ProbesDiagram() {
 function TaintsTolerationsDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 10, width: "100%", maxWidth: 280 })}>
+      <div style={row({ gap: 10, width: "100%", maxWidth: 330 })}>
         <div style={col({ gap: 4, flex: 1 })}>
           <div style={box(C.amber, C.amberBg, { padding: "6px 8px", width: "100%" })}>
             <div style={label(C.amberText, { fontSize: 10, marginBottom: 4 })}>Node</div>
@@ -437,7 +438,7 @@ function TaintsTolerationsDiagram() {
 function IngressVsLbDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 12, width: "100%", maxWidth: 280 })}>
+      <div style={row({ gap: 12, width: "100%", maxWidth: 330 })}>
         <div style={col({ gap: 3, flex: 1 })}>
           <div style={label(C.redText, { fontSize: 9 })}>Multiple LBs</div>
           <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>LB 1</div>
@@ -466,7 +467,7 @@ function IngressVsLbDiagram() {
 function HeadlessServiceDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={smallBox(C.amber, C.amberBg, C.amberText)}>DNS query</div>
         <div style={arrow({ fontSize: 13 })}>&rarr;</div>
         <div style={box(C.indigo, C.indigoBg, { padding: "6px 10px" })}>
@@ -488,7 +489,7 @@ function HeadlessServiceDiagram() {
 function TopologySpreadDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280 })}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 330 })}>
         {["Zone A", "Zone B", "Zone C"].map((z) => (
           <div key={z} style={box(C.indigo, C.indigoBg, { padding: "6px 8px", flex: 1, minWidth: 0 })}>
             <div style={label(C.indigoText, { fontSize: 9, marginBottom: 4 })}>{z}</div>
@@ -508,7 +509,7 @@ function TopologySpreadDiagram() {
 function ArgoCdSyncDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={box(C.purple, C.purpleBg, { padding: "6px 10px" })}>
           <div style={label(C.purpleText, { fontSize: 10 })}>Git</div>
           <div style={subLabel({ marginTop: 3 })}>source of truth</div>
@@ -537,7 +538,7 @@ function ArgoCdSyncDiagram() {
 function RoleScopeDiagram() {
   return (
     <div style={wrap}>
-      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 330 })}>
         <div style={label(C.indigoText, { marginBottom: 8 })}>Cluster</div>
         <div style={row({ gap: 6, marginBottom: 6 })}>
           <div style={box(C.green, C.greenBg, { padding: "6px 8px", flex: 1 })}>
@@ -566,7 +567,7 @@ function PsaAdmissionDiagram() {
   );
   return (
     <div dir="ltr" style={{...wrap, direction: "ltr"}}>
-      <div style={box("rgba(239,68,68,0.30)", "rgba(239,68,68,0.03)", { width: "100%", maxWidth: 280, padding: "10px 12px 8px" })}>
+      <div style={box("rgba(239,68,68,0.30)", "rgba(239,68,68,0.03)", { width: "100%", maxWidth: 330, padding: "10px 12px 8px" })}>
         <div style={{ fontSize: 9, fontFamily: MONO, fontWeight: 600, color: "rgba(252,165,165,0.7)", letterSpacing: 0.5, textAlign: "center", marginBottom: 8 }}>PSA: restricted</div>
         <div style={{ padding: "5px 6px", background: "rgba(239,68,68,0.05)", borderRadius: 5, border: "1px solid rgba(239,68,68,0.14)", marginBottom: 8 }}>
           {kvRow("allowPrivilegeEscalation", "false")}
@@ -579,7 +580,7 @@ function PsaAdmissionDiagram() {
           </div>
         </div>
       </div>
-      <div style={{ marginTop: 6, width: "100%", maxWidth: 280, background: "rgba(248,81,73,0.06)", border: "1px solid rgba(248,81,73,0.12)", borderRadius: 5, padding: "4px 10px", fontFamily: MONO, fontSize: 9, color: "#f85149", lineHeight: 1.5 }}>Error: allowPrivilegeEscalation must be false</div>
+      <div style={{ marginTop: 6, width: "100%", maxWidth: 330, background: "rgba(248,81,73,0.06)", border: "1px solid rgba(248,81,73,0.12)", borderRadius: 5, padding: "4px 10px", fontFamily: MONO, fontSize: 9, color: "#f85149", lineHeight: 1.5 }}>Error: allowPrivilegeEscalation must be false</div>
     </div>
   );
 }
@@ -588,7 +589,7 @@ function PsaAdmissionDiagram() {
 function ConfigMapMountDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 330 })}>
         <div style={row({ gap: 8 })}>
           <div style={box(C.indigo, C.indigoBg, { padding: "6px 10px" })}>
             <div style={label(C.indigoText, { fontSize: 10 })}>ConfigMap</div>
@@ -624,7 +625,7 @@ function ConfigMapMountDiagram() {
 function DynamicProvisioningDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 330 })}>
         <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%" })}>PVC (request: 10Gi)</div>
         <div style={col({ gap: 1 })}>
           <span style={{ fontSize: 8, color: C.amberText, fontFamily: MONO }}>triggers</span>
@@ -653,7 +654,7 @@ function DynamicProvisioningDiagram() {
 function SealedSecretsDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 330 })}>
         <div style={row({ gap: 6, flexWrap: "nowrap" })}>
           <div style={smallBox(C.amber, C.amberBg, C.amberText)}>Secret</div>
           <div style={col({ gap: 1 })}>
@@ -689,7 +690,7 @@ function SealedSecretsDiagram() {
 function ESODiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap" })}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 330, flexWrap: "nowrap" })}>
         <div style={col({ gap: 3 })}>
           <div style={box(C.amber, C.amberBg, { padding: "6px 10px" })}>
             <div style={label(C.amberText, { fontSize: 10 })}>AWS SM</div>
@@ -726,7 +727,7 @@ function ESODiagram() {
 function HelmChartDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 330 })}>
         <div style={box(C.indigo, C.indigoBg, { width: "100%", padding: "8px 10px" })}>
           <div style={label(C.indigoText, { marginBottom: 6, fontSize: 10 })}>Helm Chart</div>
           <div style={row({ gap: 6 })}>
@@ -754,7 +755,7 @@ function HelmChartDiagram() {
 function CronJobDiagram() {
   return (
     <div style={wrap}>
-      <div style={box(C.purple, C.purpleBg, { width: "100%", maxWidth: 280 })}>
+      <div style={box(C.purple, C.purpleBg, { width: "100%", maxWidth: 330 })}>
         <div style={label(C.purpleText, { marginBottom: 4 })}>CronJob</div>
         <div style={subLabel({ marginBottom: 6 })}>schedule: "0 */6 * * *"</div>
         <div style={col({ gap: 4, width: "100%" })}>

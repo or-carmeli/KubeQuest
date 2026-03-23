@@ -50,8 +50,8 @@ export default function IncidentReplay({ systemTimeline, decisionHistory, optima
 
   return (
     <div style={{
-      background: cardBg, border: cardBorder, borderRadius: 16,
-      padding: "18px 20px", marginBottom: 16, direction: dir,
+      background: cardBg, border: cardBorder, borderRadius: 12,
+      padding: "14px 16px", marginBottom: 12, direction: dir,
       transition: "border-color 0.3s, background 0.3s",
     }}>
       {/* ── Header ── */}

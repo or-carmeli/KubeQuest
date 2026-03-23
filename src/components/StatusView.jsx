@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Activity } from "lucide-react";
 import { fetchSystemStatus, fetchUptimeHistory, fetchIncidentHistory, fetchMaintenanceWindows } from "../api/monitoring";
 
 export default function StatusView({ supabase, lang, isStatusDomain, setScreen, APP_VERSION }) {
@@ -281,12 +282,14 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
 
       <div className="page-pad" dir="ltr" style={{maxWidth:1200,margin:"0 auto",padding:isStatusDomain?"28px 16px 48px":"20px 16px 48px",animation:"fadeIn 0.3s ease",direction:"ltr"}}>
 
-        {/* Back (hidden on standalone status subdomain) */}
+        {/* Back + Title (hidden on standalone status subdomain) */}
         {!isStatusDomain && (
-          <div style={{display:"flex",justifyContent:lang==="en"?"flex-start":"flex-end",marginBottom:24}}>
-            <button onClick={()=>setScreen("home")} style={{background:"var(--glass-3)",border:"1px solid var(--glass-6)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+            <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-3)",border:"1px solid var(--glass-6)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>
               {lang==="en"?"\u2190":"\u2192"}
             </button>
+            <Activity size={22} strokeWidth={1.5} style={{color:"var(--text-bright)"}} />
+            <span style={{fontSize:26,fontWeight:700,color:"var(--text-bright)",letterSpacing:-0.3}}>{lang==="en"?"System Status":"\u05E1\u05D8\u05D8\u05D5\u05E1 \u05DE\u05E2\u05E8\u05DB\u05EA"}</span>
           </div>
         )}
 

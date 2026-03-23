@@ -20,6 +20,7 @@ import {
   fetchInfraSnapshots, extractInfraSeries,
   STATUS_COLORS, TIME_WINDOWS,
 } from "../utils/backendMetrics";
+import InfoTip from "./shared/InfoTip";
 
 // ─── Guard ───────────────────────────────────────────────────────────────────
 
@@ -100,26 +101,27 @@ function EmptyState({ title, message }) {
 
 // ─── Metric tile with sparkline + delta ──────────────────────────────────────
 
-function MiniSparkline({ values, color, width = 40, height = 14 }) {
+function MiniSparkline({ values, color, width = 48, height = 16 }) {
   if (!values || values.length < 2) return null;
   const min = Math.min(...values), max = Math.max(...values), range = max - min || 1;
   const pts = values.map((v, i) => `${(i / (values.length - 1)) * width},${height - 1 - ((v - min) / range) * (height - 2)}`).join(" ");
-  return <svg width={width} height={height} style={{ display: "block", flexShrink: 0 }}><polyline points={pts} fill="none" stroke={color || "var(--glass-15)"} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  return <svg width={width} height={height} style={{ display: "block", flexShrink: 0 }}><polyline points={pts} fill="none" stroke={color || "var(--glass-15)"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-function MetricTile({ icon: Icon, label, value, unit, sub, subColor, statusColor, sparkValues, sparkColor }) {
+function MetricTile({ icon: Icon, label, value, unit, sub, subColor, statusColor, sparkValues, sparkColor, desc, info }) {
   const delta = useMemo(() => computeDelta(sparkValues), [sparkValues]);
   const DeltaIcon = delta?.dir === "up" ? TrendingUp : delta?.dir === "down" ? TrendingDown : Minus;
   return (
-    <div style={{ flex: 1, minWidth: 100, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 8, padding: "8px 10px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
-        <Icon size={11} strokeWidth={1.5} style={{ color: "var(--text-dim)", opacity: 0.6, flexShrink: 0 }} />
-        <span style={{ fontSize: 9, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.4 }}>{label}</span>
+    <div style={{ flex: 1, minWidth: 100, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "10px 12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 5 }}>
+        <Icon size={12} strokeWidth={1.5} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: 0.4 }}>{label}</span>
+        {info && <InfoTip text={info} />}
       </div>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 4 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, fontFamily: MONO, color: statusColor || "var(--text-bright)", lineHeight: 1 }}>{value}</span>
-          {unit && <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{unit}</span>}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, fontFamily: MONO, color: statusColor || "var(--text-bright)", lineHeight: 1 }}>{value}</span>
+          {unit && <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{unit}</span>}
         </div>
         <MiniSparkline values={sparkValues} color={sparkColor || statusColor || "var(--glass-15)"} />
       </div>
@@ -132,6 +134,7 @@ function MetricTile({ icon: Icon, label, value, unit, sub, subColor, statusColor
         )}
         {sub && <span style={{ fontSize: 9, color: subColor || "var(--text-dim)" }}>{sub}</span>}
       </div>
+      {desc && <div style={{ fontSize: 8, color: "var(--text-dim)", marginTop: 2, lineHeight: 1.3 }}>{desc}</div>}
     </div>
   );
 }
@@ -186,13 +189,9 @@ function PrimaryChart({ requestSeries, errorSeries, fill }) {
 
   const hp = hoverIdx !== null && hoverIdx < points.length ? points[hoverIdx] : null;
   const hasError = hp && hp.errorRate != null && hp.errorRate > 0;
-  const TT_W = hasError ? 150 : 120, TT_H = hasError ? 52 : 36;
-  const ttX = hp ? Math.max(padX, Math.min(hp.x - TT_W / 2, W - TT_W - 2)) : 0;
-  const ttY = hp ? (hp.y > TT_H + 10 ? hp.y - TT_H - 6 : hp.y + 10) : 0;
-
-  // Delta from previous point
-  const prevVal = hp && hoverIdx > 0 ? points[hoverIdx - 1].value : null;
-  const delta = hp && prevVal != null ? hp.value - prevVal : null;
+  const TT_W = hasError ? 150 : 120, TT_H = hasError ? 50 : 34;
+  const ttX = hp ? (hp.x < W / 2 ? Math.min(hp.x + 12, W - TT_W - 4) : Math.max(padX, hp.x - TT_W - 12)) : 0;
+  const ttY = padY + 4;
 
   // Grid lines
   const gridLines = [0.25, 0.5, 0.75].map(pct => H - padY - pct * (H - padY * 2));
@@ -202,8 +201,11 @@ function PrimaryChart({ requestSeries, errorSeries, fill }) {
       <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={fill ? "xMidYMid meet" : "none"} style={{ display: "block", cursor: "crosshair", ...(fill ? { flex: 1, minHeight: 0 } : {}) }} onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIdx(null)}>
         <defs><linearGradient id="ig-primary" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={BLUE} stopOpacity="0.18" /><stop offset="100%" stopColor={BLUE} stopOpacity="0.01" /></linearGradient></defs>
 
+        {/* Transparent hit area */}
+        <rect x={padX} y={padY} width={cW} height={H - padY * 2} fill="transparent" />
+
         {/* Grid lines */}
-        {gridLines.map((y, i) => <line key={i} x1={padX} y1={y} x2={W - padX} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />)}
+        {gridLines.map((y, i) => <line key={i} x1={padX} y1={y} x2={W - padX} y2={y} stroke="rgba(255,255,255,0.035)" strokeWidth={1} />)}
 
         <path d={fillD} fill="url(#ig-primary)" />
         <path d={pathD} fill="none" stroke={BLUE} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
@@ -218,15 +220,15 @@ function PrimaryChart({ requestSeries, errorSeries, fill }) {
 
         {/* Hover */}
         {hp && <g style={{ pointerEvents: "none" }}>
-          <line x1={hp.x} y1={padY} x2={hp.x} y2={H - padY} stroke="rgba(255,255,255,0.6)" strokeWidth={1} />
+          <line x1={hp.x} y1={padY} x2={hp.x} y2={H - padY} stroke="rgba(255,255,255,0.4)" strokeWidth={1} />
           <circle cx={hp.x} cy={hp.y} r={4} fill={BLUE} stroke="#fff" strokeWidth={1.5} />
-          <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={5} fill="#1a1a1a" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-          <text x={ttX + 10} y={ttY + 13} fill="#a1a1a1" fontSize={9} fontFamily={MONO}>requests</text>
-          <text x={ttX + TT_W - 10} y={ttY + 13} textAnchor="end" fill="#ededed" fontSize={10} fontWeight={700} fontFamily={MONO}>{Math.round(hp.value)}</text>
-          <text x={ttX + 10} y={ttY + 27} fill="#64748b" fontSize={8} fontFamily={MONO}>{fmt(hp.ts)}{delta != null ? ` (${delta >= 0 ? "+" : ""}${Math.round(delta)})` : ""}</text>
+          <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={5} fill="#0f172a" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+          <text x={ttX + 10} y={ttY + 12} fill="var(--text-secondary)" fontSize={8} fontFamily={MONO}>requests</text>
+          <text x={ttX + TT_W - 10} y={ttY + 12} textAnchor="end" fill="var(--text-bright)" fontSize={9} fontWeight={700} fontFamily={MONO}>{Math.round(hp.value)}</text>
+          <text x={ttX + 10} y={ttY + 25} fill="var(--text-dim)" fontSize={7} fontFamily={MONO}>{fmt(hp.ts)}</text>
           {hasError && <>
-            <text x={ttX + 10} y={ttY + 42} fill={RED} fontSize={9} fontFamily={MONO}>error rate</text>
-            <text x={ttX + TT_W - 10} y={ttY + 42} textAnchor="end" fill={RED} fontSize={10} fontWeight={700} fontFamily={MONO}>{hp.errorRate.toFixed(1)}%</text>
+            <text x={ttX + 10} y={ttY + 38} fill={RED} fontSize={8} fontFamily={MONO}>error rate</text>
+            <text x={ttX + TT_W - 10} y={ttY + 38} textAnchor="end" fill={RED} fontSize={9} fontWeight={700} fontFamily={MONO}>{hp.errorRate.toFixed(1)}%</text>
           </>}
         </g>}
       </svg>
@@ -242,7 +244,7 @@ function PrimaryChart({ requestSeries, errorSeries, fill }) {
 
 // ─── Secondary chart (DB latency, connections, utilization) ──────────────────
 
-function InfraLineChart({ series, color, unit, label, thresholds, compact, fill }) {
+function InfraLineChart({ series, color, unit, label, thresholds, compact, fill, yMin: yMinProp }) {
   const [hoverIdx, setHoverIdx] = useState(null);
   const svgRef = useRef(null);
   const handleMouseMove = useCallback((e) => {
@@ -261,8 +263,8 @@ function InfraLineChart({ series, color, unit, label, thresholds, compact, fill 
   }
 
   const values = series.map(s => s.value);
-  const min = Math.min(...values) * 0.9;
-  const max = Math.max(...values) * 1.15 || 1;
+  const min = yMinProp != null ? yMinProp : Math.min(...values) * 0.85;
+  const max = yMinProp != null ? Math.max(...values, 1) * 1.3 : Math.max(...values) * 1.15 || 1;
   const range = max - min || 1;
   const W = 600, H = compact ? 55 : 70, padX = 6, padY = 4;
   const cW = W - padX * 2;
@@ -290,15 +292,18 @@ function InfraLineChart({ series, color, unit, label, thresholds, compact, fill 
 
   return (
     <div style={{ background: "var(--glass-2)", borderRadius: 8, padding: compact ? "8px 10px" : "10px 12px", ...(fill ? { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } : {}) }}>
-      <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={fill ? "xMidYMid meet" : "none"} style={{ display: "block", cursor: "crosshair", ...(fill ? { flex: 1, minHeight: 0 } : {}) }} onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIdx(null)}>
+      <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block", cursor: "crosshair" }} onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIdx(null)}>
         <defs><linearGradient id={`ig-${color.replace("#", "")}`} x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity={fillOpacity} /><stop offset="100%" stopColor={color} stopOpacity="0.01" /></linearGradient></defs>
+
+        {/* Transparent hit area */}
+        <rect x={padX} y={padY} width={W - padX * 2} height={H - padY * 2} fill="transparent" />
 
         {gridLines.map((y, i) => <line key={i} x1={padX} y1={y} x2={W - padX} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />)}
 
-        {thresholds?.map((th, i) => { const y = H - padY - ((th.value - min) / range) * (H - padY * 2); if (y < 0 || y > H) return null; return <g key={i}><line x1={padX} y1={y} x2={W - padX} y2={y} stroke={th.color} strokeWidth={1} strokeDasharray="4,4" opacity={0.3} /><text x={W - padX - 4} y={y - 2} textAnchor="end" fontSize={7} fill={th.color} opacity={0.6} fontFamily={MONO}>{th.label}</text></g>; })}
+        {thresholds?.map((th, i) => { const y = H - padY - ((th.value - min) / range) * (H - padY * 2); if (y < 0 || y > H) return null; return <g key={i}><line x1={padX} y1={y} x2={W - padX} y2={y} stroke={th.color} strokeWidth={1} strokeDasharray="4,4" opacity={0.45} /><text x={W - padX - 4} y={y - 3} textAnchor="end" fontSize={8} fill={th.color} opacity={0.8} fontWeight={600} fontFamily={MONO}>{th.label}</text></g>; })}
         <path d={fillD} fill={`url(#ig-${color.replace("#", "")})`} />
-        <path d={pathD} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={3} fill={color} stroke="var(--glass-2)" strokeWidth={1.5} />
+        <path d={pathD} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={3.5} fill={color} stroke="var(--glass-2)" strokeWidth={2} />
         {hp && <g style={{ pointerEvents: "none" }}>
           <line x1={hp.x} y1={padY} x2={hp.x} y2={H - padY} stroke="rgba(255,255,255,0.6)" strokeWidth={1} />
           <circle cx={hp.x} cy={hp.y} r={3.5} fill={hpThresholdWarn ? hpThresholdWarn.color : color} stroke="#fff" strokeWidth={1.5} />
@@ -320,10 +325,13 @@ function InfraLineChart({ series, color, unit, label, thresholds, compact, fill 
 
 // ─── Chart panel ─────────────────────────────────────────────────────────────
 
-function ChartPanel({ title, children, fill }) {
+function ChartPanel({ title, children, fill, info }) {
   return (
     <div style={fill ? { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } : undefined}>
-      <div style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4, flexShrink: 0 }}>{title}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4, flexShrink: 0 }}>
+        {title}
+        {info && <InfoTip text={info} />}
+      </div>
       {children}
     </div>
   );
@@ -403,13 +411,13 @@ function BackendMonitoringInner({ onBack, dir, supabase }) {
         <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "6px 8px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", order: dir === "rtl" ? 99 : 0 }}>
           <ArrowLeft size={15} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
-        <Server size={16} strokeWidth={1.5} style={{ color: "#a78bfa", opacity: 0.7 }} />
-        <span className="bm-header-title" style={{ fontSize: 15, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>Infrastructure Insights</span>
+        <Server size={22} strokeWidth={1.5} style={{ color: "var(--text-bright)" }} />
+        <span className="bm-header-title" style={{ fontSize: 26, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>Infrastructure Insights</span>
         <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "1px 6px", borderRadius: 4, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>DEV</span>
 
         {/* System health badge */}
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: health.color, marginLeft: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: health.color, boxShadow: `0 0 5px ${health.color}66` }} />
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: health.color, marginLeft: 6, background: `${health.color}10`, padding: "2px 8px", borderRadius: 6, border: `1px solid ${health.color}25` }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: health.color, boxShadow: `0 0 6px ${health.color}88` }} />
           {health.label}
         </span>
 
@@ -417,6 +425,11 @@ function BackendMonitoringInner({ onBack, dir, supabase }) {
           {agoSec != null && <span className="bm-header-extras" style={{ fontSize: 10, color: "var(--text-dim)", fontWeight: 500 }}>updated {agoSec}s ago</span>}
           <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "4px 7px", borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center" }} title="Refresh"><RefreshCw size={11} /></button>
         </div>
+      </div>
+
+      {/* Subtitle */}
+      <div style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 6 }}>
+        Database performance, connection pools, and infrastructure resource utilization
       </div>
 
       {/* Time range */}
@@ -433,46 +446,47 @@ function BackendMonitoringInner({ onBack, dir, supabase }) {
       ) : !hasData ? (
         <EmptyState title="No infrastructure data available" message="Metrics will appear once the collect-metrics edge function runs." />
       ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, minHeight: 0 }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
 
-          {/* Row 1: 6 metric tiles */}
-          <div className="bm-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, flexShrink: 0 }}>
-            <MetricTile icon={Database} label="DB Connections" value={connActive != null ? String(connActive) : "--"} sub={connPct != null ? `${connPct}% of ${connMax}` : null} statusColor={connPct != null ? (connPct > 80 ? RED : connPct > 50 ? AMBER : GREEN) : undefined} sparkValues={infraSeries.connections.slice(-12).map(d => d.value)} sparkColor={PURPLE} />
-            <MetricTile icon={Activity} label="API Req / 5m" value={apiReq5m != null ? String(apiReq5m) : "--"} sub={il?.active_sessions_5m != null ? `${il.active_sessions_5m} sessions` : null} sparkValues={infraSeries.apiRequests.slice(-12).map(d => d.value)} sparkColor={BLUE} />
-            <MetricTile icon={AlertTriangle} label="Service Errors" value={apiErr5m != null ? String(apiErr5m) : "--"} sub={healthOk != null ? `${healthOk}/${healthTotal} healthy` : null} statusColor={apiErr5m > 0 ? RED : apiErr5m != null ? GREEN : undefined} sparkValues={infraSeries.apiErrors.slice(-12).map(d => d.value)} sparkColor={RED} />
-            <MetricTile icon={Clock} label="DB Latency" value={dbLat != null ? String(dbLat) : "--"} unit={dbLat != null ? "ms" : ""} statusColor={dbLat != null ? (dbLat > 5000 ? RED : dbLat > 2000 ? AMBER : GREEN) : undefined} sparkValues={dbLatency.slice(-12).map(d => d.value)} sparkColor={CYAN} />
-            <MetricTile icon={Zap} label="Slow Queries" value={il?.slow_query_count != null ? String(il.slow_query_count) : "--"} statusColor={il?.slow_query_count != null ? (il.slow_query_count > 5 ? RED : il.slow_query_count > 0 ? AMBER : GREEN) : undefined} sub={il?.top_slow_query_ms ? `top: ${Math.round(il.top_slow_query_ms)}ms` : null} />
-            <MetricTile icon={HardDrive} label="DB Size" value={fmtBytes(il?.db_size_bytes)} />
+          {/* ── Top: 4 Key Infrastructure KPIs ── */}
+          <div className="bm-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, flexShrink: 0 }}>
+            <MetricTile icon={AlertTriangle} label="API Errors" value={apiErr5m != null ? String(apiErr5m) : "--"} sub={healthOk != null ? `${healthOk}/${healthTotal} healthy` : null} statusColor={apiErr5m > 0 ? RED : apiErr5m != null ? GREEN : undefined} sparkValues={infraSeries.apiErrors.slice(-12).map(d => d.value)} sparkColor={RED} desc="Failed API calls" info="API calls that returned errors in the last 5 minutes" />
+            <MetricTile icon={Clock} label="DB Latency" value={dbLat != null ? String(dbLat) : "--"} unit={dbLat != null ? "ms" : ""} statusColor={dbLat != null ? (dbLat > 5000 ? RED : dbLat > 2000 ? AMBER : GREEN) : undefined} sparkValues={dbLatency.slice(-12).map(d => d.value)} sparkColor={CYAN} desc="Query response time" info="Round-trip time for database health check queries" />
+            <MetricTile icon={Database} label="Connections" value={connActive != null ? String(connActive) : "--"} sub={connPct != null ? `${connPct}% of ${connMax}` : null} statusColor={connPct != null ? (connPct > 80 ? RED : connPct > 50 ? AMBER : GREEN) : undefined} sparkValues={infraSeries.connections.slice(-12).map(d => d.value)} sparkColor={PURPLE} desc="Active DB connections" info="Current active connections to the database pool" />
+            <MetricTile icon={Zap} label="Slow Queries" value={il?.slow_query_count != null ? String(il.slow_query_count) : "--"} statusColor={il?.slow_query_count != null ? (il.slow_query_count > 5 ? RED : il.slow_query_count > 0 ? AMBER : GREEN) : undefined} sub={il?.top_slow_query_ms ? `top: ${Math.round(il.top_slow_query_ms)}ms` : null} sparkValues={infraSeries.slowQueries.slice(-12).map(d => d.value)} sparkColor={AMBER} desc="Queries exceeding threshold" info="Queries that exceeded the slow query latency threshold" />
           </div>
 
-          {/* Row 2: API Request Rate (full width, production data from infra_metrics) */}
+          {/* ── Main Chart: Database Query Latency ── */}
           <div style={{ flex: 3, display: "flex", flexDirection: "column", minHeight: 0 }}>
-            <ChartPanel title="API Request Rate (Production)" fill>
+            <ChartPanel title="Database Query Latency" fill info="Database query response time over the selected window. Warning at 500ms, critical at 1000ms">
+              <InfraLineChart series={dbLatency} color={CYAN} unit="ms" label="DB latency" fill
+                thresholds={[{ value: 500, color: AMBER, label: "Warn" }, { value: 1000, color: RED, label: "Crit" }]} />
+            </ChartPanel>
+          </div>
+
+          {/* ── Secondary: API Request Rate ── */}
+          <div style={{ flex: 2, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <ChartPanel title="API Request Rate" fill info="Incoming API requests per time bucket. Red dots indicate error spikes">
               <PrimaryChart requestSeries={infraSeries.apiRequests} errorSeries={infraSeries.apiErrors} fill />
             </ChartPanel>
           </div>
 
-          {/* Row 3: DB charts (side by side) */}
-          <div className="bm-charts-pair" style={{ flex: 2, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, minHeight: 0 }}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <ChartPanel title="DB Query Latency Trend" fill>
-                <InfraLineChart series={dbLatency} color={CYAN} unit="ms" label="DB latency" fill
-                  thresholds={[{ value: 500, color: AMBER, label: "Warn" }, { value: 1000, color: RED, label: "Crit" }]} />
-              </ChartPanel>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <ChartPanel title="DB Active Connections" fill>
-                <InfraLineChart series={infraSeries.connections} color={PURPLE} unit="" label="connections" fill />
-              </ChartPanel>
-            </div>
-          </div>
-
-          {/* Row 4: Connection Utilization (compact, reduced visual weight) */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-            <ChartPanel title="Connection Utilization" fill>
-              <InfraLineChart series={infraSeries.utilization} color={PURPLE} unit="%" label="utilization" compact fill
+          {/* ── Database Health: connections + utilization side by side ── */}
+          <div className="bm-charts-pair" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, flexShrink: 0 }}>
+            <ChartPanel title="Active Connections" info="Number of active database connections over time">
+              <InfraLineChart series={infraSeries.connections} color={PURPLE} unit="" label="connections" yMin={0} />
+            </ChartPanel>
+            <ChartPanel title="Connection Pool Utilization" info="Percentage of database connection pool currently in use">
+              <InfraLineChart series={infraSeries.utilization} color={PURPLE} unit="%" label="utilization" compact
                 thresholds={[{ value: 70, color: AMBER, label: "70%" }, { value: 90, color: RED, label: "90%" }]} />
             </ChartPanel>
+          </div>
+
+          {/* ── Footer: Secondary metrics ── */}
+          <div style={{ display: "flex", gap: 12, flexShrink: 0, fontSize: 11, color: "var(--text-muted)", padding: "4px 2px" }}>
+            <span>API Req/5m <span style={{ fontFamily: MONO, fontWeight: 600, color: "var(--text-primary)" }}>{apiReq5m != null ? apiReq5m : "--"}</span></span>
+            <span>DB Size <span style={{ fontFamily: MONO, fontWeight: 600, color: "var(--text-primary)" }}>{fmtBytes(il?.db_size_bytes)}</span></span>
+            {il?.active_sessions_5m != null && <span>Sessions <span style={{ fontFamily: MONO, fontWeight: 600, color: "var(--text-primary)" }}>{il.active_sessions_5m}</span></span>}
           </div>
         </div>
       )}
