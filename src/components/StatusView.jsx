@@ -289,7 +289,7 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
               {lang==="en"?"\u2190":"\u2192"}
             </button>
             <Activity size={22} strokeWidth={1.5} style={{color:"var(--text-bright)"}} />
-            <span style={{fontSize:26,fontWeight:700,color:"var(--text-bright)",letterSpacing:-0.3}}>{lang==="en"?"System Status":"\u05E1\u05D8\u05D8\u05D5\u05E1 \u05DE\u05E2\u05E8\u05DB\u05EA"}</span>
+            <span style={{fontSize:24,fontWeight:700,color:"var(--text-bright)",letterSpacing:-0.3}}>{lang==="en"?"System Status":"\u05E1\u05D8\u05D8\u05D5\u05E1 \u05DE\u05E2\u05E8\u05DB\u05EA"}</span>
           </div>
         )}
 

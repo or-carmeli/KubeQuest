@@ -142,7 +142,7 @@ export default function StatsView({
         <button onClick={onBack} style={backBtnStyle}>
           {dir === "rtl" ? "→" : "←"}
         </button>
-        <h2 style={{ fontSize: 28, fontWeight: 800, textAlign: dir === "rtl" ? "right" : "left", color: "var(--text-primary)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, textAlign: dir === "rtl" ? "right" : "left", color: "var(--text-primary)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
           <BarChart3 size={26} strokeWidth={1.5} style={{ flexShrink: 0, opacity: 0.7 }} />
           {t("statsTitle")}
         </h2>
@@ -189,7 +189,7 @@ export default function StatsView({
         {dir === "rtl" ? "→" : "←"}
       </button>
 
-      <h2 style={{ fontSize: 28, fontWeight: 800, textAlign: dir === "rtl" ? "right" : "left", color: "var(--text-primary)", marginBottom: 24, marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <h2 style={{ fontSize: 24, fontWeight: 800, textAlign: dir === "rtl" ? "right" : "left", color: "var(--text-primary)", marginBottom: 24, marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
         <BarChart3 size={26} strokeWidth={1.5} style={{ flexShrink: 0, opacity: 0.7 }} />
         {t("statsTitle")}
       </h2>
