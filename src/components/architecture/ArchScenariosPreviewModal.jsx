@@ -126,14 +126,15 @@ export default function ArchScenariosPreviewModal({
     }).catch(() => { setSending(false); onError(); });
   };
 
-  const isEn = lang === "en";
+  // Preview is always rendered in English / LTR
+  const isEn = true;
   const sel = selectedOption !== null ? PREVIEW_OPTIONS[selectedOption] : null;
 
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: "16px 20px", animation: "fadeIn 0.3s ease", direction: dir }}>
+    <div style={{ maxWidth: 780, margin: "0 auto", padding: "16px 20px", animation: "fadeIn 0.3s ease", direction: "ltr" }}>
       {/* Back button */}
       <button onClick={onBack} style={{ background: "var(--glass-4)", border: "1px solid var(--glass-9)", color: "var(--text-secondary)", width: 36, height: 36, borderRadius: 8, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-        <span aria-hidden="true">{dir === "rtl" ? "\u2192" : "\u2190"}</span>
+        <span aria-hidden="true">{"\u2190"}</span>
       </button>
 
       {/* Main card */}
@@ -179,7 +180,7 @@ export default function ArchScenariosPreviewModal({
             borderRadius: 14,
             padding: "12px 14px 10px",
             marginBottom: 10,
-            textAlign: dir === "rtl" ? "right" : "left",
+            textAlign: "left",
             boxShadow: "inset 0 1px 12px rgba(168,85,247,0.04)",
           }}>
             {/* Progress indicator */}
@@ -271,7 +272,7 @@ export default function ArchScenariosPreviewModal({
                       {isEn ? opt.en : opt.he}
                     </span>
                   </div>
-                  <div style={{ color: "var(--text-dim)", fontSize: 10, opacity: 0.45, marginTop: 1, paddingLeft: dir === "rtl" ? 0 : 22, paddingRight: dir === "rtl" ? 22 : 0 }}>
+                  <div style={{ color: "var(--text-dim)", fontSize: 10, opacity: 0.45, marginTop: 1, paddingLeft: 22 }}>
                     {isEn ? opt.hintEn : opt.hintHe}
                   </div>
                 </div>
