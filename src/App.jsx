@@ -38,6 +38,7 @@ import ProductIntelligence from "./components/ProductIntelligence";
 import { TimeRangeProvider } from "./hooks/useTimeRange";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
+import ArchScenariosPreviewModal from "./components/architecture/ArchScenariosPreviewModal";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle, Server } from "lucide-react";
 import TopicIcon from "./components/TopicIcon";
 import { Star, Flame as FlameIcon, Lock as LockIcon, Sun, Moon, Zap, Coffee, Triangle, Medal, Crown, Gem, Search as SearchIcon, FolderOpen, Bug, ScrollText, Terminal, Globe as GlobeIcon, Settings as SettingsIcon, TrendingUp, Trash2 as TrashIcon, Award } from "lucide-react";
@@ -1223,7 +1224,7 @@ export default function K8sQuestApp() {
       console.info("[KubeQuest:boot] Screen was", s, "- falling back to home (transient state lost on refresh)");
       return "home";
     }
-    if (s && ["home","incidentList","incident","privacy","terms",...(EXPERIMENTAL_ENABLED?["architecture","performanceInsights","systemObservability","backendMonitoring"]:[])].includes(s)) return s;
+    if (s && ["home","incidentList","incident","privacy","terms","architecture",...(EXPERIMENTAL_ENABLED?["performanceInsights","systemObservability","backendMonitoring"]:[])].includes(s)) return s;
     return "home";
   });
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -4678,11 +4679,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {/* ── 0. Architecture Scenarios (Advanced) ── */}
-          {EXPERIMENTAL_ENABLED&&<button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:screen==="architecture"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
+          <button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:screen==="architecture"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
             <Brain size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"Architecture Scenarios":"תרחישי ארכיטקטורה"}
             <span style={{background:"rgba(168,85,247,0.12)",color:"#C084FC",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:4,marginInlineStart:"auto",flexShrink:0,lineHeight:1.5,letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"ADV":"מתקדם"}</span>
-          </button>}
+          </button>
 
           {/* ── 1. Practice ── */}
           <div style={{padding:"12px 16px 5px"}}>
@@ -5188,7 +5189,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
             {dir==="rtl"?"→":"←"}
           </button>
-          <h2 style={{color:"var(--text-primary)",fontSize:28,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
+          <h2 style={{color:"var(--text-primary)",fontSize:24,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
           <div style={{position:"relative",marginBottom:20}}>
             <Search size={16} strokeWidth={2} style={{position:"absolute",top:"50%",transform:"translateY(-50%)",[dir==="rtl"?"right":"left"]:14,color:searchFocused?"var(--text-secondary)":"var(--text-dim)",transition:"color 0.2s",pointerEvents:"none",zIndex:1}} />
             <input type="search" autoFocus value={searchQuery}
@@ -5294,7 +5295,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
               {dir==="rtl"?"→":"←"}
             </button>
-            <h2 style={{color:"var(--text-primary)",fontSize:28,fontWeight:700,marginBottom:4,display:"flex",alignItems:"center",gap:8}}><XCircle size={26} strokeWidth={1.5} style={{flexShrink:0,opacity:0.7}} />{t("mistakesBtn")}</h2>
+            <h2 style={{color:"var(--text-primary)",fontSize:24,fontWeight:700,marginBottom:4,display:"flex",alignItems:"center",gap:8}}><XCircle size={26} strokeWidth={1.5} style={{flexShrink:0,opacity:0.7}} />{t("mistakesBtn")}</h2>
             <p style={{color:"var(--text-muted)",fontSize:13,marginBottom:20}}>{t("mistakesHint")}</p>
             {!anyTopicCompleted&&<div style={{background:"rgba(0,212,255,0.06)",border:"1px solid rgba(0,212,255,0.2)",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,color:"var(--text-secondary)",direction:dir}}>
               <span style={{display:"flex",alignItems:"flex-start",gap:8}}><Lightbulb size={16} color="var(--text-secondary)" style={{flexShrink:0,marginTop:1}} />{lang==="en"?"Mistakes are only tracked for individual topic quizzes (Easy / Medium / Hard). Mixed Quiz and Daily Challenge are not tracked here.":"טעויות נשמרות רק בחידוני נושא רגילים (קל / בינוני / קשה). חידון מיקס ואתגר יומי לא נשמרים כאן."}</span>
@@ -5390,7 +5391,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
             {/* Header */}
             <div style={{marginBottom:16}}>
-              <h2 style={{color:"var(--text-primary)",fontSize:28,fontWeight:800,margin:0,letterSpacing:-0.3,display:"flex",alignItems:"center",gap:8}}><BookOpen size={26} strokeWidth={1.5} style={{flexShrink:0,opacity:0.7}} />kubectl Cheat Sheet</h2>
+              <h2 style={{color:"var(--text-primary)",fontSize:24,fontWeight:800,margin:0,letterSpacing:-0.3,display:"flex",alignItems:"center",gap:8}}><BookOpen size={26} strokeWidth={1.5} style={{flexShrink:0,opacity:0.7}} />kubectl Cheat Sheet</h2>
               <p style={{color:"var(--text-muted)",fontSize:12,lineHeight:1.4,margin:"4px 0 0"}}>Copy-ready commands - click to expand</p>
               <div style={{display:"flex",gap:6,marginTop:8}}>
                 <span style={{fontSize:11,color:"var(--text-secondary)",background:"var(--glass-4)",border:"1px solid var(--glass-8)",borderRadius:4,padding:"2px 8px"}}>{CHEATSHEET.length} sections</span>
@@ -5440,7 +5441,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
             <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><Shield size={80} strokeWidth={1} color="var(--text-dim)" /></div>
-            <h1 style={{fontSize:28,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Privacy Policy":"מדיניות פרטיות"}</h1>
+            <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Privacy Policy":"מדיניות פרטיות"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עדכון אחרון: מרץ 2026"}</p>
           </div>
           {(lang==="en"?[
@@ -5489,7 +5490,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
             <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><FileText size={80} strokeWidth={1} color="var(--text-dim)" /></div>
-            <h1 style={{fontSize:28,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Terms of Service":"תנאי שימוש"}</h1>
+            <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Terms of Service":"תנאי שימוש"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עודכן לאחרונה: מרץ 2026"}</p>
           </div>
           {(lang==="en"?[
@@ -5581,8 +5582,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       )}
 
       {/* ARCHITECTURE SCENARIOS */}
-      {EXPERIMENTAL_ENABLED&&screen==="architecture"&&(
-        <ArchitectureView lang={lang} onBack={()=>setScreen("home")} />
+      {screen==="architecture"&&(
+        EXPERIMENTAL_ENABLED
+          ? <ArchitectureView lang={lang} onBack={()=>setScreen("home")} />
+          : <ArchScenariosPreviewModal lang={lang} dir={dir} supabase={supabase} user={user} isGuest={isGuest} onBack={()=>setScreen("home")} />
       )}
 
       {/* PERFORMANCE INSIGHTS */}
@@ -6172,7 +6175,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"50vh",textAlign:"center",padding:"0 20px"}}>
             <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"48px 36px",maxWidth:420,width:"100%",position:"relative"}}>
               <div style={{fontSize:56,marginBottom:16}}>🚧</div>
-              <h2 style={{margin:"0 0 8px",color:"var(--text-primary)",fontSize:28,fontWeight:700}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
+              <h2 style={{margin:"0 0 8px",color:"var(--text-primary)",fontSize:24,fontWeight:700}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
               <div style={{display:"inline-block",background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:12,fontWeight:700,padding:"4px 14px",borderRadius:20,letterSpacing:0.5,marginBottom:16}}>Coming Soon</div>
               <p style={{margin:"0 0 20px",color:"var(--text-secondary)",fontSize:14,lineHeight:1.7}}>{lang==="en"?"This feature is under development and will be available soon.":"הפיצ'ר נמצא בפיתוח ויהיה זמין בקרוב."}</p>
               <button
@@ -6293,7 +6296,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <div style={{marginBottom:20}}>
             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
               <Siren size={32} strokeWidth={1.5} style={{color:"#ffffff",opacity:0.9}} />
-              <h2 style={{margin:0,color:"#ffffff",fontSize:28,fontWeight:800}}>{t("incidentModeBtn")}</h2>
+              <h2 style={{margin:0,color:"#ffffff",fontSize:24,fontWeight:800}}>{t("incidentModeBtn")}</h2>
             </div>
             <p style={{margin:0,color:"var(--text-muted)",fontSize:13,lineHeight:1.6}}>{t("incidentHeaderSub")}</p>
             {/* Progress */}

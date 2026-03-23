@@ -192,7 +192,7 @@ export default function ArchitectureView({ lang, onBack }) {
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
               <Network size={32} strokeWidth={1.5} style={{ color: "#ffffff", opacity: 0.9, flexShrink: 0 }} />
-              <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "#ffffff" }}>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#ffffff" }}>
                 {en ? "Architecture Scenarios" : "תרחישי ארכיטקטורה"}
               </h2>
               {/* Architecture Level badge */}
