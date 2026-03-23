@@ -2964,7 +2964,7 @@ export default function K8sQuestApp() {
     // Prefetch answer check (without scoring) so the result is ready when user confirms.
     // Scoring happens separately at confirm time to preserve existing behavior.
     const q = currentQuestions[questionIndex];
-    if (supabase && q?.id && typeof q.answer !== "number") {
+    if (supabase && !isGuest && q?.id && typeof q.answer !== "number") {
       prefetchAbortRef.current?.abort();
       prefetchedAnswerRef.current = null;
       const controller = new AbortController();
@@ -2996,7 +2996,7 @@ export default function K8sQuestApp() {
     let result;
     if (typeof q.answer === "number") {
       result = { correct: selectedAnswer === q.answer, correctIndex: q.answer, explanation: q.explanation };
-    } else if (supabase && q.id) {
+    } else if (supabase && !isGuest && q.id) {
       const originalIndex = q._optionMap ? q._optionMap[selectedAnswer] : selectedAnswer;
       const isDaily = selectedTopic?.id === "daily";
       // Pass quizRunId for server-side scoring (null for retries or already-scored -> skip scoring)
@@ -3036,8 +3036,19 @@ export default function K8sQuestApp() {
         try {
           rpcResult = await callRpc();
         } catch (e1) {
-          try { rpcResult = await callRpc(); } catch (e2) {
-            console.error("[KubeQuest] answer RPC failed after retry:", e2.message, { topic: selectedTopic?.id, questionIndex });
+          // If session expired, try refreshing it once before retrying
+          if (e1.message?.includes("Not authenticated")) {
+            try {
+              const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+              if (refreshed) {
+                rpcResult = await callRpc();
+              }
+            } catch {}
+          }
+          if (!rpcResult) {
+            try { rpcResult = await callRpc(); } catch (e2) {
+              console.error("[KubeQuest] answer RPC failed after retry:", e2.message, { topic: selectedTopic?.id, questionIndex });
+            }
           }
         }
       }
