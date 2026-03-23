@@ -3,8 +3,9 @@
 // Reads from analytics_events table only. Completely isolated.
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, Calendar, ChevronDown } from "lucide-react";
+import { ArrowLeft, Users, Eye, BarChart3, Globe, Smartphone, Monitor, TrendingDown, TrendingUp, Calendar, ChevronDown } from "lucide-react";
 import { fetchAnalytics, fetchOnlineCount, TIME_RANGES } from "../api/analyticsQueries";
+import InfoTip from "./shared/InfoTip";
 
 const MONO = "'Fira Code','Courier New',monospace";
 
@@ -139,8 +140,8 @@ function AnalyticsDashboardInner({ onBack, supabase, dir }) {
         }}>
           <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
-        <BarChart3 size={18} strokeWidth={1.5} style={{ color: "#a78bfa", opacity: 0.7 }} />
-        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Analytics</span>
+        <TrendingUp size={22} strokeWidth={1.5} style={{ color: "var(--text-bright)" }} />
+        <span style={{ fontSize: 26, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>Analytics</span>
         <span style={{
           fontSize: 9, fontWeight: 600, padding: "1px 5px", borderRadius: 4,
           background: "rgba(139,92,246,0.15)", color: "#a78bfa",
@@ -169,6 +170,11 @@ function AnalyticsDashboardInner({ onBack, supabase, dir }) {
         <TimeRangeSelector range={range} onChange={setRange} />
       </div>
 
+      {/* Subtitle */}
+      <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: -6, marginBottom: 6 }}>
+        Visitor traffic, page views, and engagement metrics across all channels
+      </div>
+
       {/* Data source indicator */}
       {data && (data.hasSeededData || !data.hasLiveData) && (
         <div style={{
@@ -181,7 +187,7 @@ function AnalyticsDashboardInner({ onBack, supabase, dir }) {
             padding: "1px 6px", fontSize: 9, fontWeight: 600,
           }}>SEEDED DATA</span>}
           {!data.hasLiveData && <span>No live analytics collected yet. Showing seeded Vercel snapshot.</span>}
-          {data.hasSeededData && data.hasLiveData && <span>Includes seeded Vercel snapshot data.</span>}
+          {data.hasSeededData && data.hasLiveData && <span>Includes seeded Vercel snapshot data</span>}
         </div>
       )}
 
@@ -193,11 +199,12 @@ function AnalyticsDashboardInner({ onBack, supabase, dir }) {
         <>
           {/* Summary cards */}
           <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-            <SummaryCard icon={<Users size={14} />} label="Visitors" value={fmt(data.totalVisitors)} />
-            <SummaryCard icon={<Eye size={14} />} label="Page Views" value={fmt(data.totalPageViews)} />
+            <SummaryCard icon={<Users size={14} />} label="Visitors" value={fmt(data.totalVisitors)} desc="Unique sessions in this time range" info="Count of distinct user sessions in the selected period" />
+            <SummaryCard icon={<Eye size={14} />} label="Page Views" value={fmt(data.totalPageViews)} desc="Total pages viewed across all sessions" info="Total number of page navigation events across all visitors" />
             <SummaryCard icon={<TrendingDown size={14} />} label="Bounce Rate" value={`${data.bounceRate}%`}
               sub={data.bounceRate > 70 ? "high" : data.bounceRate > 40 ? "moderate" : "low"}
-              subColor={data.bounceRate > 70 ? "#f87171" : data.bounceRate > 40 ? "#fbbf24" : "#34d399"} />
+              subColor={data.bounceRate > 70 ? "#f87171" : data.bounceRate > 40 ? "#fbbf24" : "#34d399"}
+              desc="Percentage of sessions with only one page view" info="Visitors who left after viewing only one page. Lower is better" />
           </div>
 
           {/* Chart */}
@@ -207,6 +214,7 @@ function AnalyticsDashboardInner({ onBack, supabase, dir }) {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <ChartToggle mode={chartMode} onChange={setChartMode} />
+              <InfoTip text="Tracks unique visitor sessions and page views over time within the selected range." />
             </div>
             <AreaChart
               data={chartMode === "visitors" ? data.visitorsOverTime : data.pageViewsOverTime}
@@ -246,7 +254,7 @@ function AnalyticsDashboardInner({ onBack, supabase, dir }) {
 
 // ── Summary Card ────────────────────────────────────────────────────────────
 
-function SummaryCard({ icon, label, value, sub, subColor }) {
+function SummaryCard({ icon, label, value, sub, subColor, desc, info }) {
   return (
     <div className="av-summary" style={{
       flex: 1, minWidth: 120,
@@ -260,6 +268,7 @@ function SummaryCard({ icon, label, value, sub, subColor }) {
           fontSize: 10, fontWeight: 600, color: "var(--text-secondary)",
           textTransform: "uppercase", letterSpacing: 0.5,
         }}>{label}</span>
+        {info && <InfoTip text={info} />}
       </div>
       <div style={{ fontSize: 26, fontWeight: 700, fontFamily: MONO, color: "var(--text-primary)", lineHeight: 1 }}>
         {value}
@@ -267,6 +276,7 @@ function SummaryCard({ icon, label, value, sub, subColor }) {
       {sub && (
         <span style={{ fontSize: 10, color: subColor || "var(--text-dim)", fontWeight: 500 }}>{sub}</span>
       )}
+      {desc && <span style={{ fontSize: 9, color: "var(--text-dim)", lineHeight: 1.3 }}>{desc}</span>}
     </div>
   );
 }
@@ -397,23 +407,22 @@ function AreaChart({ data, color, rangeKey, metricLabel = "Visitors" }) {
     return d.toLocaleDateString([], { month: "short", year: "2-digit" });
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = useCallback((e) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * W;
-    const idx = Math.round((x - PAD_LEFT) / step);
+    const mouseX = ((e.clientX - rect.left) / rect.width) * W;
+    const clampedX = Math.max(PAD_LEFT, Math.min(mouseX, PAD_LEFT + chartW));
+    const idx = Math.round((clampedX - PAD_LEFT) / step);
     if (idx >= 0 && idx < points.length) setHoverIdx(idx);
-    else setHoverIdx(null);
-  };
+  }, [W, PAD_LEFT, chartW, step, points.length]);
 
-  const hp = hoverIdx !== null ? points[hoverIdx] : null;
+  const hp = hoverIdx !== null && hoverIdx < points.length ? points[hoverIdx] : null;
 
-  // Tooltip positioning — keep inside chart bounds
-  const TT_W = 120;
-  const TT_H = 44;
-  const ttX = hp ? Math.max(PAD_LEFT, Math.min(hp.x - TT_W / 2, W - TT_W - 4)) : 0;
-  const ttAbove = hp && hp.y > TT_H + 16;
-  const ttY = hp ? (ttAbove ? hp.y - TT_H - 12 : hp.y + 16) : 0;
+  // Tooltip — position to the side of the crosshair
+  const TT_W = 130;
+  const TT_H = 46;
+  const ttX = hp ? (hp.x < W / 2 ? Math.min(hp.x + 14, W - TT_W - 4) : Math.max(PAD_LEFT, hp.x - TT_W - 14)) : 0;
+  const ttY = PAD_TOP + 6;
 
   return (
     <svg
@@ -423,13 +432,16 @@ function AreaChart({ data, color, rangeKey, metricLabel = "Visitors" }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setHoverIdx(null)}
     >
+      {/* Transparent hit area */}
+      <rect x={PAD_LEFT} y={PAD_TOP} width={chartW} height={chartH} fill="transparent" />
+
       {/* Grid lines */}
       {yLabels.map((v, i) => {
         const y = PAD_TOP + (i / yTicks) * chartH;
         return (
           <g key={i}>
-            <line x1={PAD_LEFT} y1={y} x2={W} y2={y} stroke="var(--glass-4)" strokeWidth={0.5} />
-            <text x={PAD_LEFT - 6} y={y + 3} textAnchor="end" fill="var(--text-dim)" fontSize={9} fontFamily={MONO}>{v}</text>
+            <line x1={PAD_LEFT} y1={y} x2={W} y2={y} stroke="rgba(255,255,255,0.035)" strokeWidth={1} />
+            <text x={PAD_LEFT - 6} y={y + 3} textAnchor="end" fill="var(--text-muted)" fontSize={9} fontFamily={MONO}>{v}</text>
           </g>
         );
       })}
@@ -437,35 +449,33 @@ function AreaChart({ data, color, rangeKey, metricLabel = "Visitors" }) {
       {/* Area + line */}
       <defs>
         <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.25} />
-          <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+          <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.01} />
         </linearGradient>
       </defs>
       <path d={areaPath} fill={`url(#grad-${color.replace("#", "")})`} />
-      <path d={linePath} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" />
+      <path d={linePath} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
 
-      {/* Hover: solid white vertical line + dot + Vercel-style tooltip card */}
+      {/* Hover overlay */}
       {hp && (
-        <g className="av-chart-hover-line">
-          {/* Solid white vertical line — full height */}
+        <g style={{ pointerEvents: "none" }}>
+          {/* Crosshair line */}
           <line x1={hp.x} y1={PAD_TOP} x2={hp.x} y2={PAD_TOP + chartH}
-            stroke="rgba(255,255,255,0.8)" strokeWidth={1} />
-          {/* Dot on data point — filled with outline */}
-          <circle cx={hp.x} cy={hp.y} r={5} fill={color} stroke="#fff" strokeWidth={2} />
+            stroke="rgba(255,255,255,0.4)" strokeWidth={1} />
+          {/* Point dot */}
+          <circle cx={hp.x} cy={hp.y} r={4.5} fill={color} stroke="#fff" strokeWidth={2} />
 
-          {/* Tooltip card */}
-          <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={8}
-            fill="#1a1a1a" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-          {/* Row 1: color dot + label + value */}
-          <circle cx={ttX + 12} cy={ttY + 16} r={4} fill={color} />
-          <text x={ttX + 22} y={ttY + 20} fill="#a1a1a1" fontSize={11} fontFamily={MONO}>
+          {/* Tooltip */}
+          <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={6}
+            fill="#0f172a" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+          <circle cx={ttX + 12} cy={ttY + 15} r={3.5} fill={color} />
+          <text x={ttX + 22} y={ttY + 19} fill="var(--text-secondary)" fontSize={10} fontFamily={MONO}>
             {metricLabel}
           </text>
-          <text x={ttX + TT_W - 10} y={ttY + 20} textAnchor="end" fill="#ededed" fontSize={12} fontWeight={700} fontFamily={MONO}>
+          <text x={ttX + TT_W - 10} y={ttY + 19} textAnchor="end" fill="var(--text-bright)" fontSize={11} fontWeight={700} fontFamily={MONO}>
             {hp.count}
           </text>
-          {/* Row 2: date */}
-          <text x={ttX + TT_W / 2} y={ttY + 37} textAnchor="middle" fill="#64748b" fontSize={10} fontFamily={MONO}>
+          <text x={ttX + TT_W / 2} y={ttY + 36} textAnchor="middle" fill="var(--text-dim)" fontSize={9} fontFamily={MONO}>
             {formatDateTooltip(hp.ts)}
           </text>
         </g>
@@ -477,14 +487,14 @@ function AreaChart({ data, color, rangeKey, metricLabel = "Visitors" }) {
         const x = PAD_LEFT + i * step;
         return (
           <text key={i} x={x} y={H - 6} textAnchor="middle" fill="var(--text-dim)" fontSize={9} fontFamily={MONO}>
-            {formatDateShort(d.ts)}
+            {hoverIdx === null || Math.abs(i - hoverIdx) > 2 ? formatDateShort(d.ts) : ""}
           </text>
         );
       })}
 
-      {/* Hover x-axis label replacement */}
+      {/* Hover x-axis label */}
       {hp && (
-        <text x={hp.x} y={H - 6} textAnchor="middle" fill="#ededed" fontSize={9} fontWeight={600} fontFamily={MONO}>
+        <text x={hp.x} y={H - 6} textAnchor="middle" fill="var(--text-primary)" fontSize={9} fontWeight={600} fontFamily={MONO}>
           {formatDateTooltip(hp.ts)}
         </text>
       )}

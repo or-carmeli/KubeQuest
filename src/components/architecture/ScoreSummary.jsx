@@ -50,12 +50,12 @@ export default function ScoreSummary({
   };
 
   return (
-    <div style={{ animation: "fadeIn 0.4s ease", direction: dir, maxWidth: 540, margin: "0 auto" }}>
+    <div style={{ animation: "fadeIn 0.4s ease", direction: dir, maxWidth: 660, margin: "0 auto" }}>
 
       {/* ── HERO: Score centered ── */}
       <div style={{
-        textAlign: "center", padding: "24px 20px 20px",
-        background: "var(--glass-3)", border: "1px solid var(--glass-8)", borderRadius: 16,
+        textAlign: "center", padding: "20px 16px 16px",
+        background: "var(--glass-3)", border: "1px solid var(--glass-8)", borderRadius: 12,
         marginBottom: 10,
       }}>
         {/* Rank icon */}

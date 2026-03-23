@@ -34,6 +34,8 @@ import DevPerfOverlay from "./components/DevPerfOverlay";
 import SystemObservability from "./components/SystemObservability";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import BackendMonitoring from "./components/BackendMonitoring";
+import ProductIntelligence from "./components/ProductIntelligence";
+import { TimeRangeProvider } from "./hooks/useTimeRange";
 // eslint-disable-next-line no-unused-vars
 import ArchitectureView from "./components/architecture/ArchitectureView";
 import { Brain, Siren, Shuffle, CalendarDays, Target, BarChart3, XCircle, Trophy, Bookmark, BookOpen, Search, Download, Activity, Info, Shield, FileText, Share2, Mail, Accessibility, ClipboardList, Cookie, Handshake, Trash2, GraduationCap, User, PenLine, Scale, RefreshCw, AlertTriangle, Server } from "lucide-react";
@@ -4617,7 +4619,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* Leaderboard ranks by total_score (accumulated permanently, never decremented).
            The RPC get_leaderboard orders by total_score DESC.
            best_score is NOT used for ranking - it's a per-topic canonical metric. */}
-      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:dir,overflowX:"hidden"}}><div style={{position:"relative",marginBottom:20,flexShrink:0}}><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{position:"absolute",top:0,left:0,background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",padding:0,lineHeight:1}}>✕</button><div style={{textAlign:"right",direction:"rtl"}}><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",gap:8,direction:"rtl"}}><Trophy size={20} strokeWidth={1.5} style={{color:"#FFD700"}}/>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#FFD700","#C0C0C0","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:i<3?medalColors[i]:"var(--text-dim)"}}>{i<3?<Trophy size={16} strokeWidth={2} style={{color:medalColors[i]}}/>:`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:8,background:`${rTier.color}18`,border:`1px solid ${rTier.color}33`}}><span style={{lineHeight:1,display:"inline-flex",color:rTier.color}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span></span><span style={{fontSize:10,color:"var(--text-dim)"}}>Top {rTopPct}%</span></div><div style={{fontSize:9,color:"var(--text-dim)",opacity:0.5}}>{t("leaderboardTierExplain")}</div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2191"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
+      {showLeaderboard&&<div onClick={()=>setShowLeaderboard(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center"}}><div role="dialog" aria-modal="true" aria-label={t("leaderboardTitle")} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key!=="Tab")return;const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const[first,last]=[f[0],f[f.length-1]];if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus();}}else{if(document.activeElement===last){e.preventDefault();first.focus();}}}} style={{background:"var(--bg-card)",border:"1px solid var(--glass-10)",borderRadius:16,padding:"20px 14px",width:"min(360px,calc(100vw - 32px))",maxHeight:"90vh",display:"flex",flexDirection:"column",boxSizing:"border-box",animation:"fadeIn 0.3s ease",direction:dir,overflowX:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexShrink:0,direction:dir}}><div><h3 style={{margin:0,color:"var(--text-primary)",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",gap:8}}><Trophy size={20} strokeWidth={1.5} style={{color:"#FFD700"}}/>{t("leaderboardTitle")}</h3><div style={{fontSize:11,color:"var(--text-dim)",fontWeight:700,letterSpacing:1.5,marginTop:3}}>{lang==="en"?"TOP 10":"טופ 10"}</div><div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7,fontWeight:400,marginTop:4}}>{t("leaderboardRankedBy")}</div></div><button autoFocus onClick={()=>setShowLeaderboard(false)} aria-label={lang==="en"?"Close leaderboard":"סגור לוח תוצאות"} style={{background:"none",border:"none",color:"var(--text-muted)",fontSize:18,cursor:"pointer",padding:0,lineHeight:1,flexShrink:0}}>✕</button></div>{leaderboard.length===0?<div style={{color:"var(--text-dim)",textAlign:"center",padding:"20px 0"}}>{t("noData")}</div>:<div style={{flex:1,minHeight:0,overflowY:"auto"}}>{leaderboard.length>0&&<div style={{display:"flex",alignItems:"center",padding:"0 10px 4px",marginBottom:4}}><span style={{width:36,flexShrink:0}}></span><div style={{flex:1,fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{lang==="en"?"Player":"שחקן"}</div><div style={{width:60,textAlign:"right",fontSize:10,color:"var(--text-dim)",opacity:0.5,fontWeight:600}}>{t("leaderboardScoreCol")}</div></div>}{leaderboard.map((entry,i)=>{const medalColors=["#FFD700","#C0C0C0","#CD7F32"];const isMedal=i<3;const nameRaw=entry.username?(entry.username.includes("@")?entry.username.split("@")[0]:entry.username):t("anonymous");const name=nameRaw.replace(/[\u{1F451}\u{1F934}\u{1F478}\u{1F525}\u{2B50}\u{1F31F}\u{1F4AB}\u{1F3C6}\u{1F947}\u{1F948}\u{1F949}\u{1F396}\u{1F3C5}]/gu,"").trim();return<div key={i} style={{display:"flex",alignItems:"center",padding:"12px 12px",background:isMedal?`${medalColors[i]}0A`:"var(--glass-3)",borderRadius:12,marginBottom:10,border:`1px solid ${isMedal?medalColors[i]+"22":"var(--glass-6)"}`}}><span style={{width:36,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:i<3?medalColors[i]:"var(--text-dim)"}}>{i<3?<Trophy size={16} strokeWidth={2} style={{color:medalColors[i]}}/>:`${i+1}`}</span><div style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMedal?"var(--text-primary)":"var(--text-secondary)",fontWeight:isMedal?700:600,fontSize:14}}>{name}</div><div style={{width:60,textAlign:"right",color:"#00D4FF",fontWeight:800,fontSize:16,flexShrink:0,fontVariantNumeric:"tabular-nums"}}>{entry.total_score}</div></div>})}</div>}{userRank&&(()=>{const rTier=getRankTier(userRank.percentile||0);const rTopPct=Math.max(1,Math.round(100-(userRank.percentile||0)));return<div style={{marginTop:4,paddingTop:12,borderTop:"1px solid var(--glass-7)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}><div dir={dir} style={{direction:dir,unicodeBidi:"isolate",display:"flex",alignItems:"center",justifyContent:"center",gap:8,color:"var(--text-secondary)",fontSize:13,fontWeight:600}}><span style={{unicodeBidi:"isolate"}}>{lang==="en"?"Your Rank":"\u05D4\u05D3\u05D9\u05E8\u05D5\u05D2 \u05E9\u05DC\u05DA"}{lang==="en"?" ":": "}<span style={{color:"var(--text-primary)",fontWeight:800}}>#{userRank.rank}</span></span><span style={{color:"var(--glass-20)"}}>|</span><span style={{unicodeBidi:"isolate"}}>{t("leaderboardScoreCol")}{lang==="en"?" ":": "}<span style={{color:"#00D4FF",fontWeight:800}}>{userRank.score}</span></span></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:8,background:`${rTier.color}18`,border:`1px solid ${rTier.color}33`}}><span style={{lineHeight:1,display:"inline-flex",color:rTier.color}}>{rTier.icon}</span><span style={{fontSize:11,fontWeight:700,color:rTier.color}}>{t(`rankTier_${rTier.key}`)}</span></span><span style={{fontSize:10,color:"var(--text-dim)"}}>Top {rTopPct}%</span></div><div style={{fontSize:9,color:"var(--text-dim)",opacity:0.5}}>{t("leaderboardTierExplain")}</div>{userRank.xp_to_next>0&&<div style={{fontSize:10,color:"var(--text-dim)",opacity:0.7}}>{"\u2191"} {userRank.xp_to_next} XP {t("xpToNextRank")}</div>}</div>})()}</div></div>}
 
       {showBookmarks&&(
         <div onClick={()=>setShowBookmarks(false)} style={{position:"fixed",inset:0,background:"var(--overlay-light)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
@@ -4678,7 +4680,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <button className="menu-item" onClick={()=>{setScreen("incidentList");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:!EXPERIMENTAL_ENABLED?"var(--text-dim)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             <Siren size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"War Room":"חדר מצב"}
-            {!EXPERIMENTAL_ENABLED&&<span style={{background:"rgba(120,140,255,0.1)",color:"#9fb3ff",fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:999,marginInlineStart:"auto",flexShrink:0,lineHeight:1.4}}>Soon</span>}
+            <span style={{background:"rgba(120,140,255,0.1)",color:"#9fb3ff",fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:999,marginInlineStart:"auto",flexShrink:0,lineHeight:1.4}}>Soon</span>
           </button>
           <button className="menu-item" onClick={()=>{tryStartQuiz(startMixedQuiz,"mixed");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",color:"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir}}>
             <Shuffle size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
@@ -4758,6 +4760,13 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <button className="menu-item" onClick={()=>{setScreen("systemObservability");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="systemObservability"?"var(--glass-3)":"none",border:"none",color:screen==="systemObservability"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="systemObservability"?600:400,direction:dir}}>
             <Activity size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"System Observability":"מעקב מערכת"}
+            <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
+          </button>
+          )}
+          {import.meta.env.DEV && (
+          <button className="menu-item" onClick={()=>{setScreen("productIntelligence");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:screen==="productIntelligence"?"var(--glass-3)":"none",border:"none",color:screen==="productIntelligence"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,fontWeight:screen==="productIntelligence"?600:400,direction:dir}}>
+            <Lightbulb size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
+            {lang==="en"?"Product Intelligence":"תובנות מוצר"}
             <span style={{fontSize:9,fontWeight:600,padding:"1px 5px",borderRadius:4,background:"rgba(139,92,246,0.15)",color:"#a78bfa",border:"1px solid rgba(139,92,246,0.25)",marginLeft:"auto",letterSpacing:0.5}}>DEV</span>
           </button>
           )}
@@ -5102,9 +5111,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
               <div className="action-text" style={{textAlign:"start",minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                   <span style={{color:!EXPERIMENTAL_ENABLED?"var(--text-dim)":"#EF4444",fontWeight:800,fontSize:14}}>{t("incidentModeBtn")}</span>
-                  {!EXPERIMENTAL_ENABLED
-                    ?<span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>Coming Soon</span>
-                    :<span style={{background:"rgba(239,68,68,0.12)",color:"#EF4444",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>NEW</span>}
+                  <span style={{background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:20,letterSpacing:0.5,flexShrink:0}}>Coming Soon</span>
                 </div>
                 <div style={{color:"var(--text-muted)",fontSize:11,marginTop:2}}>{t("incidentModeDesc")}</div>
               </div>
@@ -5170,7 +5177,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
             {dir==="rtl"?"→":"←"}
           </button>
-          <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
+          <h2 style={{color:"var(--text-primary)",fontSize:28,fontWeight:700,marginBottom:16}}>{t("searchBtn")}</h2>
           <div style={{position:"relative",marginBottom:20}}>
             <Search size={16} strokeWidth={2} style={{position:"absolute",top:"50%",transform:"translateY(-50%)",[dir==="rtl"?"right":"left"]:14,color:searchFocused?"var(--text-secondary)":"var(--text-dim)",transition:"color 0.2s",pointerEvents:"none",zIndex:1}} />
             <input type="search" autoFocus value={searchQuery}
@@ -5276,7 +5283,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,marginBottom:20,display:"flex",alignItems:"center",gap:6}}>
               {dir==="rtl"?"→":"←"}
             </button>
-            <h2 style={{color:"var(--text-primary)",fontSize:18,fontWeight:700,marginBottom:4}}>{t("mistakesBtn")}</h2>
+            <h2 style={{color:"var(--text-primary)",fontSize:28,fontWeight:700,marginBottom:4,display:"flex",alignItems:"center",gap:8}}><XCircle size={26} strokeWidth={1.5} style={{flexShrink:0,opacity:0.7}} />{t("mistakesBtn")}</h2>
             <p style={{color:"var(--text-muted)",fontSize:13,marginBottom:20}}>{t("mistakesHint")}</p>
             {!anyTopicCompleted&&<div style={{background:"rgba(0,212,255,0.06)",border:"1px solid rgba(0,212,255,0.2)",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,color:"var(--text-secondary)",direction:dir}}>
               <span style={{display:"flex",alignItems:"flex-start",gap:8}}><Lightbulb size={16} color="var(--text-secondary)" style={{flexShrink:0,marginTop:1}} />{lang==="en"?"Mistakes are only tracked for individual topic quizzes (Easy / Medium / Hard). Mixed Quiz and Daily Challenge are not tracked here.":"טעויות נשמרות רק בחידוני נושא רגילים (קל / בינוני / קשה). חידון מיקס ואתגר יומי לא נשמרים כאן."}</span>
@@ -5372,7 +5379,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
             {/* Header */}
             <div style={{marginBottom:16}}>
-              <h2 style={{color:"var(--text-primary)",fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.3}}>kubectl Cheat Sheet</h2>
+              <h2 style={{color:"var(--text-primary)",fontSize:28,fontWeight:800,margin:0,letterSpacing:-0.3,display:"flex",alignItems:"center",gap:8}}><BookOpen size={26} strokeWidth={1.5} style={{flexShrink:0,opacity:0.7}} />kubectl Cheat Sheet</h2>
               <p style={{color:"var(--text-muted)",fontSize:12,lineHeight:1.4,margin:"4px 0 0"}}>Copy-ready commands - click to expand</p>
               <div style={{display:"flex",gap:6,marginTop:8}}>
                 <span style={{fontSize:11,color:"var(--text-secondary)",background:"var(--glass-4)",border:"1px solid var(--glass-8)",borderRadius:4,padding:"2px 8px"}}>{CHEATSHEET.length} sections</span>
@@ -5422,7 +5429,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
             <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><Shield size={80} strokeWidth={1} color="var(--text-dim)" /></div>
-            <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Privacy Policy":"מדיניות פרטיות"}</h1>
+            <h1 style={{fontSize:28,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Privacy Policy":"מדיניות פרטיות"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עדכון אחרון: מרץ 2026"}</p>
           </div>
           {(lang==="en"?[
@@ -5471,7 +5478,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </button>
           <div style={{textAlign:"center",marginBottom:28}}>
             <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><FileText size={80} strokeWidth={1} color="var(--text-dim)" /></div>
-            <h1 style={{fontSize:24,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Terms of Service":"תנאי שימוש"}</h1>
+            <h1 style={{fontSize:28,fontWeight:900,color:"var(--text-bright)",margin:"0 0 4px"}}>{lang==="en"?"Terms of Service":"תנאי שימוש"}</h1>
             <p style={{color:"var(--text-muted)",fontSize:12,margin:0}}>{lang==="en"?"Last updated: March 2026":"עודכן לאחרונה: מרץ 2026"}</p>
           </div>
           {(lang==="en"?[
@@ -5578,6 +5585,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
 
       {/* BACKEND MONITORING */}
       {EXPERIMENTAL_ENABLED&&screen==="backendMonitoring"&&<BackendMonitoring onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} />}
+
+      {/* PRODUCT INTELLIGENCE */}
+      {EXPERIMENTAL_ENABLED&&screen==="productIntelligence"&&<TimeRangeProvider><ProductIntelligence onBack={()=>setScreen("home")} lang={lang} dir={dir} supabase={supabase} /></TimeRangeProvider>}
 
       {/* STATS */}
       {screen==="stats"&&(
@@ -6144,14 +6154,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {/* ── INCIDENT LIST ─────────────────────────────────────────────────── */}
       {screen==="incidentList"&&(
         !EXPERIMENTAL_ENABLED ? (
-        <div style={{maxWidth:780,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
-          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
-            <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
+        <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6,marginBottom:20}}>
+            {dir==="rtl"?"→":"←"}
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"50vh",textAlign:"center",padding:"0 20px"}}>
-            <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:20,padding:"48px 36px",maxWidth:420,width:"100%",position:"relative"}}>
+            <div style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:12,padding:"48px 36px",maxWidth:420,width:"100%",position:"relative"}}>
               <div style={{fontSize:56,marginBottom:16}}>🚧</div>
-              <h2 style={{margin:"0 0 8px",color:"var(--text-bright)",fontSize:26,fontWeight:900}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
+              <h2 style={{margin:"0 0 8px",color:"var(--text-primary)",fontSize:28,fontWeight:700}}>{lang==="en"?"War Room":"חדר מצב"}</h2>
               <div style={{display:"inline-block",background:"rgba(234,179,8,0.12)",color:"#EAB308",fontSize:12,fontWeight:700,padding:"4px 14px",borderRadius:20,letterSpacing:0.5,marginBottom:16}}>Coming Soon</div>
               <p style={{margin:"0 0 20px",color:"var(--text-secondary)",fontSize:14,lineHeight:1.7}}>{lang==="en"?"This feature is under development and will be available soon.":"הפיצ'ר נמצא בפיתוח ויהיה זמין בקרוב."}</p>
               <button
@@ -6263,15 +6273,18 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           )}
         </div>
         ) : (
-        <div style={{maxWidth:780,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
+        <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
           {/* Back button */}
-          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
-            <span aria-hidden="true">{dir==="rtl"?"→":"←"}</span>
+          <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6,marginBottom:20}}>
+            {dir==="rtl"?"→":"←"}
           </button>
           {/* Header */}
-          <div style={{marginBottom:32}}>
-            <h2 style={{margin:0,color:"var(--text-bright)",fontSize:32,fontWeight:900,lineHeight:1.3,display:"flex",alignItems:"center",gap:10,direction:dir}}><Siren size={30} strokeWidth={1.5} style={{opacity:0.7}} />{t("incidentModeBtn")}</h2>
-            <p style={{margin:"6px 0 0",color:"var(--text-secondary)",fontSize:14,lineHeight:1.6}}>{t("incidentHeaderSub")}</p>
+          <div style={{marginBottom:20}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+              <Siren size={32} strokeWidth={1.5} style={{color:"#ffffff",opacity:0.9}} />
+              <h2 style={{margin:0,color:"#ffffff",fontSize:28,fontWeight:800}}>{t("incidentModeBtn")}</h2>
+            </div>
+            <p style={{margin:0,color:"var(--text-muted)",fontSize:13,lineHeight:1.6}}>{t("incidentHeaderSub")}</p>
             {/* Progress */}
             <div style={{marginTop:16}}>
               <div style={{height:4,background:"var(--glass-6)",borderRadius:4,overflow:"hidden",marginBottom:8,direction:"ltr"}}>
@@ -6288,7 +6301,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             const riTotalSteps = ri.steps.length;
             const riPct = Math.round((riStepNum / riTotalSteps) * 100);
             return(
-            <div style={{marginBottom:28,background:"var(--bg-card)",border:"1px solid rgba(239,68,68,0.2)",borderInlineStart:"3px solid #EF4444",borderRadius:14,padding:"18px 20px",direction:dir,boxShadow:"0 2px 12px rgba(0,0,0,0.2)"}}>
+            <div style={{marginBottom:20,background:"var(--bg-card)",border:"1px solid rgba(239,68,68,0.2)",borderInlineStart:"3px solid #EF4444",borderRadius:12,padding:"14px 16px",direction:dir,boxShadow:"0 2px 12px rgba(0,0,0,0.2)"}}>
               {/* Header row */}
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                 <span style={{width:8,height:8,borderRadius:"50%",background:"#EF4444",boxShadow:"0 0 8px rgba(239,68,68,0.5)",animation:"pulse 2s infinite"}}/>
@@ -6395,11 +6408,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const progress = totalSteps > 0 ? ((incidentStepIndex + (incidentSubmitted ? 1 : 0)) / totalSteps) * 100 : 0;
         const incidentNum = INCIDENTS.findIndex(inc => inc.id === selectedIncident.id) + 1;
         return(
-          <div style={{maxWidth:660,margin:"0 auto",padding:"24px 20px",animation:"fadeIn 0.3s ease",direction:dir}}>
+          <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"20px 16px",animation:"fadeIn 0.3s ease",direction:dir}}>
             {/* Top bar */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8,direction:dir}}>
-              <button onClick={()=>{saveIncidentProgress(selectedIncident,incidentStepIndex,incidentScore,incidentMistakes,incidentElapsed,incidentHistory);setScreen("incidentList");}}
-                style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-muted)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <button className="back-btn" onClick={()=>{saveIncidentProgress(selectedIncident,incidentStepIndex,incidentScore,incidentMistakes,incidentElapsed,incidentHistory);setScreen("incidentList");}}
+                style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>
                 {dir==="rtl"?"→":"←"}
               </button>
               <div style={{display:"flex",gap:12,alignItems:"center",fontSize:12,fontWeight:600,fontFamily:"'SF Mono','Fira Code',monospace",direction:"ltr",unicodeBidi:"isolate"}}>
@@ -6618,7 +6631,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
         const requiredCorrect = Math.ceil(totalSteps * 0.7);
         const allowedMistakes = totalSteps - requiredCorrect;
         return(
-          <div style={{maxWidth:480,margin:"20px auto",padding:"0 18px",textAlign:"center",animation:"fadeIn 0.5s ease",direction:dir}}>
+          <div className="page-pad" style={{maxWidth:660,margin:"20px auto",padding:"20px 16px",textAlign:"center",animation:"fadeIn 0.5s ease",direction:dir}}>
             {/* Result header */}
             <div style={{animation:"resolvedPulse 2s ease-in-out",marginBottom:8}}>
               <div style={{width:56,height:56,borderRadius:"50%",background:`rgba(${accentRgb},0.12)`,border:`2px solid rgba(${accentRgb},0.3)`,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:12,boxShadow:`0 0 24px rgba(${accentRgb},0.15)`,color:accentColor}}>

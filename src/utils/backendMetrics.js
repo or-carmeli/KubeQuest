@@ -95,6 +95,7 @@ export function extractInfraSeries(snapshots) {
   const utilization = [];
   const apiRequests = [];
   const apiErrors = [];
+  const slowQueries = [];
 
   for (const s of snapshots) {
     const ts = new Date(s.collected_at).getTime();
@@ -106,9 +107,11 @@ export function extractInfraSeries(snapshots) {
       apiRequests.push({ ts, value: s.api_requests_5m });
     if (s.api_errors_5m != null)
       apiErrors.push({ ts, value: s.api_errors_5m });
+    if (s.slow_query_count != null)
+      slowQueries.push({ ts, value: s.slow_query_count });
   }
 
-  return { connections, utilization, apiRequests, apiErrors };
+  return { connections, utilization, apiRequests, apiErrors, slowQueries };
 }
 
 // ─── Fetch incidents (production) ────────────────────────────────────────────

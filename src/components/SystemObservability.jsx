@@ -12,8 +12,9 @@
  * Triple-gated (DEV only).
  */
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, Activity } from "lucide-react";
 import { fetchSystemStatus, fetchHealthCheckHistory, fetchRollupHourly, fetchRollupDaily } from "../api/monitoring";
+import InfoTip from "./shared/InfoTip";
 
 // ─── Guard ──────────────────────────────────────────────────────────────────────
 export default function SystemObservability({ onBack, lang = "en", dir = "ltr", supabase = null }) {
@@ -175,14 +176,29 @@ function SystemObservabilityInner({ onBack, dir = "ltr", supabase }) {
         <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", order: dir === "rtl" ? 99 : 0 }}>
           <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>System Observability</span>
+        <Activity size={22} strokeWidth={1.5} style={{ color: "var(--text-bright)" }} />
+        <span style={{ fontSize: 26, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>System Observability</span>
         <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>DEV</span>
+        {(() => {
+          let hLabel = "Unknown", hColor = "#64748b";
+          if (summary) {
+            if (summary.errorRate > 5 || (summary.p95 != null && summary.p95 > 5000)) { hLabel = "Critical"; hColor = RED; }
+            else if (summary.errorRate > 1 || (summary.p95 != null && summary.p95 > 2000)) { hLabel = "Warning"; hColor = AMBER; }
+            else { hLabel = "Healthy"; hColor = GREEN; }
+          }
+          return <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: hColor, marginLeft: 4, background: `${hColor}10`, padding: "2px 8px", borderRadius: 6, border: `1px solid ${hColor}25` }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: hColor, boxShadow: `0 0 6px ${hColor}88` }} />{hLabel}</span>;
+        })()}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
           {agoSec != null && <span style={{ fontSize: 11, color: "var(--text-dim)", fontWeight: 500 }}>updated {agoSec}s ago</span>}
           <button onClick={refresh} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-muted)", padding: "5px 8px", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center" }} title="Refresh">
             <RefreshCw size={12} />
           </button>
         </div>
+      </div>
+
+      {/* Subtitle */}
+      <div style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 6 }}>
+        Real-time system telemetry, error tracking, and resource utilization
       </div>
 
       {/* Time window + summary cards */}
@@ -232,21 +248,22 @@ function SystemObservabilityInner({ onBack, dir = "ltr", supabase }) {
 function SummaryCards({ summary }) {
   const s = summary;
   const cards = [
-    { label: "P95 Latency", value: s.p95 != null ? `${s.p95}ms` : "--", color: s.p95 > 5000 ? RED : s.p95 > 2000 ? AMBER : GREEN, sparkline: s.latSparkline, sparkColor: BLUE },
-    { label: "Error Rate", value: `${s.errorRate}%`, color: s.errorRate > 5 ? RED : s.errorRate > 1 ? AMBER : GREEN, sparkline: s.errSparkline, sparkColor: RED },
-    { label: "Total Checks", value: String(s.totalChecks), color: "var(--text-bright)" },
-    { label: "Last Check", value: s.lastCheckAgo != null ? (s.lastCheckAgo < 60 ? `${s.lastCheckAgo}s ago` : `${Math.floor(s.lastCheckAgo / 60)}m ago`) : "--", color: s.lastCheckAgo != null && s.lastCheckAgo > 600 ? RED : GREEN },
+    { label: "Service P95", value: s.p95 != null ? `${s.p95}ms` : "--", color: s.p95 > 5000 ? RED : s.p95 > 2000 ? AMBER : GREEN, sparkline: s.latSparkline, sparkColor: BLUE, desc: "Backend health check latency", info: "95th percentile response time for backend health check endpoints. For browser-side latency, see Performance Insights" },
+    { label: "Error Rate", value: `${s.errorRate}%`, color: s.errorRate > 5 ? RED : s.errorRate > 1 ? AMBER : GREEN, sparkline: s.errSparkline, sparkColor: RED, desc: "Percentage of failed health checks.", info: "Percentage of health check requests that returned an error" },
+    { label: "Total Checks", value: String(s.totalChecks), color: "var(--text-bright)", desc: "Health checks performed in this window.", info: "Total number of health check requests executed in the selected time range" },
+    { label: "Last Check", value: s.lastCheckAgo != null ? (s.lastCheckAgo < 60 ? `${s.lastCheckAgo}s ago` : `${Math.floor(s.lastCheckAgo / 60)}m ago`) : "--", color: s.lastCheckAgo != null && s.lastCheckAgo > 600 ? RED : GREEN, desc: "Time since last health check ran.", info: "Elapsed time since the most recent health check was recorded" },
   ];
 
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {cards.map(c => (
         <div key={c.label} style={{ flex: 1, minWidth: 100, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "8px 10px", position: "relative", overflow: "hidden" }}>
-          <div style={{ fontSize: 9, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: 4 }}>{c.label}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: 4 }}>{c.label}{c.info && <InfoTip text={c.info} />}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: c.color, fontFamily: MONO, lineHeight: 1 }}>{c.value}</span>
             {c.sparkline && <Sparkline data={c.sparkline} color={c.sparkColor} width={60} height={18} />}
           </div>
+          {c.desc && <div style={{ fontSize: 8, color: "var(--text-dim)", marginTop: 3, lineHeight: 1.3 }}>{c.desc}</div>}
         </div>
       ))}
     </div>
@@ -304,7 +321,7 @@ function SystemLoadChart({ buckets, serviceNames }) {
   }, [buckets, serviceNames]);
 
   return (
-    <Panel title="System Load" subtitle="Checks per service">
+    <Panel title="System Load" subtitle="Checks per service" info="Total health check volume per service, stacked by endpoint">
       <HoverChart W={W} H={H} pad={pad} buckets={buckets} formatValue={b => `${b.totalChecks} checks`}
         yTicks={[{ pct: 0.5, label: Math.round(maxTotal / 2) }, { pct: 1, label: maxTotal }]}>
         {stacks.map(s => (
@@ -343,7 +360,7 @@ function ApiReliabilityChart({ buckets }) {
   const latestError = points[points.length - 1]?.error?.toFixed(1);
 
   return (
-    <Panel title="API Reliability" subtitle="Success vs error rate">
+    <Panel title="API Reliability" subtitle="Success vs error rate" info="Success and failure rate trends for API health checks over time">
       <HoverChart W={W} H={H} pad={pad} buckets={buckets} formatValue={(_b, i) => `OK ${points[i]?.success?.toFixed(1)}% / Err ${points[i]?.error?.toFixed(1)}%`}
         yTicks={[{ pct: 0.5, label: "50%" }, { pct: 1, label: "100%" }]}>
         <line x1={pad} x2={W - pad} y1={pad} y2={pad} stroke={GREEN} strokeWidth={0.3} strokeDasharray="2,2" opacity={0.3} />
@@ -396,7 +413,7 @@ function LatencyTrendsChart({ buckets, serviceNames, history }) {
   const thresholdY = H - pad - (2000 / paths.maxLat) * (H - pad * 2);
 
   return (
-    <Panel title="Latency Trends" subtitle="Response time per service">
+    <Panel title="Latency Trends" subtitle="Response time per service" info="P50 and P95 response times for each monitored service endpoint">
       <HoverChart W={W} H={H} pad={pad} buckets={buckets} formatValue={b => {
         const lats = Object.entries(b.perService).filter(([, s]) => s.avgLatency != null).map(([n, s]) => `${n.replace("Authentication","Auth").replace("Content API","API")}: ${s.avgLatency}ms`);
         return lats.length > 0 ? lats[0] : `${b.totalChecks} checks`;
@@ -489,7 +506,7 @@ function HealthCheckTimeline({ buckets, serviceNames }) {
   const cellW = Math.max(8, Math.floor(240 / buckets.length));
 
   return (
-    <Panel title="Health Check Timeline" subtitle="Status per check window">
+    <Panel title="Health Check Timeline" subtitle="Status per check window" info="Pass/fail heatmap showing health check results for each service over time">
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {serviceNames.map(name => (
           <div key={name} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -527,52 +544,58 @@ function HoverChart({ W, H, pad, buckets, formatValue, yTicks, yUnit, children }
   const [hoverIdx, setHoverIdx] = useState(null);
   const svgRef = useRef(null);
   const step = (W - pad * 2) / Math.max(buckets.length - 1, 1);
+  const cW = W - pad * 2, cH = H - pad * 2;
 
   const handleMouseMove = useCallback((e) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * W;
-    const idx = Math.round((x - pad) / step);
+    const mouseX = ((e.clientX - rect.left) / rect.width) * W;
+    const clampedX = Math.max(pad, Math.min(mouseX, pad + cW));
+    const idx = Math.round((clampedX - pad) / step);
     if (idx >= 0 && idx < buckets.length) setHoverIdx(idx);
-    else setHoverIdx(null);
-  }, [W, pad, step, buckets.length]);
+  }, [W, pad, cW, step, buckets.length]);
 
   const hx = hoverIdx !== null ? pad + hoverIdx * step : 0;
   const hb = hoverIdx !== null ? buckets[hoverIdx] : null;
   const label = hb ? formatValue(hb, hoverIdx) : "";
   const TT_W = Math.min(Math.max(label.length * 6.5 + 16, 80), 200);
-  const ttX = hb ? Math.max(pad, Math.min(hx - TT_W / 2, W - TT_W - pad)) : 0;
+  const ttX = hb ? (hx < W / 2 ? Math.min(hx + 10, W - TT_W - pad) : Math.max(pad, hx - TT_W - 10)) : 0;
 
   return (
     <svg ref={svgRef} width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", cursor: "crosshair" }}
       onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIdx(null)}>
+      {/* Transparent hit area */}
+      <rect x={pad} y={pad} width={cW} height={cH} fill="transparent" />
       {/* Subtle grid lines */}
       {[0.25, 0.5, 0.75].map(pct => {
-        const y = H - pad - pct * (H - pad * 2);
-        return <line key={pct} x1={pad} y1={y} x2={W - pad} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />;
+        const y = H - pad - pct * cH;
+        return <line key={pct} x1={pad} y1={y} x2={W - pad} y2={y} stroke="rgba(255,255,255,0.035)" strokeWidth={1} />;
       })}
       {/* Y-axis tick labels */}
       {yTicks && yTicks.map((tick, i) => {
-        const y = H - pad - (tick.pct) * (H - pad * 2);
+        const y = H - pad - (tick.pct) * cH;
         return <text key={i} x={pad + 2} y={y - 2} fontSize={7} fill="var(--text-dim)" fontFamily={MONO} opacity={0.7}>{tick.label}</text>;
       })}
       {children}
       {hb && <>
-        <line x1={hx} y1={pad} x2={hx} y2={H - pad} stroke="rgba(255,255,255,0.6)" strokeWidth={1} />
-        <rect x={ttX} y={4} width={TT_W} height={26} rx={5} fill="#1a1a1a" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-        <text x={ttX + TT_W / 2} y={12} textAnchor="middle" fill="#a1a1a1" fontSize={8} fontFamily={MONO}>{hb.time}</text>
-        <text x={ttX + TT_W / 2} y={24} textAnchor="middle" fill="#ededed" fontSize={9} fontWeight={600} fontFamily={MONO}>{label}</text>
+        <line x1={hx} y1={pad} x2={hx} y2={H - pad} stroke="rgba(255,255,255,0.4)" strokeWidth={1} />
+        <rect x={ttX} y={4} width={TT_W} height={26} rx={5} fill="#0f172a" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+        <text x={ttX + TT_W / 2} y={12} textAnchor="middle" fill="var(--text-secondary)" fontSize={8} fontFamily={MONO}>{hb.time}</text>
+        <text x={ttX + TT_W / 2} y={24} textAnchor="middle" fill="var(--text-bright)" fontSize={9} fontWeight={600} fontFamily={MONO}>{label}</text>
       </>}
     </svg>
   );
 }
 
 // ─── Shared primitives ──────────────────────────────────────────────────────────
-function Panel({ title, subtitle, children }) {
+function Panel({ title, subtitle, children, info }) {
   return (
     <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "8px 10px" }}>
       <div style={{ marginBottom: 4 }}>
-        <div style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600, letterSpacing: 0.3 }}>{title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-secondary)", fontWeight: 600, letterSpacing: 0.3 }}>
+          {title}
+          {info && <InfoTip text={info} />}
+        </div>
         {subtitle && <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 1 }}>{subtitle}</div>}
       </div>
       {children}

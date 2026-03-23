@@ -19,6 +19,7 @@ import { buildSnapshot, TIME_RANGES, computePercentiles } from "../utils/hybridT
 import { initRealTelemetry, getRealMetrics, recordRouteChange } from "../utils/realTelemetry";
 import { HISTORICAL_RANGES, startHistoryRecorder, getHistory, mergeSnapshots, aggregateHistory, computeRES, scoreLabel, computeVitalDistribution } from "../utils/telemetryHistory";
 import { startTelemetrySync, loadHistoryFromSupabase } from "../api/telemetrySync";
+import InfoTip from "./shared/InfoTip";
 
 
 // ─── Component-level guard ─────────────────────────────────────────────────────
@@ -176,7 +177,7 @@ function Sparkline({ values, width = 52, height = 20, color = "var(--glass-15)",
 }
 
 // ─── Metric Card ───────────────────────────────────────────────────────────────
-function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, sparkValues, sparkColor, metricKey, samples, compact }) {
+function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, sparkValues, sparkColor, metricKey, samples, compact, desc, helpTip }) {
   const TrendIcon = trend === "improving" ? TrendingDown : trend === "degrading" ? TrendingUp : Minus;
   const trendColor = trend === "improving" ? GREEN : trend === "degrading" ? RED : "var(--text-dim)";
   const info = metricKey ? METRIC_INFO[metricKey] : null;
@@ -184,11 +185,12 @@ function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, s
   if (compact) {
     return (
       <div style={{ flex: 1, minWidth: 100, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 8, padding: "8px 10px" }}>
-        <div style={{ fontSize: 9, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: 3 }}>{label}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: 3 }}>{label}{helpTip && <InfoTip text={helpTip} />}</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: statusColor || "var(--text-bright)", fontFamily: MONO, lineHeight: 1 }}>{value}</span>
           {unit && <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{unit}</span>}
         </div>
+        {desc && <div style={{ fontSize: 8, color: "var(--text-dim)", marginTop: 2, lineHeight: 1.3 }}>{desc}</div>}
       </div>
     );
   }
@@ -238,11 +240,25 @@ function MetricCard({ label, tooltip, value, unit, status, statusColor, trend, s
 }
 
 // ─── Telemetry Status Indicator ────────────────────────────────────────────────
-function TelemetryIndicator({ hasData }) {
+function TelemetryIndicator({ hasData, data }) {
+  // Derive health from real vitals + error rate
+  let label = "waiting", color = "#64748b";
+  if (hasData && data) {
+    const lcp = data.vitals?.lcp;
+    const inp = data.vitals?.inp;
+    const cls = data.vitals?.cls;
+    const errRate = data.errorRate;
+    const p95 = data.avgP95;
+    const isCritical = (lcp != null && lcp > THRESHOLDS.lcp.critical) || (inp != null && inp > THRESHOLDS.inp.critical) || (cls != null && cls > THRESHOLDS.cls.critical) || (errRate != null && errRate >= 5) || (p95 != null && p95 > THRESHOLDS.p95Latency.critical);
+    const isWarning = (lcp != null && lcp > THRESHOLDS.lcp.warning) || (inp != null && inp > THRESHOLDS.inp.warning) || (cls != null && cls > THRESHOLDS.cls.warning) || (errRate != null && errRate >= 2) || (p95 != null && p95 > THRESHOLDS.p95Latency.warning);
+    if (isCritical) { label = "Critical"; color = RED; }
+    else if (isWarning) { label = "Warning"; color = AMBER; }
+    else { label = "Healthy"; color = GREEN; }
+  }
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: hasData ? GREEN : "var(--text-dim)", fontWeight: 500 }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: hasData ? GREEN : "var(--text-dim)", boxShadow: hasData ? `0 0 4px ${GREEN}88` : "none", animation: hasData ? "pulse 2s ease-in-out infinite" : "none" }} />
-      {hasData ? "collecting" : "waiting"}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color, marginLeft: 4, background: `${color}10`, padding: "2px 8px", borderRadius: 6, border: `1px solid ${color}25` }}>
+      <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, boxShadow: `0 0 6px ${color}88` }} />
+      {label}
     </span>
   );
 }
@@ -271,7 +287,7 @@ const T = {
   en: {
     title: "Performance Insights",
     devOnly: "Dev Only",
-    p95Latency: "P95 LATENCY", p95Desc: "95th percentile - response time of 95% of requests",
+    p95Latency: "BROWSER P95", p95Desc: "95th percentile browser request latency",
     errorRate: "ERROR RATE", errorRateDesc: "Percentage of failed requests",
     traffic: "TRAFFIC", trafficDesc: "Requests per second (RPS)",
     errors: "ERRORS", errorsDesc: "Total errors in selected time window",
@@ -358,7 +374,7 @@ const T = {
     realExperienceScore: "Real Experience Score",
     resDesc: "Composite score based on Web Vitals and navigation timing",
     scoreOverTime: "Score Over Time",
-    p95OverTime: "P95 Latency Over Time",
+    p95OverTime: "Browser P95 Over Time",
     historicalSummary: "Historical Summary",
     snapshots: "Snapshots",
     noHistoryTitle: "No historical data yet",
@@ -372,7 +388,7 @@ const T = {
   he: {
     title: "Performance Insights",
     devOnly: "Dev Only",
-    p95Latency: "P95 LATENCY", p95Desc: "95th percentile - response time of 95% of requests",
+    p95Latency: "BROWSER P95", p95Desc: "95th percentile browser request latency",
     errorRate: "ERROR RATE", errorRateDesc: "Percentage of failed requests",
     traffic: "TRAFFIC", trafficDesc: "Requests per second (RPS)",
     errors: "ERRORS", errorsDesc: "Total errors in selected time window",
@@ -454,7 +470,7 @@ const T = {
     realExperienceScore: "Real Experience Score",
     resDesc: "Composite score based on Web Vitals and navigation timing",
     scoreOverTime: "Score Over Time",
-    p95OverTime: "P95 Latency Over Time",
+    p95OverTime: "Browser P95 Over Time",
     historicalSummary: "Historical Summary",
     snapshots: "Snapshots",
     noHistoryTitle: "No historical data yet",
@@ -568,9 +584,10 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr", supabase =
         <button className="back-btn" onClick={onBack} style={{ background: "var(--glass-3)", border: "1px solid var(--glass-6)", color: "var(--text-secondary)", padding: "7px 10px", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", order: dir === "rtl" ? 99 : 0 }}>
           <ArrowLeft size={16} style={dir === "rtl" ? { transform: "scaleX(-1)" } : undefined} />
         </button>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.2 }}>{t("title")}</span>
+        <BarChart3 size={22} strokeWidth={1.5} style={{ color: "var(--text-bright)" }} />
+        <span style={{ fontSize: 26, fontWeight: 700, color: "var(--text-bright)", letterSpacing: -0.3 }}>{t("title")}</span>
         <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", padding: "2px 7px", borderRadius: 5, background: "rgba(139,92,246,0.15)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.25)" }}>{t("devOnly")}</span>
-        <TelemetryIndicator hasData={hasAnyData} />
+        <TelemetryIndicator hasData={hasAnyData} data={data} />
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
           {!isHistorical && agoSec != null && (
             <span style={{ fontSize: 11, color: "var(--text-dim)", fontWeight: 500 }}>updated {agoSec}s ago</span>
@@ -581,6 +598,11 @@ function PerformanceInsightsInner({ onBack, lang = "en", dir = "ltr", supabase =
             </button>
           )}
         </div>
+      </div>
+
+      {/* Subtitle */}
+      <div style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 6 }}>
+        Core Web Vitals, navigation timing, and API performance scoring
       </div>
 
       {/* ── Time controls ── */}
@@ -720,11 +742,11 @@ function HistoricalView({ data, range, t, liveScore, snapshots }) {
     <div style={{ display: "flex", gap: 12, flex: 1 }}>
       {/* ── Left column: Web Vitals vertical rail (full height) ── */}
       <div style={{ width: 170, flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 4, background: "var(--glass-1)", border: "1px solid var(--glass-3)", borderRadius: 10, padding: "6px 6px" }}>
-        <VitalCard label="LCP" metricKey="lcp" value={data.vitals.lcp} unit="ms" threshold={THRESHOLDS.lcp} snapshots={snapshots} vitalKey="lcp" compact />
-        <VitalCard label="INP" metricKey="inp" value={data.vitals.inp} unit="ms" threshold={THRESHOLDS.inp} snapshots={snapshots} vitalKey="inp" compact />
-        <VitalCard label="CLS" metricKey="cls" value={data.vitals.cls} unit="" threshold={THRESHOLDS.cls} snapshots={snapshots} vitalKey="cls" compact />
-        <VitalCard label="FCP" metricKey="fcp" value={data.nav?.fcp} unit="ms" threshold={{ warning: 1800, critical: 3000 }} compact />
-        <VitalCard label="TTFB" metricKey="ttfb" value={data.nav?.ttfb} unit="ms" threshold={{ warning: 800, critical: 1800 }} compact />
+        <VitalCard label="LCP" metricKey="lcp" value={data.vitals.lcp} unit="ms" threshold={THRESHOLDS.lcp} snapshots={snapshots} vitalKey="lcp" compact helpTip="Time until the largest visible element renders" />
+        <VitalCard label="INP" metricKey="inp" value={data.vitals.inp} unit="ms" threshold={THRESHOLDS.inp} snapshots={snapshots} vitalKey="inp" compact helpTip="Delay between user interaction and visual response" />
+        <VitalCard label="CLS" metricKey="cls" value={data.vitals.cls} unit="" threshold={THRESHOLDS.cls} snapshots={snapshots} vitalKey="cls" compact helpTip="How much the page layout shifts unexpectedly" />
+        <VitalCard label="FCP" metricKey="fcp" value={data.nav?.fcp} unit="ms" threshold={{ warning: 1800, critical: 3000 }} compact helpTip="Time until first content appears on screen" />
+        <VitalCard label="TTFB" metricKey="ttfb" value={data.nav?.ttfb} unit="ms" threshold={{ warning: 800, critical: 1800 }} compact helpTip="Time until the server sends the first byte" />
       </div>
 
       {/* ── Right column: CSS Grid dashboard ── */}
@@ -752,16 +774,20 @@ function HistoricalView({ data, range, t, liveScore, snapshots }) {
 
         {/* Row 2: Summary stat cards (compact, auto height) */}
         <div style={{ display: "flex", gap: 8 }}>
-          <MetricCard label={t("totalReqs")} value={String(data.totalRequests)} statusColor="var(--text-bright)" samples={data.snapshotCount} compact />
-          <MetricCard label={t("errorRate")} tooltip={t("errorRateTooltip")} value={data.errorRate != null ? data.errorRate + "%" : "\u2014"} statusColor={data.errorRate != null && data.errorRate >= 5 ? RED : data.errorRate != null && data.errorRate >= 2 ? AMBER : GREEN} compact />
-          <MetricCard label={t("p95Latency")} value={data.avgP95 != null ? String(data.avgP95) : "\u2014"} unit={data.avgP95 != null ? "ms" : ""} statusColor={data.avgP95 != null ? sevColor(data.avgP95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} compact />
+          <MetricCard label={t("totalReqs")} value={String(data.totalRequests)} statusColor="var(--text-bright)" samples={data.snapshotCount} compact desc="Network requests captured across snapshots" helpTip="Total network requests observed across all telemetry snapshots" />
+          <MetricCard label={t("errorRate")} tooltip={t("errorRateTooltip")} value={data.errorRate != null ? data.errorRate + "%" : "\u2014"} statusColor={data.errorRate != null && data.errorRate >= 5 ? RED : data.errorRate != null && data.errorRate >= 2 ? AMBER : GREEN} compact desc="Percentage of failed network requests" helpTip="Percentage of network requests that returned a non-OK status" />
+          <MetricCard label={t("p95Latency")} value={data.avgP95 != null ? String(data.avgP95) : "\u2014"} unit={data.avgP95 != null ? "ms" : ""} statusColor={data.avgP95 != null ? sevColor(data.avgP95, THRESHOLDS.p95Latency, "var(--text-bright)") : "var(--text-dim)"} compact desc="95th percentile of browser request latency" helpTip="Browser-side P95 latency measured from real user sessions. For backend service latency, see System Observability" />
         </div>
 
         {/* Row 3: Distribution + P95 Latency (fills remaining space) */}
         <div style={{ display: "flex", gap: 8, minHeight: 0 }}>
           {(lcpDist || inpDist || clsDist) && (
             <div style={{ flex: 1, minWidth: 0, background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, marginBottom: 8 }}>{t("distribution")}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, marginBottom: 2 }}>
+                {t("distribution")}
+                <InfoTip text="Breaks down each Core Web Vital into Good, Needs Work, and Poor categories based on Google thresholds." />
+              </div>
+              <div style={{ fontSize: 8, color: "var(--text-dim)", marginBottom: 6 }}>Good / Needs Work / Poor breakdown per vital</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center", flex: 1 }}>
                 {lcpDist && <DistributionBar distribution={lcpDist} label="LCP" compact />}
                 {inpDist && <DistributionBar distribution={inpDist} label="INP" compact />}
@@ -771,7 +797,11 @@ function HistoricalView({ data, range, t, liveScore, snapshots }) {
           )}
           {data.p95Series.length > 1 ? (
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, marginBottom: 4 }}>{t("p95OverTime")}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, marginBottom: 2 }}>
+                {t("p95OverTime")}
+                <InfoTip text="Browser-side P95 latency from real user sessions. For backend service P95, see System Observability" />
+              </div>
+              <div style={{ fontSize: 8, color: "var(--text-dim)", marginBottom: 3 }}>Browser-side response time trend for the slowest 5% of requests</div>
               <HistoricalLineChart series={data.p95Series} color={BLUE} formatLabel={formatTimeLabel} unit="ms"
                 thresholds={[{ value: THRESHOLDS.p95Latency.warning, color: AMBER, label: "Warning" }, { value: THRESHOLDS.p95Latency.critical, color: RED, label: "Critical" }]} fill />
             </div>
@@ -783,7 +813,7 @@ function HistoricalView({ data, range, t, liveScore, snapshots }) {
 }
 
 // ─── Vitals Sidebar Card ─────────────────────────────────────────────────────
-function VitalCard({ label, metricKey, value, unit, threshold, snapshots, vitalKey, compact }) {
+function VitalCard({ label, metricKey, value, unit, threshold, snapshots, vitalKey, compact, helpTip }) {
   const sev = threshold && value != null ? severity(value, threshold) : "info";
   const col = value == null ? "var(--text-dim)" : sev === "info" ? GREEN : SEVERITY_COLORS[sev].text;
   const displayVal = value != null ? (unit === "ms" && value >= 1000 ? (value / 1000).toFixed(2) + "s" : value + (unit || "")) : "\u2014";
@@ -806,7 +836,10 @@ function VitalCard({ label, metricKey, value, unit, threshold, snapshots, vitalK
     return (
       <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: "10px 10px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", letterSpacing: 0.3 }}>{label}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", letterSpacing: 0.3 }}>{label}</span>
+            {helpTip && <InfoTip text={helpTip} />}
+          </div>
           {statusLabel && (
             <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 4px", borderRadius: 3, background: `${col}15`, color: col, border: `1px solid ${col}30` }}>{statusLabel}</span>
           )}
@@ -831,7 +864,10 @@ function VitalCard({ label, metricKey, value, unit, threshold, snapshots, vitalK
   return (
     <div style={{ background: "var(--glass-2)", border: "1px solid var(--glass-4)", borderRadius: 8, padding: "10px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{label}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{label}</span>
+          {helpTip && <InfoTip text={helpTip} />}
+        </div>
         {statusLabel && (
           <span style={{ fontSize: 9, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: `${col}15`, color: col, border: `1px solid ${col}30` }}>{statusLabel}</span>
         )}
@@ -879,11 +915,11 @@ function VitalsSidebar({ vitals, navTiming }) {
 
   return (
     <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-      <VitalCard label="LCP" metricKey="lcp" value={lcpVal} unit="ms" threshold={THRESHOLDS.lcp} />
-      <VitalCard label="INP" metricKey="inp" value={inpVal} unit="ms" threshold={THRESHOLDS.inp} />
-      <VitalCard label="CLS" metricKey="cls" value={clsVal} unit="" threshold={THRESHOLDS.cls} />
-      <VitalCard label="FCP" metricKey="fcp" value={fcpVal} unit="ms" threshold={{ warning: 1800, critical: 3000 }} />
-      <VitalCard label="TTFB" metricKey="ttfb" value={ttfbVal} unit="ms" threshold={{ warning: 800, critical: 1800 }} />
+      <VitalCard label="LCP" metricKey="lcp" value={lcpVal} unit="ms" threshold={THRESHOLDS.lcp} helpTip="Time until the largest visible element renders" />
+      <VitalCard label="INP" metricKey="inp" value={inpVal} unit="ms" threshold={THRESHOLDS.inp} helpTip="Delay between user interaction and visual response" />
+      <VitalCard label="CLS" metricKey="cls" value={clsVal} unit="" threshold={THRESHOLDS.cls} helpTip="How much the page layout shifts unexpectedly" />
+      <VitalCard label="FCP" metricKey="fcp" value={fcpVal} unit="ms" threshold={{ warning: 1800, critical: 3000 }} helpTip="Time until first content appears on screen" />
+      <VitalCard label="TTFB" metricKey="ttfb" value={ttfbVal} unit="ms" threshold={{ warning: 800, critical: 1800 }} helpTip="Time until the server sends the first byte" />
     </div>
   );
 }
@@ -942,7 +978,7 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
   const points = series.map((s, i) => {
     const x = padX + (i / (series.length - 1)) * (W - padX * 2);
     const y = H - padY - ((s.value - min) / range) * (H - padY * 2);
-    return { x, y, value: s.value, ts: s.ts };
+    return { x, y, value: s.value, ts: s.ts, samples: s.samples };
   });
   const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
   const fillD = `${pathD} L ${points[points.length - 1].x} ${H} L ${points[0].x} ${H} Z`;
@@ -955,10 +991,17 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
   const pad = compact || fill ? "8px 10px" : "12px 14px";
 
   const hp = hoverIdx !== null ? points[hoverIdx] : null;
-  const TT_W = 120, TT_H = 40;
+  const hasSamples = hp && hp.samples != null && hp.samples > 0;
+  const TT_W = hasSamples ? 140 : 120;
+  const TT_H = hasSamples ? 54 : 40;
   const ttX = hp ? Math.max(padX, Math.min(hp.x - TT_W / 2, W - TT_W - 2)) : 0;
   const ttAbove = hp && hp.y > TT_H + 12;
   const ttY = hp ? (ttAbove ? hp.y - TT_H - 8 : hp.y + 12) : 0;
+
+  // Summary stats
+  const latest = values[values.length - 1];
+  const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+  const totalSamples = series.reduce((sum, s) => sum + (s.samples || 0), 0);
 
   return (
     <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: pad, ...(fill ? { flex: 1, display: "flex", flexDirection: "column" } : {}) }}>
@@ -970,6 +1013,8 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
             <stop offset="100%" stopColor={color} stopOpacity="0.02" />
           </linearGradient>
         </defs>
+        {/* Transparent hit area */}
+        {!compact && <rect x={padX} y={padY} width={W - padX * 2} height={H - padY * 2} fill="transparent" />}
         {thresholds?.map((th, i) => {
           const y = H - padY - ((th.value - min) / range) * (H - padY * 2);
           if (y < 0 || y > H) return null;
@@ -992,13 +1037,16 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
         {/* Hover interaction */}
         {hp && !compact && (
           <g style={{ pointerEvents: "none" }}>
-            <line x1={hp.x} y1={padY} x2={hp.x} y2={H - padY} stroke="rgba(255,255,255,0.7)" strokeWidth={1} />
+            <line x1={hp.x} y1={padY} x2={hp.x} y2={H - padY} stroke="rgba(255,255,255,0.4)" strokeWidth={1} />
             <circle cx={hp.x} cy={hp.y} r={4} fill={color} stroke="#fff" strokeWidth={2} />
-            <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={6} fill="#1a1a1a" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+            <rect x={ttX} y={ttY} width={TT_W} height={TT_H} rx={6} fill="#0f172a" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
             <text x={ttX + TT_W / 2} y={ttY + 16} textAnchor="middle" fill="#ededed" fontSize={11} fontWeight={700} fontFamily={MONO}>
               {typeof hp.value === "number" ? (Number.isInteger(hp.value) ? hp.value : hp.value.toFixed(2)) : hp.value}{unit || ""}
             </text>
             <text x={ttX + TT_W / 2} y={ttY + 32} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily={MONO}>{formatLabel(hp.ts)}</text>
+            {hasSamples && (
+              <text x={ttX + TT_W / 2} y={ttY + 46} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily={MONO}>{hp.samples} samples</text>
+            )}
           </g>
         )}
       </svg>
@@ -1009,9 +1057,9 @@ function HistoricalLineChart({ series, color, formatLabel, unit, yMin, yMax, thr
       </div>
       {!compact && (
         <div style={{ display: "flex", gap: 16, marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--glass-3)", fontSize: 11 }}>
-          <span style={{ color: "var(--text-muted)" }}>Latest <span style={{ color, fontFamily: MONO, fontWeight: 600 }}>{values[values.length - 1]}{unit || ""}</span></span>
-          <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{Math.round(values.reduce((a, b) => a + b, 0) / values.length)}{unit || ""}</span></span>
-          <span style={{ color: "var(--text-muted)" }}>Points <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{values.length}</span></span>
+          <span style={{ color: "var(--text-muted)" }}>Latest <span style={{ color, fontFamily: MONO, fontWeight: 600 }}>{latest}{unit || ""}</span></span>
+          <span style={{ color: "var(--text-muted)" }}>Avg <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{Math.round(avg)}{unit || ""}</span></span>
+          <span style={{ color: "var(--text-muted)" }}>Samples <span style={{ color: "var(--text-primary)", fontFamily: MONO, fontWeight: 600 }}>{totalSamples > 0 ? totalSamples : values.length}</span></span>
         </div>
       )}
     </div>
@@ -1223,7 +1271,7 @@ function NetworkHealthSection({ data }) {
         {/* API Latency Over Time (P50 / P95) */}
         {hasStatusData && statusBuckets.some(b => b.latencies.length > 0) && (
           <div style={{ background: "var(--glass-2)", borderRadius: 10, padding: "12px 14px" }}>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>API Latency Over Time</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>API Latency Over Time <InfoTip text="P50 and P95 latency for all network requests captured per snapshot interval." /></div>
             <LatencyPercentilesChart buckets={statusBuckets} height={48} />
           </div>
         )}
@@ -1566,7 +1614,7 @@ const LatencyChart = memo(function LatencyChart({ data, baseline, p95, percentil
   const avg = useMemo(() => Math.round(data.reduce((s, d) => s + d.value, 0) / data.length), [data]);
   const spikeThreshold = baseline ? baseline.baseline * 2 : THRESHOLDS.p95Latency.warning;
   const baselinePct = baseline ? Math.min((baseline.baseline / max) * 100, 92) : null;
-  const chartHeight = compact ? 56 : 72;
+  const chartHeight = compact ? 56 : 90;
 
   // Threshold lines for latency
   const goodLine = THRESHOLDS.p95Latency.warning;
