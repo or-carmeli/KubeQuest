@@ -4679,7 +4679,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
 
           {/* ── 0. Architecture Scenarios (Advanced) ── */}
-          <button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:screen==="architecture"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
+          <button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"9px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:!EXPERIMENTAL_ENABLED?(screen==="architecture"?"var(--text-primary)":"var(--text-dim)"):(screen==="architecture"?"var(--text-primary)":"var(--text-secondary)"),cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
             <Brain size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"Architecture Scenarios":"תרחישי ארכיטקטורה"}
             <span style={{background:"rgba(120,140,255,0.1)",color:"#9fb3ff",fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:999,marginInlineStart:"auto",flexShrink:0,lineHeight:1.4}}>ADV</span>
