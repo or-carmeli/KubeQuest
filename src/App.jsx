@@ -4682,7 +4682,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           <button className="menu-item" onClick={()=>{setScreen("architecture");setShowMenu(false);}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid var(--glass-4)",color:screen==="architecture"?"var(--text-primary)":"var(--text-secondary)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:10,direction:dir,fontWeight:screen==="architecture"?600:400}}>
             <Brain size={15} strokeWidth={1.5} style={{flexShrink:0,opacity:0.5}} />
             {lang==="en"?"Architecture Scenarios":"תרחישי ארכיטקטורה"}
-            <span style={{background:"rgba(168,85,247,0.12)",color:"#C084FC",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:4,marginInlineStart:"auto",flexShrink:0,lineHeight:1.5,letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"ADV":"מתקדם"}</span>
+            <span style={{background:"rgba(120,140,255,0.1)",color:"#9fb3ff",fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:999,marginInlineStart:"auto",flexShrink:0,lineHeight:1.4}}>ADV</span>
           </button>
 
           {/* ── 1. Practice ── */}
