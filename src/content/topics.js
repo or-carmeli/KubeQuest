@@ -1559,7 +1559,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "הפקודה:\n```\nETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-backup.db \\\n  --endpoints=https://127.0.0.1:2379 \\\n  --cacert=/etc/kubernetes/pki/etcd/ca.crt \\\n  --cert=/etc/kubernetes/pki/etcd/server.crt \\\n  --key=/etc/kubernetes/pki/etcd/server.key\n```\nדורש certificates לאימות מול etcd.",
+                "```\netcdctl snapshot save /tmp/etcd-backup.db\n```\nיש להגדיר ETCDCTL_API=3 ולהעביר certificates:\n--endpoints, --cacert, --cert, --key.\nה-certificates נמצאים ב-/etc/kubernetes/pki/etcd/.",
             },
             {
               q: "איפה נמצאים ה-manifest files של Static Pods ב-kubeadm cluster?",
@@ -1635,7 +1635,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "הפקודה:\n```\nETCDCTL_API=3 etcdctl snapshot restore /tmp/etcd-backup.db \\\n  --data-dir=/var/lib/etcd-restored\n```\nאחרי שחזור, יש לעדכן את ה-Static Pod manifest של etcd ל-data-dir החדש ולהפעיל מחדש את kubelet.",
+                "```\netcdctl snapshot restore /tmp/etcd-backup.db --data-dir=/var/lib/etcd-restored\n```\nיש להגדיר ETCDCTL_API=3.\nאחרי שחזור, יש לעדכן את ה-Static Pod manifest של etcd ל-data-dir החדש ולהפעיל מחדש את kubelet.",
             },
         ],
         questionsEn: [
@@ -1662,7 +1662,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Command:\n```\nETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-backup.db \\\n  --endpoints=https://127.0.0.1:2379 \\\n  --cacert=/etc/kubernetes/pki/etcd/ca.crt \\\n  --cert=/etc/kubernetes/pki/etcd/server.crt \\\n  --key=/etc/kubernetes/pki/etcd/server.key\n```\nRequires TLS certificates for etcd authentication.",
+                "```\netcdctl snapshot save /tmp/etcd-backup.db\n```\nSet ETCDCTL_API=3 and pass TLS certificates:\n--endpoints, --cacert, --cert, --key.\nCertificates are in /etc/kubernetes/pki/etcd/.",
             },
             {
               q: "Where are Static Pod manifest files stored in a kubeadm cluster?",
@@ -1738,7 +1738,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Command:\n```\nETCDCTL_API=3 etcdctl snapshot restore /tmp/etcd-backup.db \\\n  --data-dir=/var/lib/etcd-restored\n```\nAfter restore, update the etcd Static Pod manifest to point to the new data-dir and restart the kubelet.",
+                "```\netcdctl snapshot restore /tmp/etcd-backup.db --data-dir=/var/lib/etcd-restored\n```\nSet ETCDCTL_API=3.\nAfter restore, update the etcd Static Pod manifest to point to the new data-dir and restart the kubelet.",
             },
         ],
       },
