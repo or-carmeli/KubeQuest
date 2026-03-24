@@ -760,7 +760,7 @@ export const TOPICS = [
             },
             {
               q: "מה kube-dns/CoreDNS ב-Kubernetes?",
-              tags: ["dns"],
+              tags: ["dns-flow"],
               options: [
               "Firewall שמסנן תנועה DNS ומונע גישה ל-domains זדוניים",
               "Load balancer שמנתב בקשות DNS בין Nodes",
@@ -864,7 +864,7 @@ export const TOPICS = [
             },
             {
               q: "What is CoreDNS in Kubernetes?",
-              tags: ["dns"],
+              tags: ["dns-flow"],
               options: [
               "An internal DNS server that resolves Service names to IPs",
               "A certificate manager Pod that issues TLS certificates for Services",
@@ -1329,36 +1329,37 @@ export const TOPICS = [
               tags: ["controlplane-components"],
               options: [
               "kubelet, kube-proxy, CoreDNS, CNI plugin",
-              "API Server, etcd, Scheduler, Controller Manager",
               "Docker, containerd, CRI-O, runc",
+              "API Server, etcd, Scheduler, Controller Manager",
               "Ingress Controller, Service Mesh, API Gateway, Load Balancer",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
                 "Control Plane מורכב מ:\n• API Server: נקודת כניסה לכל הבקשות\n• etcd: מאגר מצב ה-Cluster\n• Scheduler: בוחר Node ל-Pods\n• Controller Manager: מריץ control loops",
             },
             {
               q: "מה תפקיד kubelet?",
+              tags: ["kubelet-role"],
               options: [
-              "ניהול DNS פנימי בתוך ה-Cluster",
-              "ניתוב תעבורת רשת בין Services",
               "Agent שרץ על כל Node, מנהל Pods ומדווח סטטוס ל-API Server",
-              "ניהול אחסון מתמיד עבור PersistentVolumes",
+              "ניתוב תעבורת רשת בין Services באמצעות iptables או IPVS rules",
+              "ניהול DNS פנימי בתוך ה-Cluster ורישום שמות Services",
+              "ניהול אחסון מתמיד עבור PersistentVolumes ו-StorageClasses",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "kubelet הוא agent שרץ על כל Node ב-Cluster.\nהוא מקבל PodSpecs מ-API Server ומוודא שה-containers רצים ובריאים.\nאם kubelet נעצר, ה-Node עובר ל-NotReady.",
             },
             {
               q: "מה תפקיד etcd ב-Kubernetes?",
-              tags: ["etcd-basics"],
+              tags: ["etcd-data"],
               options: [
               "שרת DNS פנימי שמפתח שמות Services לכתובות IP",
-              "מאגר key-value מבוזר ששומר את כל מצב ה-Cluster",
               "מנוע scheduling שמחליט איפה להריץ Pods",
               "שכבת רשת שמנהלת תקשורת בין Nodes",
+              "מאגר key-value מבוזר ששומר את כל מצב ה-Cluster",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "etcd הוא מאגר key-value מבוזר שמחזיק את כל מצב ה-Cluster:\nPods, Services, ConfigMaps, Secrets, ועוד.\nכל שינוי שנשמר דרך API Server מגיע ל-etcd.",
             },
@@ -1379,12 +1380,12 @@ export const TOPICS = [
               q: "כיצד מצרפים Worker Node ל-Cluster קיים?",
               tags: ["kubeadm-join"],
               options: [
-              "kubeadm add-node --master <IP>",
+              "kubeadm add-node --master <IP> --token <token> --node-role worker",
+              "kubectl attach node --cluster <name> --token <token> --ca-cert-hash <hash>",
+              "kubeadm register --node-role worker --api <IP> --token <token> --cert-hash <hash>",
               "kubeadm join <API-server>:<port> --token <token> --discovery-token-ca-cert-hash <hash>",
-              "kubectl attach node --cluster <name>",
-              "kubeadm register --node-role worker --api <IP>",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "`kubeadm join` מצרף Node ל-Cluster.\nהפקודה מקבלת את כתובת ה-API Server, token לאימות, ו-CA cert hash לאימות זהות.\nה-token נוצר בזמן `kubeadm init` ותקף 24 שעות כברירת מחדל.",
             },
@@ -1392,24 +1393,24 @@ export const TOPICS = [
               q: "מה Static Pod ב-Kubernetes?",
               tags: ["static-pod"],
               options: [
-              "Pod שלא ניתן למחוק אותו עם kubectl",
+              "Pod שלא ניתן למחוק אותו עם kubectl delete בשום מצב",
+              "Pod עם IP קבוע שלא משתנה גם אחרי restart של ה-Node",
               "Pod שמנוהל ישירות ע\"י kubelet דרך manifest file על ה-Node",
-              "Pod עם IP קבוע שלא משתנה אחרי restart",
-              "Pod שמשויך ל-StatefulSet עם אחסון קבוע",
+              "Pod שמשויך ל-StatefulSet עם אחסון קבוע ו-ordinal index",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
                 "Static Pod מנוהל ישירות ע\"י kubelet, לא דרך API Server.\nה-manifest נמצא בתיקייה על ה-Node (בד\"כ /etc/kubernetes/manifests/).\nרכיבי Control Plane (API Server, etcd, Scheduler) הם Static Pods ב-kubeadm cluster.",
             },
             {
               q: "Cluster חדש הותקן עם kubeadm.\n\nהרצת:\n\n```\nkubectl get nodes\n```\n\nפלט:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nמה הסיבה הסבירה ביותר?",
               options: [
-              "kubelet לא פועל על ה-Node",
               "CNI plugin לא הותקן ולכן ה-Node לא מוכן",
+              "kubelet לא פועל על ה-Node",
               "etcd לא רץ ולכן ה-Cluster לא יכול לשמור מצב",
               "kube-proxy לא מותקן ולכן אין ניתוב רשת",
 ],
-              answer: 1,
+              answer: 0,
               explanation:
                 "אחרי `kubeadm init`, ה-Node נשאר NotReady עד שמתקינים CNI plugin (כמו Calico, Flannel, Cilium).\nCNI מספק רשת ל-Pods. ללא CNI, ה-Node לא יכול להריץ Pods ולכן מסומן NotReady.",
             },
@@ -1417,11 +1418,11 @@ export const TOPICS = [
               q: "מה תפקיד kube-proxy?",
               options: [
               "מנהל DNS פנימי עבור Services ב-Cluster",
-              "מנהל certificates ו-TLS בין רכיבי Control Plane",
               "מנהל כללי רשת על כל Node כדי לנתב traffic ל-Services",
+              "מנהל certificates ו-TLS בין רכיבי Control Plane",
               "מנהל אימות ואישור בקשות ל-API Server",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "kube-proxy רץ על כל Node ומנהל כללי רשת (iptables/IPVS) שמנתבים traffic ל-Service endpoints.\nכש-Service נוצר, kube-proxy מעדכן את כללי הניתוב בכל Node.\nללא kube-proxy, Services לא יעבדו.",
             },
@@ -1431,37 +1432,38 @@ export const TOPICS = [
               q: "What are the four Control Plane components?",
               tags: ["controlplane-components"],
               options: [
-              "kubelet, kube-proxy, CoreDNS, CNI plugin",
-              "Docker, containerd, CRI-O, runc",
               "API Server, etcd, Scheduler, Controller Manager",
+              "Docker, containerd, CRI-O, runc",
+              "kubelet, kube-proxy, CoreDNS, CNI plugin",
               "Ingress Controller, Service Mesh, API Gateway, Load Balancer",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "The Control Plane consists of:\n• API Server: entry point for all requests\n• etcd: cluster state store\n• Scheduler: picks Nodes for Pods\n• Controller Manager: runs control loops",
             },
             {
               q: "What is the role of the kubelet?",
+              tags: ["kubelet-role"],
               options: [
-              "Managing internal DNS within the cluster",
-              "An agent running on every Node that manages Pods and reports status to the API Server",
-              "Routing network traffic between Services",
+              "Managing internal DNS resolution within the cluster",
+              "Routing network traffic between Services and Pods",
               "Managing persistent storage for PersistentVolumes",
+              "An agent on every Node that manages Pods and reports status",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "The kubelet is an agent that runs on every Node in the cluster.\nIt receives PodSpecs from the API Server and ensures the containers are running and healthy.\nIf the kubelet stops, the Node transitions to NotReady.",
             },
             {
               q: "What is the role of etcd in Kubernetes?",
-              tags: ["etcd-basics"],
+              tags: ["etcd-data"],
               options: [
               "An internal DNS server that resolves Service names to IPs",
-              "A scheduling engine that decides where to run Pods",
               "A distributed key-value store that holds all cluster state",
+              "A scheduling engine that decides where to run Pods",
               "A network layer that manages communication between Nodes",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "etcd is a distributed key-value store that holds all cluster state:\nPods, Services, ConfigMaps, Secrets, and more.\nEvery change saved through the API Server ends up in etcd.",
             },
@@ -1482,12 +1484,12 @@ export const TOPICS = [
               q: "How do you join a worker Node to an existing cluster?",
               tags: ["kubeadm-join"],
               options: [
-              "kubeadm add-node --master <IP>",
-              "kubectl attach node --cluster <name>",
-              "kubeadm join <API-server>:<port> --token <token> --discovery-token-ca-cert-hash <hash>",
+              "kubeadm join <API-server>:<port> --token <token> --hash <hash>",
+              "kubectl attach node --cluster <name> --role worker",
               "kubeadm register --node-role worker --api <IP>",
+              "kubeadm add-node --master <IP> --token <token>",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "`kubeadm join` adds a Node to the cluster.\nIt takes the API Server address, an authentication token, and a CA cert hash for identity verification.\nThe token is generated during `kubeadm init` and is valid for 24 hours by default.",
             },
@@ -1495,12 +1497,12 @@ export const TOPICS = [
               q: "What is a Static Pod in Kubernetes?",
               tags: ["static-pod"],
               options: [
-              "A Pod that cannot be deleted with kubectl",
-              "A Pod with a fixed IP that does not change after restart",
-              "A Pod managed directly by the kubelet via a manifest file on the Node",
-              "A Pod tied to a StatefulSet with persistent storage",
+              "A Pod that cannot be deleted using kubectl commands",
+              "A Pod with a fixed IP address that persists after restart",
+              "A Pod tied to a StatefulSet with dedicated persistent storage",
+              "A Pod managed directly by the kubelet via a manifest file",
 ],
-              answer: 2,
+              answer: 3,
               explanation:
                 "A Static Pod is managed directly by the kubelet, not through the API Server.\nIts manifest lives on the Node (usually /etc/kubernetes/manifests/).\nControl Plane components (API Server, etcd, Scheduler) are Static Pods in a kubeadm cluster.",
             },
@@ -1508,11 +1510,11 @@ export const TOPICS = [
               q: "A new cluster was just bootstrapped with kubeadm.\n\nCommand:\n\n```\nkubectl get nodes\n```\n\nOutput:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nWhat is the most likely cause?",
               options: [
               "kubelet is not running on the Node",
-              "etcd is down so the cluster cannot persist state",
               "A CNI plugin has not been installed so the Node is not ready",
+              "etcd is down so the cluster cannot persist state",
               "kube-proxy is not installed so there is no network routing",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "After `kubeadm init`, the Node stays NotReady until a CNI plugin is installed (e.g. Calico, Flannel, Cilium).\nCNI provides Pod networking. Without it, the Node cannot run Pods and is marked NotReady.",
             },
@@ -1531,18 +1533,18 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "kubeadm, שדרוגים, ו-etcd.\n🔹 kubeadm upgrade:\u200E שדרוג Control Plane ו-Nodes בצעדים: upgrade plan, upgrade apply, drain, upgrade kubelet\n🔹 etcd backup:\u200E etcdctl snapshot save שומר את מצב ה-Cluster\n🔹 etcd restore:\u200E etcdctl snapshot restore משחזר ממצב שמור\n🔹 Static Pod path:\u200E /etc/kubernetes/manifests/ - kubelet עוקב אחרי שינויים בתיקייה\n🔹 kubeconfig:\u200E ~/.kube/config מגדיר clusters, users, contexts\n🔹 Certificate rotation:\u200E kubeadm certs renew מחדש certificates שפגו\n🔹 Node lifecycle:\u200E cordon, drain, uncordon לתחזוקת Nodes\n🔹 HA etcd:\u200E מספר אי-זוגי של members (3 או 5) ל-quorum\nCODE:\netcdctl snapshot save /tmp/etcd-backup.db",
+        theory: "kubeadm, שדרוגים ו-etcd\n🔹 שדרוג עם kubeadm: שדרוג רכיבי ה-Control Plane וה-Nodes מתבצע בשלבים: `kubeadm upgrade plan`, `kubeadm upgrade apply`, `kubectl drain`, ולבסוף שדרוג kubelet\n🔹 גיבוי etcd: הפקודה `etcdctl snapshot save` שומרת את כל מצב ה-Cluster לקובץ\n🔹 שחזור etcd: הפקודה `etcdctl snapshot restore` משחזרת את ה-Cluster ממצב שנשמר\n🔹 הנתיב של Static Pods: kubelet עוקב אחרי שינויים בתיקייה /etc/kubernetes/manifests/ ומפעיל Pods אוטומטית\n🔹 קובץ kubeconfig: הקובץ ~/.kube/config מגדיר clusters, users ו-contexts לחיבור ל-Cluster\n🔹 חידוש certificates: הפקודה `kubeadm certs renew` מחדשת certificates שפג תוקפם\n🔹 ניהול Nodes: הפקודות `kubectl cordon`, `kubectl drain` ו-`kubectl uncordon` משמשות לתחזוקת Nodes\n🔹 זמינות גבוהה של etcd: נדרש מספר אי-זוגי של members (3 או 5) כדי לשמור על quorum\nCODE:\netcdctl snapshot save /tmp/etcd-backup.db",
         theoryEn: "kubeadm, Upgrades, and etcd\n🔹 kubeadm upgrade - upgrade Control Plane and Nodes step by step: upgrade plan, upgrade apply, drain, upgrade kubelet.\n🔹 etcd backup - `etcdctl snapshot save` captures the full cluster state.\n🔹 etcd restore - `etcdctl snapshot restore` recovers from a saved snapshot.\n🔹 Static Pod path - /etc/kubernetes/manifests/ - kubelet watches this directory for changes.\n🔹 kubeconfig - ~/.kube/config defines clusters, users, and contexts.\n🔹 Certificate rotation - `kubeadm certs renew` renews expired certificates.\n🔹 Node lifecycle - cordon, drain, uncordon for Node maintenance.\n🔹 HA etcd - odd number of members (3 or 5) to maintain quorum.\nCODE:\netcdctl snapshot save /tmp/etcd-backup.db",
         questions: [
             {
               q: "מה הצעד הראשון בשדרוג Cluster עם kubeadm?",
               options: [
-              "שדרוג kubelet על כל ה-Nodes",
-              "הרצת `kubeadm upgrade plan` לבדיקת גרסאות זמינות",
-              "drain של כל ה-Worker Nodes",
-              "גיבוי etcd ומחיקת ה-Cluster",
+              "drain של כל ה-Worker Nodes לפני שדרוג",
+              "שדרוג kubelet על כל ה-Nodes במקביל",
+              "גיבוי etcd ומחיקת ה-Cluster לפני שדרוג",
+              "הרצת kubeadm upgrade plan לבדיקת גרסאות",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "סדר שדרוג kubeadm:\n1. `kubeadm upgrade plan` - בודק גרסאות זמינות\n2. `kubeadm upgrade apply v1.XX.Y` - משדרג Control Plane\n3. drain כל Worker Node\n4. שדרוג kubeadm, kubelet, kubectl על כל Node\n5. uncordon כל Node",
             },
@@ -1551,13 +1553,13 @@ export const TOPICS = [
               tags: ["etcd-backup"],
               options: [
               "kubectl backup etcd --output /tmp/backup.db",
-              "etcdctl snapshot save /tmp/etcd-backup.db",
               "kubeadm etcd backup --path /tmp/backup",
+              "etcdctl snapshot save /tmp/etcd-backup.db",
               "etcdctl export --format=json > /tmp/backup.json",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
-                "הפקודה:\n```\nETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-backup.db \\\n  --endpoints=https://127.0.0.1:2379 \\\n  --cacert=/etc/kubernetes/pki/etcd/ca.crt \\\n  --cert=/etc/kubernetes/pki/etcd/server.crt \\\n  --key=/etc/kubernetes/pki/etcd/server.key\n```\nדורש certificates לאימות מול etcd.",
+                "```\netcdctl snapshot save /tmp/etcd-backup.db\n```\nיש להגדיר ETCDCTL_API=3 ולהעביר certificates:\n--endpoints, --cacert, --cert, --key.\nה-certificates נמצאים ב-/etc/kubernetes/pki/etcd/.",
             },
             {
               q: "איפה נמצאים ה-manifest files של Static Pods ב-kubeadm cluster?",
@@ -1574,12 +1576,12 @@ export const TOPICS = [
             {
               q: "מחקת Static Pod עם `kubectl delete pod`. ה-Pod חוזר מיד.\n\nלמה?",
               options: [
-              "ה-Deployment controller יוצר Pod חדש כדי לשמור על replica count",
               "kubelet מנהל Static Pods ויוצר אותם מחדש כל עוד ה-manifest קיים בתיקייה",
-              "etcd שומר את ה-Pod ומשחזר אותו אוטומטית",
-              "kube-proxy משחזר את ה-Pod כי הוא חלק מ-Service",
+              "ה-Deployment controller יוצר Pod חדש כדי לשמור על ה-replica count שהוגדר",
+              "etcd שומר את הגדרות ה-Pod ומשחזר אותו אוטומטית לאחר מחיקה",
+              "kube-proxy משחזר את ה-Pod כי הוא חלק מ-Service ונדרש לניתוב",
 ],
-              answer: 1,
+              answer: 0,
               explanation:
                 "Static Pods מנוהלים ע\"י kubelet, לא ע\"י API Server.\n`kubectl delete` מוחק את ה-mirror Pod מ-API Server, אבל kubelet רואה שה-manifest עדיין קיים ויוצר את ה-Pod מחדש.\nכדי למחוק Static Pod: מוחקים את ה-manifest file מהתיקייה.",
             },
@@ -1588,11 +1590,11 @@ export const TOPICS = [
               tags: ["kubeconfig-context"],
               options: [
               "kubectl config set-context --current --cluster <name>",
-              "kubectl config use-context <context-name>",
               "kubectl context switch <context-name>",
               "kubectl cluster use <context-name>",
+              "kubectl config use-context <context-name>",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "`kubectl config use-context <name>` מחליף את ה-context הפעיל.\nContext מגדיר שילוב של cluster + user + namespace.\n`kubectl config get-contexts` מציג את כל ה-contexts הזמינים.",
             },
@@ -1600,12 +1602,12 @@ export const TOPICS = [
               q: "כמה etcd members צריך ב-production cluster כדי לשמור על quorum?",
               tags: ["etcd-ha"],
               options: [
-              "2 members, אחד primary ואחד backup",
-              "4 members, מספר זוגי לאיזון",
               "3 או 5 members, תמיד מספר אי-זוגי",
+              "4 members, מספר זוגי לאיזון",
+              "2 members, אחד primary ואחד backup",
               "1 member מספיק עם גיבויים תקופתיים",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "etcd דורש quorum (רוב) כדי לפעול.\n3 members מאפשרים כשל של 1. 5 מאפשרים כשל של 2.\nמספר אי-זוגי מונע split-brain.\n2 members גרוע מ-1: כשל של אחד = אובדן quorum.",
             },
@@ -1614,11 +1616,11 @@ export const TOPICS = [
               tags: ["certificate-management"],
               options: [
               "kubectl get certificates --all-namespaces",
-              "kubeadm certs check-expiration",
               "openssl verify /etc/kubernetes/pki/*",
+              "kubeadm certs check-expiration",
               "kubectl describe node | grep certificate",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
                 "`kubeadm certs check-expiration` מציג את תוקף כל ה-certificates.\nכברירת מחדל, certificates של kubeadm תקפים לשנה.\nלחידוש: `kubeadm certs renew all`.",
             },
@@ -1626,26 +1628,26 @@ export const TOPICS = [
               q: "מה הפקודה לשחזור etcd מ-snapshot?",
               tags: ["etcd-restore"],
               options: [
-              "etcdctl snapshot restore /tmp/etcd-backup.db",
               "kubeadm etcd restore --from /tmp/etcd-backup.db",
+              "etcdctl snapshot restore /tmp/etcd-backup.db",
               "kubectl apply -f /tmp/etcd-backup.db",
               "etcdctl import --file /tmp/etcd-backup.db",
 ],
-              answer: 0,
+              answer: 1,
               explanation:
-                "הפקודה:\n```\nETCDCTL_API=3 etcdctl snapshot restore /tmp/etcd-backup.db \\\n  --data-dir=/var/lib/etcd-restored\n```\nאחרי שחזור, יש לעדכן את ה-Static Pod manifest של etcd ל-data-dir החדש ולהפעיל מחדש את kubelet.",
+                "```\netcdctl snapshot restore /tmp/etcd-backup.db --data-dir=/var/lib/etcd-restored\n```\nיש להגדיר ETCDCTL_API=3.\nאחרי שחזור, יש לעדכן את ה-Static Pod manifest של etcd ל-data-dir החדש ולהפעיל מחדש את kubelet.",
             },
         ],
         questionsEn: [
             {
               q: "What is the first step when upgrading a cluster with kubeadm?",
               options: [
-              "Upgrade kubelet on all Nodes",
-              "Drain all Worker Nodes",
-              "Run `kubeadm upgrade plan` to check available versions",
-              "Back up etcd and delete the cluster",
+              "Run `kubeadm upgrade plan` to check versions",
+              "Drain all Worker Nodes before any changes",
+              "Back up etcd and then delete the cluster",
+              "Upgrade kubelet on all Nodes immediately",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "kubeadm upgrade order:\n1. `kubeadm upgrade plan` - check available versions\n2. `kubeadm upgrade apply v1.XX.Y` - upgrade Control Plane\n3. drain each Worker Node\n4. upgrade kubeadm, kubelet, kubectl on each Node\n5. uncordon each Node",
             },
@@ -1654,33 +1656,33 @@ export const TOPICS = [
               tags: ["etcd-backup"],
               options: [
               "kubectl backup etcd --output /tmp/backup.db",
-              "kubeadm etcd backup --path /tmp/backup",
               "etcdctl snapshot save /tmp/etcd-backup.db",
+              "kubeadm etcd backup --path /tmp/backup",
               "etcdctl export --format=json > /tmp/backup.json",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
-                "Command:\n```\nETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-backup.db \\\n  --endpoints=https://127.0.0.1:2379 \\\n  --cacert=/etc/kubernetes/pki/etcd/ca.crt \\\n  --cert=/etc/kubernetes/pki/etcd/server.crt \\\n  --key=/etc/kubernetes/pki/etcd/server.key\n```\nRequires TLS certificates for etcd authentication.",
+                "```\netcdctl snapshot save /tmp/etcd-backup.db\n```\nSet ETCDCTL_API=3 and pass TLS certificates:\n--endpoints, --cacert, --cert, --key.\nCertificates are in /etc/kubernetes/pki/etcd/.",
             },
             {
               q: "Where are Static Pod manifest files stored in a kubeadm cluster?",
               options: [
               "/var/lib/kubelet/pods/",
               "/opt/kubernetes/static/",
-              "/etc/kubernetes/manifests/",
               "/usr/local/k8s/manifests/",
+              "/etc/kubernetes/manifests/",
 ],
-              answer: 2,
+              answer: 3,
               explanation:
                 "The kubelet watches /etc/kubernetes/manifests/.\nEvery YAML file in that directory becomes a Static Pod.\nIn a kubeadm cluster, Control Plane components (kube-apiserver, etcd, kube-scheduler, kube-controller-manager) are managed as Static Pods in this directory.",
             },
             {
               q: "You deleted a Static Pod with `kubectl delete pod`. It comes back immediately.\n\nWhy?",
               options: [
-              "The Deployment controller creates a new Pod to maintain the replica count",
-              "etcd persists the Pod and restores it automatically",
-              "The kubelet manages Static Pods and recreates them as long as the manifest file exists",
-              "kube-proxy restores the Pod because it is part of a Service",
+              "The Deployment controller creates a new Pod to maintain the desired replica count",
+              "etcd persists the Pod definition and automatically restores it after deletion",
+              "The kubelet manages Static Pods and recreates them while the manifest file exists",
+              "kube-proxy restores the Pod because it is registered as part of a Service",
 ],
               answer: 2,
               explanation:
@@ -1690,12 +1692,12 @@ export const TOPICS = [
               q: "How do you switch context in kubeconfig?",
               tags: ["kubeconfig-context"],
               options: [
-              "kubectl config set-context --current --cluster <name>",
-              "kubectl context switch <context-name>",
               "kubectl config use-context <context-name>",
+              "kubectl context switch <context-name>",
+              "kubectl config set-context --current --cluster <name>",
               "kubectl cluster use <context-name>",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "`kubectl config use-context <name>` switches the active context.\nA context defines a combination of cluster + user + namespace.\n`kubectl config get-contexts` lists all available contexts.",
             },
@@ -1717,11 +1719,11 @@ export const TOPICS = [
               tags: ["certificate-management"],
               options: [
               "kubectl get certificates --all-namespaces",
-              "openssl verify /etc/kubernetes/pki/*",
               "kubeadm certs check-expiration",
+              "openssl verify /etc/kubernetes/pki/*",
               "kubectl describe node | grep certificate",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "`kubeadm certs check-expiration` shows the expiry of all certificates.\nBy default, kubeadm certificates are valid for one year.\nTo renew: `kubeadm certs renew all`.",
             },
@@ -1729,14 +1731,14 @@ export const TOPICS = [
               q: "What is the command to restore etcd from a snapshot?",
               tags: ["etcd-restore"],
               options: [
-              "etcdctl snapshot restore /tmp/etcd-backup.db",
               "kubeadm etcd restore --from /tmp/etcd-backup.db",
               "kubectl apply -f /tmp/etcd-backup.db",
+              "etcdctl snapshot restore /tmp/etcd-backup.db",
               "etcdctl import --file /tmp/etcd-backup.db",
 ],
-              answer: 0,
+              answer: 2,
               explanation:
-                "Command:\n```\nETCDCTL_API=3 etcdctl snapshot restore /tmp/etcd-backup.db \\\n  --data-dir=/var/lib/etcd-restored\n```\nAfter restore, update the etcd Static Pod manifest to point to the new data-dir and restart the kubelet.",
+                "```\netcdctl snapshot restore /tmp/etcd-backup.db --data-dir=/var/lib/etcd-restored\n```\nSet ETCDCTL_API=3.\nAfter restore, update the etcd Static Pod manifest to point to the new data-dir and restart the kubelet.",
             },
         ],
       },
@@ -1748,12 +1750,12 @@ export const TOPICS = [
               q: "שדרוג Control Plane עם kubeadm הושלם.\nWorker Nodes עדיין על הגרסה הישנה.\n\nמה הצעדים לשדרוג Worker Node?",
               tags: ["kubeadm-upgrade"],
               options: [
-              "רק `kubeadm upgrade apply` על ה-Worker ו-uncordon",
+              "רק `kubeadm upgrade apply` על ה-Worker ואז `kubectl uncordon`",
+              "מחיקת ה-Node מה-Cluster עם `kubectl delete node` ו-join מחדש עם הגרסה החדשה",
               "drain ה-Node, שדרוג kubeadm ו-kubelet, הפעלה מחדש של kubelet, uncordon",
-              "מחיקת ה-Node מה-Cluster ו-join מחדש עם הגרסה החדשה",
-              "הרצת `kubectl upgrade node` על כל Worker",
+              "הרצת `kubectl upgrade node` על כל Worker בנפרד ו-restart",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
                 "שדרוג Worker Node:\n1. `kubectl drain <node> --ignore-daemonsets` - פינוי Pods\n2. שדרוג kubeadm package\n3. `kubeadm upgrade node` - עדכון node config\n4. שדרוג kubelet ו-kubectl packages\n5. `systemctl restart kubelet`\n6. `kubectl uncordon <node>` - החזרת ה-Node לשירות",
             },
@@ -1761,10 +1763,10 @@ export const TOPICS = [
               q: "הפקודה `kubectl get nodes` מציגה Node בסטטוס NotReady.\n\nSSH ל-Node הצליח.\n\nמה שתי הפעולות הראשונות?",
               tags: ["kubelet-troubleshooting"],
               options: [
-              "`docker ps` ו-`kubectl describe node`",
+              "`docker ps` לבדיקת containers ו-`kubectl describe node` לבדיקת conditions",
               "`systemctl status kubelet` ו-`journalctl -u kubelet`",
-              "`kubectl logs kubelet` ו-`kubectl get events`",
-              "`reboot` ו-`kubectl uncordon`",
+              "`kubectl logs kubelet` ו-`kubectl get events` ב-namespace kube-system",
+              "`reboot` של ה-Node ואז `kubectl uncordon` להחזרה לשירות",
 ],
               answer: 1,
               explanation:
@@ -1774,12 +1776,12 @@ export const TOPICS = [
               q: "`kubectl get pods -n kube-system` מציג ש-kube-scheduler לא רץ.\n\nPods חדשים נשארים ב-Pending ללא events.\n\nמה בודקים?",
               tags: ["controlplane-troubleshooting"],
               options: [
-              "בודקים את ה-Deployment של kube-scheduler ב-kube-system",
               "בודקים את ה-manifest file של kube-scheduler ב-/etc/kubernetes/manifests/",
-              "מריצים `kubectl rollout restart` על kube-scheduler",
-              "בודקים את ה-ConfigMap של kube-scheduler ב-kube-system",
+              "בודקים את ה-Deployment של kube-scheduler ב-namespace kube-system ומריצים rollout",
+              "מריצים `kubectl rollout restart deployment kube-scheduler` ב-kube-system",
+              "בודקים את ה-ConfigMap של kube-scheduler ב-kube-system ומחילים מחדש",
 ],
-              answer: 1,
+              answer: 0,
               explanation:
                 "kube-scheduler הוא Static Pod ב-kubeadm cluster.\nה-manifest נמצא ב-/etc/kubernetes/manifests/kube-scheduler.yaml.\nאם הקובץ פגום או חסר, kubelet לא יפעיל את ה-scheduler.\nבודקים: `cat /etc/kubernetes/manifests/kube-scheduler.yaml` ו-`crictl ps`.",
             },
@@ -1787,12 +1789,12 @@ export const TOPICS = [
               q: "ה-join token פג תוקף.\n\nWorker Node חדש צריך להצטרף ל-Cluster.\n\nמה הפקודה ליצירת token חדש?",
               tags: ["kubeadm-join"],
               options: [
-              "kubeadm init --token-only",
+              "kubeadm init --token-only --ttl 24h",
+              "kubectl create token --type=join --duration=24h",
+              "kubeadm reset && kubeadm init מחדש על ה-Control Plane",
               "kubeadm token create --print-join-command",
-              "kubectl create token --type=join",
-              "kubeadm reset && kubeadm init",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "`kubeadm token create --print-join-command` יוצר token חדש ומדפיס את פקודת ה-join המלאה.\nTokens תקפים 24 שעות כברירת מחדל.\nלרשימת tokens קיימים: `kubeadm token list`.",
             },
@@ -1801,11 +1803,11 @@ export const TOPICS = [
               tags: ["certificate-csr"],
               options: [
               "CSR מאושר אוטומטית, אין צורך בפעולה",
-              "`kubectl certificate approve csr-abc12`",
               "`kubeadm certs sign csr-abc12`",
+              "`kubectl certificate approve csr-abc12`",
               "`kubectl delete csr csr-abc12` ויצירה מחדש",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
                 "`kubectl certificate approve <csr-name>` מאשר את ה-CSR.\nkubelet מבקש certificate serving כדי לאפשר תקשורת מאובטחת.\nב-production, ניתן להגדיר auto-approval עבור kubelet CSRs.",
             },
@@ -1813,12 +1815,12 @@ export const TOPICS = [
               q: "API Server לא עולה אחרי שינוי ב-manifest.\n\nהרצת:\n\n```\ncrictl ps | grep apiserver\n```\n\nאין תוצאות.\n\nמה הצעד הבא?",
               tags: ["controlplane-troubleshooting"],
               options: [
-              "`kubectl describe pod kube-apiserver -n kube-system`",
+              "`kubectl describe pod kube-apiserver -n kube-system` לבדיקת events ו-status",
+              "`kubeadm reset` ו-`kubeadm init` מחדש לאיפוס מלא של ה-Cluster",
+              "`systemctl restart kube-apiserver` להפעלה מחדש של ה-process",
               "`crictl logs` על ה-container ID של apiserver מ-`crictl ps -a`",
-              "`kubeadm reset` ו-`kubeadm init` מחדש",
-              "`systemctl restart kube-apiserver`",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "כש-API Server לא רץ, kubectl לא יעבוד.\nיש לבדוק ברמת container runtime:\n1. `crictl ps -a` - למצוא container שנכשל\n2. `crictl logs <container-id>` - לראות שגיאות\nסיבות נפוצות: manifest YAML לא תקין, certificate path שגוי, port תפוס.",
             },
@@ -1826,12 +1828,12 @@ export const TOPICS = [
               q: "מה ההבדל בין stacked etcd ל-external etcd topology?",
               tags: ["etcd-topology"],
               options: [
+              "stacked etcd תומך רק ב-3 nodes בלבד, external etcd תומך ב-5 nodes ומעלה",
               "stacked etcd רץ על Control Plane Nodes, external etcd רץ על Nodes נפרדים",
-              "stacked etcd תומך רק ב-3 nodes, external etcd תומך ב-5+",
-              "stacked etcd לא דורש certificates, external etcd דורש",
-              "אין הבדל, שניהם שמות שונים לאותה ארכיטקטורה",
+              "stacked etcd לא דורש certificates נפרדים, external etcd דורש certificates ייעודיים",
+              "אין הבדל מעשי ביניהם, שניהם שמות שונים לאותה ארכיטקטורה בדיוק",
 ],
-              answer: 0,
+              answer: 1,
               explanation:
                 "Stacked etcd: etcd רץ על אותם Nodes כמו Control Plane. פשוט יותר להקמה, אבל כשל של Node מאבד גם Control Plane וגם etcd member.\nExternal etcd: etcd על Nodes נפרדים. אמין יותר כי כשל של Control Plane Node לא משפיע על etcd.",
             },
@@ -1839,12 +1841,12 @@ export const TOPICS = [
               q: "הרצת:\n\n```\nkubeadm certs check-expiration\n```\n\nפלט:\n\n```\nCERTIFICATE                EXPIRES                  RESIDUAL TIME\napiserver                  Jan 15, 2025 10:00 UTC   <invalid>\napiserver-kubelet-client   Jan 15, 2025 10:00 UTC   <invalid>\nfront-proxy-client         Jan 15, 2025 10:00 UTC   <invalid>\n```\n\nמה הפתרון?",
               tags: ["certificate-management"],
               options: [
-              "מחיקת ה-certificates הישנים ידנית מ-/etc/kubernetes/pki/",
               "`kubeadm certs renew all` ואז restart ל-Control Plane Static Pods",
+              "מחיקת ה-certificates הישנים ידנית מ-/etc/kubernetes/pki/",
               "`kubectl delete secret` של ה-certificates ב-kube-system",
               "`kubeadm reset` ו-`kubeadm init` מחדש",
 ],
-              answer: 1,
+              answer: 0,
               explanation:
                 "`kubeadm certs renew all` מחדש את כל ה-certificates.\nאחרי חידוש, יש להפעיל מחדש את Static Pods של Control Plane כדי שיטענו את ה-certificates החדשים.\nאפשר ע\"י: העברת ה-manifests מהתיקייה וחזרה, או restart kubelet.",
             },
@@ -1867,12 +1869,12 @@ export const TOPICS = [
               q: "`kubectl get nodes` shows a Node in NotReady status.\n\nSSH to the Node succeeded.\n\nWhat are your first two actions?",
               tags: ["kubelet-troubleshooting"],
               options: [
-              "`docker ps` and `kubectl describe node`",
-              "`kubectl logs kubelet` and `kubectl get events`",
               "`systemctl status kubelet` and `journalctl -u kubelet`",
-              "`reboot` and `kubectl uncordon`",
+              "`kubectl logs kubelet` and `kubectl get events --all`",
+              "`docker ps` and `kubectl describe node <node-name>`",
+              "`reboot` the Node and then `kubectl uncordon <node>`",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "Investigating a NotReady Node:\n1. `systemctl status kubelet` - is the kubelet running?\n2. `journalctl -u kubelet` - check logs for errors\nCommon causes: expired certificates, container runtime not running, disk pressure.",
             },
@@ -1893,12 +1895,12 @@ export const TOPICS = [
               q: "The join token has expired.\n\nA new Worker Node needs to join the cluster.\n\nWhat command creates a new token?",
               tags: ["kubeadm-join"],
               options: [
-              "kubeadm init --token-only",
-              "kubectl create token --type=join",
+              "kubeadm init --token-only --ttl 24h",
               "kubeadm token create --print-join-command",
-              "kubeadm reset && kubeadm init",
+              "kubectl create token --type=join --ttl 24h",
+              "kubeadm reset && kubeadm init --new-token",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "`kubeadm token create --print-join-command` creates a new token and prints the full join command.\nTokens are valid for 24 hours by default.\nTo list existing tokens: `kubeadm token list`.",
             },
@@ -1906,12 +1908,12 @@ export const TOPICS = [
               q: "A new CSR appears in `kubectl get csr`.\n\nOutput:\n\n```\nNAME        AGE   SIGNERNAME                    REQUESTOR       CONDITION\ncsr-abc12   2m    kubernetes.io/kubelet-serving   system:node:w3   Pending\n```\n\nWhat do you do?",
               tags: ["certificate-csr"],
               options: [
-              "CSR is auto-approved, no action needed",
-              "`kubeadm certs sign csr-abc12`",
               "`kubectl certificate approve csr-abc12`",
+              "`kubeadm certs sign csr-abc12`",
+              "CSR is auto-approved, no action needed",
               "`kubectl delete csr csr-abc12` and recreate",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "`kubectl certificate approve <csr-name>` approves the CSR.\nThe kubelet requests a serving certificate for secure communication.\nIn production, auto-approval can be configured for kubelet CSRs.",
             },
@@ -1920,11 +1922,11 @@ export const TOPICS = [
               tags: ["controlplane-troubleshooting"],
               options: [
               "`kubectl describe pod kube-apiserver -n kube-system`",
-              "`kubeadm reset` and `kubeadm init` again",
-              "`crictl logs` on the apiserver container ID from `crictl ps -a`",
-              "`systemctl restart kube-apiserver`",
+              "`crictl logs` on the failed container from `crictl ps -a`",
+              "`systemctl restart kube-apiserver` on the control-plane node",
+              "`kubeadm reset` and `kubeadm init` to rebuild the cluster",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "When the API Server is down, kubectl will not work.\nInvestigate at the container runtime level:\n1. `crictl ps -a` - find the failed container\n2. `crictl logs <container-id>` - see errors\nCommon causes: invalid manifest YAML, wrong certificate path, port conflict.",
             },
@@ -1932,12 +1934,12 @@ export const TOPICS = [
               q: "What is the difference between stacked etcd and external etcd topology?",
               tags: ["etcd-topology"],
               options: [
-              "Stacked etcd runs on Control Plane Nodes; external etcd runs on separate Nodes",
               "Stacked etcd supports only 3 nodes; external etcd supports 5+",
-              "Stacked etcd does not require certificates; external etcd does",
               "No difference, they are different names for the same architecture",
+              "Stacked etcd runs on Control Plane Nodes; external etcd runs on separate Nodes",
+              "Stacked etcd does not require certificates; external etcd does",
 ],
-              answer: 0,
+              answer: 2,
               explanation:
                 "Stacked etcd: etcd runs on the same Nodes as the Control Plane. Simpler to set up, but losing a Node loses both a Control Plane member and an etcd member.\nExternal etcd: etcd on separate Nodes. More reliable because a Control Plane Node failure does not affect etcd.",
             },
@@ -1946,11 +1948,11 @@ export const TOPICS = [
               tags: ["certificate-management"],
               options: [
               "Manually delete old certificates from /etc/kubernetes/pki/",
-              "`kubeadm certs renew all` then restart Control Plane Static Pods",
               "`kubectl delete secret` for the certificates in kube-system",
               "`kubeadm reset` and `kubeadm init` again",
+              "`kubeadm certs renew all` then restart Control Plane Static Pods",
 ],
-              answer: 1,
+              answer: 3,
               explanation:
                 "`kubeadm certs renew all` renews all certificates.\nAfter renewal, restart Control Plane Static Pods so they load the new certificates.\nYou can do this by moving the manifests out of the directory and back, or by restarting kubelet.",
             },
@@ -1972,6 +1974,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה ההבדל בין ConfigMap ל-Secret?",
+              tags: ["configmap-vs-secret"],
               options: [
               "אין הבדל. שניהם מאחסנים key-value data בצורה זהה ב-etcd",
               "ConfigMap מהיר יותר לגישה כי הוא לא עובר base64 encoding",
@@ -2057,6 +2060,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
+              tags: ["requests-vs-limits"],
               options: [
               "requests:\u200E הכמות המינימלית שה-Scheduler מבטיח; limits:\u200E הכמות המקסימלית שהקונטיינר יכול להשתמש",
               "requests ו-limits מגדירים את אותם ערכים. הם תמיד שווים",
@@ -2071,6 +2075,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is the difference between ConfigMap and Secret?",
+              tags: ["configmap-vs-secret"],
               options: [
               "ConfigMap is faster because it skips base64 encoding",
               "Secret is only for passwords and not for other sensitive data types",
@@ -2156,6 +2161,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between resource requests and limits?",
+              tags: ["requests-vs-limits"],
               options: [
               "limits determine Scheduling priority; requests determine QoS class only",
               "requests and limits define the same values. They are always set equally",
@@ -2237,7 +2243,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין LimitRange ל-ResourceQuota?",
-              tags: ["resource-limits"],
+              tags: ["limitrange-vs-quota"],
               options: [
               "LimitRange: CPU quota ל-Node. ResourceQuota: memory quota ל-Cluster",
               "LimitRange:\u200E מגביל מספר Pods. ResourceQuota:\u200E מגביל מספר Nodes",
@@ -2340,7 +2346,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between LimitRange and ResourceQuota?",
-              tags: ["resource-limits"],
+              tags: ["limitrange-vs-quota"],
               options: [
               "LimitRange applies only to new Pods; ResourceQuota applies only to existing Pods",
               "LimitRange sets per-container defaults and limits; ResourceQuota sets aggregate limits for the whole Namespace",
@@ -3424,6 +3430,7 @@ export const TOPICS = [
         questions: [
             {
               q: "פרסמת גרסה חדשה.\nה-Pod עולה, קורס מיד, ו-Kubernetes מפעיל אותו שוב ושוב.\n\nאיזה סטטוס תראה בפלט הפקודה?\n\n```\nkubectl get pods\n```",
+              tags: ["crashloop-flow"],
               options: [
               "CrashLoopBackOff",
               "OOMKilled",
@@ -3436,6 +3443,7 @@ export const TOPICS = [
             },
             {
               q: "ה-Pod נמצא ב-ImagePullBackOff. מה שתי הסיבות הנפוצות ביותר?",
+              tags: ["imagepull-flow"],
               options: [
               "Node חסר disk + Port שגוי",
               "הרשאות RBAC + ConfigMap חסר",
@@ -3523,6 +3531,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "You deployed a new version.\nThe Pod starts, immediately crashes, and Kubernetes keeps restarting it.\n\nWhat status do you see?\n\n```\nkubectl get pods\n```",
+              tags: ["crashloop-flow"],
               options: [
               "CrashLoopBackOff",
               "OOMKilled",
@@ -3535,6 +3544,7 @@ export const TOPICS = [
             },
             {
               q: "A pod is stuck in ImagePullBackOff. What are the two most common causes?",
+              tags: ["imagepull-flow"],
               options: [
               "Wrong image name/tag, or missing imagePullSecret for a private registry",
               "RBAC permissions and missing ConfigMap",

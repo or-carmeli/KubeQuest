@@ -902,30 +902,257 @@ function OomKilledDiagram() {
   );
 }
 
-// ── Control Plane Components ─────────────────────────────────────────
-function ControlPlaneDiagram() {
+// ── Requests vs Limits ───────────────────────────────────────────────
+function RequestsLimitsDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={{ width: "100%", position: "relative", height: 60, marginBottom: 6 }}>
+          {/* Bar background */}
+          <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }} />
+          {/* Requests zone */}
+          <div style={{ position: "absolute", top: 14, left: 0, width: "40%", height: 32, borderRadius: "8px 0 0 8px", background: C.greenBg, borderTop: `1.5px solid ${C.green}`, borderBottom: `1.5px solid ${C.green}`, borderLeft: `1.5px solid ${C.green}` }} />
+          {/* Limits marker */}
+          <div style={{ position: "absolute", top: 12, left: "70%", width: 2, height: 36, background: C.redText, borderRadius: 1 }} />
+          {/* Labels */}
+          <div style={{ position: "absolute", top: 0, left: "40%", transform: "translateX(-100%)", ...label(C.greenText, { fontSize: 8 }) }}>requests</div>
+          <div style={{ position: "absolute", top: 0, left: "70%", transform: "translateX(-50%)", ...label(C.redText, { fontSize: 8 }) }}>limits</div>
+          {/* Usage arrow */}
+          <div style={{ position: "absolute", top: 50, left: "10%", fontSize: 8, fontFamily: MONO, color: C.amberText }}>◀ scheduled here</div>
+          <div style={{ position: "absolute", top: 50, right: "5%", fontSize: 8, fontFamily: MONO, color: C.redText }}>killed ▶</div>
+        </div>
+      </div>
+      <div style={caption()}>requests = scheduling guarantee | limits = hard ceiling</div>
+    </div>
+  );
+}
+
+// ── ConfigMap vs Secret ─────────────────────────────────────────────
+function ConfigMapVsSecretDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 280, alignItems: "stretch" })}>
+        <div style={box(C.cyan, C.cyanBg, { flex: 1, padding: "8px 10px" })}>
+          <div style={label(C.cyanText, { fontSize: 10, marginBottom: 4 })}>ConfigMap</div>
+          <div style={subLabel({ fontSize: 8, lineHeight: 1.4 })}>plain text<br />not encrypted<br />config data</div>
+        </div>
+        <div style={box(C.amber, C.amberBg, { flex: 1, padding: "8px 10px" })}>
+          <div style={label(C.amberText, { fontSize: 10, marginBottom: 4 })}>Secret</div>
+          <div style={subLabel({ fontSize: 8, lineHeight: 1.4 })}>base64 encoded<br />access-controlled<br />sensitive data</div>
+        </div>
+      </div>
+      <div style={{ ...dashed, width: "100%", maxWidth: 280, marginTop: 6, marginBottom: 2 }} />
+      <div style={subLabel({ textAlign: "center", fontSize: 8 })}>both mount as env vars or volume files</div>
+      <div style={caption()}>Secrets are base64-encoded, not encrypted by default</div>
+    </div>
+  );
+}
+
+// ── LimitRange vs ResourceQuota ─────────────────────────────────────
+function LimitRangeVsQuotaDiagram() {
   return (
     <div style={wrap}>
       <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
-        <div style={label(C.indigoText, { marginBottom: 8 })}>Control Plane</div>
+        <div style={label(C.indigoText, { marginBottom: 8 })}>Namespace</div>
         <div style={col({ gap: 6, width: "100%" })}>
-          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "6px 10px" })}>
-            API Server (entry point)
+          <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "6px 10px", textAlign: "left" })}>
+            <span style={{ fontWeight: 700 }}>LimitRange</span>
+            <span style={{ fontSize: 8, opacity: 0.7 }}> — per Pod/container</span>
+          </div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 10px", textAlign: "left" })}>
+            <span style={{ fontWeight: 700 }}>ResourceQuota</span>
+            <span style={{ fontSize: 8, opacity: 0.7 }}> — total namespace</span>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>LimitRange = per-object defaults | Quota = namespace-wide cap</div>
+    </div>
+  );
+}
+
+// ── DNS Resolution Path ─────────────────────────────────────────────
+function DnsResolutionDiagram() {
+  const steps = [
+    { text: "Pod", color: C.green, bg: C.greenBg, textColor: C.greenText },
+    { text: "CoreDNS", color: C.cyan, bg: C.cyanBg, textColor: C.cyanText },
+    { text: "Service IP", color: C.indigo, bg: C.indigoBg, textColor: C.indigoText },
+  ];
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 280, flexWrap: "nowrap", alignItems: "center" })}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <span style={arrow({ fontSize: 12 })}>&rarr;</span>}
+            <div style={smallBox(s.color, s.bg, s.textColor, { flex: 1, padding: "7px 8px", fontSize: 9, minWidth: 0 })}>
+              {s.text}
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={subLabel({ textAlign: "center", fontSize: 8, marginTop: 4 })}>
+        svc.namespace.svc.cluster.local
+      </div>
+      <div style={caption()}>CoreDNS resolves Service names to cluster IPs</div>
+    </div>
+  );
+}
+
+// ── CrashLoopBackOff Flow ───────────────────────────────────────────
+function CrashLoopDiagram() {
+  const steps = [
+    { text: "Container starts",    color: C.green,  bg: C.greenBg,  textColor: C.greenText },
+    { text: "Crashes immediately",  color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "Kubelet restarts it",  color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
+    { text: "Back-off delay grows", color: C.purple, bg: C.purpleBg, textColor: C.purpleText },
+  ];
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div style={smallBox(s.color, s.bg, s.textColor, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+              {s.text}
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ textAlign: "center", padding: "1px 0" }}>
+                <span style={arrow({ fontSize: 10 })}>{i === steps.length - 2 ? "↻" : "↓"}</span>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>10s → 20s → 40s … up to 5 min between restarts</div>
+    </div>
+  );
+}
+
+// ── ImagePullBackOff Flow ───────────────────────────────────────────
+function ImagePullDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { width: "100%", padding: "7px 14px", fontSize: 10 })}>
+          kubelet pulls image
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        </div>
+        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "7px 14px", fontSize: 10 })}>
+          Pull fails
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        </div>
+        <div style={row({ gap: 6, width: "100%" })}>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText, { flex: 1, padding: "6px 8px", fontSize: 9 })}>
+            wrong name/tag
+          </div>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText, { flex: 1, padding: "6px 8px", fontSize: 9 })}>
+            missing pull secret
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>two most common causes of ImagePullBackOff</div>
+    </div>
+  );
+}
+
+// ── Kubelet Role ────────────────────────────────────────────────────
+function KubeletDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280, alignItems: "center" })}>
+        <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "7px 20px", fontSize: 10 })}>
+          API Server
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>&#8595; PodSpec</span>
+        </div>
+        <div style={box(C.indigo, C.indigoBg, { width: "100%", padding: "8px 14px" })}>
+          <div style={label(C.indigoText, { marginBottom: 6 })}>Node</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 10px", fontSize: 10, marginBottom: 6 })}>
+            kubelet
           </div>
           <div style={row({ gap: 6 })}>
-            <div style={smallBox(C.green, C.greenBg, C.greenText, { flex: 1, padding: "6px 8px" })}>
-              etcd
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "4px 6px", fontSize: 9 })}>Container</div>
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "4px 6px", fontSize: 9 })}>Container</div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>kubelet ensures containers match the desired PodSpec</div>
+    </div>
+  );
+}
+
+// ── etcd Data Store ─────────────────────────────────────────────────
+function EtcdDataDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280, alignItems: "center" })}>
+        <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "7px 20px", fontSize: 10 })}>
+          API Server
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>&#8595; read/write</span>
+        </div>
+        <div style={box(C.green, C.greenBg, { width: "100%", padding: "8px 14px" })}>
+          <div style={label(C.greenText, { marginBottom: 6 })}>etcd</div>
+          <div style={row({ gap: 4, flexWrap: "wrap" })}>
+            {["Pods", "Services", "Secrets", "ConfigMaps"].map((r) => (
+              <div key={r} style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "3px 8px", fontSize: 8 })}>{r}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>etcd is the single source of truth for all cluster state</div>
+    </div>
+  );
+}
+
+// ── Control Plane Components ─────────────────────────────────────────
+function ControlPlaneDiagram() {
+  const roleLabel = (text) => ({
+    fontSize: 8, color: "rgba(255,255,255,0.4)", fontFamily: MONO,
+    textAlign: "center", marginTop: 2, lineHeight: 1.2,
+  });
+  return (
+    <div style={wrap}>
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 300 })}>
+        <div style={label(C.indigoText, { marginBottom: 10 })}>Control Plane</div>
+        <div style={col({ gap: 8, width: "100%" })}>
+          {/* API Server - entry point */}
+          <div style={col({ gap: 2, width: "100%" })}>
+            <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "7px 10px" })}>
+              API Server
             </div>
-            <div style={smallBox(C.amber, C.amberBg, C.amberText, { flex: 1, padding: "6px 8px" })}>
-              Scheduler
+            <div style={roleLabel()}>all requests go through here</div>
+          </div>
+          {/* Arrow */}
+          <div style={arrow({ textAlign: "center", fontSize: 13, margin: "-2px 0" })}>↓</div>
+          {/* 3 components */}
+          <div style={row({ gap: 6, width: "100%", alignItems: "flex-start" })}>
+            <div style={col({ gap: 2, flex: 1 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 4px" })}>
+                etcd
+              </div>
+              <div style={roleLabel()}>state store</div>
             </div>
-            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "6px 8px" })}>
-              CM
+            <div style={col({ gap: 2, flex: 1 })}>
+              <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "6px 4px" })}>
+                Scheduler
+              </div>
+              <div style={roleLabel()}>Pod placement</div>
+            </div>
+            <div style={col({ gap: 2, flex: 1 })}>
+              <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { width: "100%", padding: "6px 4px" })}>
+                Controller<br/>Manager
+              </div>
+              <div style={roleLabel()}>control loops</div>
             </div>
           </div>
         </div>
       </div>
-      <div style={caption()}>API Server → etcd (state) | Scheduler (placement) | CM (loops)</div>
+      <div style={caption()}>API Server is the single entry point — all components communicate through it</div>
     </div>
   );
 }
@@ -1399,6 +1626,14 @@ const COMPONENT_MAP = {
   QosEvictionDiagram,
   OomKilledDiagram,
   RestartPolicyDiagram,
+  RequestsLimitsDiagram,
+  ConfigMapVsSecretDiagram,
+  LimitRangeVsQuotaDiagram,
+  DnsResolutionDiagram,
+  CrashLoopDiagram,
+  ImagePullDiagram,
+  KubeletDiagram,
+  EtcdDataDiagram,
   ControlPlaneDiagram,
   StaticPodDiagram,
   EtcdQuorumDiagram,
@@ -1494,12 +1729,11 @@ export function getDiagramForQuestion(tags) {
 
 // Tags that intentionally have no diagram — suppress dev warnings
 const _knownInfoTags = new Set([
-  "dns", "port-mapping", "traffic-policy", "admission-control",
+  "port-mapping", "traffic-policy", "admission-control",
   "resource-limits", "node-lifecycle", "storage-interface",
   "storage-zone", "image-pull", "dns-resolution",
   "kubeadm-join", "kubeadm-init",
   "certificate-management", "controlplane-troubleshooting",
-  "etcd-basics",
   "etcd-backup", "kubeconfig-context", "etcd-restore",
   "kubelet-troubleshooting", "certificate-csr",
 ]);

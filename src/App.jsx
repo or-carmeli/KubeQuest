@@ -804,7 +804,7 @@ function splitQuestionSegments(qText) {
   // false matches across two short-quoted terms like 'api' ב-namespace 'prod'.
   // Stop-word lookahead on trailing args: common English prose words (fails, but,
   // the, etc.) stop command matching to prevent swallowing narrative text.
-  const splitPat = /((?<![A-Za-z0-9\u0590-\u05FF])'(?:[^']{8,})'|(?<![A-Za-z0-9\u0590-\u05FF])"(?:[^"]{8,})"|(?:(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s+(?:[^\s\u0590-\u05FF(:"`]|:[^\s])+(?:\s+(?!(?:fails|returns|shows|but|and|or|the|it|this|which|what|however|because)(?:\s|$|[.,;:!?]))(?:[^\s\u0590-\u05FF(:"`]|:[^\s])+)*))/g;
+  const splitPat = /((?<![A-Za-z0-9\u0590-\u05FF])'(?:[^']{8,})'|(?<![A-Za-z0-9\u0590-\u05FF])"(?:[^"]{8,})"|(?:(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)\s+(?!(?:fails|returns|shows|but|and|or|the|it|this|which|what|however|because|cluster|running|package|packages)(?:\s|$|[.,;:!?]))(?:[^\s\u0590-\u05FF(:"`]|:[^\s])+(?:\s+(?!(?:fails|returns|shows|but|and|or|the|it|this|which|what|however|because|cluster|running|package|packages)(?:\s|$|[.,;:!?]))(?:[^\s\u0590-\u05FF(:"`]|:[^\s])+)*))/g;
 
   let last = 0;
   const matches = [];
@@ -5757,7 +5757,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </div>
                   {hintVisible&&(
                     <div role="note" dir={dir} style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"11px 14px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,unicodeBidi:"isolate",wordBreak:"break-word",overflowWrap:"anywhere",animation:"fadeIn 0.2s ease"}}>
-                      {renderBidiBlock(serverHintText||(currentQuestions[questionIndex]?.explanation || "").split(/\.\s+/)[0], lang)}
+                      {renderBidiBlock(serverHintText||(currentQuestions[questionIndex]?.explanation || "").split(/(?<!\d)\.\s+/)[0], lang)}
                     </div>
                   )}
                 </div>
@@ -5843,12 +5843,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           if (t2.startsWith("```")) { result.push(fenceLines.join("\n")); fenceLines = null; }
                           continue;
                         }
-                        if (t2.startsWith("```") && !t2.endsWith("```")) { fenceLines = [p]; continue; }
+                        if (t2.startsWith("```") && !t2.slice(3).includes("```")) { fenceLines = [p]; continue; }
                         // Single-line code blocks
                         if (t2.startsWith("```") || (t2.startsWith("`") && t2.endsWith("`"))) { result.push(t2); continue; }
                         // Split on ". " at sentence boundaries, but not inside backtick-wrapped code
                         const codes = []; const safe = t2.replace(/`[^`]+`/g, m => { codes.push(m); return `\x00${codes.length-1}\x00`; });
-                        result.push(...safe.split(/(?<=\.)\s+/).map(s => s.trim()).filter(Boolean).map(s => s.replace(/\x00(\d+)\x00/g, (_,i) => codes[i])));
+                        result.push(...safe.split(/(?<=(?<!\d)\.)\s+/).map(s => s.trim()).filter(Boolean).map(s => s.replace(/\x00(\d+)\x00/g, (_,i) => codes[i])));
                       }
                       if (fenceLines) result.push(fenceLines.join("\n")); // unclosed fence
                       return result;
@@ -5887,7 +5887,11 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               if (codeLang === "yaml" || codeLang === "yml" || (!codeLang && /^\s*[\w.\-/]+:\s/m.test(code) && /\n\s+\w/.test(code))) {
                                 return <YamlBlock key={idx}>{code}</YamlBlock>;
                               }
-                              return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
+                              // CLI commands get default variant (auto-detects $ prompt);
+                              // other code gets "output" variant (plain text)
+                              const cliDetect = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)(?:\s|$)/;
+                              const codeVariant = cliDetect.test(code.split("\n")[0].trim()) ? undefined : "output";
+                              return <TerminalBlock key={idx} variant={codeVariant}>{code}</TerminalBlock>;
                             }
                             return (
                               <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
@@ -5916,10 +5920,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           if (t2.startsWith("```")) { result.push(fenceLines.join("\n")); fenceLines = null; }
                           continue;
                         }
-                        if (t2.startsWith("```") && !t2.endsWith("```")) { fenceLines = [p]; continue; }
+                        if (t2.startsWith("```") && !t2.slice(3).includes("```")) { fenceLines = [p]; continue; }
                         if (t2.startsWith("```") || (t2.startsWith("`") && t2.endsWith("`"))) { result.push(t2); continue; }
                         const codes = []; const safe = t2.replace(/`[^`]+`/g, m => { codes.push(m); return `\x00${codes.length-1}\x00`; });
-                        result.push(...safe.split(/(?<=\.)\s+/).map(s => s.trim()).filter(Boolean).map(s => s.replace(/\x00(\d+)\x00/g, (_,i) => codes[i])));
+                        result.push(...safe.split(/(?<=(?<!\d)\.)\s+/).map(s => s.trim()).filter(Boolean).map(s => s.replace(/\x00(\d+)\x00/g, (_,i) => codes[i])));
                       }
                       if (fenceLines) result.push(fenceLines.join("\n"));
                       return result;
@@ -5948,7 +5952,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               if (codeLang === "yaml" || codeLang === "yml" || (!codeLang && /^\s*[\w.\-/]+:\s/m.test(code) && /\n\s+\w/.test(code))) {
                                 return <YamlBlock key={idx}>{code}</YamlBlock>;
                               }
-                              return <TerminalBlock key={idx} variant="output">{code}</TerminalBlock>;
+                              const cliDetect = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget)(?:\s|$)/;
+                              const codeVariant = cliDetect.test(code.split("\n")[0].trim()) ? undefined : "output";
+                              return <TerminalBlock key={idx} variant={codeVariant}>{code}</TerminalBlock>;
                             }
                             return (
                               <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>

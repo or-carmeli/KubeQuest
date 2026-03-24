@@ -159,8 +159,19 @@ export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
       gap = value.match(/(\s+)$/)[1];
       value = value.slice(0, -gap.length);
     }
+    // Extract trailing sentence punctuation (?.!) from the LAST text segment
+    // so it renders outside the bidi isolation span. Without this, punctuation
+    // after English text (e.g. "topology?", "Server.") gets trapped inside
+    // the isolated span and appears mid-sentence instead of at the visual end.
+    let trailingPunct = null;
+    if (i === parts.length - 1 && /[.?!]+$/.test(value)) {
+      const punctMatch = value.match(/([.?!]+)$/);
+      trailingPunct = punctMatch[1];
+      value = value.slice(0, -trailingPunct.length);
+    }
     return [
       value ? <span key={`${keyPrefix}-ht${i}`} dir="rtl" style={{unicodeBidi:"isolate"}}>{renderBidiInner(value, lang, `${keyPrefix}h${i}`)}</span> : null,
+      trailingPunct ? <span key={`${keyPrefix}-tp${i}`} dir="rtl" style={{unicodeBidi:"isolate"}}>{"\u200F"}{trailingPunct}</span> : null,
       gap,
     ];
   });
@@ -242,13 +253,17 @@ export function renderBidi(text, lang, opts) {
       return cliParts.map((part, i) => {
         if (!part) return null;
         if (i % 2 === 1) return <span key={`cli-${i}`} dir="ltr" style={{unicodeBidi:"isolate",...(noCodeStyle?{}:CODE_SPAN_STYLE)}}>{part}</span>;
+        // Preserve boundary whitespace so Hebrew↔CLI spans don't lose spaces
+        const inner = part.trim();
+        if (!inner) return part.includes(" ") ? " " : null;
         // Anchor leading punctuation to RTL context when following an LTR CLI span
-        let trimmed = part.trim();
-        if (!trimmed) return null;
-        if (i > 0 && /^[.,;:!?)}\]>]/.test(trimmed)) trimmed = "\u200F" + trimmed;
-        const prefixed = renderHebrewPrefixTerms(trimmed, lang, `b${i}`);
-        if (prefixed) return <span key={`seg-${i}`}>{prefixed}</span>;
-        return <span key={`seg-${i}`}>{renderBidiInner(trimmed, lang, `b${i}`)}</span>;
+        let seg = inner;
+        if (i > 0 && /^[.,;:!?)}\]>]/.test(seg)) seg = "\u200F" + seg;
+        const lead = /^\s/.test(part) ? " " : "";
+        const trail = /\s$/.test(part) ? " " : "";
+        const prefixed = renderHebrewPrefixTerms(seg, lang, `b${i}`);
+        if (prefixed) return <span key={`seg-${i}`}>{lead}{prefixed}{trail}</span>;
+        return <span key={`seg-${i}`}>{lead}{renderBidiInner(seg, lang, `b${i}`)}{trail}</span>;
       });
     }
   }
@@ -267,7 +282,7 @@ export function renderBidi(text, lang, opts) {
 // so parenthetical explanations like "(see memory usage)" are not captured as part of the command).
 // The (?![-–—](?:\s|$)) lookahead prevents a standalone dash/en-dash/em-dash separator
 // (e.g. "helm install - deploys…") from being swallowed into the command match.
-export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|crictl|etcdctl|curl|wget)(?:\s+(?![-\u2013\u2014](?:\s|$))(?!(?:is|are|was|were|has|can|will|the|a|an|on|in|of|to|for|from|with|not|and|or|but|it|this|that|which|what|however|because|fails|returns|shows|sets|sees|stops|manages|watches|requests|runs|cluster|running|package)(?:\s|$|[.,;:!?]))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
+export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|crictl|etcdctl|curl|wget)(?:\s+(?![-\u2013\u2014](?:\s|$))(?!(?:is|are|was|were|has|can|will|the|a|an|on|in|of|to|for|from|with|not|and|or|but|it|this|that|which|what|however|because|fails|returns|shows|sets|sees|stops|manages|watches|requests|runs|cluster|running|package|packages)(?:\s|$|[.,;:!?]))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
 
 // Splits text on CLI commands and renders commands as LTR code blocks on separate lines.
 export function splitCliParts(text, lang, keyPrefix) {
