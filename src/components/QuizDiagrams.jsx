@@ -778,6 +778,95 @@ function CronJobDiagram() {
   );
 }
 
+// ── 27. Namespace isolation ───────────────────────────────────────────
+function NamespaceDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
+        <div style={label(C.indigoText, { marginBottom: 8 })}>Cluster</div>
+        <div style={col({ gap: 6, width: "100%" })}>
+          <div style={box(C.green, C.greenBg, { padding: "6px 10px", width: "100%" })}>
+            <div style={label(C.greenText, { fontSize: 10, marginBottom: 4 })}>ns: dev</div>
+            <div style={row({ gap: 4 })}>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "3px 6px", fontSize: 8 })}>Pod</div>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "3px 6px", fontSize: 8 })}>Svc</div>
+            </div>
+          </div>
+          <div style={box(C.amber, C.amberBg, { padding: "6px 10px", width: "100%" })}>
+            <div style={label(C.amberText, { fontSize: 10, marginBottom: 4 })}>ns: staging</div>
+            <div style={row({ gap: 4 })}>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "3px 6px", fontSize: 8 })}>Pod</div>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "3px 6px", fontSize: 8 })}>Svc</div>
+            </div>
+          </div>
+          <div style={box(C.red, C.redBg, { padding: "6px 10px", width: "100%" })}>
+            <div style={label(C.redText, { fontSize: 10, marginBottom: 4 })}>ns: prod</div>
+            <div style={row({ gap: 4 })}>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "3px 6px", fontSize: 8 })}>Pod</div>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "3px 6px", fontSize: 8 })}>Svc</div>
+              <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "3px 6px", fontSize: 8 })}>Quota</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>each Namespace isolates its own resources</div>
+    </div>
+  );
+}
+
+// ── 28. PodDisruptionBudget ───────────────────────────────────────────
+function PdbDiagram() {
+  const pod = (ok, extra) => ({
+    width: 44, height: 44, borderRadius: 10,
+    border: `1.5px solid ${ok ? C.green : C.red}`,
+    background: ok ? C.greenBg : C.redBg,
+    display: "flex", flexDirection: "column",
+    alignItems: "center", justifyContent: "center",
+    gap: 2, ...extra,
+  });
+  const check = { fontSize: 13, color: C.greenText, fontWeight: 700 };
+  const cross = { fontSize: 13, color: C.redText, fontWeight: 700 };
+  const podLabel = (c) => ({ fontSize: 8, fontFamily: MONO, fontWeight: 600, color: c, letterSpacing: 0.3 });
+  const phase = (text) => ({
+    fontSize: 9, fontFamily: MONO, fontWeight: 600,
+    color: "rgba(255,255,255,0.55)", letterSpacing: 0.3,
+    textAlign: "center", marginBottom: 4,
+  });
+
+  return (
+    <div style={wrap}>
+      <div style={{ width: "100%", maxWidth: 280 }}>
+        <div style={subLabel({ textAlign: "center", marginBottom: 6 })}>replicas: 3 &nbsp; minAvailable: 2</div>
+
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 10 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={phase()}>Before drain</div>
+            <div style={row({ gap: 6 })}>
+              <div style={pod(true)}><span style={podLabel(C.greenText)}>Pod</span><span style={check}>&#10003;</span></div>
+              <div style={pod(true)}><span style={podLabel(C.greenText)}>Pod</span><span style={check}>&#10003;</span></div>
+              <div style={pod(true)}><span style={podLabel(C.greenText)}>Pod</span><span style={check}>&#10003;</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ ...dashed, marginBottom: 10 }} />
+
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={phase()}>Node drain</div>
+            <div style={row({ gap: 6 })}>
+              <div style={pod(true)}><span style={podLabel(C.greenText)}>Pod</span><span style={check}>&#10003;</span></div>
+              <div style={pod(true)}><span style={podLabel(C.greenText)}>Pod</span><span style={check}>&#10003;</span></div>
+              <div style={pod(false, { borderStyle: "dashed" })}><span style={podLabel(C.redText)}>Pod</span><span style={cross}>&#10007;</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption({ maxWidth: 260 })}>Eviction blocked — PDB requires at least 2 Pods available</div>
+    </div>
+  );
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // LAZY RENDERING — only mount diagram when scrolled into view
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -891,6 +980,8 @@ const COMPONENT_MAP = {
   ESODiagram,
   HelmChartDiagram,
   CronJobDiagram,
+  NamespaceDiagram,
+  PdbDiagram,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
