@@ -2,7 +2,7 @@
 
 **Interactive Kubernetes learning game for DevOps engineers.**
 
-Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, and prepare for CKA-level interviews - through interactive quizzes, incident simulations, and daily challenges.
+Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, and build CKA-level knowledge - through interactive quizzes, incident simulations, and daily challenges. The learning path covers the core domains commonly tested in the Certified Kubernetes Administrator (CKA) exam.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-kubequest.online-00D4FF?style=flat-square&logo=vercel)](https://www.kubequest.online/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
@@ -27,6 +27,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 ## Table of Contents
 
 - [Features](#features)
+- [Learning Path](#learning-path)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Security Model](#security-model)
@@ -44,7 +45,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 ## Features
 
-- **🧠 Topic Quizzes** - 5 topics x 3 difficulty levels, progressively unlocked
+- **🧠 Topic Quizzes** - 8 topics x 3 difficulty levels, progressively unlocked
 - **🔥 Daily Challenge** - 5 fresh questions every day
 - **🎲 Mixed Quiz** - random questions across all topics
 - **🎯 Interview Mode** - mandatory timer, hints disabled, exam pressure
@@ -58,6 +59,25 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 - **👤 Guest Mode** - no account needed; sign up to sync progress across devices
 - **📊 Real-Time Monitoring** - live status page with health checks, uptime history, and auto-detected incidents
 - **🚨 War Room** - multi-step Kubernetes failure scenarios with step-by-step diagnosis and scoring *(Coming Soon)*
+
+---
+
+## Learning Path
+
+The learning path is structured around the core knowledge areas expected for CKA-level Kubernetes proficiency:
+
+| # | Topic | Key Areas |
+|---|-------|-----------|
+| 1 | **Workloads & Scheduling** | Pods, Deployments, StatefulSets, DaemonSets, Jobs, taints/tolerations, HPA |
+| 2 | **Networking & Services** | Services, Ingress, CoreDNS, NetworkPolicy, kube-proxy |
+| 3 | **Cluster Operations** | kubeadm init/join/upgrade, etcd backup & restore, Static Pods, certificates, control plane troubleshooting |
+| 4 | **Config & Secrets** | ConfigMaps, Secrets, RBAC, ServiceAccounts, Pod Security Admission |
+| 5 | **Storage & Helm** | PV/PVC, StorageClass, dynamic provisioning, access modes, Helm |
+| 6 | **Troubleshooting & Debugging** | CrashLoopBackOff, ImagePullBackOff, Node NotReady, DNS issues, probe failures |
+| 7 | **OS & Linux Deep Dive** | Processes, memory, CPU, networking, container runtime internals |
+| 8 | **Argo & GitOps** | ArgoCD, sync policies, ApplicationSets, App of Apps *(coming soon)* |
+
+> KubeQuest is not affiliated with or endorsed by the Linux Foundation or CNCF. CKA is a trademark of the Cloud Native Computing Foundation.
 
 ---
 
@@ -635,8 +655,8 @@ flowchart LR
 
 ## Disclaimer
 
-KubeQuest is an independent learning project and is not affiliated with, sponsored by, or endorsed by any company.
-Kubernetes is a registered trademark of the Cloud Native Computing Foundation.
+KubeQuest is an independent learning project and is not affiliated with, sponsored by, or endorsed by the Linux Foundation, the CNCF, or any certification body.
+CKA and Kubernetes are trademarks of the Cloud Native Computing Foundation.
 
 ---
 

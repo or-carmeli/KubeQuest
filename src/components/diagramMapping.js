@@ -12,8 +12,9 @@
 // Tags are organised into domains for analytics and learning paths.
 // A tag's domain is its prefix before the first hyphen.
 export const TAG_DOMAINS = {
-  workloads:   "Workloads & Pods",
-  networking:  "Networking & Services",
+  workloads:      "Workloads & Scheduling",
+  networking:     "Networking & Services",
+  "cluster-ops":  "Cluster Operations",
   storage:     "Storage & Volumes",
   security:    "Config & Security",
   scheduling:  "Scheduling",
@@ -29,11 +30,12 @@ export function domainOf(tag) {
     probe: "workloads",
     service: "networking", ingress: "networking", network: "networking",
     headless: "networking",
-    storage: "storage", dynamic: "storage",
+    storage: "storage", dynamic: "storage", wait: "storage",
+    kubeadm: "cluster-ops", static: "cluster-ops", controlplane: "cluster-ops", etcd: "cluster-ops", certificate: "cluster-ops",
     rbac: "security", role: "security", config: "security", sealed: "security", external: "security",
-    taints: "scheduling", topology: "scheduling",
+    taints: "scheduling", topology: "scheduling", qos: "scheduling",
     gitops: "gitops",
-    helm: "storage", cronjob: "workloads", namespace: "security",
+    helm: "storage", cronjob: "workloads", namespace: "security", oom: "workloads", restart: "workloads",
   };
   return map[prefix] || "other";
 }
@@ -106,4 +108,35 @@ export const TAG_DIAGRAM_CONFIG = {
 
   // ── disruption ─────────────────────────────────────────────────────
   "pod-disruption":       { component: "PdbDiagram",                 score: 5 },
+
+  // ── scheduling (qos) ──────────────────────────────────────────────
+  "qos-eviction":         { component: "QosEvictionDiagram",         score: 5 },
+
+  // ── workloads (oom) ───────────────────────────────────────────────
+  "oom-killed":           { component: "OomKilledDiagram",           score: 5 },
+
+  // ── networking (hostname) ─────────────────────────────────────────
+  "ingress-hostname":     { component: "IngressHostnameDiagram",     score: 4 },
+
+  // ── networking (stable ip) ────────────────────────────────────────
+  "service-stable-ip":    { component: "ServiceStableIpDiagram",     score: 4 },
+
+  // ── workloads (comparison) ────────────────────────────────────────
+  "statefulset-vs-deployment": { component: "StatefulSetVsDeploymentDiagram", score: 4 },
+
+  // ── storage (binding mode) ────────────────────────────────────────
+  "wait-for-consumer":    { component: "WaitForConsumerDiagram",     score: 4 },
+
+  // ── workloads (pod status) ────────────────────────────────────────
+  "pod-status-phases":    { component: "PodStatusPhasesDiagram",     score: 4 },
+
+  // ── workloads (restart policy) ──────────────────────────────────
+  "restart-policy":       { component: "RestartPolicyDiagram",       score: 4 },
+
+  // ── cluster-ops ───────────────────────────────────────────────────
+  "controlplane-components": { component: "ControlPlaneDiagram",           score: 5 },
+  "static-pod":              { component: "StaticPodDiagram",              score: 4 },
+  "etcd-ha":                 { component: "EtcdQuorumDiagram",             score: 4 },
+  "etcd-topology":           { component: "StackedVsExternalEtcdDiagram",  score: 4 },
+  "kubeadm-upgrade":         { component: "KubeadmUpgradeDiagram",         score: 4 },
 };

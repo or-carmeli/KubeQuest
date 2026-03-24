@@ -867,6 +867,420 @@ function PdbDiagram() {
   );
 }
 
+// ── OOMKilled Flow ──────────────────────────────────────────────────
+function OomKilledDiagram() {
+  const steps = [
+    { text: "Container memory usage",  color: C.green,  bg: C.greenBg,  textColor: C.greenText },
+    { text: "Exceeds limits.memory",   color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
+    { text: "OOM Killer triggered",    color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "Exit Code 137",           color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "CrashLoopBackOff",        color: C.purple, bg: C.purpleBg, textColor: C.purpleText },
+  ];
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div style={{
+              ...smallBox(s.color, s.bg, s.textColor, {
+                width: "100%", padding: "7px 14px", fontSize: 11,
+              }),
+            }}>
+              {s.text}
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>cgroup limit → kernel kills process → Pod restarts</div>
+    </div>
+  );
+}
+
+// ── Control Plane Components ─────────────────────────────────────────
+function ControlPlaneDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
+        <div style={label(C.indigoText, { marginBottom: 8 })}>Control Plane</div>
+        <div style={col({ gap: 6, width: "100%" })}>
+          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "6px 10px" })}>
+            API Server (entry point)
+          </div>
+          <div style={row({ gap: 6 })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { flex: 1, padding: "6px 8px" })}>
+              etcd
+            </div>
+            <div style={smallBox(C.amber, C.amberBg, C.amberText, { flex: 1, padding: "6px 8px" })}>
+              Scheduler
+            </div>
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "6px 8px" })}>
+              CM
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>API Server → etcd (state) | Scheduler (placement) | CM (loops)</div>
+    </div>
+  );
+}
+
+// ── Static Pod vs API-managed Pod ───────────────────────────────────
+function StaticPodDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={row({ gap: 6, width: "100%", alignItems: "stretch" })}>
+          <div style={box(C.amber, C.amberBg, { flex: 1, padding: "8px 10px" })}>
+            <div style={label(C.amberText, { fontSize: 10, marginBottom: 4 })}>Static Pod</div>
+            <div style={subLabel({ fontSize: 8, lineHeight: 1.4 })}>
+              manifest file<br />→ kubelet
+            </div>
+          </div>
+          <div style={box(C.green, C.greenBg, { flex: 1, padding: "8px 10px" })}>
+            <div style={label(C.greenText, { fontSize: 10, marginBottom: 4 })}>Regular Pod</div>
+            <div style={subLabel({ fontSize: 8, lineHeight: 1.4 })}>
+              API Server<br />→ Scheduler → kubelet
+            </div>
+          </div>
+        </div>
+        <div style={{ ...dashed, marginTop: 8, marginBottom: 4 }} />
+        <div style={subLabel({ textAlign: "center", fontSize: 8 })}>
+          /etc/kubernetes/manifests/
+        </div>
+      </div>
+      <div style={caption()}>kubelet manages Static Pods directly from manifest files</div>
+    </div>
+  );
+}
+
+// ── etcd Quorum ─────────────────────────────────────────────────────
+function EtcdQuorumDiagram() {
+  const members = [
+    { ok: true }, { ok: true }, { ok: false },
+  ];
+  const nodeStyle = (ok) => ({
+    width: 38, height: 38, borderRadius: 10,
+    border: `1.5px solid ${ok ? C.green : C.red}`,
+    background: ok ? C.greenBg : C.redBg,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: 9, fontWeight: 700, fontFamily: MONO,
+    color: ok ? C.greenText : C.redText,
+  });
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 6, width: "100%", maxWidth: 280 })}>
+        <div style={subLabel({ textAlign: "center", fontSize: 10 })}>3 members — quorum: 2</div>
+        <div style={row({ gap: 10 })}>
+          {members.map((m, i) => (
+            <div key={i} style={col({ gap: 2, alignItems: "center" })}>
+              <div style={nodeStyle(m.ok)}>{m.ok ? "etcd" : "etcd"}</div>
+              <span style={{ fontSize: 8, fontFamily: MONO, color: m.ok ? C.greenText : C.redText }}>
+                {m.ok ? "✓" : "✗"}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "5px 10px", fontSize: 9, textAlign: "center" })}>
+          quorum maintained — cluster operational
+        </div>
+      </div>
+      <div style={caption()}>odd number prevents split-brain | 3 tolerates 1 failure</div>
+    </div>
+  );
+}
+
+// ── Stacked vs External etcd ────────────────────────────────────────
+function StackedVsExternalEtcdDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 6, width: "100%", maxWidth: 280, alignItems: "stretch" })}>
+        <div style={box(C.amber, C.amberBg, { flex: 1, padding: "8px 8px" })}>
+          <div style={label(C.amberText, { fontSize: 9, marginBottom: 6 })}>Stacked</div>
+          <div style={col({ gap: 3 })}>
+            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP + etcd</div>
+            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP + etcd</div>
+            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP + etcd</div>
+          </div>
+          <div style={subLabel({ marginTop: 4, fontSize: 7, textAlign: "center" })}>simpler setup</div>
+        </div>
+        <div style={box(C.green, C.greenBg, { flex: 1, padding: "8px 8px" })}>
+          <div style={label(C.greenText, { fontSize: 9, marginBottom: 6 })}>External</div>
+          <div style={col({ gap: 3 })}>
+            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP</div>
+            <div style={{ ...dashed, width: "100%" }} />
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "4px 6px", fontSize: 8 })}>etcd</div>
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "4px 6px", fontSize: 8 })}>etcd</div>
+          </div>
+          <div style={subLabel({ marginTop: 4, fontSize: 7, textAlign: "center" })}>more resilient</div>
+        </div>
+      </div>
+      <div style={caption()}>external etcd survives Control Plane node failure</div>
+    </div>
+  );
+}
+
+// ── Kubeadm Upgrade Flow ────────────────────────────────────────────
+function KubeadmUpgradeDiagram() {
+  const steps = [
+    { text: "drain Node",         color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
+    { text: "upgrade kubeadm",    color: C.indigo,  bg: C.indigoBg,  textColor: C.indigoText },
+    { text: "upgrade kubelet",    color: C.indigo,  bg: C.indigoBg,  textColor: C.indigoText },
+    { text: "restart kubelet",    color: C.purple, bg: C.purpleBg, textColor: C.purpleText },
+    { text: "uncordon Node",      color: C.green,  bg: C.greenBg,  textColor: C.greenText },
+  ];
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div style={smallBox(s.color, s.bg, s.textColor, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+              {s.text}
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ textAlign: "center", padding: "1px 0" }}>
+                <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>repeat for each Worker Node after Control Plane upgrade</div>
+    </div>
+  );
+}
+
+// ── Restart Policy Comparison ────────────────────────────────────────
+function RestartPolicyDiagram() {
+  const policies = [
+    { name: "Always",    desc: "restart always",      color: C.green,  bg: C.greenBg,  text: C.greenText, badge: "default" },
+    { name: "OnFailure", desc: "restart if exit ≠ 0", color: C.amber,  bg: C.amberBg,  text: C.amberText, badge: null },
+    { name: "Never",     desc: "no restart",          color: C.red,    bg: C.redBg,    text: C.redText,   badge: null },
+  ];
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { width: "100%", padding: "7px 14px", fontSize: 11 })}>
+          Container exits
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+        </div>
+        <div style={col({ gap: 6, width: "100%" })}>
+          {policies.map((p) => (
+            <div key={p.name} style={{
+              ...box(p.color, p.bg, {
+                width: "100%", padding: "6px 14px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }),
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={label(p.text, { fontSize: 11 })}>{p.name}</span>
+                {p.badge && (
+                  <span style={{
+                    fontSize: 8, fontWeight: 700, color: p.text, fontFamily: MONO,
+                    background: p.bg, border: `1px solid ${p.color}`,
+                    borderRadius: 4, padding: "1px 5px", letterSpacing: 0.3,
+                  }}>
+                    {p.badge}
+                  </span>
+                )}
+              </div>
+              <span style={subLabel({ fontSize: 9 })}>{p.desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={caption()}>most Deployments use Always</div>
+    </div>
+  );
+}
+
+// ── Service Stable IP ────────────────────────────────────────────────
+function ServiceStableIpDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ width: "100%", maxWidth: 280, alignItems: "stretch" })}>
+        <div style={{ ...box(C.red, C.redBg), flex: 1 }}>
+          <div style={label(C.redText, { marginBottom: 6 })}>Pod restarts</div>
+          <div style={{ fontSize: 10, fontFamily: MONO, color: C.redText, textAlign: "center", lineHeight: 1.6 }}>
+            <span style={{ textDecoration: "line-through", opacity: 0.5 }}>10.0.1.5</span>
+            <span style={arrow({ margin: "0 4px" })}>&rarr;</span>
+            10.0.1.9
+          </div>
+          <div style={subLabel({ marginTop: 4, textAlign: "center" })}>IP changes</div>
+        </div>
+        <div style={{ ...box(C.green, C.greenBg), flex: 1 }}>
+          <div style={label(C.greenText, { marginBottom: 6 })}>Service</div>
+          <div style={{ fontSize: 10, fontFamily: MONO, color: C.greenText, textAlign: "center" }}>
+            10.96.0.10
+          </div>
+          <div style={subLabel({ marginTop: 4, textAlign: "center" })}>stable IP</div>
+        </div>
+      </div>
+      <div style={caption()}>Pod IPs change on restart -- Service IP stays stable</div>
+    </div>
+  );
+}
+
+// ── Ingress Hostname Routing ─────────────────────────────────────────
+function IngressHostnameDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { width: "100%" })}>
+          Client
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+        </div>
+        <div style={{ ...box(C.cyan, C.cyanBg, { width: "100%", padding: "10px 10px 8px" }) }}>
+          <div style={label(C.cyanText, { marginBottom: 8 })}>Ingress Controller</div>
+          <div style={col({ gap: 4, width: "100%" })}>
+            <div style={{ display: "flex", justifyContent: "space-between", width: "100%", fontSize: 10, fontFamily: MONO }}>
+              <span style={{ color: C.amberText }}>api.example.com</span>
+              <span style={arrow()}>&rarr;</span>
+              <span style={{ color: C.greenText }}>api-svc</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", width: "100%", fontSize: 10, fontFamily: MONO }}>
+              <span style={{ color: C.amberText }}>web.example.com</span>
+              <span style={arrow()}>&rarr;</span>
+              <span style={{ color: C.greenText }}>web-svc</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>hostname routing -- one IP, multiple domains</div>
+    </div>
+  );
+}
+
+// ── StatefulSet vs Deployment ────────────────────────────────────────
+function StatefulSetVsDeploymentDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ width: "100%", maxWidth: 290, alignItems: "stretch" })}>
+        <div style={{ ...box(C.indigo, C.indigoBg), flex: 1 }}>
+          <div style={label(C.indigoText, { marginBottom: 6 })}>Deployment</div>
+          <div style={col({ gap: 4 })}>
+            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText)}>pod-xk2f</div>
+            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText)}>pod-m9z1</div>
+          </div>
+          <div style={{ ...smallBox(C.purple, C.purpleBg, C.purpleText), marginTop: 6, width: "100%" }}>PVC (shared)</div>
+        </div>
+        <div style={{ ...box(C.green, C.greenBg), flex: 1 }}>
+          <div style={label(C.greenText, { marginBottom: 6 })}>StatefulSet</div>
+          <div style={col({ gap: 4 })}>
+            <div style={col({ gap: 2 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText)}>pod-0</div>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { fontSize: 9 })}>pvc-0</div>
+            </div>
+            <div style={col({ gap: 2 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText)}>pod-1</div>
+              <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { fontSize: 9 })}>pvc-1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption({ maxWidth: 280 })}>random names + shared storage vs stable names + dedicated PVCs</div>
+    </div>
+  );
+}
+
+// ── WaitForFirstConsumer ─────────────────────────────────────────────
+function WaitForConsumerDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={subLabel({ textAlign: "center", marginBottom: 6, fontSize: 10 })}>Immediate</div>
+        <div style={row({ gap: 4 })}>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText)}>PVC created</div>
+          <span style={arrow()}>&rarr;</span>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText)}>PV bound (any zone)</div>
+        </div>
+        <div style={{ ...dashed, width: "100%", margin: "10px 0" }} />
+        <div style={subLabel({ textAlign: "center", marginBottom: 6, fontSize: 10 })}>WaitForFirstConsumer</div>
+        <div style={row({ gap: 4 })}>
+          <div style={smallBox(C.green, C.greenBg, C.greenText)}>PVC created</div>
+          <span style={arrow()}>&rarr;</span>
+          <div style={smallBox(C.green, C.greenBg, C.greenText)}>Pod scheduled</div>
+          <span style={arrow()}>&rarr;</span>
+          <div style={smallBox(C.green, C.greenBg, C.greenText)}>PV bound (same zone)</div>
+        </div>
+      </div>
+      <div style={caption()}>WaitForFirstConsumer ensures PV and Pod are co-located</div>
+    </div>
+  );
+}
+
+// ── Pod Status Phases ────────────────────────────────────────────────
+function PodStatusPhasesDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ width: "100%", maxWidth: 280 })}>
+        <div style={{ ...box(C.amber, C.amberBg), flex: 1, textAlign: "center" }}>
+          <div style={label(C.amberText, { marginBottom: 4 })}>Running</div>
+          <div style={subLabel({ textAlign: "center" })}>container active</div>
+          <div style={{ fontSize: 9, color: C.redText, marginTop: 4, fontFamily: MONO }}>not in endpoints</div>
+        </div>
+        <span style={arrow({ fontSize: 14 })}>&rarr;</span>
+        <div style={{ ...box(C.green, C.greenBg), flex: 1, textAlign: "center" }}>
+          <div style={label(C.greenText, { marginBottom: 4 })}>Ready</div>
+          <div style={subLabel({ textAlign: "center" })}>probe passed</div>
+          <div style={{ fontSize: 9, color: C.greenText, marginTop: 4, fontFamily: MONO }}>in Service endpoints &#10003;</div>
+        </div>
+      </div>
+      <div style={caption({ maxWidth: 260 })}>Running &#8800; Ready -- readiness probe gates traffic</div>
+    </div>
+  );
+}
+
+// ── QoS Eviction Order ──────────────────────────────────────────────
+function QosEvictionDiagram() {
+  const qosClasses = [
+    { name: "BestEffort",  color: C.red,    bg: C.redBg,    text: C.redText,    desc: "no requests/limits" },
+    { name: "Burstable",   color: C.amber,  bg: C.amberBg,  text: C.amberText,  desc: "partial limits" },
+    { name: "Guaranteed",  color: C.green,  bg: C.greenBg,  text: C.greenText,  desc: "requests = limits" },
+  ];
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={subLabel({ textAlign: "center", marginBottom: 8, fontSize: 10 })}>
+          Eviction priority (high → low)
+        </div>
+        {qosClasses.map((qos, i) => (
+          <React.Fragment key={qos.name}>
+            <div style={{
+              ...box(qos.color, qos.bg, {
+                width: "100%", padding: "8px 14px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }),
+            }}>
+              <div style={label(qos.text, { fontSize: 11 })}>{qos.name}</div>
+              <div style={subLabel({ fontSize: 9 })}>{qos.desc}</div>
+            </div>
+            {i < qosClasses.length - 1 && (
+              <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>first to be evicted → last to be evicted</div>
+    </div>
+  );
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // LAZY RENDERING — only mount diagram when scrolled into view
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -982,6 +1396,19 @@ const COMPONENT_MAP = {
   CronJobDiagram,
   NamespaceDiagram,
   PdbDiagram,
+  QosEvictionDiagram,
+  OomKilledDiagram,
+  RestartPolicyDiagram,
+  ControlPlaneDiagram,
+  StaticPodDiagram,
+  EtcdQuorumDiagram,
+  StackedVsExternalEtcdDiagram,
+  KubeadmUpgradeDiagram,
+  ServiceStableIpDiagram,
+  IngressHostnameDiagram,
+  StatefulSetVsDeploymentDiagram,
+  WaitForConsumerDiagram,
+  PodStatusPhasesDiagram,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1068,7 +1495,11 @@ export function getDiagramForQuestion(tags) {
 // Tags that intentionally have no diagram — suppress dev warnings
 const _knownInfoTags = new Set([
   "dns", "port-mapping", "traffic-policy", "admission-control",
-  "resource-limits", "qos-eviction", "node-lifecycle", "storage-interface",
-  "storage-zone", "config-mount", "image-pull", "dns-resolution",
-  "pod-disruption", "dynamic-provisioning",
+  "resource-limits", "node-lifecycle", "storage-interface",
+  "storage-zone", "image-pull", "dns-resolution",
+  "kubeadm-join", "kubeadm-init",
+  "certificate-management", "controlplane-troubleshooting",
+  "etcd-basics",
+  "etcd-backup", "kubeconfig-context", "etcd-restore",
+  "kubelet-troubleshooting", "certificate-csr",
 ]);

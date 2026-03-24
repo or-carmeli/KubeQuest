@@ -55,7 +55,7 @@ export const TOPIC_META = [
   {
     id: "workloads",
     icon: "workloads",
-    name: "Workloads & Pods",
+    name: "Workloads & Scheduling",
     color: "#00D4FF",
     description: "Pods · Deployments · Jobs · Scheduling",
     descriptionEn: "Pods · Deployments · Jobs · Scheduling",
@@ -67,6 +67,15 @@ export const TOPIC_META = [
     color: "#A855F7",
     description: "Services · Ingress · DNS · NetworkPolicy",
     descriptionEn: "Services · Ingress · DNS · NetworkPolicy",
+  },
+  {
+    id: "cluster-ops",
+    icon: "cluster-ops",
+    name: "Cluster Operations",
+    color: "#3B82F6",
+    description: "kubeadm · Control Plane · Static Pods · Certificates",
+    descriptionEn: "kubeadm · Control Plane · Static Pods · Certificates",
+    isNew: true,
   },
   {
     id: "config",
