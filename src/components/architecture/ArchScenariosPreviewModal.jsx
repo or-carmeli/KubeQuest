@@ -168,7 +168,7 @@ export default function ArchScenariosPreviewModal({
           <p style={{ margin: "0 0 1px", color: "var(--text-secondary)", fontSize: 12, fontWeight: 500 }}>
             {isEn ? "Train real infrastructure decision making" : "סימולציות החלטות בארכיטקטורת מערכות"}
           </p>
-          <p style={{ margin: "0 0 10px", color: "var(--text-dim)", fontSize: 10, opacity: 0.5 }}>
+          <p style={{ margin: "0 0 10px", color: "var(--text-dim)", fontSize: 10, opacity: 0.7 }}>
             {isEn ? "Designed for DevOps and SRE engineers" : "מיועד למהנדסי DevOps ו-SRE"}
           </p>
 
@@ -188,7 +188,7 @@ export default function ArchScenariosPreviewModal({
               <span style={{ fontSize: 9, fontWeight: 700, color: "#C084FC", letterSpacing: 1.2, textTransform: "uppercase", opacity: 0.8 }}>
                 Scenario Preview
               </span>
-              <span style={{ fontSize: 9, color: "var(--text-dim)", opacity: 0.5, fontWeight: 600 }}>
+              <span style={{ fontSize: 9, color: "var(--text-dim)", opacity: 0.7, fontWeight: 600 }}>
                 Scenario 1 of 5
               </span>
             </div>
@@ -203,13 +203,13 @@ export default function ArchScenariosPreviewModal({
               background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 8,
               padding: "8px 10px", marginBottom: 10,
             }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, opacity: 0.6 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, opacity: 0.8 }}>
                 System context
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "3px 14px" }}>
                 {CONTEXT_ITEMS.map((item, i) => (
                   <span key={i} style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.6 }}>
-                    <span style={{ opacity: 0.5 }}>{item.labelEn}: </span>
+                    <span style={{ opacity: 0.7 }}>{item.labelEn}: </span>
                     <span style={{ color: "var(--text-secondary)", fontWeight: 600, fontFamily: "monospace", fontSize: 10 }}>
                       {item.valueEn}
                     </span>
@@ -222,7 +222,7 @@ export default function ArchScenariosPreviewModal({
             <p style={{ margin: "0 0 2px", color: "var(--text-bright)", fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>
               K8s traffic spike hitting your cluster
             </p>
-            <p style={{ margin: "0 0 8px", color: "var(--text-dim)", fontSize: 11, opacity: 0.55 }}>
+            <p style={{ margin: "0 0 8px", color: "var(--text-secondary)", fontSize: 11, opacity: 0.85 }}>
               Choose the best architectural response
             </p>
 

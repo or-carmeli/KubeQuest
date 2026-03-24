@@ -6,6 +6,5 @@
  *
  * Unlocks: Architecture Scenarios, Performance Insights, War Room, Argo.
  */
-export const EXPERIMENTAL_ENABLED = false; // TEMP: preview prod mode locally
-// export const EXPERIMENTAL_ENABLED = !import.meta.env.PROD
-//   || new URLSearchParams(window.location.search).has("arch");
+export const EXPERIMENTAL_ENABLED = !import.meta.env.PROD
+  || new URLSearchParams(window.location.search).has("arch");

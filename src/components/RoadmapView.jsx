@@ -9,6 +9,7 @@ const LEVEL_ICON_MAP = { easy: Zap, medium: Triangle, hard: Flame };
 const STAGE_SUBTITLES = {
   workloads:       "Pods · Deployments · Jobs · Scheduling",
   networking:      "Services · Ingress · DNS · NetworkPolicy",
+  "cluster-ops":   "kubeadm · Control Plane · Static Pods · Certificates",
   config:          "ConfigMaps · Secrets · RBAC · SA",
   storage:         "PV · StorageClass · Helm · Operators",
   troubleshooting: "Logs · Events · Probes · Observability",

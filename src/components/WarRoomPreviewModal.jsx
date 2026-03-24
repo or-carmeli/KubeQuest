@@ -186,7 +186,7 @@ export default function WarRoomPreviewModal({
               ? "Practice real-time production incident management"
               : "תרגול ניהול תקלות פרודקשן בזמן אמת"}
           </p>
-          <p style={{ margin: "0 0 10px", color: "var(--text-dim)", fontSize: 10, opacity: 0.5 }}>
+          <p style={{ margin: "0 0 10px", color: "var(--text-dim)", fontSize: 10, opacity: 0.7 }}>
             {isEn ? "Designed for DevOps and SRE engineers" : "מיועד למהנדסי DevOps ו-SRE"}
           </p>
 
@@ -206,7 +206,7 @@ export default function WarRoomPreviewModal({
               <span style={{ fontSize: 9, fontWeight: 700, color: A.accent, letterSpacing: 1.2, textTransform: "uppercase", opacity: 0.8 }}>
                 Incident Preview
               </span>
-              <span style={{ fontSize: 9, color: "var(--text-dim)", opacity: 0.5, fontWeight: 600 }}>
+              <span style={{ fontSize: 9, color: "var(--text-dim)", opacity: 0.7, fontWeight: 600 }}>
                 Step 1 of 4
               </span>
             </div>
@@ -221,13 +221,13 @@ export default function WarRoomPreviewModal({
               background: "var(--glass-2)", border: "1px solid var(--glass-5)", borderRadius: 8,
               padding: "7px 10px", marginBottom: 8,
             }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, opacity: 0.6 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-dim)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, opacity: 0.8 }}>
                 System context
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 12px" }}>
                 {CONTEXT_ITEMS.map((item, i) => (
                   <span key={i} style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.5 }}>
-                    <span style={{ opacity: 0.5 }}>{item.label}: </span>
+                    <span style={{ opacity: 0.7 }}>{item.label}: </span>
                     <span style={{ color: "var(--text-secondary)", fontWeight: 600, fontFamily: "monospace", fontSize: 10 }}>
                       {item.value}
                     </span>
@@ -242,12 +242,12 @@ export default function WarRoomPreviewModal({
             </p>
 
             {/* Metrics line */}
-            <p style={{ margin: "0 0 6px", color: "var(--text-dim)", fontSize: 10, opacity: 0.55, fontFamily: "monospace" }}>
+            <p style={{ margin: "0 0 6px", color: "var(--text-secondary)", fontSize: 10, opacity: 0.8, fontFamily: "monospace" }}>
               Error rate: 45% &middot; Baseline: 1.2% &middot; P95: 2.8s
             </p>
 
             {/* Prompt */}
-            <p style={{ margin: "0 0 7px", color: "var(--text-secondary)", fontSize: 11, opacity: 0.7 }}>
+            <p style={{ margin: "0 0 7px", color: "var(--text-secondary)", fontSize: 11, opacity: 0.85 }}>
               Where do you start?
             </p>
 

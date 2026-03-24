@@ -267,7 +267,7 @@ export function renderBidi(text, lang, opts) {
 // so parenthetical explanations like "(see memory usage)" are not captured as part of the command).
 // The (?![-–—](?:\s|$)) lookahead prevents a standalone dash/en-dash/em-dash separator
 // (e.g. "helm install - deploys…") from being swallowed into the command match.
-export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|kubelet|crictl|etcdctl|curl|wget)(?:\s+(?![-\u2013\u2014](?:\s|$))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
+export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|crictl|etcdctl|curl|wget)(?:\s+(?![-\u2013\u2014](?:\s|$))(?!(?:is|are|was|were|has|can|will|the|a|an|on|in|of|to|for|from|with|not|and|or|but|it|this|that|which|what|however|because|fails|returns|shows|sets|sees|stops|manages|watches|requests|runs|cluster|running|package)(?:\s|$|[.,;:!?]))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
 
 // Splits text on CLI commands and renders commands as LTR code blocks on separate lines.
 export function splitCliParts(text, lang, keyPrefix) {
@@ -296,8 +296,23 @@ export function renderBidiBlock(text, lang) {
   // Quick check: does the text contain a CLI command outside backticks?
   const bare = text.replace(/`[^`]+`/g, "");
   const hasCli = CLI_COMMAND_RE.test(bare);
-  // No CLI command: for Hebrew fall back to renderBidi; for English return plain text
-  if (!hasCli) return lang === "he" ? renderBidi(text, lang) : renderBidiInner(text, lang, "e");
+  // No CLI command: handle backtick-wrapped inline code for all languages,
+  // then fall back to renderBidi (Hebrew) or renderBidiInner (English)
+  if (!hasCli) {
+    if (text.includes("`")) {
+      const btParts = text.split(/`([^`]+)`/);
+      if (btParts.length > 1) {
+        return btParts.map((part, i) => {
+          if (i % 2 === 1) return <span key={`bt-${i}`} dir="ltr" style={{unicodeBidi:"isolate",...CODE_SPAN_STYLE}}>{part}</span>;
+          if (!part) return null;
+          let seg = part;
+          if (i > 0 && lang === "he" && /^[\s]*[.,;:!?)}\]>]/.test(seg)) seg = "\u200F" + seg;
+          return <span key={`seg-${i}`}>{lang === "he" ? renderBidi(seg, lang) : renderBidiInner(seg, lang, `e${i}`)}</span>;
+        });
+      }
+    }
+    return lang === "he" ? renderBidi(text, lang) : renderBidiInner(text, lang, "e");
+  }
   // CLI command found (any language): handle backtick-wrapped inline code first,
   // then CLI commands in remaining segments
   if (text.includes("`")) {

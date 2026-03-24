@@ -1,8 +1,9 @@
-import { Settings, Globe, ShieldCheck, HardDrive, Wrench, Monitor, RefreshCw } from "lucide-react";
+import { Settings, Globe, ShieldCheck, HardDrive, Wrench, Monitor, RefreshCw, Server } from "lucide-react";
 
 const TOPIC_ICONS = {
   workloads: Settings,
   networking: Globe,
+  "cluster-ops": Server,
   config: ShieldCheck,
   storage: HardDrive,
   troubleshooting: Wrench,

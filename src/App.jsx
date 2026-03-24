@@ -327,6 +327,7 @@ const TRANSLATIONS = {
     heroStage: "שלב", heroStageOf: "מתוך", heroStartTrack: "התחל את המסלול", heroContinueTrack: "המשך למשימה הבאה", heroAllDone: "כל הנושאים הושלמו!",
     trackProgressTitle: "התקדמות במסלול", trackCompleted: "הושלם", rankUnlockHint: "התחבר כדי להצטרף לדירוג",
     roadmapTitle: "ההתקדמות במסלול",
+    roadmapCkaSub: "מסלול לימוד המכסה את תחומי ה-CKA המרכזיים",
     roadmapAllDone: "השלמת את כל השלבים!",
     roadmapStage: "את בשלב", roadmapStageOf: "מתוך",
     roadmapCompletedPct: "הושלם",
@@ -596,6 +597,7 @@ const TRANSLATIONS = {
     heroStage: "Stage", heroStageOf: "of", heroStartTrack: "Start the Track", heroContinueTrack: "Continue to Next Task", heroAllDone: "All topics completed!",
     trackProgressTitle: "Track Progress", trackCompleted: "completed", rankUnlockHint: "Log in to join ranking",
     roadmapTitle: "Roadmap Progress",
+    roadmapCkaSub: "Covers core CKA exam domains",
     roadmapAllDone: "You completed all stages!",
     roadmapStage: "You're on stage", roadmapStageOf: "of",
     roadmapCompletedPct: "completed",
@@ -780,7 +782,7 @@ function classifyFragment(text) {
   const trimmed = text.trim();
   if (!trimmed) return null;
   // CLI commands: starts with a known CLI tool
-  if (/^(kubectl|helm|docker|kubeadm|kubelet|crictl|etcdctl|curl|wget|git|aws)\s/.test(trimmed)) return "command";
+  if (/^(kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|git|aws)\s/.test(trimmed)) return "command";
   // Error/output messages: starts with error indicators or typical K8s output patterns
   if (/^(error:|Error:|ERROR|Failed|FATAL|rpc error|unauthorized|forbidden|connection refused|Could not|cannot|Back-off|warning:|Warning:)/i.test(trimmed)) return "error";
   // Quoted output that looks like an error or status message (no Hebrew)
@@ -5561,7 +5563,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
             </div>
           </div>
           {[
-            {icon:<BookOpen size={18} strokeWidth={1.5}/>,title:lang==="en"?"What is this?":"מה זה?",body:lang==="en"?<>KubeQuest is an interactive app for practicing Kubernetes through questions and real troubleshooting scenarios.<br/><br/>The goal is not just memorizing commands, but understanding how to diagnose real cluster issues.<br/><br/>Topics include:<br/>• Workloads &amp; Pods<br/>• Networking &amp; Services<br/>• Config &amp; Secrets<br/>• Storage &amp; Helm<br/>• Troubleshooting &amp; Debugging<br/>• OS &amp; Linux Deep Dive<br/>• Argo &amp; GitOps</>:<>KubeQuest היא אפליקציה לשפר את כישורי הקוברנטיס שלך דרך שאלות ותרחישי תקלות.<br/><br/>המטרה היא לא רק לזכור פקודות, אלא להבין איך לאבחן בעיות אמיתיות בקלאסטר Kubernetes.<br/><br/>נושאים לדוגמה:<br/>• Workloads &amp; Pods<br/>• Networking &amp; Services<br/>• Config &amp; Secrets<br/>• Storage &amp; Helm<br/>• Troubleshooting &amp; Debugging<br/>• OS &amp; Linux Deep Dive<br/>• Argo &amp; GitOps</>},
+            {icon:<BookOpen size={18} strokeWidth={1.5}/>,title:lang==="en"?"What is this?":"מה זה?",body:lang==="en"?<>KubeQuest is an interactive app for practicing Kubernetes through scenario-based questions and real troubleshooting exercises.<br/><br/>The learning path covers the core domains expected for CKA-level Kubernetes knowledge, including cluster operations, workloads, networking, storage, and troubleshooting.<br/><br/>Topics:<br/>• Workloads &amp; Scheduling<br/>• Networking &amp; Services<br/>• Cluster Operations<br/>• Config &amp; Secrets<br/>• Storage &amp; Helm<br/>• Troubleshooting &amp; Debugging<br/>• OS &amp; Linux Deep Dive<br/>• Argo &amp; GitOps</>:<>KubeQuest היא אפליקציה לשפר את כישורי הקוברנטיס שלך דרך שאלות מבוססות תרחישים ותרגילי troubleshooting.<br/><br/>מסלול הלמידה מכסה את התחומים המרכזיים הנדרשים לרמת הידע של הסמכת CKA, כולל ניהול קלאסטר, workloads, רשתות, אחסון ואיתור תקלות.<br/><br/>נושאים:<br/>• Workloads &amp; Scheduling<br/>• Networking &amp; Services<br/>• Cluster Operations<br/>• Config &amp; Secrets<br/>• Storage &amp; Helm<br/>• Troubleshooting &amp; Debugging<br/>• OS &amp; Linux Deep Dive<br/>• Argo &amp; GitOps</>},
             {icon:<Activity size={18} strokeWidth={1.5}/>,title:lang==="en"?"How it works":"איך זה עובד",body:lang==="en"?<>The app includes several practice modes:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>Practice questions by topic.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>Daily challenge with random questions.<br/><br/><span style={{fontWeight:600}}>War Room</span><br/>Troubleshooting scenarios that simulate real Kubernetes cluster issues.</>:<>האפליקציה כוללת כמה מצבי תרגול:<br/><br/><span style={{fontWeight:600}}>Topic Practice</span><br/>תרגול שאלות לפי נושאים שונים.<br/><br/><span style={{fontWeight:600}}>Daily Challenge</span><br/>אתגר יומי עם שאלות אקראיות.<br/><br/><span style={{fontWeight:600}}>חדר מצב</span><br/>תרחישי תקלות המדמים בעיות אמיתיות בקלאסטר.</>},
             {icon:<Target size={18} strokeWidth={1.5}/>,title:lang==="en"?"Who is it for":"למי זה מיועד",body:lang==="en"?<>• DevOps Engineers<br/>• SRE Engineers<br/>• Developers working with Kubernetes<br/>• Anyone preparing for CKA or CKAD certifications</>:<>האפליקציה מיועדת ל:<br/><br/>• DevOps Engineers<br/>• SRE Engineers<br/>• מפתחים שעובדים עם Kubernetes<br/>• אנשים שמתכוננים להסמכות CKA או CKAD</>},
             {icon:<User size={18} strokeWidth={1.5}/>,title:lang==="en"?"Built by":"פותח על ידי",body:<span>Or Carmeli<br/><span style={{color:"var(--text-dim)",fontSize:12}}>DevOps Engineer</span><br/><br/><a href="https://www.linkedin.com/in/orcarmeli/" target="_blank" rel="noopener noreferrer" style={{color:"var(--link-color)",textDecoration:"none",fontWeight:600}}>LinkedIn</a>{" · "}<a href="https://github.com/or-carmeli/KubeQuest" target="_blank" rel="noopener noreferrer" style={{color:"var(--text-primary)",textDecoration:"none",fontWeight:600}}>GitHub</a></span>},
@@ -5581,7 +5583,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
           </div>
           <div style={{marginTop:32,padding:"14px 16px",borderTop:"1px solid var(--glass-6)"}}>
             <div style={{color:"var(--text-muted)",fontSize:11,fontWeight:600,letterSpacing:0.3,marginBottom:6}}>{lang==="en"?"Disclaimer":"הצהרה"}</div>
-            <p style={{color:"var(--text-dim)",fontSize:11,lineHeight:1.6,margin:0}}>{lang==="en"?"KubeQuest is an independent learning project and is not affiliated with, sponsored by, or endorsed by any company. Kubernetes is a registered trademark of the Cloud Native Computing Foundation.":"KubeQuest הוא פרויקט לימודי עצמאי ואינו קשור, ממומן או מאושר על ידי כל חברה. Kubernetes הוא סימן מסחרי רשום של Cloud Native Computing Foundation."}</p>
+            <p style={{color:"var(--text-dim)",fontSize:11,lineHeight:1.6,margin:0}}>{lang==="en"?"KubeQuest is an independent learning project and is not affiliated with, sponsored by, or endorsed by the Linux Foundation, the CNCF, or any certification body. CKA and Kubernetes are trademarks of the Cloud Native Computing Foundation.":"KubeQuest הוא פרויקט לימודי עצמאי ואינו קשור, ממומן או מאושר על ידי Linux Foundation, CNCF, או כל גוף הסמכה. CKA ו-Kubernetes הם סימנים מסחריים של Cloud Native Computing Foundation."}</p>
           </div>
         </div>
       )}
