@@ -959,7 +959,7 @@ function renderQuestion(qText, lang, animate) {
     if (segments.length <= 1) {
       return (
         <div dir={qDir} style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",direction:qDir,textAlign:qDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>
-          {lang==="he"?renderBidi(qText,lang):renderBidiInner(qText,lang,"q")}
+          {renderBidi(qText,lang)}
         </div>
       );
     }
@@ -982,14 +982,14 @@ function renderQuestion(qText, lang, animate) {
           if (seg.type === "question") {
             return (
               <div key={idx} dir={qDir} style={{color:"var(--text-primary)",fontSize:16,fontWeight:700,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",direction:qDir,textAlign:qDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>
-                {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`q${idx}`)}
+                {renderBidi(seg.content,lang)}
               </div>
             );
           }
           // Regular text (description)
           return (
             <div key={idx} dir={qDir} style={{color:"var(--text-secondary)",fontSize:13.5,fontWeight:400,lineHeight:1.6,wordBreak:"break-word",overflowWrap:"anywhere",direction:qDir,textAlign:qDir==="rtl"?"right":"left",unicodeBidi:"isolate"}}>
-              {lang==="he"?renderBidi(seg.content,lang):renderBidiInner(seg.content,lang,`t${idx}`)}
+              {renderBidi(seg.content,lang)}
             </div>
           );
         })}

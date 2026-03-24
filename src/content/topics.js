@@ -3860,7 +3860,7 @@ export const TOPICS = [
             explanation: "prune: true אומר ל-ArgoCD למחוק מהקלאסטר משאבים שכבר לא קיימים ב-Git.\nבלי prune, ArgoCD היה מתעלם ממשאבים שנמחקו מ-Git.\nזה חשוב להבין כי prune יכול למחוק משאבים בלי אזהרה.",
           },
           {
-            q: "ArgoCD Application מוגדר עם Helm source:\n\n```\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nהמפתח רוצה לשנות את ה-image tag ל-v1.6.\n\nמה הדרך הנכונה ב-GitOps?",
+            q: "ArgoCD Application מוגדר עם Helm source:\n\n```yaml\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nהמפתח רוצה לשנות את ה-image tag ל-v1.6.\n\nמה הדרך הנכונה ב-GitOps?",
             options: [
               "לשנות ב-ArgoCD UI את ה-parameter ישירות",
               "להריץ `helm upgrade` עם --set image.tag=v1.6",
@@ -3879,7 +3879,7 @@ export const TOPICS = [
               "להוסיף replicas: null ל-manifests ב-Git",
             ],
             answer: 1,
-            explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\nignoreDifferences:\n- group: apps\n  kind: Deployment\n  jsonPointers:\n  - /spec/replicas\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
+            explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\n```yaml\nignoreDifferences:\n- group: apps\n  kind: Deployment\n  jsonPointers:\n  - /spec/replicas\n```\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
           },
           {
             q: "ב-ArgoCD, מה Sync Waves מאפשר לך לעשות?",
@@ -3912,7 +3912,7 @@ export const TOPICS = [
               "צריך למחוק את ה-Application דרך CLI ולא דרך UI",
             ],
             answer: 0,
-            explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\nmetadata:\n  finalizers:\n  - resources-finalizer.argocd.argoproj.io\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
+            explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n  - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
             q: "מה ההבדל בין prune: true ל-selfHeal: true?",
@@ -3984,7 +3984,7 @@ export const TOPICS = [
               "להעביר ל-client-side apply במקום server-side",
             ],
             answer: 0,
-            explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\nignoreDifferences:\n- group: \"*\"\n  kind: \"*\"\n  managedFieldsManagers:\n  - \"kube-controller-manager\"\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
+            explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\n```yaml\nignoreDifferences:\n- group: \"*\"\n  kind: \"*\"\n  managedFieldsManagers:\n  - \"kube-controller-manager\"\n```\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
           },
           {
             q: "sync של אפליקציה גדולה נכשל עם:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nמה הבעיה ומה הפתרון?",
@@ -4020,7 +4020,7 @@ export const TOPICS = [
             explanation: "ArgoCD Rollback מחזיר את הקלאסטר ל-sync state קודם מתוך ההיסטוריה.\nזה מהיר כי הוא לא דורש שינוי ב-Git.\nאבל חשוב להבין: אחרי rollback, האפליקציה תהיה OutOfSync עד שה-Git יתעדכן.\n\ngit revert הוא הפתרון ה-GitOps טהור, אבל דורש pipeline.\nב-production emergency, rollback ב-ArgoCD ואז git revert הוא הגישה המעשית.",
           },
           {
-            q: "ApplicationSet עם Matrix generator:\n\n```\ngenerators:\n- matrix:\n    generators:\n    - clusters:\n        selector:\n          matchLabels:\n            env: production\n    - list:\n        elements:\n        - app: payments\n          team: billing\n        - app: orders\n          team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
+            q: "ApplicationSet עם Matrix generator:\n\n```yaml\ngenerators:\n- matrix:\n    generators:\n    - clusters:\n        selector:\n          matchLabels:\n            env: production\n    - list:\n        elements:\n        - app: payments\n          team: billing\n        - app: orders\n          team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
             options: [
               "3 - אחד לכל cluster",
               "2 - אחד לכל app",
