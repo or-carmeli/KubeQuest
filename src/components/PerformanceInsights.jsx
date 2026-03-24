@@ -795,17 +795,21 @@ function HistoricalView({ data, range, t, liveScore, snapshots }) {
               </div>
             </div>
           )}
-          {data.p95Series.length > 1 ? (
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--text-secondary)", fontWeight: 600, marginBottom: 2 }}>
                 {t("p95OverTime")}
                 <InfoTip text="Browser-side P95 latency from real user sessions. For backend service P95, see System Observability" />
               </div>
               <div style={{ fontSize: 8, color: "var(--text-dim)", marginBottom: 3 }}>Browser-side response time trend for the slowest 5% of requests</div>
-              <HistoricalLineChart series={data.p95Series} color={BLUE} formatLabel={formatTimeLabel} unit="ms"
-                thresholds={[{ value: THRESHOLDS.p95Latency.warning, color: AMBER, label: "Warning" }, { value: THRESHOLDS.p95Latency.critical, color: RED, label: "Critical" }]} fill />
+              {data.p95Series.length > 1 ? (
+                <HistoricalLineChart series={data.p95Series} color={BLUE} formatLabel={formatTimeLabel} unit="ms"
+                  thresholds={[{ value: THRESHOLDS.p95Latency.warning, color: AMBER, label: "Warning" }, { value: THRESHOLDS.p95Latency.critical, color: RED, label: "Critical" }]} fill />
+              ) : (
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 80, color: "var(--text-dim)", fontSize: 11 }}>
+                  Waiting for more data points
+                </div>
+              )}
             </div>
-          ) : <div style={{ flex: 1 }} />}
         </div>
       </div>
     </div>
