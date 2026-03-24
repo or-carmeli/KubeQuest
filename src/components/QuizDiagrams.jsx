@@ -1111,28 +1111,48 @@ function EtcdDataDiagram() {
 
 // ── Control Plane Components ─────────────────────────────────────────
 function ControlPlaneDiagram() {
+  const roleLabel = (text) => ({
+    fontSize: 8, color: "rgba(255,255,255,0.4)", fontFamily: MONO,
+    textAlign: "center", marginTop: 2, lineHeight: 1.2,
+  });
   return (
     <div style={wrap}>
-      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
-        <div style={label(C.indigoText, { marginBottom: 8 })}>Control Plane</div>
-        <div style={col({ gap: 6, width: "100%" })}>
-          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "6px 10px" })}>
-            API Server (entry point)
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 300 })}>
+        <div style={label(C.indigoText, { marginBottom: 10 })}>Control Plane</div>
+        <div style={col({ gap: 8, width: "100%" })}>
+          {/* API Server - entry point */}
+          <div style={col({ gap: 2, width: "100%" })}>
+            <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "7px 10px" })}>
+              API Server
+            </div>
+            <div style={roleLabel()}>all requests go through here</div>
           </div>
-          <div style={row({ gap: 6 })}>
-            <div style={smallBox(C.green, C.greenBg, C.greenText, { flex: 1, padding: "6px 8px" })}>
-              etcd
+          {/* Arrow */}
+          <div style={arrow({ textAlign: "center", fontSize: 13, margin: "-2px 0" })}>↓</div>
+          {/* 3 components */}
+          <div style={row({ gap: 6, width: "100%", alignItems: "flex-start" })}>
+            <div style={col({ gap: 2, flex: 1 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 4px" })}>
+                etcd
+              </div>
+              <div style={roleLabel()}>state store</div>
             </div>
-            <div style={smallBox(C.amber, C.amberBg, C.amberText, { flex: 1, padding: "6px 8px" })}>
-              Scheduler
+            <div style={col({ gap: 2, flex: 1 })}>
+              <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "6px 4px" })}>
+                Scheduler
+              </div>
+              <div style={roleLabel()}>Pod placement</div>
             </div>
-            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "6px 8px" })}>
-              CM
+            <div style={col({ gap: 2, flex: 1 })}>
+              <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { width: "100%", padding: "6px 4px" })}>
+                Controller<br/>Manager
+              </div>
+              <div style={roleLabel()}>control loops</div>
             </div>
           </div>
         </div>
       </div>
-      <div style={caption()}>API Server → etcd (state) | Scheduler (placement) | CM (loops)</div>
+      <div style={caption()}>API Server is the single entry point — all components communicate through it</div>
     </div>
   );
 }
