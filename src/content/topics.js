@@ -1342,9 +1342,9 @@ export const TOPICS = [
               tags: ["kubelet-role"],
               options: [
               "Agent שרץ על כל Node, מנהל Pods ומדווח סטטוס ל-API Server",
-              "ניתוב תעבורת רשת בין Services",
-              "ניהול DNS פנימי בתוך ה-Cluster",
-              "ניהול אחסון מתמיד עבור PersistentVolumes",
+              "ניתוב תעבורת רשת בין Services באמצעות iptables או IPVS rules",
+              "ניהול DNS פנימי בתוך ה-Cluster ורישום שמות Services",
+              "ניהול אחסון מתמיד עבור PersistentVolumes ו-StorageClasses",
 ],
               answer: 0,
               explanation:
@@ -1380,9 +1380,9 @@ export const TOPICS = [
               q: "כיצד מצרפים Worker Node ל-Cluster קיים?",
               tags: ["kubeadm-join"],
               options: [
-              "kubeadm add-node --master <IP>",
-              "kubectl attach node --cluster <name>",
-              "kubeadm register --node-role worker --api <IP>",
+              "kubeadm add-node --master <IP> --token <token> --node-role worker",
+              "kubectl attach node --cluster <name> --token <token> --ca-cert-hash <hash>",
+              "kubeadm register --node-role worker --api <IP> --token <token> --cert-hash <hash>",
               "kubeadm join <API-server>:<port> --token <token> --discovery-token-ca-cert-hash <hash>",
 ],
               answer: 3,
@@ -1393,10 +1393,10 @@ export const TOPICS = [
               q: "מה Static Pod ב-Kubernetes?",
               tags: ["static-pod"],
               options: [
-              "Pod שלא ניתן למחוק אותו עם kubectl",
-              "Pod עם IP קבוע שלא משתנה אחרי restart",
+              "Pod שלא ניתן למחוק אותו עם kubectl delete בשום מצב",
+              "Pod עם IP קבוע שלא משתנה גם אחרי restart של ה-Node",
               "Pod שמנוהל ישירות ע\"י kubelet דרך manifest file על ה-Node",
-              "Pod שמשויך ל-StatefulSet עם אחסון קבוע",
+              "Pod שמשויך ל-StatefulSet עם אחסון קבוע ו-ordinal index",
 ],
               answer: 2,
               explanation:
@@ -1497,10 +1497,10 @@ export const TOPICS = [
               q: "What is a Static Pod in Kubernetes?",
               tags: ["static-pod"],
               options: [
-              "A Pod that cannot be deleted with kubectl",
-              "A Pod with a fixed IP that does not change after restart",
-              "A Pod tied to a StatefulSet with persistent storage",
-              "A Pod managed directly by the kubelet via a manifest file on the Node",
+              "A Pod that cannot be deleted using kubectl commands",
+              "A Pod with a fixed IP address that persists after restart",
+              "A Pod tied to a StatefulSet with dedicated persistent storage",
+              "A Pod managed directly by the kubelet via a manifest file",
 ],
               answer: 3,
               explanation:
@@ -1539,10 +1539,10 @@ export const TOPICS = [
             {
               q: "מה הצעד הראשון בשדרוג Cluster עם kubeadm?",
               options: [
-              "שדרוג kubelet על כל ה-Nodes",
-              "drain של כל ה-Worker Nodes",
-              "גיבוי etcd ומחיקת ה-Cluster",
-              "הרצת `kubeadm upgrade plan` לבדיקת גרסאות זמינות",
+              "drain של כל ה-Worker Nodes לפני שדרוג",
+              "שדרוג kubelet על כל ה-Nodes במקביל",
+              "גיבוי etcd ומחיקת ה-Cluster לפני שדרוג",
+              "הרצת kubeadm upgrade plan לבדיקת גרסאות",
 ],
               answer: 3,
               explanation:
@@ -1577,9 +1577,9 @@ export const TOPICS = [
               q: "מחקת Static Pod עם `kubectl delete pod`. ה-Pod חוזר מיד.\n\nלמה?",
               options: [
               "kubelet מנהל Static Pods ויוצר אותם מחדש כל עוד ה-manifest קיים בתיקייה",
-              "ה-Deployment controller יוצר Pod חדש כדי לשמור על replica count",
-              "etcd שומר את ה-Pod ומשחזר אותו אוטומטית",
-              "kube-proxy משחזר את ה-Pod כי הוא חלק מ-Service",
+              "ה-Deployment controller יוצר Pod חדש כדי לשמור על ה-replica count שהוגדר",
+              "etcd שומר את הגדרות ה-Pod ומשחזר אותו אוטומטית לאחר מחיקה",
+              "kube-proxy משחזר את ה-Pod כי הוא חלק מ-Service ונדרש לניתוב",
 ],
               answer: 0,
               explanation:
@@ -1679,10 +1679,10 @@ export const TOPICS = [
             {
               q: "You deleted a Static Pod with `kubectl delete pod`. It comes back immediately.\n\nWhy?",
               options: [
-              "The Deployment controller creates a new Pod to maintain the replica count",
-              "etcd persists the Pod and restores it automatically",
-              "The kubelet manages Static Pods and recreates them as long as the manifest file exists",
-              "kube-proxy restores the Pod because it is part of a Service",
+              "The Deployment controller creates a new Pod to maintain the desired replica count",
+              "etcd persists the Pod definition and automatically restores it after deletion",
+              "The kubelet manages Static Pods and recreates them while the manifest file exists",
+              "kube-proxy restores the Pod because it is registered as part of a Service",
 ],
               answer: 2,
               explanation:
@@ -1750,10 +1750,10 @@ export const TOPICS = [
               q: "שדרוג Control Plane עם kubeadm הושלם.\nWorker Nodes עדיין על הגרסה הישנה.\n\nמה הצעדים לשדרוג Worker Node?",
               tags: ["kubeadm-upgrade"],
               options: [
-              "רק `kubeadm upgrade apply` על ה-Worker ו-uncordon",
-              "מחיקת ה-Node מה-Cluster ו-join מחדש עם הגרסה החדשה",
+              "רק `kubeadm upgrade apply` על ה-Worker ואז `kubectl uncordon`",
+              "מחיקת ה-Node מה-Cluster עם `kubectl delete node` ו-join מחדש עם הגרסה החדשה",
               "drain ה-Node, שדרוג kubeadm ו-kubelet, הפעלה מחדש של kubelet, uncordon",
-              "הרצת `kubectl upgrade node` על כל Worker",
+              "הרצת `kubectl upgrade node` על כל Worker בנפרד ו-restart",
 ],
               answer: 2,
               explanation:
@@ -1763,10 +1763,10 @@ export const TOPICS = [
               q: "הפקודה `kubectl get nodes` מציגה Node בסטטוס NotReady.\n\nSSH ל-Node הצליח.\n\nמה שתי הפעולות הראשונות?",
               tags: ["kubelet-troubleshooting"],
               options: [
-              "`docker ps` ו-`kubectl describe node`",
+              "`docker ps` לבדיקת containers ו-`kubectl describe node` לבדיקת conditions",
               "`systemctl status kubelet` ו-`journalctl -u kubelet`",
-              "`kubectl logs kubelet` ו-`kubectl get events`",
-              "`reboot` ו-`kubectl uncordon`",
+              "`kubectl logs kubelet` ו-`kubectl get events` ב-namespace kube-system",
+              "`reboot` של ה-Node ואז `kubectl uncordon` להחזרה לשירות",
 ],
               answer: 1,
               explanation:
@@ -1777,9 +1777,9 @@ export const TOPICS = [
               tags: ["controlplane-troubleshooting"],
               options: [
               "בודקים את ה-manifest file של kube-scheduler ב-/etc/kubernetes/manifests/",
-              "בודקים את ה-Deployment של kube-scheduler ב-kube-system",
-              "מריצים `kubectl rollout restart` על kube-scheduler",
-              "בודקים את ה-ConfigMap של kube-scheduler ב-kube-system",
+              "בודקים את ה-Deployment של kube-scheduler ב-namespace kube-system ומריצים rollout",
+              "מריצים `kubectl rollout restart deployment kube-scheduler` ב-kube-system",
+              "בודקים את ה-ConfigMap של kube-scheduler ב-kube-system ומחילים מחדש",
 ],
               answer: 0,
               explanation:
@@ -1789,9 +1789,9 @@ export const TOPICS = [
               q: "ה-join token פג תוקף.\n\nWorker Node חדש צריך להצטרף ל-Cluster.\n\nמה הפקודה ליצירת token חדש?",
               tags: ["kubeadm-join"],
               options: [
-              "kubeadm init --token-only",
-              "kubectl create token --type=join",
-              "kubeadm reset && kubeadm init",
+              "kubeadm init --token-only --ttl 24h",
+              "kubectl create token --type=join --duration=24h",
+              "kubeadm reset && kubeadm init מחדש על ה-Control Plane",
               "kubeadm token create --print-join-command",
 ],
               answer: 3,
@@ -1815,9 +1815,9 @@ export const TOPICS = [
               q: "API Server לא עולה אחרי שינוי ב-manifest.\n\nהרצת:\n\n```\ncrictl ps | grep apiserver\n```\n\nאין תוצאות.\n\nמה הצעד הבא?",
               tags: ["controlplane-troubleshooting"],
               options: [
-              "`kubectl describe pod kube-apiserver -n kube-system`",
-              "`kubeadm reset` ו-`kubeadm init` מחדש",
-              "`systemctl restart kube-apiserver`",
+              "`kubectl describe pod kube-apiserver -n kube-system` לבדיקת events ו-status",
+              "`kubeadm reset` ו-`kubeadm init` מחדש לאיפוס מלא של ה-Cluster",
+              "`systemctl restart kube-apiserver` להפעלה מחדש של ה-process",
               "`crictl logs` על ה-container ID של apiserver מ-`crictl ps -a`",
 ],
               answer: 3,
@@ -1828,10 +1828,10 @@ export const TOPICS = [
               q: "מה ההבדל בין stacked etcd ל-external etcd topology?",
               tags: ["etcd-topology"],
               options: [
-              "stacked etcd תומך רק ב-3 nodes, external etcd תומך ב-5+",
+              "stacked etcd תומך רק ב-3 nodes בלבד, external etcd תומך ב-5 nodes ומעלה",
               "stacked etcd רץ על Control Plane Nodes, external etcd רץ על Nodes נפרדים",
-              "stacked etcd לא דורש certificates, external etcd דורש",
-              "אין הבדל, שניהם שמות שונים לאותה ארכיטקטורה",
+              "stacked etcd לא דורש certificates נפרדים, external etcd דורש certificates ייעודיים",
+              "אין הבדל מעשי ביניהם, שניהם שמות שונים לאותה ארכיטקטורה בדיוק",
 ],
               answer: 1,
               explanation:
@@ -1870,9 +1870,9 @@ export const TOPICS = [
               tags: ["kubelet-troubleshooting"],
               options: [
               "`systemctl status kubelet` and `journalctl -u kubelet`",
-              "`kubectl logs kubelet` and `kubectl get events`",
-              "`docker ps` and `kubectl describe node`",
-              "`reboot` and `kubectl uncordon`",
+              "`kubectl logs kubelet` and `kubectl get events --all`",
+              "`docker ps` and `kubectl describe node <node-name>`",
+              "`reboot` the Node and then `kubectl uncordon <node>`",
 ],
               answer: 0,
               explanation:
@@ -1895,10 +1895,10 @@ export const TOPICS = [
               q: "The join token has expired.\n\nA new Worker Node needs to join the cluster.\n\nWhat command creates a new token?",
               tags: ["kubeadm-join"],
               options: [
-              "kubeadm init --token-only",
+              "kubeadm init --token-only --ttl 24h",
               "kubeadm token create --print-join-command",
-              "kubectl create token --type=join",
-              "kubeadm reset && kubeadm init",
+              "kubectl create token --type=join --ttl 24h",
+              "kubeadm reset && kubeadm init --new-token",
 ],
               answer: 1,
               explanation:
