@@ -33,7 +33,7 @@ export function domainOf(tag) {
     rbac: "security", role: "security", config: "security", sealed: "security", external: "security",
     taints: "scheduling", topology: "scheduling",
     gitops: "gitops",
-    helm: "storage", cronjob: "workloads",
+    helm: "storage", cronjob: "workloads", namespace: "security",
   };
   return map[prefix] || "other";
 }
@@ -100,4 +100,10 @@ export const TAG_DIAGRAM_CONFIG = {
 
   // ── workloads (additional) ────────────────────────────────────────────
   "cronjob-hierarchy":    { component: "CronJobDiagram",             score: 4 },
+
+  // ── namespaces ──────────────────────────────────────────────────────
+  "namespace-isolation":  { component: "NamespaceDiagram",           score: 4 },
+
+  // ── disruption ─────────────────────────────────────────────────────
+  "pod-disruption":       { component: "PdbDiagram",                 score: 5 },
 };

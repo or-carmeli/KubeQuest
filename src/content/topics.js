@@ -92,7 +92,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Liveness probe הוא בדיקת בריאות תקופתית על הקונטיינר.\nכשלון חוזר גורם ל-Kubernetes להניח שהקונטיינר תקוע ולהפעיל אותו מחדש.\nסוגי בדיקות: HTTP GET, TCP socket, או פקודת shell (exit code 0).",
+                "Liveness probe הוא בדיקת בריאות תקופתית על הקונטיינר.\nכשלון חוזר גורם ל-Kubernetes להניח שהקונטיינר תקוע ולהפעיל אותו מחדש.\nסוגי בדיקות: HTTP GET, TCP socket, או פקודת shell (exit code 0).\n\n```yaml\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: 8080\n  initialDelaySeconds: 5\n  periodSeconds: 10\n```",
             },
             {
               q: "מה readiness probe עושה?",
@@ -141,10 +141,11 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "requests מגדיר את כמות ה-CPU/Memory המינימלית שה-Pod צריך כדי לרוץ.\nה-Scheduler בודק את הערכים האלה כדי לבחור Node עם מספיק משאבים פנויים.\nהקונטיינר יכול לצרוך יותר מה-requests, אבל לא מעבר ל-limits.",
+                "`requests` מגדיר את כמות ה-CPU/Memory המינימלית שה-Pod צריך כדי לרוץ.\nה-Scheduler בודק את הערכים האלה כדי לבחור Node עם מספיק משאבים פנויים.\nהקונטיינר יכול לצרוך יותר מה-`requests`, אבל לא מעבר ל-`limits`.\n\n```yaml\nresources:\n  requests:\n    cpu: 250m\n    memory: 128Mi\n  limits:\n    cpu: 500m\n    memory: 256Mi\n```",
             },
             {
               q: "מה מטרת Namespace ב-Kubernetes?",
+              tags: ["namespace-isolation"],
               options: [
               "שכבת רשת וירטואלית שמבדילה בין Pods ב-Nodes שונים",
               "מנגנון לאחסון logs ומטריקות של Pods לטווח ארוך",
@@ -193,7 +194,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "A liveness probe is a periodic health check Kubernetes runs on each container.\nRepeated failures → Kubernetes kills and restarts the stuck container.\nProbe types: HTTP GET, TCP socket, or shell command (exit code 0).",
+                "A liveness probe is a periodic health check Kubernetes runs on each container.\nRepeated failures → Kubernetes kills and restarts the stuck container.\nProbe types: HTTP GET, TCP socket, or shell command (exit code 0).\n\n```yaml\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: 8080\n  initialDelaySeconds: 5\n  periodSeconds: 10\n```",
             },
             {
               q: "What does a readiness probe do?",
@@ -242,10 +243,11 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "requests defines how much CPU and Memory the Pod asks for.\nThe Scheduler uses these values to find a Node with enough resources.\nrequests is a scheduling hint. Containers can burst above it, up to limits.",
+                "`requests` defines how much CPU and Memory the Pod asks for.\nThe Scheduler uses these values to find a Node with enough resources.\n`requests` is a scheduling hint. Containers can burst above it, up to `limits`.\n\n```yaml\nresources:\n  requests:\n    cpu: 250m\n    memory: 128Mi\n  limits:\n    cpu: 500m\n    memory: 256Mi\n```",
             },
             {
               q: "What is the purpose of a Namespace in Kubernetes?",
+              tags: ["namespace-isolation"],
               options: [
               "A special Service type that enables cross-cluster communication",
               "A virtual network layer separating Pods across different Nodes",
@@ -276,12 +278,12 @@ export const TOPICS = [
                 "Rolling Update מחליף Pods בהדרגה: חדש עולה, רק אז ישן יורד.\nתמיד יש Pods זמינים, כך שאין downtime.\nבשונה מ-Recreate שמוחק הכל ויוצר downtime.",
             },
             {
-              q: "כיצד מבצעים rollback?",
+              q: "גרסה חדשה של Deployment גרמה לבאג.\nאיך חוזרים לגרסה הקודמת?",
               options: [
-              "`kubectl scale deployment my-app --replicas=0` ואז להגדיל מחדש",
-              "`kubectl rollout undo deployment/my-app`",
-              "`kubectl delete deployment my-app` ואז `kubectl apply` מחדש עם YAML קודם",
-              "`kubectl patch deployment my-app --type=json -p '[{\"op\":\"replace\"}]'`",
+              "kubectl scale deployment my-app --replicas=0\nואז להגדיל מחדש",
+              "kubectl rollout undo deployment/my-app",
+              "kubectl delete deployment my-app\nואז kubectl apply מחדש עם YAML קודם",
+              "kubectl patch deployment my-app --type=json -p '[{\"op\":\"replace\"}]'",
 ],
               answer: 1,
               explanation:
@@ -379,12 +381,12 @@ export const TOPICS = [
                 "Rolling Update replaces Pods gradually. New Pod starts, then old Pod stops.\nThere are always running Pods serving traffic → zero downtime.\nUnlike Recreate strategy, which causes downtime by deleting all Pods first.",
             },
             {
-              q: "How do you perform a rollback?",
+              q: "A new Deployment version introduced a bug.\nHow do you roll back to the previous revision?",
               options: [
-              "`kubectl scale deployment my-app --replicas=0` then scale back up",
-              "`kubectl rollout undo deployment/my-app`",
-              "`kubectl delete deployment my-app` and re-apply the previous YAML manifest",
-              "`kubectl patch deployment my-app` to restore the previous image tag",
+              "kubectl scale deployment my-app --replicas=0\nthen scale back up",
+              "kubectl rollout undo deployment/my-app",
+              "kubectl delete deployment my-app\nand re-apply the previous YAML manifest",
+              "kubectl patch deployment my-app\nto restore the previous image tag",
 ],
               answer: 1,
               explanation:
@@ -993,10 +995,10 @@ export const TOPICS = [
             {
               q: "איך בודקים למה Service לא מגיע ל-Pods?",
               options: [
-              "בדוק `kubectl get endpoints <service>`. אם ריק, selector לא תואם labels",
-              "`kubectl describe service/<name> --show-pods` מציג Pods מחוברים",
-              "`kubectl logs service/<name>` כדי לראות את logs של ה-Service",
-              "`kubectl exec -it service/<name> -- netstat` מציג חיבורים פעילים",
+              "kubectl get endpoints <service>\nאם ריק, selector לא תואם labels",
+              "kubectl describe service/<name> --show-pods\nמציג Pods מחוברים",
+              "kubectl logs service/<name>\nכדי לראות את logs של ה-Service",
+              "kubectl exec -it service/<name> -- netstat\nמציג חיבורים פעילים",
 ],
               answer: 0,
               explanation:
@@ -1095,10 +1097,10 @@ export const TOPICS = [
             {
               q: "How do you debug why a Service is not reaching its Pods?",
               options: [
-              "`kubectl logs service/<name>` to view connection logs from the Service",
-              "`kubectl exec -it service/<name> -- netstat` to view active connections",
-              "Check `kubectl get endpoints <service>`. If empty, selector doesn't match labels",
-              "`kubectl describe service/<name> --show-pods` to list all attached Pods",
+              "kubectl logs service/<name>\nto view connection logs from the Service",
+              "kubectl exec -it service/<name> -- netstat\nto view active connections",
+              "kubectl get endpoints <service>\nIf empty, selector doesn't match labels",
+              "kubectl describe service/<name> --show-pods\nto list all attached Pods",
 ],
               answer: 2,
               explanation:
@@ -1989,10 +1991,10 @@ export const TOPICS = [
             {
               q: "מה הפקודה להתקנת Helm Chart\u200F?",
               options: [
-              "`helm upgrade`",
-              "`helm template`",
-              "`helm install`",
-              "`helm create`",
+              "helm upgrade",
+              "helm template",
+              "helm install",
+              "helm create",
 ],
               answer: 2,
               explanation:
@@ -2089,10 +2091,10 @@ export const TOPICS = [
             {
               q: "What command installs a Helm Chart?",
               options: [
-              "`helm upgrade`",
-              "`helm template`",
-              "`helm install`",
-              "`helm create`",
+              "helm upgrade",
+              "helm template",
+              "helm install",
+              "helm create",
 ],
               answer: 2,
               explanation:
@@ -2180,10 +2182,10 @@ export const TOPICS = [
             {
               q: "איך עוקפים ערך מ-values.yaml בזמן התקנת Helm Chart\u200F?",
               options: [
-              "`helm template --set key=value`",
-              "`helm rollback --set key=value`",
-              "`helm install --set key=value`",
-              "`helm show values --set key=value`",
+              "helm template --set key=value",
+              "helm rollback --set key=value",
+              "helm install --set key=value",
+              "helm show values --set key=value",
 ],
               answer: 2,
               explanation:
@@ -2193,7 +2195,7 @@ export const TOPICS = [
               q: "כיצד מרחיבים PVC?",
               options: [
               "מגדירים allowVolumeExpansion: true ב-StorageClass ומגדילים spec.resources.requests.storage",
-              "יוצרים PVC שני ומשתמשים ב-`kubectl merge-pvc` לאיחוד הנפחים",
+              "kubectl merge-pvc\nיוצרים PVC שני ומשתמשים לאיחוד הנפחים",
               "מוחקים את ה-PVC ויוצרים חדש עם גודל גדול יותר באותו StorageClass",
               "משנים את ה-PV הקיים ישירות ומעדכנים את capacity.storage בו",
 ],
@@ -2217,7 +2219,7 @@ export const TOPICS = [
               q: "מה עושה הפקודה\n\n```\n$ helm rollback\n```",
               options: [
               "מוחק את ה-Release לחלוטין ומסיר את כל המשאבים שנוצרו",
-              "מעדכן את ה-Chart לגרסה חדשה ומפעיל `helm upgrade` אוטומטית",
+              "helm upgrade\nמעדכן את ה-Chart לגרסה חדשה ומפעיל אוטומטית",
               "מאפס את כל ה-values לברירות מחדל של ה-Chart",
               "מחזיר Release ל-revision קודמת מתוך ההיסטוריה",
 ],
@@ -2280,10 +2282,10 @@ export const TOPICS = [
             {
               q: "How do you change a Helm value from the CLI?",
               options: [
-              "`helm template --set key=value`",
-              "`helm rollback --set key=value`",
-              "`helm install --set key=value`",
-              "`helm show values --set key=value`",
+              "helm template --set key=value",
+              "helm rollback --set key=value",
+              "helm install --set key=value",
+              "helm show values --set key=value",
 ],
               answer: 2,
               explanation:
@@ -2293,7 +2295,7 @@ export const TOPICS = [
               q: "How do you expand a PVC?",
               options: [
               "Edit the existing PV directly and update its capacity.storage field",
-              "Create a second PVC and use `kubectl merge-pvc` to combine the volumes",
+              "kubectl merge-pvc\nCreate a second PVC and use to combine the volumes",
               "Set allowVolumeExpansion: true in the StorageClass then increase spec.resources.requests.storage",
               "Delete the PVC and recreate it with a larger size in the same StorageClass",
 ],
@@ -2316,7 +2318,7 @@ export const TOPICS = [
             {
               q: "What does this command do?\n\n```\n$ helm rollback\n```",
               options: [
-              "Updates the Chart to a new version and runs `helm upgrade` automatically",
+              "helm upgrade\nUpdates the Chart to a new version and runs automatically",
               "Resets all values to the Chart's default values.yaml configuration",
               "Deletes the Release completely and removes all created resources",
               "Reverts a Release to a previous revision from its history",
@@ -2434,8 +2436,8 @@ export const TOPICS = [
             {
               q: "הרצת:\n\n```\nhelm upgrade\n```\n\nה-upgrade כשל באמצע.\nRelease ב-status failed.\nה-ConfigMap עודכן חלקית.\n\nמה הצעד הבא?",
               options: [
-              "`helm upgrade` שוב",
-              "`helm rollback my-release [last-good-revision]` להחזיר למצב עקבי",
+              "helm upgrade שוב",
+              "helm rollback my-release [last-good-revision]\nלהחזיר למצב עקבי",
               "מחק ה-Release",
               "מחק ConfigMap",
 ],
@@ -2537,9 +2539,9 @@ export const TOPICS = [
               q: "Command:\n\n```\nhelm upgrade\n```\n\nThe upgrade failed midway.\nRelease status: failed.\nA ConfigMap is half-updated.\n\nWhat is the next step?",
               options: [
               "Delete the ConfigMap",
-              "Run `helm upgrade` again",
+              "helm upgrade again",
               "Delete the Release",
-              "`helm rollback my-release [last-good-revision]` to return to a consistent state",
+              "helm rollback my-release [last-good-revision]\nto return to a consistent state",
 ],
               answer: 3,
               explanation:
@@ -2577,10 +2579,10 @@ export const TOPICS = [
             {
               q: "ה-Pod 'web-server' לא מגיב. איזו פקודה תציג מידע מפורט ו-events לצורך אבחון?",
               options: [
-              "`kubectl describe pod web-server`",
-              "`kubectl status pod web-server`",
-              "`kubectl get pod web-server`",
-              "`kubectl inspect pod web-server`",
+              "kubectl describe pod web-server",
+              "kubectl status pod web-server",
+              "kubectl get pod web-server",
+              "kubectl inspect pod web-server",
 ],
               answer: 0,
               explanation:
@@ -2589,10 +2591,10 @@ export const TOPICS = [
             {
               q: "ה-Pod 'api-service' נמצא ב-Running אבל האפליקציה מחזירה שגיאות 500. מה הפקודה הראשונה שתריץ?",
               options: [
-              "`kubectl top pod api-service`",
-              "`kubectl describe pod api-service`",
-              "`kubectl logs api-service`",
-              "`kubectl events api-service`",
+              "kubectl top pod api-service",
+              "kubectl describe pod api-service",
+              "kubectl logs api-service",
+              "kubectl events api-service",
 ],
               answer: 2,
               explanation:
@@ -2626,10 +2628,10 @@ export const TOPICS = [
             {
               q: "כיצד רואים לוגים של קונטיינר שקרס?",
               options: [
-              "`kubectl get logs --crashed`",
-              "`kubectl logs pod-name`",
-              "`kubectl describe pod-name --logs`",
-              "`kubectl logs pod-name --previous`",
+              "kubectl get logs --crashed",
+              "kubectl logs pod-name",
+              "kubectl describe pod-name --logs",
+              "kubectl logs pod-name --previous",
 ],
               answer: 3,
               explanation:
@@ -2650,10 +2652,10 @@ export const TOPICS = [
             {
               q: "כיצד בודקים את ה-health של ה-API server\u200F?",
               options: [
-              "`kubectl get --raw='/healthz'` (מחזיר ok אם בריא)",
-              "`kubectl check apiserver`",
-              "`kubectl status cluster`",
-              "`kubectl describe apiserver`",
+              "kubectl get --raw='/healthz'\nמחזיר ok אם בריא",
+              "kubectl check apiserver",
+              "kubectl status cluster",
+              "kubectl describe apiserver",
 ],
               answer: 0,
               explanation:
@@ -2676,10 +2678,10 @@ export const TOPICS = [
             {
               q: "Pod 'web-server' is not responding and you don't know why. Which command gives you events and detailed state to start diagnosing?",
               options: [
-              "`kubectl describe pod web-server`",
-              "`kubectl status pod web-server`",
-              "`kubectl get pod web-server`",
-              "`kubectl inspect pod web-server`",
+              "kubectl describe pod web-server",
+              "kubectl status pod web-server",
+              "kubectl get pod web-server",
+              "kubectl inspect pod web-server",
 ],
               answer: 0,
               explanation:
@@ -2688,10 +2690,10 @@ export const TOPICS = [
             {
               q: "Pod 'api-service' is Running but the app returns 500 errors. What is the first command you run?",
               options: [
-              "`kubectl top pod api-service`",
-              "`kubectl describe pod api-service`",
-              "`kubectl logs api-service`",
-              "`kubectl events api-service`",
+              "kubectl top pod api-service",
+              "kubectl describe pod api-service",
+              "kubectl logs api-service",
+              "kubectl events api-service",
 ],
               answer: 2,
               explanation:
@@ -2725,10 +2727,10 @@ export const TOPICS = [
             {
               q: "How do you view logs from a crashed container?",
               options: [
-              "`kubectl get logs --crashed`",
-              "`kubectl logs pod-name`",
-              "`kubectl describe pod-name --logs`",
-              "`kubectl logs pod-name --previous`",
+              "kubectl get logs --crashed",
+              "kubectl logs pod-name",
+              "kubectl describe pod-name --logs",
+              "kubectl logs pod-name --previous",
 ],
               answer: 3,
               explanation:
@@ -2749,10 +2751,10 @@ export const TOPICS = [
             {
               q: "How do you check the health of the API server?",
               options: [
-              "`kubectl status cluster`",
-              "`kubectl describe apiserver`",
-              "`kubectl check apiserver`",
-              "`kubectl get --raw='/healthz'` (returns ok when healthy)",
+              "kubectl status cluster",
+              "kubectl describe apiserver",
+              "kubectl check apiserver",
+              "kubectl get --raw='/healthz'\nreturns ok when healthy",
 ],
               answer: 3,
               explanation:
@@ -2983,8 +2985,8 @@ export const TOPICS = [
               options: [
               "Scale down ל-0 ו-redeploy מחדש",
               "מחק את כל ה-Pods ותן ל-Kubernetes ליצור אותם מחדש",
-              "`kubectl logs <new-pod> --previous` ו-`kubectl describe pod <new-pod>`",
-              "`kubectl rollout undo` מיד לגרסה הקודמת",
+              "kubectl logs <new-pod> --previous\nו-kubectl describe pod <new-pod>",
+              "kubectl rollout undo\nמיד לגרסה הקודמת",
 ],
               answer: 2,
               explanation:
@@ -2993,10 +2995,10 @@ export const TOPICS = [
             {
               q: "ה-Node מראה NotReady.\nPods מפונים ממנו.\n\nהרצת:\n\n```\nkubectl get nodes\n```\n\nמה שתי הפעולות הראשונות שלך?",
               options: [
-              "`kubectl drain <name> --force` להעביר Pods ואז למחוק ולהצטרף מחדש",
-              "`kubectl describe node <name>` לבדוק Conditions ו-Events, ואז SSH ל-Node ולהריץ `systemctl status kubelet`",
-              "`kubectl cordon <name>` ואז לבדוק kubelet status דרך systemctl על ה-Node",
-              "`kubectl delete node <name>` ולתת ל-cluster autoscaler להפעיל Node חדש",
+              "kubectl drain <name> --force\nלהעביר Pods ואז למחוק ולהצטרף מחדש",
+              "kubectl describe node <name>\nלבדוק Conditions ו-Events, ואז SSH ל-Node ולהריץ systemctl status kubelet",
+              "kubectl cordon <name>\nואז לבדוק kubelet status דרך systemctl על ה-Node",
+              "kubectl delete node <name>\nולתת ל-cluster autoscaler להפעיל Node חדש",
 ],
               answer: 1,
               explanation:
@@ -3015,24 +3017,24 @@ export const TOPICS = [
                 "מפנה Pods מ-Node בצורה graceful ומסמן אותו כ-unschedulable.\nמכבד PodDisruptionBudgets ומחכה שה-Pods יעלו במקום אחר.\nמשתמשים לפני upgrade, reboot, או decommissioning.",
             },
             {
-              q: "כיצד מאבחנים בעיות DNS ב-Kubernetes?",
+              q: "מה הצעד הראשון לאבחון בעיות DNS ב-Kubernetes?",
               options: [
-              "`kubectl get endpoints -n kube-system kube-dns` ולוודא שה-IP תקין",
-              "`kubectl logs -n kube-system coredns-xxx` ולבדוק config של Corefile",
-              "`kubectl describe svc kube-dns -n kube-system` ולחפש Selector mismatch",
-              "`kubectl exec pod -- nslookup kubernetes.default` + בדיקת CoreDNS Pod logs",
+              "kubectl get endpoints -n kube-system kube-dns\nבודק האם ל-Service של DNS יש Endpoints תקינים",
+              "kubectl logs -n kube-system <coredns-pod>\nמציג את הלוגים של CoreDNS לזיהוי שגיאות",
+              "kubectl describe svc kube-dns -n kube-system\nבודק את הגדרות ה-Service וה-Selector",
+              "kubectl exec <pod> -- nslookup kubernetes.default\nבודק האם DNS resolution עובד מתוך ה-Pod",
 ],
               answer: 3,
               explanation:
-                "nslookup kubernetes.default מתוך Pod מוודא ש-CoreDNS מגיב.\nאם נכשל. בדקו שה-CoreDNS Pods רצים ב-kube-system.\n`kubectl logs <coredns-pod> -n kube-system` יחשוף שגיאות.",
+                "התשובה הנכונה: הרצת `nslookup` מתוך Pod מוודאת ש-CoreDNS מגיב לבקשות.\n\nאם הבדיקה נכשלת:\n1. ודאו שה-CoreDNS Pods רצים: `kubectl get pods -n kube-system -l k8s-app=kube-dns`\n2. בדקו לוגים: `kubectl logs <coredns-pod> -n kube-system`\n3. ודאו שה-Service קיים: `kubectl get svc kube-dns -n kube-system`",
             },
             {
               q: "מה הפקודה לגיבוי etcd?",
               options: [
-              "`etcdctl backup create --name=backup.db --cacert=... --cert=...`",
-              "`etcdctl snapshot save backup.db --endpoints=...`",
-              "`etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db`",
-              "`etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db`",
+              "etcdctl backup create --name=backup.db --cacert=... --cert=...",
+              "etcdctl snapshot save backup.db --endpoints=...",
+              "etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db",
+              "etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db",
 ],
               answer: 1,
               explanation:
@@ -3055,7 +3057,7 @@ export const TOPICS = [
               options: [
               "הוסף sidecar container שיאסוף את ה-logs מה-container הראשי",
               "ה-Pod רץ בוודאות. הבעיה היא ב-RBAC שחוסם גישה ל-logs",
-              "ה-Pod לא רץ. בדוק סטטוס עם `kubectl get pod` ואז Events עם `kubectl describe pod`",
+              "ה-Pod לא רץ.\nkubectl get pod לבדוק סטטוס ואז kubectl describe pod לבדוק Events",
               "מחק את ה-Pod ותן ל-Deployment ליצור אחד חדש שאפשר לקרוא לו logs",
 ],
               answer: 2,
@@ -3079,9 +3081,9 @@ export const TOPICS = [
             {
               q: "After a Deployment, the new Pods are in CrashLoopBackOff.\nThe previous version worked fine.\n\nWhat are your first two debugging steps?",
               options: [
-              "Run `kubectl logs <new-pod> --previous` and `kubectl describe pod <new-pod>`",
+              "kubectl logs <new-pod> --previous\nand kubectl describe pod <new-pod>",
               "Delete all pods and wait for recreation",
-              "Run `kubectl rollout undo` immediately",
+              "kubectl rollout undo\nimmediately",
               "Scale down to 0 and redeploy",
 ],
               answer: 0,
@@ -3091,10 +3093,10 @@ export const TOPICS = [
             {
               q: "A Node shows NotReady.\nPods on it are being evicted.\n\nCommand:\n\n```\nkubectl get nodes\n```\n\nWhat are your first two steps?",
               options: [
-              "`kubectl delete node <name>` and let the cluster autoscaler provision a new Node",
-              "`kubectl drain <name> --force` to move Pods then delete and rejoin the Node",
-              "`kubectl cordon <name>` then check kubelet status via systemctl on the Node",
-              "`kubectl describe node <name>` to check Conditions and Events, then SSH in and run `systemctl status kubelet`",
+              "kubectl delete node <name>\nand let the cluster autoscaler provision a new Node",
+              "kubectl drain <name> --force\nto move Pods then delete and rejoin the Node",
+              "kubectl cordon <name>\nthen check kubelet status via systemctl on the Node",
+              "kubectl describe node <name>\nto check Conditions and Events, then SSH in and run systemctl status kubelet",
 ],
               answer: 3,
               explanation:
@@ -3113,24 +3115,24 @@ export const TOPICS = [
                 "Gracefully evicts all Pods from a Node and marks it as unschedulable.\nHonors PodDisruptionBudgets and waits for Pods to come up elsewhere.\nUsed before upgrades, reboots, or decommissioning.",
             },
             {
-              q: "How do you diagnose DNS issues in Kubernetes?",
+              q: "What is the first step to diagnose DNS issues in Kubernetes?",
               options: [
-              "`kubectl exec pod -- nslookup kubernetes.default` + check CoreDNS Pod logs",
-              "`kubectl logs -n kube-system coredns-xxx` and check the Corefile config",
-              "`kubectl get endpoints -n kube-system kube-dns` and verify the IP is correct",
-              "`kubectl describe svc kube-dns -n kube-system` and look for Selector mismatch",
+              "kubectl exec <pod> -- nslookup kubernetes.default\nChecks whether DNS resolution works from inside the Pod",
+              "kubectl logs -n kube-system <coredns-pod>\nShows CoreDNS logs to identify errors",
+              "kubectl get endpoints -n kube-system kube-dns\nChecks whether the DNS Service has valid Endpoints",
+              "kubectl describe svc kube-dns -n kube-system\nInspects the Service configuration and Selector",
 ],
               answer: 0,
               explanation:
-                "nslookup kubernetes.default from inside a Pod verifies CoreDNS is responding.\nIf it fails, check that CoreDNS Pods are Running in kube-system.\n`kubectl logs <coredns-pod> -n kube-system` will reveal errors.",
+                "Correct: Running `nslookup` from inside a Pod verifies that CoreDNS is responding to queries.\n\nIf it fails:\n1. Verify CoreDNS Pods are running: `kubectl get pods -n kube-system -l k8s-app=kube-dns`\n2. Check logs: `kubectl logs <coredns-pod> -n kube-system`\n3. Verify the Service exists: `kubectl get svc kube-dns -n kube-system`",
             },
             {
               q: "What is the command to back up etcd?",
               options: [
-              "`etcdctl backup create --name=backup.db --cacert=... --cert=...`",
-              "`etcdctl snapshot save backup.db --endpoints=...`",
-              "`etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db`",
-              "`etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db`",
+              "etcdctl backup create --name=backup.db --cacert=... --cert=...",
+              "etcdctl snapshot save backup.db --endpoints=...",
+              "etcdctl member backup --data-dir=/var/lib/etcd --output=backup.db",
+              "etcdctl export --all-keys --snapshot-dir=/backup/etcd-data.db",
 ],
               answer: 1,
               explanation:
@@ -3151,7 +3153,7 @@ export const TOPICS = [
             {
               q: "Command:\n\n```\nkubectl logs my-pod\n```\n\nOutput:\n\n```\nError from server (BadRequest):\ncontainer 'my-container' in pod\n'my-pod' is not running\n```\n\nWhat do you do?",
               options: [
-              "The Pod is not Running. Check status with `kubectl get pod`, then Events with `kubectl describe pod`",
+              "The Pod is not Running.\nkubectl get pod to check status, then kubectl describe pod to check Events",
               "Delete the Pod and let the Deployment create a new one whose logs you can read",
               "Add a sidecar container that collects logs from the main container",
               "The Pod is definitely Running. The issue is RBAC blocking access to read logs",
@@ -3203,7 +3205,7 @@ export const TOPICS = [
           {
             q: "הרצת:\n\n```\ndf -h\n```\n\nפלט:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nמה הבעיה ומה הצעד הראשון?",
             options: [
-              "הדיסק כמעט מלא - יש להריץ `du -sh /*` לזיהוי קבצים גדולים",
+              "du -sh /*\nהדיסק כמעט מלא - לזיהוי קבצים גדולים",
               "הדיסק כמעט מלא - יש להריץ \u2066fsck\u2069 לתיקון שגיאות מערכת קבצים",
               "הדיסק כמעט מלא - יש למחוק את כל \u2066/var/log\u2069 ולהפעיל מחדש",
               "השימוש בדיסק תקין - ערך של 96% סביר לשרת ייצור",
@@ -3385,7 +3387,7 @@ export const TOPICS = [
             explanation: "בשורת %Cpu(s) של top, השדה %id (idle) מציין כמה מהמעבד פנוי.\n\nכאן הערך הוא 5.0% בלבד, כלומר ה-CPU תפוס ב-95% מהזמן (%us + %sy = 90.5%).\n\n%wa מתייחס להמתנה לדיסק ולא לעומס מעבד ישיר.\n%ni ו-%si נמוכים מאוד ואינם מעידים על בעיה.",
           },
           {
-            q: "הרצת:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n              total   used   free   shared  buff/cache  available\nMem:           16G    15G   200M     100M        800M       500M\n```\n\nמה המצב?",
+            q: "הרצת:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n       total  used  free  shared  buff/cache  available\nMem:    16G   15G  200M   100M       800M        500M\n```\n\nמה המצב?",
             options: [
               "הכל תקין - רוב הזיכרון ב-cache וניתן לשחרור אוטומטי",
               "הזיכרון כמעט אזל - available רק 500M מתוך 16G",
@@ -3475,7 +3477,7 @@ export const TOPICS = [
             explanation: "In top's %Cpu(s) line, %id (idle) shows how much CPU is free.\n\nHere it's only 5.0%, meaning the CPU is 95% busy (%us + %sy = 90.5%).\n\n%wa refers to disk wait, not direct CPU load.\n%ni and %si are very low and don't indicate a problem.",
           },
           {
-            q: "You ran:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n              total   used   free   shared  buff/cache  available\nMem:           16G    15G   200M     100M        800M       500M\n```\n\nWhat is the situation?",
+            q: "You ran:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n       total  used  free  shared  buff/cache  available\nMem:    16G   15G  200M   100M       800M        500M\n```\n\nWhat is the situation?",
             options: [
               "Everything is fine - most memory is in cache and can be freed",
               "Memory is nearly exhausted - only 500M available out of 16G",
@@ -3755,8 +3757,8 @@ export const TOPICS = [
           {
             q: "אפליקציה payments-service מוצגת כ-OutOfSync ב-ArgoCD אחרי deploy.\n\nמה הצעד הראשון המתאים ביותר?",
             options: [
-              "להריץ `kubectl delete pod` על כל ה-Pods ב-namespace",
-              "להריץ `kubectl apply` ידנית מתוך ה-repo",
+              "kubectl delete pod\nעל כל ה-Pods ב-namespace",
+              "kubectl apply\nידנית מתוך ה-repo",
               "לבדוק את ה-diff בין Git למצב בקלאסטר",
               "למחוק את ה-namespace וליצור מחדש",
             ],
@@ -3778,7 +3780,7 @@ export const TOPICS = [
             q: "מהנדס עשה `kubectl edit deployment` ישירות על הקלאסטר.\nאחרי כמה דקות ArgoCD מציג את האפליקציה כ-OutOfSync.\n\nלמה?",
             options: [
               "ArgoCD זיהה שהמצב בקלאסטר כבר לא תואם את Git",
-              "`kubectl edit` גרם ל-ArgoCD לעשות restart",
+              "kubectl edit גרם ל-ArgoCD לעשות restart",
               "ה-deployment נכשל כי ArgoCD חוסם שינויים ישירים",
               "ArgoCD מוחק אוטומטית שינויים שלא עברו דרך Git",
             ],
@@ -3801,7 +3803,7 @@ export const TOPICS = [
             q: "צוות רוצה לעשות rollback ל-version קודם של אפליקציה.\nהם משתמשים ב-GitOps עם ArgoCD.\n\nמה הדרך הנכונה?",
             options: [
               "ללחוץ Rollback ב-ArgoCD UI",
-              "להריץ `kubectl rollout undo`",
+              "kubectl rollout undo",
               "לעשות git revert ל-commit האחרון ולתת ל-ArgoCD לסנכרן",
               "למחוק את ה-Application ב-ArgoCD וליצור מחדש עם הגרסה הישנה",
             ],
@@ -3860,12 +3862,12 @@ export const TOPICS = [
             explanation: "prune: true אומר ל-ArgoCD למחוק מהקלאסטר משאבים שכבר לא קיימים ב-Git.\nבלי prune, ArgoCD היה מתעלם ממשאבים שנמחקו מ-Git.\nזה חשוב להבין כי prune יכול למחוק משאבים בלי אזהרה.",
           },
           {
-            q: "ArgoCD Application מוגדר עם Helm source:\n\n```\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nהמפתח רוצה לשנות את ה-image tag ל-v1.6.\n\nמה הדרך הנכונה ב-GitOps?",
+            q: "ArgoCD Application מוגדר עם Helm source:\n\n```yaml\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nהמפתח רוצה לשנות את ה-image tag ל-v1.6.\n\nמה הדרך הנכונה ב-GitOps?",
             options: [
               "לשנות ב-ArgoCD UI את ה-parameter ישירות",
-              "להריץ `helm upgrade` עם --set image.tag=v1.6",
+              "helm upgrade --set image.tag=v1.6",
               "לעדכן את ה-values ב-Git ולעשות commit",
-              "לעשות `kubectl set image` על ה-deployment",
+              "kubectl set image\nעל ה-deployment",
             ],
             answer: 2,
             explanation: "ב-GitOps, כל שינוי צריך לעבור דרך Git.\nהדרך הנכונה היא לעדכן את ה-values בקובץ שנמצא ב-Git ולעשות commit.\nArgoCD ירנדר מחדש את ה-Helm chart עם ה-values החדשים ויסנכרן.\nשינוי דרך UI, `helm upgrade`, או `kubectl` עוקף את ה-GitOps flow.",
@@ -3879,7 +3881,7 @@ export const TOPICS = [
               "להוסיף replicas: null ל-manifests ב-Git",
             ],
             answer: 1,
-            explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\nignoreDifferences:\n- group: apps\n  kind: Deployment\n  jsonPointers:\n  - /spec/replicas\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
+            explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\n```yaml\nignoreDifferences:\n- group: apps\n  kind: Deployment\n  jsonPointers:\n  - /spec/replicas\n```\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
           },
           {
             q: "ב-ArgoCD, מה Sync Waves מאפשר לך לעשות?",
@@ -3912,7 +3914,7 @@ export const TOPICS = [
               "צריך למחוק את ה-Application דרך CLI ולא דרך UI",
             ],
             answer: 0,
-            explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\nmetadata:\n  finalizers:\n  - resources-finalizer.argocd.argoproj.io\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
+            explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n  - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
             q: "מה ההבדל בין prune: true ל-selfHeal: true?",
@@ -3984,7 +3986,7 @@ export const TOPICS = [
               "להעביר ל-client-side apply במקום server-side",
             ],
             answer: 0,
-            explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\nignoreDifferences:\n- group: \"*\"\n  kind: \"*\"\n  managedFieldsManagers:\n  - \"kube-controller-manager\"\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
+            explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\n```yaml\nignoreDifferences:\n- group: \"*\"\n  kind: \"*\"\n  managedFieldsManagers:\n  - \"kube-controller-manager\"\n```\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
           },
           {
             q: "sync של אפליקציה גדולה נכשל עם:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nמה הבעיה ומה הפתרון?",
@@ -4020,7 +4022,7 @@ export const TOPICS = [
             explanation: "ArgoCD Rollback מחזיר את הקלאסטר ל-sync state קודם מתוך ההיסטוריה.\nזה מהיר כי הוא לא דורש שינוי ב-Git.\nאבל חשוב להבין: אחרי rollback, האפליקציה תהיה OutOfSync עד שה-Git יתעדכן.\n\ngit revert הוא הפתרון ה-GitOps טהור, אבל דורש pipeline.\nב-production emergency, rollback ב-ArgoCD ואז git revert הוא הגישה המעשית.",
           },
           {
-            q: "ApplicationSet עם Matrix generator:\n\n```\ngenerators:\n- matrix:\n    generators:\n    - clusters:\n        selector:\n          matchLabels:\n            env: production\n    - list:\n        elements:\n        - app: payments\n          team: billing\n        - app: orders\n          team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
+            q: "ApplicationSet עם Matrix generator:\n\n```yaml\ngenerators:\n- matrix:\n    generators:\n    - clusters:\n        selector:\n          matchLabels:\n            env: production\n    - list:\n        elements:\n        - app: payments\n          team: billing\n        - app: orders\n          team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
             options: [
               "3 - אחד לכל cluster",
               "2 - אחד לכל app",
