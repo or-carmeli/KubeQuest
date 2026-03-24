@@ -36,6 +36,8 @@ export function domainOf(tag) {
     taints: "scheduling", topology: "scheduling", qos: "scheduling",
     gitops: "gitops",
     helm: "storage", cronjob: "workloads", namespace: "security", oom: "workloads", restart: "workloads",
+    kubelet: "cluster-ops", requests: "security", configmap: "security", limitrange: "security",
+    dns: "networking", crashloop: "workloads", imagepull: "workloads",
   };
   return map[prefix] || "other";
 }
@@ -139,4 +141,18 @@ export const TAG_DIAGRAM_CONFIG = {
   "etcd-ha":                 { component: "EtcdQuorumDiagram",             score: 4 },
   "etcd-topology":           { component: "StackedVsExternalEtcdDiagram",  score: 4 },
   "kubeadm-upgrade":         { component: "KubeadmUpgradeDiagram",         score: 4 },
+  "kubelet-role":            { component: "KubeletDiagram",                score: 4 },
+  "etcd-data":               { component: "EtcdDataDiagram",              score: 4 },
+
+  // ── config (comparisons) ──────────────────────────────────────────
+  "requests-vs-limits":      { component: "RequestsLimitsDiagram",        score: 4 },
+  "configmap-vs-secret":     { component: "ConfigMapVsSecretDiagram",     score: 4 },
+  "limitrange-vs-quota":     { component: "LimitRangeVsQuotaDiagram",     score: 4 },
+
+  // ── networking (dns) ──────────────────────────────────────────────
+  "dns-flow":                { component: "DnsResolutionDiagram",         score: 4 },
+
+  // ── troubleshooting (status flows) ────────────────────────────────
+  "crashloop-flow":          { component: "CrashLoopDiagram",             score: 5 },
+  "imagepull-flow":          { component: "ImagePullDiagram",             score: 4 },
 };

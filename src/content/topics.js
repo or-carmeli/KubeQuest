@@ -760,7 +760,7 @@ export const TOPICS = [
             },
             {
               q: "מה kube-dns/CoreDNS ב-Kubernetes?",
-              tags: ["dns"],
+              tags: ["dns-flow"],
               options: [
               "Firewall שמסנן תנועה DNS ומונע גישה ל-domains זדוניים",
               "Load balancer שמנתב בקשות DNS בין Nodes",
@@ -864,7 +864,7 @@ export const TOPICS = [
             },
             {
               q: "What is CoreDNS in Kubernetes?",
-              tags: ["dns"],
+              tags: ["dns-flow"],
               options: [
               "An internal DNS server that resolves Service names to IPs",
               "A certificate manager Pod that issues TLS certificates for Services",
@@ -1339,6 +1339,7 @@ export const TOPICS = [
             },
             {
               q: "מה תפקיד kubelet?",
+              tags: ["kubelet-role"],
               options: [
               "ניהול DNS פנימי בתוך ה-Cluster",
               "ניתוב תעבורת רשת בין Services",
@@ -1351,7 +1352,7 @@ export const TOPICS = [
             },
             {
               q: "מה תפקיד etcd ב-Kubernetes?",
-              tags: ["etcd-basics"],
+              tags: ["etcd-data"],
               options: [
               "שרת DNS פנימי שמפתח שמות Services לכתובות IP",
               "מאגר key-value מבוזר ששומר את כל מצב ה-Cluster",
@@ -1442,6 +1443,7 @@ export const TOPICS = [
             },
             {
               q: "What is the role of the kubelet?",
+              tags: ["kubelet-role"],
               options: [
               "Managing internal DNS within the cluster",
               "An agent running on every Node that manages Pods and reports status to the API Server",
@@ -1454,7 +1456,7 @@ export const TOPICS = [
             },
             {
               q: "What is the role of etcd in Kubernetes?",
-              tags: ["etcd-basics"],
+              tags: ["etcd-data"],
               options: [
               "An internal DNS server that resolves Service names to IPs",
               "A scheduling engine that decides where to run Pods",
@@ -1972,6 +1974,7 @@ export const TOPICS = [
         questions: [
             {
               q: "מה ההבדל בין ConfigMap ל-Secret?",
+              tags: ["configmap-vs-secret"],
               options: [
               "אין הבדל. שניהם מאחסנים key-value data בצורה זהה ב-etcd",
               "ConfigMap מהיר יותר לגישה כי הוא לא עובר base64 encoding",
@@ -2057,6 +2060,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
+              tags: ["requests-vs-limits"],
               options: [
               "requests:\u200E הכמות המינימלית שה-Scheduler מבטיח; limits:\u200E הכמות המקסימלית שהקונטיינר יכול להשתמש",
               "requests ו-limits מגדירים את אותם ערכים. הם תמיד שווים",
@@ -2071,6 +2075,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What is the difference between ConfigMap and Secret?",
+              tags: ["configmap-vs-secret"],
               options: [
               "ConfigMap is faster because it skips base64 encoding",
               "Secret is only for passwords and not for other sensitive data types",
@@ -2156,6 +2161,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between resource requests and limits?",
+              tags: ["requests-vs-limits"],
               options: [
               "limits determine Scheduling priority; requests determine QoS class only",
               "requests and limits define the same values. They are always set equally",
@@ -2237,7 +2243,7 @@ export const TOPICS = [
             },
             {
               q: "מה ההבדל בין LimitRange ל-ResourceQuota?",
-              tags: ["resource-limits"],
+              tags: ["limitrange-vs-quota"],
               options: [
               "LimitRange: CPU quota ל-Node. ResourceQuota: memory quota ל-Cluster",
               "LimitRange:\u200E מגביל מספר Pods. ResourceQuota:\u200E מגביל מספר Nodes",
@@ -2340,7 +2346,7 @@ export const TOPICS = [
             },
             {
               q: "What is the difference between LimitRange and ResourceQuota?",
-              tags: ["resource-limits"],
+              tags: ["limitrange-vs-quota"],
               options: [
               "LimitRange applies only to new Pods; ResourceQuota applies only to existing Pods",
               "LimitRange sets per-container defaults and limits; ResourceQuota sets aggregate limits for the whole Namespace",
@@ -3424,6 +3430,7 @@ export const TOPICS = [
         questions: [
             {
               q: "פרסמת גרסה חדשה.\nה-Pod עולה, קורס מיד, ו-Kubernetes מפעיל אותו שוב ושוב.\n\nאיזה סטטוס תראה בפלט הפקודה?\n\n```\nkubectl get pods\n```",
+              tags: ["crashloop-flow"],
               options: [
               "CrashLoopBackOff",
               "OOMKilled",
@@ -3436,6 +3443,7 @@ export const TOPICS = [
             },
             {
               q: "ה-Pod נמצא ב-ImagePullBackOff. מה שתי הסיבות הנפוצות ביותר?",
+              tags: ["imagepull-flow"],
               options: [
               "Node חסר disk + Port שגוי",
               "הרשאות RBAC + ConfigMap חסר",
@@ -3523,6 +3531,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "You deployed a new version.\nThe Pod starts, immediately crashes, and Kubernetes keeps restarting it.\n\nWhat status do you see?\n\n```\nkubectl get pods\n```",
+              tags: ["crashloop-flow"],
               options: [
               "CrashLoopBackOff",
               "OOMKilled",
@@ -3535,6 +3544,7 @@ export const TOPICS = [
             },
             {
               q: "A pod is stuck in ImagePullBackOff. What are the two most common causes?",
+              tags: ["imagepull-flow"],
               options: [
               "Wrong image name/tag, or missing imagePullSecret for a private registry",
               "RBAC permissions and missing ConfigMap",
