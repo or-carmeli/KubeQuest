@@ -9,6 +9,8 @@ jobs:
   smoke-test:
     name: Smoke Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 5
 
     steps:

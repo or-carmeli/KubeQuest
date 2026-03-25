@@ -9,6 +9,8 @@ jobs:
   uptime-check:
     name: Uptime Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 3
 
     steps:
