@@ -31,17 +31,17 @@ const C = {
 // ── shared style helpers ────────────────────────────────────────────
 const wrap = {
   display: "flex", flexDirection: "column", alignItems: "center",
-  padding: "14px 12px 10px", margin: "4px 0 2px",
+  padding: "16px 14px 12px", margin: "4px 0 2px",
   background: "rgba(255,255,255,0.02)",
   border: "1px solid rgba(255,255,255,0.06)",
-  borderRadius: 12, maxWidth: 300, width: "100%", alignSelf: "center",
+  borderRadius: 14, maxWidth: 320, width: "100%", alignSelf: "center",
   boxSizing: "border-box", overflow: "hidden",
   direction: "ltr",
 };
 
 const box = (border, bg, extra) => ({
-  border: `1.5px solid ${border}`, borderRadius: 10,
-  padding: "10px 14px 8px", background: bg,
+  border: `1.5px solid ${border}`, borderRadius: 11,
+  padding: "12px 16px 10px", background: bg,
   boxSizing: "border-box", ...extra,
 });
 
@@ -51,8 +51,8 @@ const label = (color, extra) => ({
 });
 
 const smallBox = (border, bg, color, extra) => ({
-  border: `1px solid ${border}`, borderRadius: 7,
-  padding: "6px 12px", background: bg,
+  border: `1px solid ${border}`, borderRadius: 8,
+  padding: "7px 14px", background: bg,
   fontSize: 11, fontWeight: 600, color, fontFamily: MONO,
   letterSpacing: 0.3, textAlign: "center", whiteSpace: "nowrap",
   boxSizing: "border-box", ...extra,
