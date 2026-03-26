@@ -84,18 +84,18 @@ const subLabel = (extra) => ({
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// DIAGRAM COMPONENTS — 19 kept (score >= 4)
+// DIAGRAM COMPONENTS -19 kept (score >= 4)
 //
 // Removed 9 low-value diagrams:
-//   PortTargetPortDiagram  (score 2) — trivial port mapping, text sufficient
-//   CsiDiagram             (score 2) — just a vendor list, no architecture
-//   AdmissionWebhookDiagram(score 2) — linear pipeline, text sufficient
-//   QosDiagram             (score 2) — just ordering 3 items
+//   PortTargetPortDiagram  (score 2) -trivial port mapping, text sufficient
+//   CsiDiagram             (score 2) -just a vendor list, no architecture
+//   AdmissionWebhookDiagram(score 2) -linear pipeline, text sufficient
+//   QosDiagram             (score 2) -just ordering 3 items
 //   LimitRangeVsQuotaDiagram(score 2)— simple comparison, text sufficient
-//   PdbDiagram             (score 2) — "min 2, can evict 1" obvious from text
-//   SyncWavesDiagram       (score 2) — sequential 3-step list
-//   NodeDrainDiagram       (score 3) — simple before/after, 2 nodes
-//   CoreDnsDiagram         (score 3) — simple 3-node chain
+//   PdbDiagram             (score 2) -"min 2, can evict 1" obvious from text
+//   SyncWavesDiagram       (score 2) -sequential 3-step list
+//   NodeDrainDiagram       (score 3) -simple before/after, 2 nodes
+//   CoreDnsDiagram         (score 3) -simple 3-node chain
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // ── 1. Deployment → ReplicaSet → Pods ───────────────────────────────
@@ -862,7 +862,7 @@ function PdbDiagram() {
           </div>
         </div>
       </div>
-      <div style={caption({ maxWidth: 260 })}>Eviction blocked — PDB requires at least 2 Pods available</div>
+      <div style={caption({ maxWidth: 260 })}>Eviction blocked - PDB requires at least 2 Pods available</div>
     </div>
   );
 }
@@ -957,11 +957,11 @@ function LimitRangeVsQuotaDiagram() {
         <div style={col({ gap: 6, width: "100%" })}>
           <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "6px 10px", textAlign: "left" })}>
             <span style={{ fontWeight: 700 }}>LimitRange</span>
-            <span style={{ fontSize: 8, opacity: 0.7 }}> — per Pod/container</span>
+            <span style={{ fontSize: 8, opacity: 0.7 }}> - per Pod/container</span>
           </div>
           <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 10px", textAlign: "left" })}>
             <span style={{ fontWeight: 700 }}>ResourceQuota</span>
-            <span style={{ fontSize: 8, opacity: 0.7 }}> — total namespace</span>
+            <span style={{ fontSize: 8, opacity: 0.7 }}> - total namespace</span>
           </div>
         </div>
       </div>
@@ -1070,16 +1070,118 @@ function KubeletDiagram() {
         </div>
         <div style={box(C.indigo, C.indigoBg, { width: "100%", padding: "8px 14px" })}>
           <div style={label(C.indigoText, { marginBottom: 6 })}>Node</div>
-          <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 10px", fontSize: 10, marginBottom: 6 })}>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 10px", fontSize: 10, marginBottom: 4 })}>
             kubelet
           </div>
-          <div style={row({ gap: 6 })}>
-            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "4px 6px", fontSize: 9 })}>Container</div>
-            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "4px 6px", fontSize: 9 })}>Container</div>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "5px 10px", fontSize: 9, marginBottom: 6 })}>
+            container runtime (containerd)
+          </div>
+          <div style={box(C.purple, C.purpleBg, { width: "100%", padding: "6px 8px" })}>
+            <div style={label(C.purpleText, { marginBottom: 4, fontSize: 9 })}>Pod</div>
+            <div style={row({ gap: 6 })}>
+              <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "4px 6px", fontSize: 9, border: `1px solid ${C.purple}` })}>container</div>
+              <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { flex: 1, padding: "4px 6px", fontSize: 9, border: `1px solid ${C.purple}` })}>container</div>
+            </div>
           </div>
         </div>
       </div>
       <div style={caption()}>kubelet ensures containers match the desired PodSpec</div>
+    </div>
+  );
+}
+
+// ── kube-proxy routing ──────────────────────────────────────────────
+function KubeProxyDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 260, alignItems: "center" })}>
+        <div style={smallBox(C.amber, C.amberBg, C.amberText, { padding: "6px 18px", fontSize: 10 })}>
+          Client
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"}</span>
+        </div>
+        <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "6px 10px", fontSize: 10 })}>
+          Service (virtual IP)
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"}</span>
+        </div>
+        <div style={box(C.indigo, C.indigoBg, { width: "100%", padding: "8px 12px" })}>
+          <div style={label(C.indigoText, { marginBottom: 2, fontSize: 10 })}>kube-proxy</div>
+          <div style={subLabel({ textAlign: "center", fontSize: 8 })}>iptables / IPVS</div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0", display: "flex", justifyContent: "center", gap: 20 }}>
+          <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+          <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+          <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+        </div>
+        <div style={row({ gap: 6 })}>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 10px", fontSize: 9 })}>Pod</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 10px", fontSize: 9 })}>Pod</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 10px", fontSize: 9 })}>Pod</div>
+        </div>
+      </div>
+      <div style={caption()}>kube-proxy routes Service traffic to Pods</div>
+    </div>
+  );
+}
+
+// ── etcd Restore Flow ───────────────────────────────────────────────
+function EtcdRestoreDiagram() {
+  const step = (text) => (
+    <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "5px 10px", fontSize: 9 })}>{text}</div>
+  );
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 220, alignItems: "center" })}>
+        {step("snapshot")}
+        <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+        {step("etcdctl snapshot restore")}
+        <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+        {step("new data directory")}
+        <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+        {step("update etcd static pod")}
+        <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+        {step("kubelet restarts etcd")}
+      </div>
+    </div>
+  );
+}
+
+// ── CNI NotReady ────────────────────────────────────────────────────
+function CniNotReadyDiagram() {
+  const stateBox = (text, color, bg, borderColor, icon) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 7, border: `1px solid ${borderColor}`, background: bg, fontSize: 9, fontWeight: 600, fontFamily: MONO, color }}>
+      <span>{icon}</span><span>{text}</span>
+    </div>
+  );
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 14, width: "100%", maxWidth: 280, alignItems: "stretch" })}>
+        <div style={col({ gap: 4, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 9, fontWeight: 700 })}>Before CNI</div>
+          <div style={box(C.amber, C.amberBg, { padding: "8px 10px", flex: 1 })}>
+            <div style={label(C.amberText, { fontSize: 9, marginBottom: 6 })}>Node</div>
+            {stateBox("NotReady", C.amberText, C.amberBg, C.amber, "\u2718")}
+            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.4)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2718"}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={arrow({ fontSize: 14 })}>{"\u2192"}</span>
+        </div>
+        <div style={col({ gap: 4, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 9, fontWeight: 700 })}>After CNI</div>
+          <div style={box(C.green, C.greenBg, { padding: "8px 10px", flex: 1 })}>
+            <div style={label(C.greenText, { fontSize: 9, marginBottom: 6 })}>Node</div>
+            {stateBox("Ready", C.greenText, C.greenBg, C.green, "\u2714")}
+            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.4)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2714"}</div>
+          </div>
+        </div>
+      </div>
+      <div style={{ ...caption(), marginTop: 8 }}>
+        <span style={{ fontSize: 9, opacity: 0.7 }}>Calico / Flannel / Cilium</span>
+      </div>
     </div>
   );
 }
@@ -1152,7 +1254,7 @@ function ControlPlaneDiagram() {
           </div>
         </div>
       </div>
-      <div style={caption()}>API Server is the single entry point — all components communicate through it</div>
+      <div style={caption()}>API Server is the single entry point - all components communicate through it</div>
     </div>
   );
 }
@@ -1203,7 +1305,7 @@ function EtcdQuorumDiagram() {
   return (
     <div style={wrap}>
       <div style={col({ gap: 6, width: "100%", maxWidth: 280 })}>
-        <div style={subLabel({ textAlign: "center", fontSize: 10 })}>3 members — quorum: 2</div>
+        <div style={subLabel({ textAlign: "center", fontSize: 10 })}>3 members - quorum: 2</div>
         <div style={row({ gap: 10 })}>
           {members.map((m, i) => (
             <div key={i} style={col({ gap: 2, alignItems: "center" })}>
@@ -1215,7 +1317,7 @@ function EtcdQuorumDiagram() {
           ))}
         </div>
         <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "5px 10px", fontSize: 9, textAlign: "center" })}>
-          quorum maintained — cluster operational
+          quorum maintained - cluster operational
         </div>
       </div>
       <div style={caption()}>odd number prevents split-brain | 3 tolerates 1 failure</div>
@@ -1225,27 +1327,49 @@ function EtcdQuorumDiagram() {
 
 // ── Stacked vs External etcd ────────────────────────────────────────
 function StackedVsExternalEtcdDiagram() {
+  const cpItem = (text, sz = 8) => (
+    <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "3px 6px", fontSize: sz, width: "100%" })}>{text}</div>
+  );
+  const etcdItem = (sz = 8) => (
+    <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "3px 6px", fontSize: sz, width: "100%" })}>etcd</div>
+  );
   return (
     <div style={wrap}>
-      <div style={row({ gap: 6, width: "100%", maxWidth: 280, alignItems: "stretch" })}>
-        <div style={box(C.amber, C.amberBg, { flex: 1, padding: "8px 8px" })}>
-          <div style={label(C.amberText, { fontSize: 9, marginBottom: 6 })}>Stacked</div>
-          <div style={col({ gap: 3 })}>
-            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP + etcd</div>
-            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP + etcd</div>
-            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP + etcd</div>
+      <div style={row({ gap: 8, width: "100%", maxWidth: 290, alignItems: "flex-start" })}>
+        <div style={col({ gap: 4, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 9, fontWeight: 700 })}>Stacked</div>
+          <div style={box(C.amber, C.amberBg, { padding: "6px 6px", width: "100%" })}>
+            <div style={label(C.amberText, { fontSize: 8, marginBottom: 4 })}>CP Node</div>
+            {cpItem("API Server")}
+            {cpItem("Scheduler")}
+            {cpItem("Controller Mgr")}
+            {etcdItem()}
           </div>
-          <div style={subLabel({ marginTop: 4, fontSize: 7, textAlign: "center" })}>simpler setup</div>
+          <div style={box(C.amber, C.amberBg, { padding: "6px 6px", width: "100%" })}>
+            <div style={label(C.amberText, { fontSize: 8, marginBottom: 4 })}>CP Node</div>
+            {cpItem("API Server")}
+            {cpItem("Scheduler")}
+            {cpItem("Controller Mgr")}
+            {etcdItem()}
+          </div>
+          <div style={subLabel({ marginTop: 2, textAlign: "center", fontSize: 7 })}>simpler setup</div>
         </div>
-        <div style={box(C.green, C.greenBg, { flex: 1, padding: "8px 8px" })}>
-          <div style={label(C.greenText, { fontSize: 9, marginBottom: 6 })}>External</div>
-          <div style={col({ gap: 3 })}>
-            <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "4px 6px", fontSize: 8 })}>CP</div>
-            <div style={{ ...dashed, width: "100%" }} />
-            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "4px 6px", fontSize: 8 })}>etcd</div>
-            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "4px 6px", fontSize: 8 })}>etcd</div>
+        <div style={col({ gap: 4, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 9, fontWeight: 700 })}>External</div>
+          <div style={box(C.green, C.greenBg, { padding: "6px 6px", width: "100%" })}>
+            <div style={label(C.greenText, { fontSize: 8, marginBottom: 4 })}>CP Node</div>
+            {cpItem("API Server")}
+            {cpItem("Scheduler")}
+            {cpItem("Controller Mgr")}
           </div>
-          <div style={subLabel({ marginTop: 4, fontSize: 7, textAlign: "center" })}>more resilient</div>
+          <div style={{ ...dashed, width: "80%", alignSelf: "center" }} />
+          <div style={box(C.purple, C.purpleBg, { padding: "6px 6px", width: "100%" })}>
+            <div style={label(C.purpleText, { fontSize: 8, marginBottom: 4 })}>etcd Cluster</div>
+            {etcdItem()}
+            {etcdItem()}
+            {etcdItem()}
+          </div>
+          <div style={subLabel({ marginTop: 2, textAlign: "center", fontSize: 7 })}>higher resilience</div>
         </div>
       </div>
       <div style={caption()}>external etcd survives Control Plane node failure</div>
@@ -1509,7 +1633,7 @@ function QosEvictionDiagram() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// LAZY RENDERING — only mount diagram when scrolled into view
+// LAZY RENDERING -only mount diagram when scrolled into view
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function LazyDiagram({ children, diagramId }) {
@@ -1537,14 +1661,14 @@ function LazyDiagram({ children, diagramId }) {
   }, [diagramId]);
 
   return (
-    <div ref={ref} style={{ minHeight: visible ? "auto" : 130 }}>
+    <div ref={ref} className="quiz-diagram" style={{ minHeight: visible ? "auto" : 130 }}>
       {visible ? children : null}
     </div>
   );
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ANALYTICS — track shown / skipped per diagram
+// ANALYTICS -track shown / skipped per diagram
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const STATS_KEY = "k8s-diagram-stats";
@@ -1584,14 +1708,14 @@ if (typeof window !== "undefined") {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// DIAGRAM REGISTRY — explicit per-question mapping (replaces regex)
+// DIAGRAM REGISTRY -explicit per-question mapping (replaces regex)
 //
 // Each diagram has a unique ID, a relevance score (1–5), and a
 // component reference. Only diagrams with score >= 4 are registered.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// COMPONENT REGISTRY — resolves config string keys to React components
+// COMPONENT REGISTRY -resolves config string keys to React components
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const COMPONENT_MAP = {
@@ -1633,6 +1757,9 @@ const COMPONENT_MAP = {
   CrashLoopDiagram,
   ImagePullDiagram,
   KubeletDiagram,
+  KubeProxyDiagram,
+  EtcdRestoreDiagram,
+  CniNotReadyDiagram,
   EtcdDataDiagram,
   ControlPlaneDiagram,
   StaticPodDiagram,
@@ -1647,7 +1774,7 @@ const COMPONENT_MAP = {
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// DEV VALIDATION — warn about misconfigured tags (dev only)
+// DEV VALIDATION -warn about misconfigured tags (dev only)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 if (process.env.NODE_ENV !== "production") {
@@ -1667,7 +1794,7 @@ if (process.env.NODE_ENV !== "production") {
 
 /**
  * Returns a lazy-loaded diagram element for a question, or null.
- * Uses ONLY the question's tags array — no string matching.
+ * Uses ONLY the question's tags array -no string matching.
  *
  * Selection: picks the tag with the highest diagram score (not first-match).
  * This avoids hidden priority bugs when questions carry multiple tags.
@@ -1727,7 +1854,7 @@ export function getDiagramForQuestion(tags) {
   );
 }
 
-// Tags that intentionally have no diagram — suppress dev warnings
+// Tags that intentionally have no diagram -suppress dev warnings
 const _knownInfoTags = new Set([
   "port-mapping", "traffic-policy", "admission-control",
   "resource-limits", "node-lifecycle", "storage-interface",
