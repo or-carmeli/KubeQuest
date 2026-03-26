@@ -982,7 +982,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\napi.example.com מופנה ל-Service אחד, web.example.com ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.",
+                "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n- host: api.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: api-svc\n- host: web.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: web-svc\n```",
             },
             {
               q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
@@ -1085,7 +1085,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Each Ingress rule has a host field for hostname-based routing.\napi.example.com → one Service, web.example.com → another.\nA single Ingress can serve multiple domains.",
+                "Each Ingress rule has a host field for hostname-based routing.\napi.example.com routes to one Service, web.example.com to another.\nA single Ingress can serve multiple domains.\n\n```yaml\nrules:\n- host: api.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: api-svc\n- host: web.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: web-svc\n```",
             },
             {
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",

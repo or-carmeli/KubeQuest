@@ -1593,7 +1593,7 @@ function IngressHostnameDiagram() {
           </div>
         </div>
       </div>
-      <div style={caption()}>hostname routing -- one IP, multiple domains</div>
+      <div style={caption()}>hostname routing - one IP, multiple domains</div>
     </div>
   );
 }
