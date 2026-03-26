@@ -1450,6 +1450,34 @@ function RestartPolicyDiagram() {
 }
 
 // ── Service Stable IP ────────────────────────────────────────────────
+// ── Port vs TargetPort ──────────────────────────────────────────────
+function PortTargetPortDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280, alignItems: "center" })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 14px", fontSize: 10 })}>
+          Client / Pod
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"} port: 80</span>
+        </div>
+        <div style={box(C.cyan, C.cyanBg, { width: "100%", padding: "8px 12px", textAlign: "center" })}>
+          <div style={label(C.cyanText, { fontSize: 11 })}>Service</div>
+          <div style={subLabel({ fontSize: 9 })}>10.96.0.10:80</div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"} targetPort: 8080</span>
+        </div>
+        <div style={box(C.purple, C.purpleBg, { width: "100%", padding: "8px 12px", textAlign: "center" })}>
+          <div style={label(C.purpleText, { fontSize: 11 })}>Container</div>
+          <div style={subLabel({ fontSize: 9 })}>listening on :8080</div>
+        </div>
+      </div>
+      <div style={caption()}>Service translates port 80 {"\u2192"} targetPort 8080</div>
+    </div>
+  );
+}
+
 // ── ClusterIP Service ───────────────────────────────────────────────
 function ClusterIpDiagram() {
   return (
@@ -1791,6 +1819,7 @@ const COMPONENT_MAP = {
   EtcdQuorumDiagram,
   StackedVsExternalEtcdDiagram,
   KubeadmUpgradeDiagram,
+  PortTargetPortDiagram,
   ClusterIpDiagram,
   ServiceStableIpDiagram,
   IngressHostnameDiagram,
