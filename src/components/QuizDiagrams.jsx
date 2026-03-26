@@ -1450,6 +1450,37 @@ function RestartPolicyDiagram() {
 }
 
 // ── Service Stable IP ────────────────────────────────────────────────
+// ── Egress NetworkPolicy ────────────────────────────────────────────
+function EgressPolicyDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 240, alignItems: "center" })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "6px 16px", fontSize: 11 })}>
+          Pod
+        </div>
+        <div style={{ textAlign: "center", padding: "3px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>outbound {"\u2193"}</span>
+        </div>
+        <div style={row({ gap: 8 })}>
+          <div style={col({ gap: 2, alignItems: "center" })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "4px 8px", fontSize: 9 })}>port 53</div>
+            <span style={{ fontSize: 10, color: C.greenText }}>{"\u2714"}</span>
+          </div>
+          <div style={col({ gap: 2, alignItems: "center" })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "4px 8px", fontSize: 9 })}>API</div>
+            <span style={{ fontSize: 10, color: C.greenText }}>{"\u2714"}</span>
+          </div>
+          <div style={col({ gap: 2, alignItems: "center" })}>
+            <div style={smallBox(C.red, C.redBg, C.redText, { padding: "4px 8px", fontSize: 9 })}>other</div>
+            <span style={{ fontSize: 10, color: C.redText }}>{"\u2718"}</span>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>egress policy: allow listed, block the rest</div>
+    </div>
+  );
+}
+
 // ── Port vs TargetPort ──────────────────────────────────────────────
 function PortTargetPortDiagram() {
   return (
@@ -1819,6 +1850,7 @@ const COMPONENT_MAP = {
   EtcdQuorumDiagram,
   StackedVsExternalEtcdDiagram,
   KubeadmUpgradeDiagram,
+  EgressPolicyDiagram,
   PortTargetPortDiagram,
   ClusterIpDiagram,
   ServiceStableIpDiagram,

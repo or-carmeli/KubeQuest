@@ -959,16 +959,17 @@ export const TOPICS = [
                 "ניתוב לפי path: /api מופנה ל-service-api, /web מופנה ל-service-web באותו Ingress.\nכל URL path מופנה ל-Service אחר לפי כללי ניתוב.\nמספר Services חולקים דומיין אחד.",
             },
             {
-              q: "מה egress NetworkPolicy?",
+              q: "מה \u2066egress NetworkPolicy\u2069?",
+              tags: ["egress-policy"],
               options: [
               "מגביל תנועה נכנסת ל-Pod לפי labels של Pod המקור",
               "מגביל bandwidth של Pod לפי annotations",
-              "מנהל DNS resolution עבור Pods ב-Namespace",
+              "מנהל \u2066DNS resolution\u2069 עבור Pods ב-Namespace",
               "מגביל תנועה יוצאת מ-Pods",
 ],
               answer: 3,
               explanation:
-                "Egress NetworkPolicy מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nעם policyTypes: [Egress], כל יציאה שלא מורשת. חסומה.\nחובה לאפשר port 53 (DNS), אחרת name resolution נכשל.",
+                "\u2066Egress NetworkPolicy\u2069 מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים \u2066policyTypes: [Egress]\u2069, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר port 53 (DNS), אחרת \u2066name resolution\u2069 נכשל.",
             },
             {
               q: "כיצד Ingress מנתב לפי hostname?",
@@ -1062,6 +1063,7 @@ export const TOPICS = [
             },
             {
               q: "What is an egress NetworkPolicy?",
+              tags: ["egress-policy"],
               options: [
               "Limits the bandwidth a Pod can use based on annotations",
               "Restricts inbound traffic to Pods based on labels of the source Pod",

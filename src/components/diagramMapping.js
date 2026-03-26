@@ -153,6 +153,7 @@ export const TAG_DIAGRAM_CONFIG = {
   "limitrange-vs-quota":     { component: "LimitRangeVsQuotaDiagram",     score: 4 },
 
   // ── networking ────────────────────────────────────────────────────
+  "egress-policy":           { component: "EgressPolicyDiagram",            score: 4 },
   "port-mapping":            { component: "PortTargetPortDiagram",         score: 4 },
   "clusterip-service":       { component: "ClusterIpDiagram",             score: 4 },
   "dns-flow":                { component: "DnsResolutionDiagram",         score: 4 },
