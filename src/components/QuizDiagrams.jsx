@@ -59,12 +59,12 @@ const smallBox = (border, bg, color, extra) => ({
 });
 
 const caption = (extra) => ({
-  fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 6,
+  fontSize: 10, color: "rgba(255,255,255,0.65)", marginTop: 6,
   textAlign: "center", ...extra,
 });
 
 const arrow = (extra) => ({
-  fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: MONO, ...extra,
+  fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: MONO, ...extra,
 });
 
 const row = (extra) => ({
@@ -79,7 +79,7 @@ const col = (extra) => ({
 const dashed = { borderTop: "1px dashed rgba(255,255,255,0.10)" };
 
 const subLabel = (extra) => ({
-  fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: MONO,
+  fontSize: 9, color: "rgba(255,255,255,0.7)", fontFamily: MONO,
   letterSpacing: 0.2, ...extra,
 });
 
@@ -1164,7 +1164,7 @@ function CniNotReadyDiagram() {
           <div style={box(C.amber, C.amberBg, { padding: "8px 10px", flex: 1 })}>
             <div style={label(C.amberText, { fontSize: 9, marginBottom: 6 })}>Node</div>
             {stateBox("NotReady", C.amberText, C.amberBg, C.amber, "\u2718")}
-            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.4)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2718"}</div>
+            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.6)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2718"}</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
@@ -1175,7 +1175,7 @@ function CniNotReadyDiagram() {
           <div style={box(C.green, C.greenBg, { padding: "8px 10px", flex: 1 })}>
             <div style={label(C.greenText, { fontSize: 9, marginBottom: 6 })}>Node</div>
             {stateBox("Ready", C.greenText, C.greenBg, C.green, "\u2714")}
-            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.4)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2714"}</div>
+            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.6)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2714"}</div>
           </div>
         </div>
       </div>
@@ -1214,7 +1214,7 @@ function EtcdDataDiagram() {
 // ── Control Plane Components ─────────────────────────────────────────
 function ControlPlaneDiagram() {
   const roleLabel = (text) => ({
-    fontSize: 8, color: "rgba(255,255,255,0.4)", fontFamily: MONO,
+    fontSize: 8, color: "rgba(255,255,255,0.6)", fontFamily: MONO,
     textAlign: "center", marginTop: 2, lineHeight: 1.2,
   });
   return (
