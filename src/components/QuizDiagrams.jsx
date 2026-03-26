@@ -59,7 +59,7 @@ const smallBox = (border, bg, color, extra) => ({
 });
 
 const caption = (extra) => ({
-  fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 6,
+  fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 10,
   textAlign: "center", ...extra,
 });
 
@@ -68,15 +68,15 @@ const arrow = (extra) => ({
 });
 
 const row = (extra) => ({
-  display: "flex", gap: 8, justifyContent: "center", alignItems: "center",
+  display: "flex", gap: 10, justifyContent: "center", alignItems: "center",
   flexWrap: "wrap", ...extra,
 });
 
 const col = (extra) => ({
-  display: "flex", flexDirection: "column", alignItems: "center", gap: 6, ...extra,
+  display: "flex", flexDirection: "column", alignItems: "center", gap: 8, ...extra,
 });
 
-const dashed = { borderTop: "1px dashed rgba(255,255,255,0.10)" };
+const dashed = { borderTop: "1px dashed rgba(255,255,255,0.10)", margin: "2px 0" };
 
 const subLabel = (extra) => ({
   fontSize: 10, color: "rgba(255,255,255,0.7)", fontFamily: MONO,
