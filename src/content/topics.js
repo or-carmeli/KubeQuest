@@ -1119,16 +1119,17 @@ export const TOPICS = [
         theoryEn: "NetworkPolicy, kube-proxy, and Debugging\n🔹 Default - all Pods can reach all Pods (allow-all) without NetworkPolicy.\n🔹 NetworkPolicy - requires a CNI plugin (Calico, Cilium). Blocking DNS? Open port 53 in egress.\n🔹 ipBlock - restricts egress to specific CIDRs (e.g. 0.0.0.0/0 for internet access).\n🔹 IPVS vs iptables - IPVS uses hash tables (O(1) lookup), iptables uses chains (O(n)).\n🔹 Labels are case-sensitive - app: App ≠ app: app, causing empty Endpoints.\n🔹 Service FQDN - service.namespace.svc.cluster.local (missing .svc = DNS failure).\n🔹 Ingress 503 - \"endpoints not found\" means the backend Service selector doesn't match any Pods.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
         questions: [
             {
-              q: "מה קורה ללא NetworkPolicy?",
+              q: "מה קורה ללא \u2066NetworkPolicy\u2069?",
+              tags: ["networkpolicy-default"],
               options: [
               "רק תנועת HTTPS מותרת ותנועת HTTP נחסמת",
-              "כל תנועה חסומה ו-Pods לא מצליחים לתקשר עד שמגדירים allow rules",
+              "כל תנועה חסומה ו-Pods לא מצליחים לתקשר עד שמגדירים \u2066allow rules\u2069",
               "כל Pod יכול לדבר עם כל Pod",
               "רק Pods באותו Namespace מדברים אחד עם השני",
 ],
               answer: 2,
               explanation:
-                "ללא NetworkPolicy, ברירת המחדל היא allow-all. כל Pod מדבר עם כל Pod.\nברגע שמוסיפים NetworkPolicy ל-Pod, כל traffic שלא מורשה. חסום.\nNetworkPolicy עובד כ-whitelist. רק מה שמוגדר מותר.",
+                "ללא \u2066NetworkPolicy\u2069, ברירת המחדל היא \u2066allow-all\u2069 - כל Pod מדבר עם כל Pod.\nברגע שמוסיפים \u2066NetworkPolicy\u2069 ל-Pod, כל traffic שלא מורשה במפורש חסום.\n\u2066NetworkPolicy\u2069 עובד כ-whitelist - רק מה שמוגדר מותר.",
             },
             {
               q: "מה נדרש כדי ש-NetworkPolicy יעבוד?",
@@ -1218,6 +1219,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What happens without a NetworkPolicy?",
+              tags: ["networkpolicy-default"],
               options: [
               "Only Pods within the same Namespace can communicate with each other",
               "All traffic is blocked and Pods cannot communicate until allow rules are defined",

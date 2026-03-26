@@ -1450,6 +1450,34 @@ function RestartPolicyDiagram() {
 }
 
 // ── Service Stable IP ────────────────────────────────────────────────
+// ── NetworkPolicy Default Behavior ──────────────────────────────────
+function NetworkPolicyDefaultDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 14, width: "100%", maxWidth: 280, alignItems: "flex-start" })}>
+        <div style={col({ gap: 6, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 10, fontWeight: 700 })}>No Policy</div>
+          <div style={row({ gap: 6 })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+            <span style={{ fontSize: 11, color: C.greenText }}>{"\u2194"}</span>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+          </div>
+          <div style={subLabel({ fontSize: 9, textAlign: "center" })}>all traffic allowed</div>
+        </div>
+        <div style={col({ gap: 6, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 10, fontWeight: 700 })}>With Policy</div>
+          <div style={row({ gap: 6 })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+            <span style={{ fontSize: 11, color: C.redText }}>{"\u2192"}{"\u2718"}</span>
+            <div style={smallBox(C.red, C.redBg, C.redText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+          </div>
+          <div style={subLabel({ fontSize: 9, textAlign: "center" })}>only whitelist passes</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Egress NetworkPolicy ────────────────────────────────────────────
 function EgressPolicyDiagram() {
   return (
@@ -1850,6 +1878,7 @@ const COMPONENT_MAP = {
   EtcdQuorumDiagram,
   StackedVsExternalEtcdDiagram,
   KubeadmUpgradeDiagram,
+  NetworkPolicyDefaultDiagram,
   EgressPolicyDiagram,
   PortTargetPortDiagram,
   ClusterIpDiagram,
