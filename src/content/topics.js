@@ -1763,7 +1763,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "שדרוג Worker Node:\n1. `kubectl drain <node> --ignore-daemonsets` - פינוי Pods\n2. שדרוג kubeadm package\n3. `kubeadm upgrade node` - עדכון node config\n4. שדרוג \u2066kubelet\u2069 ו-\u2066kubectl packages\u2069\n5. `systemctl restart kubelet`\n6. `kubectl uncordon <node>` - החזרת ה-Node לשירות",
+                "שדרוג Worker Node:\n1. `kubectl drain <node> --ignore-daemonsets` - פינוי Pods\n2. שדרוג kubeadm package\n3. `kubeadm upgrade node` - עדכון node config\n4. שדרוג חבילות kubelet ו-kubectl\n5. `systemctl restart kubelet`\n6. `kubectl uncordon <node>` - החזרת ה-Node לשירות",
             },
             {
               q: "הפקודה `kubectl get nodes` מציגה Node בסטטוס NotReady.\n\nSSH ל-Node הצליח.\n\nמה שתי הפעולות הראשונות?",
@@ -1789,7 +1789,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "kube-scheduler הוא Static Pod ב-kubeadm קלסטר.\nה-manifest נמצא ב-/etc/kubernetes/manifests/kube-scheduler.yaml.\nאם הקובץ פגום או חסר, kubelet לא יפעיל את ה-scheduler.\nבודקים: `cat /etc/kubernetes/manifests/kube-scheduler.yaml` ו-`crictl ps`.",
+                "kube-scheduler הוא \u2066Static Pod\u2069 בקלסטר kubeadm.\nה-manifest נמצא ב-\u2066/etc/kubernetes/manifests/kube-scheduler.yaml\u2069.\nאם הקובץ פגום או חסר, kubelet לא יפעיל את ה-scheduler.\nלאבחון, בודקים את תוכן ה-manifest ואת סטטוס ה-containers עם `crictl ps`.",
             },
             {
               q: "ה-join token פג תוקף.\n\nWorker Node חדש צריך להצטרף לקלסטר.\n\nמה הפקודה ליצירת token חדש?",
@@ -1841,20 +1841,20 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "\u2066Stacked etcd\u2069 - etcd רץ על אותם Nodes כמו רכיבי ה-\u2066Control Plane\u2069.\nפשוט יותר להקמה, אבל כשל של Node גורם לאובדן גם של \u2066Control Plane\u2069 וגם של etcd member.\n\u2066External etcd\u2069 - etcd רץ על Nodes נפרדים וייעודיים.\nרכיבי ה-\u2066Control Plane\u2069 מתחברים אליו מרחוק.\nאמין יותר כי כשל של \u2066Control Plane Node\u2069 לא פוגע ב-etcd.\n\u2066Stacked\u2069 = הקמה פשוטה | \u2066External\u2069 = עמידות גבוהה",
+                "\u2066Stacked etcd\u2069 - etcd רץ על אותם Nodes כמו ה-\u2066Control Plane\u2069. פשוט להקמה, אבל כשל של Node פוגע גם ב-etcd.\n\u2066External etcd\u2069 - etcd רץ על Nodes ייעודיים ונפרדים מה-\u2066Control Plane\u2069. עמיד יותר כי כשל של \u2066Control Plane Node\u2069 לא משפיע על etcd.\n\u2066Stacked\u2069 = הקמה פשוטה | \u2066External\u2069 = עמידות גבוהה",
             },
             {
               q: "הרצת:\n\n```\nkubeadm certs check-expiration\n```\n\nפלט:\n\n```\nCERTIFICATE                EXPIRES                  RESIDUAL TIME\napiserver                  Jan 15, 2025 10:00 UTC   <invalid>\napiserver-kubelet-client   Jan 15, 2025 10:00 UTC   <invalid>\nfront-proxy-client         Jan 15, 2025 10:00 UTC   <invalid>\n```\n\nמה הפתרון?",
               tags: ["certificate-management"],
               options: [
-              "`kubeadm certs renew all` ואז restart ל-Control Plane Static Pods",
+              "חידוש certificates והפעלה מחדש של רכיבי \u2066Control Plane\u2069",
               "מחיקת ה-certificates הישנים ידנית מ-/etc/kubernetes/pki/",
               "`kubectl delete secret` של ה-certificates ב-kube-system",
               "`kubeadm reset` ו-`kubeadm init` מחדש",
 ],
               answer: 0,
               explanation:
-                "`kubeadm certs renew all` מחדש את כל ה-certificates.\nאחרי חידוש, יש להפעיל מחדש את Static Pods של Control Plane כדי שיטענו את ה-certificates החדשים.\nאפשר ע\"י: העברת ה-manifests מהתיקייה וחזרה, או restart kubelet.",
+                "הפקודה `kubeadm certs renew all` מחדשת את כל ה-certificates של ה-\u2066Control Plane\u2069.\nרכיבי ה-\u2066Control Plane\u2069 (\u2066kube-apiserver\u2069, \u2066kube-controller-manager\u2069, \u2066kube-scheduler\u2069) טוענים certificates רק בעת הפעלה.\nרכיבים אלו רצים כ-\u2066Static Pods\u2069 שמנוהלים על ידי kubelet.\nkubelet עוקב אחרי התיקייה \u2066/etc/kubernetes/manifests/\u2069 - כשה-manifest משתנה, kubelet יוצר מחדש את ה-Pod וה-certificate החדש נטען.",
             },
         ],
         questionsEn: [
@@ -1947,7 +1947,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Stacked etcd - etcd runs on the same Nodes as the Control Plane components.\nSimpler to set up, but losing a Node means losing both a Control Plane member and an etcd member.\nExternal etcd - etcd runs on separate, dedicated Nodes.\nControl Plane components connect to it remotely.\nMore reliable because a Control Plane Node failure does not affect etcd.\nStacked = simpler setup | External = higher resilience",
+                "Stacked etcd - etcd runs on the same Nodes as the Control Plane. Simpler to set up, but a Node failure takes down both Control Plane and etcd.\nExternal etcd - etcd runs on separate, dedicated Nodes. More resilient because a Control Plane failure does not affect etcd.\nStacked = simpler setup | External = higher resilience",
             },
             {
               q: "Command:\n\n```\nkubeadm certs check-expiration\n```\n\nOutput:\n\n```\nCERTIFICATE                EXPIRES                  RESIDUAL TIME\napiserver                  Jan 15, 2025 10:00 UTC   <invalid>\napiserver-kubelet-client   Jan 15, 2025 10:00 UTC   <invalid>\nfront-proxy-client         Jan 15, 2025 10:00 UTC   <invalid>\n```\n\nWhat is the fix?",
@@ -1956,11 +1956,11 @@ export const TOPICS = [
               "Manually delete old certificates from /etc/kubernetes/pki/",
               "`kubectl delete secret` for the certificates in kube-system",
               "`kubeadm reset` and `kubeadm init` again",
-              "`kubeadm certs renew all` then restart Control Plane Static Pods",
+              "Renew certificates with `kubeadm certs renew all` and restart the Control Plane",
 ],
               answer: 3,
               explanation:
-                "`kubeadm certs renew all` renews all certificates.\nAfter renewal, restart Control Plane Static Pods so they load the new certificates.\nYou can do this by moving the manifests out of the directory and back, or by restarting kubelet.",
+                "`kubeadm certs renew all` renews all Control Plane certificates.\nControl Plane components (kube-apiserver, kube-controller-manager, kube-scheduler) load certificates only at startup.\nThese components run as Static Pods managed by kubelet.\nkubelet watches `/etc/kubernetes/manifests/` - when a manifest changes, kubelet recreates the Pod and the new certificate is loaded.",
             },
         ],
       },

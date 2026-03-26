@@ -1327,52 +1327,46 @@ function EtcdQuorumDiagram() {
 
 // ── Stacked vs External etcd ────────────────────────────────────────
 function StackedVsExternalEtcdDiagram() {
-  const cpItem = (text, sz = 8) => (
-    <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "3px 6px", fontSize: sz, width: "100%" })}>{text}</div>
+  const cp = (text) => (
+    <div style={smallBox(C.indigo, C.indigoBg, C.indigoText, { padding: "3px 6px", fontSize: 8, width: "100%" })}>{text}</div>
   );
-  const etcdItem = (sz = 8) => (
-    <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "3px 6px", fontSize: sz, width: "100%" })}>etcd</div>
+  const etcd = () => (
+    <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "3px 6px", fontSize: 8, width: "100%" })}>etcd</div>
   );
   return (
     <div style={wrap}>
-      <div style={row({ gap: 8, width: "100%", maxWidth: 290, alignItems: "flex-start" })}>
+      <div style={row({ gap: 10, width: "100%", maxWidth: 280, alignItems: "flex-start" })}>
         <div style={col({ gap: 4, flex: 1 })}>
           <div style={subLabel({ textAlign: "center", fontSize: 9, fontWeight: 700 })}>Stacked</div>
           <div style={box(C.amber, C.amberBg, { padding: "6px 6px", width: "100%" })}>
-            <div style={label(C.amberText, { fontSize: 8, marginBottom: 4 })}>CP Node</div>
-            {cpItem("API Server")}
-            {cpItem("Scheduler")}
-            {cpItem("Controller Mgr")}
-            {etcdItem()}
+            <div style={label(C.amberText, { fontSize: 8, marginBottom: 3 })}>Node</div>
+            {cp("API Server")}
+            {cp("Scheduler")}
+            {cp("Ctrl Mgr")}
+            {etcd()}
           </div>
-          <div style={box(C.amber, C.amberBg, { padding: "6px 6px", width: "100%" })}>
-            <div style={label(C.amberText, { fontSize: 8, marginBottom: 4 })}>CP Node</div>
-            {cpItem("API Server")}
-            {cpItem("Scheduler")}
-            {cpItem("Controller Mgr")}
-            {etcdItem()}
-          </div>
-          <div style={subLabel({ marginTop: 2, textAlign: "center", fontSize: 7 })}>simpler setup</div>
+          <div style={subLabel({ fontSize: 7, textAlign: "center" })}>node failure = etcd lost</div>
         </div>
         <div style={col({ gap: 4, flex: 1 })}>
           <div style={subLabel({ textAlign: "center", fontSize: 9, fontWeight: 700 })}>External</div>
           <div style={box(C.green, C.greenBg, { padding: "6px 6px", width: "100%" })}>
-            <div style={label(C.greenText, { fontSize: 8, marginBottom: 4 })}>CP Node</div>
-            {cpItem("API Server")}
-            {cpItem("Scheduler")}
-            {cpItem("Controller Mgr")}
+            <div style={label(C.greenText, { fontSize: 8, marginBottom: 3 })}>CP Node</div>
+            {cp("API Server")}
+            {cp("Scheduler")}
+            {cp("Ctrl Mgr")}
           </div>
-          <div style={{ ...dashed, width: "80%", alignSelf: "center" }} />
+          <div style={{ textAlign: "center", padding: "1px 0" }}>
+            <span style={arrow({ fontSize: 9 })}>{"\u2193"}</span>
+          </div>
           <div style={box(C.purple, C.purpleBg, { padding: "6px 6px", width: "100%" })}>
-            <div style={label(C.purpleText, { fontSize: 8, marginBottom: 4 })}>etcd Cluster</div>
-            {etcdItem()}
-            {etcdItem()}
-            {etcdItem()}
+            <div style={label(C.purpleText, { fontSize: 8, marginBottom: 3 })}>etcd Cluster</div>
+            <div style={row({ gap: 4 })}>
+              {[1,2,3].map(i => <div key={i} style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "2px 5px", fontSize: 7, flex: 1 })}>etcd</div>)}
+            </div>
           </div>
-          <div style={subLabel({ marginTop: 2, textAlign: "center", fontSize: 7 })}>higher resilience</div>
+          <div style={subLabel({ fontSize: 7, textAlign: "center" })}>CP failure {"\u2260"} etcd failure</div>
         </div>
       </div>
-      <div style={caption()}>external etcd survives Control Plane node failure</div>
     </div>
   );
 }
