@@ -46,25 +46,25 @@ const box = (border, bg, extra) => ({
 });
 
 const label = (color, extra) => ({
-  fontSize: 11, fontWeight: 700, color, fontFamily: MONO,
+  fontSize: 12, fontWeight: 700, color, fontFamily: MONO,
   letterSpacing: 0.5, textAlign: "center", ...extra,
 });
 
 const smallBox = (border, bg, color, extra) => ({
   border: `1px solid ${border}`, borderRadius: 7,
   padding: "6px 12px", background: bg,
-  fontSize: 10, fontWeight: 600, color, fontFamily: MONO,
+  fontSize: 11, fontWeight: 600, color, fontFamily: MONO,
   letterSpacing: 0.3, textAlign: "center", whiteSpace: "nowrap",
   boxSizing: "border-box", ...extra,
 });
 
 const caption = (extra) => ({
-  fontSize: 10, color: "rgba(255,255,255,0.65)", marginTop: 6,
+  fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 6,
   textAlign: "center", ...extra,
 });
 
 const arrow = (extra) => ({
-  fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: MONO, ...extra,
+  fontSize: 12, color: "rgba(255,255,255,0.6)", fontFamily: MONO, ...extra,
 });
 
 const row = (extra) => ({
@@ -79,7 +79,7 @@ const col = (extra) => ({
 const dashed = { borderTop: "1px dashed rgba(255,255,255,0.10)" };
 
 const subLabel = (extra) => ({
-  fontSize: 9, color: "rgba(255,255,255,0.7)", fontFamily: MONO,
+  fontSize: 10, color: "rgba(255,255,255,0.7)", fontFamily: MONO,
   letterSpacing: 0.2, ...extra,
 });
 
