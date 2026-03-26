@@ -1141,7 +1141,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "NetworkPolicy היא רק spec. האכיפה תלויה ב-`CNI plugin`.\nCalico, Cilium ו-Weave אוכפים. Flannel ו-kubenet: לא.\nב-Flannel, NetworkPolicy נוצרת אבל לא נאכפת. אפס הגנה.",
+                "\u2066NetworkPolicy\u2069 הוא משאב שמגדיר חוקים לתעבורה בין Pods.\nאבל Kubernetes עצמו רק מספק את ה-API וה-spec להגדרה של החוקים.\nהאכיפה בפועל מתבצעת על ידי \u2066CNI plugin\u2069 (\u2066Container Network Interface\u2069, רכיב רשת שמחבר את ה-Pods לרשת).\nPlugins כמו Calico, Cilium או \u2066Weave Net\u2069 יודעים ליישם את חוקי ה-\u2066NetworkPolicy\u2069 ברמת הרשת.\nלעומת זאת, plugins כמו Flannel או kubenet לא תומכים באכיפה של \u2066NetworkPolicy\u2069.\nבמקרים כאלה אפשר להגדיר \u2066NetworkPolicy\u2069, אבל בפועל היא לא תשפיע על התעבורה בין ה-Pods.\nלכן כדי ש-\u2066NetworkPolicy\u2069 יעבוד בפועל, חייבים להשתמש ב-\u2066CNI plugin\u2069 שתומך בכך.",
             },
             {
               q: "מה היתרון של IPVS על iptables ב-kube-proxy?",
@@ -1240,7 +1240,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "NetworkPolicy is just a spec. Enforcement depends on the CNI plugin.\nCalico, Cilium, Weave enforce it. Flannel, kubenet do not.\nOn Flannel, NetworkPolicy is created but completely ignored. Zero protection.",
+                "NetworkPolicy is a Kubernetes resource that defines traffic rules between Pods.\nHowever, Kubernetes itself only provides the API and specification for defining these rules.\nThe actual enforcement is performed by the CNI plugin (Container Network Interface, the networking component that connects Pods to the cluster network).\nPlugins such as Calico, Cilium, or Weave Net implement and enforce NetworkPolicy rules at the network level.\nIn contrast, plugins like Flannel or kubenet do not enforce NetworkPolicy.\nIn those cases, a NetworkPolicy object can exist in the cluster but it will have no effect on Pod traffic.\nTherefore, for NetworkPolicy to actually work, the cluster must use a CNI plugin that supports NetworkPolicy enforcement.",
             },
             {
               q: "What is the advantage of IPVS over iptables in kube-proxy?",
