@@ -744,7 +744,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n```\n\nכל Pod עם label של app: my-app ייכנס לרשימת ה-Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
+                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n```\n\nכל Pod עם label של \u200Eapp: my-app ייכנס לרשימת ה-Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
             },
             {
               q: "מה ההבדל בין port ל-targetPort ב-Service?",
@@ -1180,7 +1180,7 @@ export const TOPICS = [
                 "\u2066Egress policy\u2069 זו מאפשרת תעבורה רק ל-\u2066port 443\u2069, ולכן תעבורת DNS נחסמת.\nDNS משתמש ב-\u2066port 53\u2069 (בדרך כלל UDP ולעיתים גם TCP), ולכן Pods לא מצליחים לבצע \u2066name resolution\u2069.\nכדי לאפשר DNS, צריך להוסיף כלל Egress שמאפשר תעבורה ל-\u2066port 53\u2069 (TCP ו-UDP), בדרך כלל לכיוון CoreDNS.",
             },
             {
-              q: "ה-Ingress מחזיר שגיאת 503.\n\nהרצת:\n\n```\nkubectl describe ingress\n```\n\nפלט:\n\n```\nBackend: api-svc:80\n(<error: endpoints not found>)\n```\n\nמה הבעיה?",
+              q: "ה-Ingress מחזיר שגיאת 503.\n\nהרצת:\n\n```\n$ kubectl describe ingress my-ingress\n```\n\n```\nRules:\n  Host         Path  Backend\n  ----         ----  -------\n  api.example  /     api-svc:80 (<error: endpoints \"api-svc\" not found>)\n```\n\nמה הבעיה?",
               options: [
               "ה-Service קיים אבל ה-selector לא מתאים לאף Pod",
               "תעודת ה-TLS שגויה וחוסמת חיבורים נכנסים",
@@ -1189,7 +1189,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Service קיים אבל כש-selector לא תואם Pods, ה-Endpoints ריקים וזה גורם לשגיאת 503.\nלתקן selector או labels כך שה-Pods יתאימו ל-Service.\n• Ingress Controller חסר:\u200E לא היה מגיב בכלל. • TLS:\u200E שגיאת SSL, לא 503. • Namespace:\u200E השגיאה היא endpoints ריקים.\n503 + endpoints not found = בעיית selector/labels.",
+                "מה אומרת השגיאה:\nendpoints not found אומר שה-Service קיים, אבל אין לו Endpoints.\n\nאיך Endpoints נוצרים:\nכש-Service מוגדר עם selector, Kubernetes מחפש Pods עם labels תואמים.\nאם יש Pods תואמים, הם נרשמים כ-Endpoints של ה-Service.\nאם אין Pods תואמים, רשימת ה-Endpoints ריקה.\n\nלמה זה גורם ל-503:\nה-Ingress מנתב traffic ל-Service, אבל ה-Service לא יודע לאן להעביר אותו כי אין Endpoints.\nלכן ה-Ingress Controller מחזיר 503 (Service Unavailable).\n\nאיך מתקנים:\nבודקים את ה-selector של ה-Service ואת ה-labels של ה-Pods ומוודאים שהם תואמים.",
             },
             {
               q: "ה-Pod מנסה לגשת ל-Service ולא מצליח.\n\nכתובת שנוסתה:\n\n```\napi-svc.backend.cluster.local\n```\n\nמה ה-FQDN הנכון של Service בשם api-svc ב-Namespace backend?",
@@ -1279,7 +1279,7 @@ export const TOPICS = [
                 "This egress policy allows traffic only to port 443, so DNS traffic is blocked.\nDNS uses port 53 (usually UDP and sometimes TCP), so Pods cannot perform name resolution.\nTo fix this, an egress rule must allow traffic to port 53 (both TCP and UDP), typically toward CoreDNS.",
             },
             {
-              q: "An Ingress returns a 503 error.\n\nCommand:\n\n```\nkubectl describe ingress\n```\n\nOutput:\n\n```\nBackend: api-svc:80\n(<error: endpoints not found>)\n```\n\nWhat is the problem?",
+              q: "An Ingress returns a 503 error.\n\nYou ran:\n\n```\n$ kubectl describe ingress my-ingress\n```\n\n```\nRules:\n  Host         Path  Backend\n  ----         ----  -------\n  api.example  /     api-svc:80 (<error: endpoints \"api-svc\" not found>)\n```\n\nWhat is the problem?",
               options: [
               "The Service exists but its selector does not match any Pods",
               "The Ingress Controller is not installed in the cluster",
@@ -1288,7 +1288,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Service exists but selector doesn't match any Pods → empty Endpoints → 503.\nAlign Pod labels with the Service selector.\n• No Ingress Controller: no response at all. • TLS: SSL error, not 503. • Namespace: error says empty endpoints.\n503 + \"endpoints not found\" = selector/label mismatch.",
+                "What the error means:\nendpoints not found means the Service exists, but it has no Endpoints.\n\nHow Endpoints are created:\nWhen a Service has a selector, Kubernetes looks for Pods with matching labels.\nIf matching Pods exist, they are registered as Endpoints for that Service.\nIf no Pods match, the Endpoints list is empty.\n\nWhy this causes a 503:\nThe Ingress routes traffic to the Service, but the Service has nowhere to send it because there are no Endpoints.\nSo the Ingress Controller returns 503 (Service Unavailable).\n\nHow to fix:\nCheck the Service selector and the Pod labels and make sure they match.",
             },
             {
               q: "A Pod tries to access a Service and fails.\n\nAddress tried:\n\n```\napi-svc.backend.cluster.local\n```\n\nWhat is the correct FQDN for Service api-svc in Namespace backend?",
@@ -2496,7 +2496,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "PSA (Pod Security Admission) הוא מנגנון built-in ב-Kubernetes שאוכף מדיניות אבטחה על Pods ברמת ה-Namespace.\n\nרמת restricted דורשת שלוש הגדרות חובה:\n• allowPrivilegeEscalation: false - חוסם הסלמת הרשאות דרך setuid/setgid\n• runAsNonRoot: true - מונע הרצה כ-root (UID 0)\n• seccompProfile: RuntimeDefault - אוכף סינון syscall בסיסי\n\n```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```\n\nאפשרות א מגדירה privileged: true - ההפך מ-restricted.\nאפשרות ג חסרה allowPrivilegeEscalation ו-seccompProfile.\nאפשרות ד חסרה runAsNonRoot ו-seccompProfile.",
+                "PSA (Pod Security Admission) הוא מנגנון built-in ב-Kubernetes שאוכף מדיניות אבטחה על Pods ברמת ה-Namespace.\n\nרמת restricted דורשת שלוש הגדרות חובה:\n• allowPrivilegeEscalation: false - חוסם הסלמת הרשאות דרך setuid/setgid\n• runAsNonRoot: true - מונע הרצה כ-root (UID 0)\n• seccompProfile: RuntimeDefault - אוכף סינון syscall בסיסי\n\n```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```\n\nאפשרות א מגדירה \u200Eprivileged: true - ההפך מ-restricted.\nאפשרות ג חסרה allowPrivilegeEscalation ו-seccompProfile.\nאפשרות ד חסרה runAsNonRoot ו-seccompProfile.",
             },
         ],
         questionsEn: [
@@ -3031,7 +3031,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "CSI הוא סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers עבור Kubernetes.\nכל vendor שולח CSI driver משלו (AWS EBS, Azure Disk, Ceph) כ-DaemonSet ב-Cluster.\nזה מאפשר עדכונים ללא תלות בגרסת Kubernetes.",
+                "CSI (Container Storage Interface) הוא סטנדרט שמאפשר לחבר מערכות אחסון חיצוניות ל-Kubernetes בצורה אחידה.\nבמקום ש-Kubernetes יטמיע תמיכה מובנית בכל סוג אחסון, ספקים (vendors) יכולים לכתוב CSI drivers שמטפלים ביצירה, חיבור וניהול של volumes.\nהדרייברים האלו (למשל AWS EBS, Azure Disk, Ceph) רצים בתוך הקלאסטר ומבצעים את פעולות האחסון בפועל.\nכך ניתן להוסיף או להחליף פתרונות אחסון בלי לשנות את Kubernetes עצמו.",
             },
             {
               q: "מה התפקיד של Helm Hook?",
@@ -3093,10 +3093,10 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "ה-PVC מפנה ל-StorageClass בשם fast-ssd שלא קיים ב-Cluster.\nללא StorageClass, ה-provisioner לא יודע ליצור PV. הריצו `kubectl get storageclass` לראות מה קיים.\n• PVC גדול מדי = שגיאה על capacity • Node מלא = לא קשור ל-provisioning • Namespace שונה = שגיאה אחרת.",
+                "ה\u2011PVC מפנה ל\u2011StorageClass בשם \u2066fast-ssd\u2069 שלא קיים ב\u2011Cluster\u200F.\nללא \u2066StorageClass\u2069\u200F, ה\u2011provisioner לא יודע ליצור \u2066PV\u2069\u200F.\nהריצו kubectl get storageclass לראות מה קיים.\n\u2066PVC\u2069 גדול מדי = שגיאה על \u2066capacity\u2069\n\u2066Node\u2069 מלא = לא קשור ל\u2011provisioning\n\u2066Namespace\u2069 שונה = שגיאה אחרת\u200F",
             },
             {
-              q: "הרצת:\n\n```\nhelm upgrade\n```\n\nה-upgrade כשל באמצע.\nRelease ב-status failed.\nה-ConfigMap עודכן חלקית.\n\nמה הצעד הבא?",
+              q: "הרצת:\n\n```\nhelm upgrade\n```\n\nה-upgrade כשל באמצע.\nRelease ב-\u200Estatus failed.\nה-ConfigMap עודכן חלקית.\n\nמה הצעד הבא?",
               options: [
               "helm upgrade שוב",
               "helm rollback my-release [last-good-revision]\nלהחזיר למצב עקבי",
@@ -3105,7 +3105,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "כש-`helm upgrade` נכשל, resources עלולים להיות במצב לא עקבי.\n`helm rollback` מחזיר הכל ל-revision תקין. הריצו `helm history` קודם לראות מספרי revision.\nupgrade נוסף ללא rollback עלול להחמיר את המצב.",
+                "כש-helm upgrade נכשל, חלק מה-resources עלולים להישאר במצב לא עקבי.\nהצעד הבטוח הוא לבצע helm rollback כדי להחזיר את ה-release לגרסה האחרונה שעבדה.\nhelm rollback my-release [last-good-revision] מחזיר את ה-release לגרסה תקינה ומבטל את השינויים החלקיים שנוצרו במהלך ה-upgrade.\nניתן להשתמש ב-helm history my-release כדי לראות את רשימת ה-revisions (גרסאות deployment שנשמרות על ידי Helm) ולבחור לאיזו גרסה לחזור.",
             },
             {
               q: "Pod עם PVC ב-AWS EKS.\nה-Pod עבר ל-Node ב-Availability Zone אחרת.\nה-PVC מראה סטטוס Bound, אבל ה-Pod לא מצליח לעלות.\n\nמה הסיבה?",
@@ -3133,7 +3133,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "CSI is an open standard for writing storage drivers for Kubernetes.\nEach vendor ships their own CSI driver (AWS EBS, Ceph, etc.) as a DaemonSet in the cluster.\nThis lets vendors update drivers independently of Kubernetes releases.",
+                "CSI (Container Storage Interface) is a standard that allows external storage systems to integrate with Kubernetes in a consistent way.\nInstead of Kubernetes having built-in support for every storage type, vendors can write CSI drivers that handle creating, attaching, and managing volumes.\nThese drivers (for example AWS EBS, Azure Disk, Ceph) run inside the cluster and perform the actual storage operations.\nThis allows adding or replacing storage solutions without modifying Kubernetes itself.",
             },
             {
               q: "What is the role of a Helm Hook?",
@@ -3195,7 +3195,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "The PVC references a StorageClass named fast-ssd that doesn't exist in the Cluster.\nWithout a valid StorageClass, the provisioner can't create a PV. Run `kubectl get storageclass` to check.\n• Too large = capacity error • Node full = unrelated to provisioning • Different namespace = different error.",
+                "The PVC references a StorageClass named fast-ssd that doesn't exist in the Cluster.\nWithout a valid StorageClass, the provisioner can't create a PV.\nRun kubectl get storageclass to see what exists.\nPVC too large = capacity error\nNode full = unrelated to provisioning\nDifferent Namespace = different error",
             },
             {
               q: "Command:\n\n```\nhelm upgrade\n```\n\nThe upgrade failed midway.\nRelease status: failed.\nA ConfigMap is half-updated.\n\nWhat is the next step?",
@@ -3207,7 +3207,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "When `helm upgrade` fails midway, resources may be in an inconsistent state.\n`helm rollback` restores everything to a known good revision. Run `helm history` first.\nAnother upgrade without rollback risks making things worse.",
+                "When a helm upgrade fails, some resources may remain in an inconsistent state.\nThe safe step is to run helm rollback to restore the release to the last working revision.\nhelm rollback my-release [last-good-revision] restores the release to a healthy version and cancels the partial changes created during the upgrade.\nYou can use helm history my-release to see the list of revisions (deployment versions stored by Helm) and choose which one to roll back to.",
             },
             {
               q: "A Pod with a PVC on AWS EKS.\nThe Pod moved to a Node in a different Availability Zone.\nThe PVC shows Bound status, but the Pod fails to start.\n\nWhat is the cause?",
@@ -3263,7 +3263,7 @@ export const TOPICS = [
                 "`kubectl logs` מציג את ה-stdout/stderr של הקונטיינר.\nהמקום הראשון לחפש שגיאות אפליקציה כשה-Pod רץ.\nהוסף --follow לעקוב בזמן אמת.",
             },
             {
-              q: "מה מציגה הפקודה `kubectl get events`?",
+              q: "מה מציגה הפקודה\n\n```\n$ kubectl get events\n```",
               options: [
               "אירועים מה-Namespace הנוכחי: Pod scheduling, image pull, probe failures",
               "רק Pod logs",
@@ -3297,10 +3297,10 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "כשקונטיינר קורס, הוא עולה מחדש עם לוגים ריקים.\n\nהפלאג previous-- שולף את הלוגים מההרצה הקודמת שנכשלה, בדיוק מה שצריך לאבחון.\n\nkubectl logs pod-name --previous",
+                "כשקונטיינר קורס, הוא עולה מחדש עם לוגים ריקים.\n\nkubectl logs pod-name --previous",
             },
             {
-              q: "מה מציגה הפקודה `kubectl top nodes`?",
+              q: "מה מציגה הפקודה `kubectl top nodes`",
               options: [
               "שימוש ב-CPU/Memory של כל Node בזמן אמת (דורש metrics-server)",
               "רשימת כל ה-Nodes ב-Cluster כולל Status ו-Roles",
@@ -3321,7 +3321,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "`kubectl get --raw='/healthz'` מחזיר ok אם ה-API server בריא.\ncomponentstatuses הוסרה ב-K8s 1.26. השתמשו ב-/healthz, /readyz, /livez במקום.",
+                "kubectl get --raw=/healthz שולחת בקשה ישירה ל-Kubernetes API Server ובודקת אם הוא בריא.\nאם ה-API Server תקין, התגובה תהיה ok.\nנקודות כמו /healthz, /readyz, /livez הן health endpoints. זה אומר כתובות HTTP מיוחדות שמאפשרות לבדוק את מצב הרכיב.\nב-Kubernetes 1.26 הפקודה kubectl get componentstatuses הוסרה ולכן משתמשים ב-health endpoints במקום.",
             },
             {
               q: "מה תפקיד הפקודה `kubectl config get-contexts`?",
@@ -3362,7 +3362,7 @@ export const TOPICS = [
                 "`kubectl logs` shows the container's stdout/stderr.\nFirst place to look for application errors while the Pod is running.\nUse --follow to stream logs in real time.",
             },
             {
-              q: "What does `kubectl get events` show?",
+              q: "What does this command show?\n\n```\n$ kubectl get events\n```",
               options: [
               "Only Pod logs",
               "Only Node events",
@@ -3420,7 +3420,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "`kubectl get --raw='/healthz'` returns 'ok' if the API server is healthy.\ncomponentstatuses was removed in K8s 1.26. Use /healthz, /readyz, /livez instead.",
+                "kubectl get --raw=/healthz sends a direct request to the Kubernetes API Server to check if it is healthy.\nIf the API Server is functioning correctly, the response will be ok.\nEndpoints like /healthz, /readyz, and /livez are health endpoints, meaning special HTTP URLs used to check the status of a component.\nIn Kubernetes 1.26 the command kubectl get componentstatuses was removed, so health endpoints are used instead.",
             },
             {
               q: "What is the purpose of `kubectl config get-contexts`?",
@@ -3488,7 +3488,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "ה-CPU request של ה-Pod גדול מה-capacity הפנוי בכל Node.\nהקטינו requests.cpu לפי actual usage, או הוסיפו Nodes עם capacity פנוי.",
+                "הודעת Insufficient cpu אומרת של-Kubernetes אין Node עם מספיק CPU פנוי כדי להריץ את ה-Pod.\nה-scheduler של Kubernetes (הרכיב שמחליט על איזה Node להריץ Pod) משווה את ה-cpu requests שהוגדרו ב-Pod מול ה-capacity הזמין בכל Node.\nבמקרה הזה הבקשה ל-CPU גדולה ממה שזמין ב-Nodes, ולכן ה-Pod נשאר במצב Pending.\nכדי לפתור את הבעיה ניתן להקטין את ה-cpu requests, לפנות משאבים ב-Nodes קיימים, או להוסיף Nodes חדשים לקלאסטר.",
             },
             {
               q: "מה קורה כש-liveness probe נכשל?",
@@ -3589,7 +3589,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "The Pod's CPU request is larger than available capacity on any Node.\nLower requests.cpu to actual usage (check with `kubectl top pods`), or add more Nodes.",
+                "The Insufficient cpu message means Kubernetes cannot find a Node with enough available CPU to run the Pod.\nThe Kubernetes scheduler (the component responsible for deciding which Node runs a Pod) compares the Pod's cpu requests with the available capacity on each Node.\nIn this case the requested CPU is larger than what is available on the Nodes, so the Pod remains in the Pending state.\nTo resolve the issue you can reduce the cpu requests, free resources on existing Nodes, or add more Nodes to the cluster.",
             },
             {
               q: "What happens when a liveness probe fails?",
@@ -3707,7 +3707,7 @@ export const TOPICS = [
                 "`etcdctl snapshot save` יוצר snapshot מלא של etcd:\u200E כל מצב ה-Cluster.\nחובה לציין --endpoints, --cacert, --cert, ו--key לאימות.\nזהו הכלי הראשי ל-Disaster Recovery.",
             },
             {
-              q: "ה-Pod רץ, אבל ה-liveness probe נכשל שוב ושוב.\n\nהפלט של `kubectl describe pod` מציג:\n\n```\nLiveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nמה בודקים?",
+              q: "ה-Pod רץ, אבל ה-liveness probe נכשל שוב ושוב.\n\nהפלט של `kubectl describe pod` מציג:\n\n```\nError: Liveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nמה בודקים?",
               options: [
               "ה-container image שגוי ולא מכיל את האפליקציה",
               "בעיית DNS שמונעת מה-probe להגיע ל-Pod",
@@ -3716,7 +3716,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "קוד 404 אומר שה-path ב-livenessProbe.httpGet.path לא קיים באפליקציה. ה-Pod רץ ומגיב.\nבדקו איזה endpoint health האפליקציה חושפת (/health, /ping, /livez) ועדכנו.\n• DNS לא קשור (probe רץ ישירות ל-Pod IP) • image נכון (404 = שרת עונה) • RBAC לא משפיע על probes.",
+                "שגיאת 404 ב-liveness probe אומרת שהבקשה כן הגיעה לאפליקציה, אבל ה-endpoint שהוגדר ב-probe לא קיים.\nה-Pod עצמו רץ והשרת מגיב, אבל הנתיב (path) שהוגדר ב-livenessProbe.httpGet לא תואם ל-endpoint אמיתי באפליקציה.\nלכן Kubernetes מקבל תגובת 404 וחושב שהבדיקה נכשלה, מה שגורם ל-kubelet להפעיל מחדש את ה-container.\nהפתרון הוא לבדוק איזה endpoint של health האפליקציה באמת חושפת (למשל /health, /livez, /ping) ולעדכן את ה-livenessProbe בהתאם.",
             },
             {
               q: "הרצת:\n\n```\nkubectl logs my-pod\n```\n\nפלט:\n\n```\nError from server (BadRequest):\ncontainer 'my-container' in pod\n'my-pod' is not running\n```\n\nמה עושים?",
@@ -3805,7 +3805,7 @@ export const TOPICS = [
                 "`etcdctl snapshot save` creates a full snapshot of etcd: the entire cluster state.\nMust provide --endpoints, --cacert, --cert, and --key for authentication.\nThis is the standard backup method for disaster recovery.",
             },
             {
-              q: "A Pod is running, but the liveness probe keeps failing.\n\nThe output of `kubectl describe pod` shows:\n\n```\nLiveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nWhat do you check?",
+              q: "A Pod is running, but the liveness probe keeps failing.\n\nThe output of `kubectl describe pod` shows:\n\n```\nError: Liveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nWhat do you check?",
               options: [
               "The container image is wrong and does not contain the application",
               "A DNS issue preventing the probe from reaching the Pod",
@@ -3814,7 +3814,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "A 404 means the path in livenessProbe.httpGet.path doesn't exist in the app. The Pod is running and responding.\nCheck which health endpoint the app exposes (/health, /ping, /livez) and update the spec.\n• DNS unrelated (probe runs directly to Pod IP) • Image is correct (404 = server responds) • RBAC doesn't affect probes.",
+                "A 404 error in a liveness probe means the request reached the application, but the endpoint defined in the probe does not exist.\nThe Pod itself is running and the server is responding, but the path configured in livenessProbe.httpGet does not match a real endpoint exposed by the application.\nAs a result Kubernetes receives a 404 response and treats the probe as failed, which causes the kubelet to restart the container.\nThe fix is to check which health endpoint the application actually exposes (for example /health, /livez, /ping) and update the livenessProbe configuration accordingly.",
             },
             {
               q: "Command:\n\n```\nkubectl logs my-pod\n```\n\nOutput:\n\n```\nError from server (BadRequest):\ncontainer 'my-container' in pod\n'my-pod' is not running\n```\n\nWhat do you do?",
@@ -3860,13 +3860,12 @@ export const TOPICS = [
           {
             q: "צריך למצוא תהליך שצורך הכי הרבה זיכרון.\n\nאיזו פקודה הכי מתאימה?",
             options: [
-              "ps aux --sort=-%mem | head",
-              "cat /proc/meminfo",
               "vmstat 1",
-              "free -m",
-            ],
-            answer: 0,
-            explanation: "חושדים בתהליך שצורך יותר מדי זיכרון.\nהצעד הראשון הוא למיין תהליכים לפי צריכת RAM:\n\nps aux --sort=-%mem | head\n\nמקבלים רשימה מהתהליך הכי כבד למטה.\n\nאחרי שמזהים את החשוד, בודקים פירוט עם:\n\npmap <PID>\n\ncat /proc/meminfo מציג סיכום כללי של המערכת, לא לפי תהליך.\nvmstat גם נותן תמונה כללית, בלי לפרק לפי תהליכים.\ndf -h זה דיסק, לא זיכרון - כלי אחר לגמרי.",
+              "cat /proc/meminfo",
+              "ps aux --sort=-%mem | head",
+              "free -m"],
+            answer: 2,
+            explanation: "כשיש חשד ל-memory leak או צריכת RAM חריגה, קודם מזהים את התהליך שצורך הכי הרבה זיכרון.\nps aux --sort=-%mem ממיין תהליכים לפי שימוש בזיכרון.\nhead מציג את התהליכים המובילים בצריכה.\nאחרי שמזהים את ה-PID אפשר להמשיך בדיבוג עם כלים כמו pmap, top, או smem.",
           },
           {
             q: "הרצת:\n\n```\ndf -h\n```\n\nפלט:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nמה הבעיה ומה הצעד הראשון?",
@@ -3877,29 +3876,27 @@ export const TOPICS = [
               "השימוש בדיסק תקין - ערך של 96% סביר לשרת ייצור",
             ],
             answer: 0,
-            explanation: "הדיסק ב-96%, נשארו רק 2GB. ב-100% שירותים יפסיקו לעבוד.\n\nהצעד הראשון - למצוא מה תופס מקום:\n\ndu -sh /*\n\nלרוב האשם הוא /var/log או /tmp.\n\nלמה לא התשובות האחרות?\nfsck מתקן שגיאות במערכת קבצים, לא משחרר מקום.\nמחיקת כל /var/log מסוכנת - עלולה למחוק לוגים קריטיים.\n96% זה לא תקין לשרת ייצור - הכלל הוא לטפל מתחת ל-85%.",
+            explanation: "הפלט מראה שהדיסק ב-96% תפוסה, נשארו רק 2GB מתוך 50GB.\nב-100% שירותים יפסיקו לכתוב לוגים, databases עלולים לקרוס, ואפילו SSH עלול להפסיק לעבוד.\nהצעד הראשון הוא לזהות מה תופס מקום באמצעות du -sh /*.\nבדרך כלל הצרכנים הגדולים הם /var/log או /tmp.\nfsck מתקן שגיאות במערכת קבצים ולא משחרר מקום, ומחיקה גורפת של /var/log עלולה להרוס לוגים קריטיים.",
           },
           {
             q: "שירות לא עולה אחרי הפעלה מחדש של השרת.\n\nאיזו פקודה תראה את הלוגים של השירות?",
             options: [
               "systemctl restart service-name",
-              "journalctl -u service-name --no-pager -n 50",
-              "dmesg | tail",
               "cat /etc/systemd/system/service-name.service",
-            ],
-            answer: 1,
-            explanation: "שירות לא עולה? קודם כל קוראים את הלוגים:\n\n```\njournalctl -u service-name --no-pager -n 50\n```\n\nדוגמת פלט:\n\n```\nMar 19 08:12:02 srv1 service-name[1423]: Error: failed to bind port 8080: address already in use\nMar 19 08:12:02 srv1 systemd[1]: service-name.service: Main process exited, code=exited, status=1/FAILURE\n```\n\nn 50- מגביל ל-50 שורות אחרונות - מספיק לזהות את שגיאת ההפעלה.\n\nsystemctl restart בלי לבדוק לוגים קודם זה טעות - הבעיה תחזור.\ndmesg מציג הודעות kernel, לא לוגים של שירותים.",
+              "dmesg | tail",
+              "journalctl -u service-name --no-pager -n 50"],
+            answer: 3,
+            explanation: "כדי להבין למה השירות לא עולה, צריך לבדוק את הלוגים שלו.\nהפקודה journalctl -u service-name --no-pager -n 50 מציגה את הלוגים של השירות מ-systemd (מערכת הניהול של שירותים בלינוקס) ומאפשרת לראות את שגיאת ההפעלה.\nהאופציה -n 50 מציגה את 50 השורות האחרונות, שהן בדרך כלל הרלוונטיות לכשל האחרון.\nכך ניתן לזהות בעיות כמו פורט תפוס, שגיאת קונפיגורציה או קריסה של התהליך.\nפקודות כמו systemctl restart לא עוזרות לדיבוג, ו-dmesg מציג לוגים של הקרנל ולא של השירות עצמו.",
           },
           {
             q: "צריך לבדוק אם שירות nginx פעיל.\n\nאיזו פקודה הכי מתאימה?",
             options: [
-              "systemctl status nginx",
               "cat /var/log/nginx/error.log",
+              "systemctl status nginx",
               "top -u nginx",
-              "netstat -tlnp",
-            ],
-            answer: 0,
-            explanation: "רוצים לדעת אם nginx רץ? פקודה אחת:\n\nsystemctl status nginx\n\nמקבלים: active/inactive/failed, PID, uptime, ושורות לוג אחרונות.\n\nאם הוא למטה, הצעד הבא:\n\njournalctl -u nginx\n\ncat /var/log/nginx/error.log מציג שגיאות אבל לא אומר אם השירות רץ עכשיו.\ntop -u nginx מסנן לפי user, אבל nginx לא תמיד רץ תחת user בשם nginx.\nnetstat -tlnp מציג פורטים פתוחים, אבל לא מזהה בוודאות מי מאזין.",
+              "netstat -tlnp"],
+            answer: 1,
+            explanation: "systemctl status מציג את מצב השירות: האם הוא active, inactive או failed.\nבנוסף מוצגים ה-PID, זמן הפעילות, ושורות לוג אחרונות.\nזה נותן תמונה מלאה בפקודה אחת.\ncat /var/log/nginx/error.log מציג שגיאות היסטוריות אבל לא אומר אם השירות רץ כרגע.\ntop ו-netstat נותנים מידע חלקי ולא מזהים בוודאות את מצב השירות.",
           },
           {
             q: "אתה רוצה לעקוב אחרי קובץ לוג בזמן אמת.\n\nאיזו פקודה הכי מתאימה?",
@@ -3910,18 +3907,17 @@ export const TOPICS = [
               "head -100 /var/log/syslog",
             ],
             answer: 2,
-            explanation: "צריכים לעקוב אחרי לוג בזמן אמת:\n\ntail -f /var/log/syslog\n\nהקובץ נשאר פתוח ושורות חדשות מופיעות ברגע שנכתבות. הכלי הסטנדרטי בזמן deploy.\n\nאפשר לשלב עם סינון:\n\ntail -f /var/log/syslog | grep ERROR\n\ncat מדפיס הכל ויוצא, לא עוקב.\ngrep error מחפש ויוצא, לא מראה שורות חדשות.\nhead -100 מציג את 100 הראשונות (הישנות), ההפך ממה שצריך.",
+            explanation: "tail -f משאיר את הקובץ פתוח ומציג שורות חדשות ברגע שנכתבות.\nזה הכלי הסטנדרטי למעקב אחרי לוגים בזמן deploy או בזמן דיבוג.\nאפשר לשלב עם סינון: tail -f /var/log/syslog | grep ERROR.\ncat מדפיס את כל התוכן ויוצא, בלי להמשיך לעקוב.\ngrep מחפש ויוצא, ו-head מציג שורות מתחילת הקובץ (הישנות ביותר).",
           },
           {
             q: "אתה רואה שתהליך תקוע במצב D (uninterruptible sleep) בפלט של ps.\n\nמה הסיבה הסבירה?",
             options: [
-              "התהליך ממתין לפעולת I/O שלא מסתיימת, כמו דיסק או NFS",
+              "התהליך הושהה ידנית באמצעות שליחת סיגנל SIGSTOP",
               "התהליך תקוע בלולאה אינסופית שצורכת CPU מקסימלי",
               "התהליך הוא zombie שממתין לאיסוף ע\"י תהליך האב",
-              "התהליך הושהה ידנית באמצעות שליחת סיגנל SIGSTOP",
-            ],
-            answer: 0,
-            explanation: "תהליך ב-D state (uninterruptible sleep) ממתין לפעולת I/O שה-kernel לא מאפשר לבטל.\n\nברוב המקרים: NFS mount תקוע, דיסק כושל, או בעיית storage driver.\n\nתהליך ב-D לא ניתן להריגה עם kill -9. ה-kernel חוסם signals.\nצריך לפתור את בעיית ה-I/O עצמה.\n\nצריכת CPU גבוהה זה R (running), לא D.\nzombie זה Z, תהליך שסיים אך האב לא אסף exit status.\nSIGSTOP מעביר ל-T (stopped), לא D.",
+              "התהליך ממתין לפעולת I/O שלא מסתיימת, כמו דיסק או NFS"],
+            answer: 3,
+            explanation: "מצב D (uninterruptible sleep) אומר שהתהליך ממתין לפעולת I/O שהקרנל לא מאפשר לבטל.\nהסיבות הנפוצות: NFS mount תקוע, דיסק כושל, או בעיית storage driver.\nתהליך ב-D לא ניתן להריגה עם kill -9 כי הקרנל חוסם signals במצב זה.\nהפתרון הוא לטפל בבעיית ה-I/O עצמה.\nלולאה אינסופית מופיעה כ-R, zombie כ-Z, ו-SIGSTOP כ-T.",
           },
           {
             q: "אתה מנסה להתחבר לשרת מרוחק בפורט 8080 אבל החיבור נכשל.\n\nהרצת:\n\n```\ncurl -v http://remote-server:8080\n```\n\nפלט:\n\n```\n* connect to remote-server port 8080 failed: Connection refused\n```\n\nמה המשמעות?",
@@ -3932,31 +3928,29 @@ export const TOPICS = [
               "תעודת SSL לא תקינה וה-handshake נכשל",
             ],
             answer: 1,
-            explanation: "Connection refused = חבילת TCP SYN הגיעה לשרת, אבל הוא ענה ב-RST.\n\nDNS ו-routing עובדים. הבעיה: אין מי שמאזין על הפורט, או firewall דוחה.\n\nבעיית DNS הייתה מציגה Could not resolve host.\nSSL רלוונטי רק אחרי שה-TCP connection הצליח.",
+            explanation: "Connection refused אומר שחבילת TCP SYN הגיעה לשרת, אבל הוא ענה ב-RST (דחייה).\nזה מוכיח ש-DNS ו-routing עובדים, אחרת הבקשה לא הייתה מגיעה.\nהבעיה היא שאין שירות שמאזין על פורט 8080, או ש-firewall דוחה את החיבור.\nבעיית DNS הייתה מציגה Could not resolve host.\nSSL רלוונטי רק אחרי שהחיבור TCP הצליח.",
           },
           {
             q: "הרצת:\n\n```\nlsof +D /var/log/ | head -20\n```\n\nלמה הפקודה הזו שימושית?",
             options: [
-              "היא מציגה תהליכים שמחזיקים קבצים פתוחים בתיקייה",
-              "היא מוחקת קבצי לוג ישנים שלא נגישו לאחרונה",
               "היא דוחסת קבצי לוג ומסובבת אותם לפי גודל",
-              "היא מציגה את גודל כל קובץ לוג בסדר יורד",
-            ],
-            answer: 0,
-            explanation: "lsof +D מציג תהליכים שמחזיקים file handles פתוחים בתיקייה.\n\nחשוב במיוחד לפני מחיקת לוגים:\nאם תהליך עדיין כותב לקובץ שמחקת, ה-inode לא משתחרר.\ndu יראה מקום פנוי, df לא. הדיסק לא מתפנה.\n\nהפתרון - לסגור את ה-handle:\n\nsystemctl restart service-name\n\nאו logrotate עם copytruncate.\n\nlsof לא מוחק, לא דוחס, ולא מציג גודל קבצים.\nלגודל משתמשים ב-du -sh.",
+              "היא מוחקת קבצי לוג ישנים שלא נגישו לאחרונה",
+              "היא מציגה תהליכים שמחזיקים קבצים פתוחים בתיקייה",
+              "היא מציגה את גודל כל קובץ לוג בסדר יורד"],
+            answer: 2,
+            explanation: "lsof +D מציג תהליכים שמחזיקים file handles פתוחים בתיקייה.\nזה חשוב במיוחד לפני מחיקת קבצי לוג.\nאם תהליך עדיין כותב לקובץ שנמחק, ה-inode לא משתחרר והדיסק לא מתפנה.\nלכן צריך לדעת מי מחזיק את הקובץ לפני שמוחקים.\nlsof לא מוחק, לא דוחס, ולא מציג גודל קבצים.",
           },
         ],
         questionsEn: [
           {
             q: "You need to find the process consuming the most memory.\n\nWhich command is most appropriate?",
             options: [
-              "ps aux --sort=-%mem | head",
-              "cat /proc/meminfo",
               "vmstat 1",
-              "free -m",
-            ],
-            answer: 0,
-            explanation: "Suspecting a process is eating too much memory.\nFirst step is to sort processes by RAM usage:\n\nps aux --sort=-%mem | head\n\nThis shows the heaviest consumers at the top.\n\nOnce you spot the suspect, dig deeper:\n\npmap <PID>\n\ncat /proc/meminfo shows system-wide summary, not per-process.\nvmstat gives a general overview, doesn't break down by process.\nfree -m shows a general memory summary without per-process details.",
+              "cat /proc/meminfo",
+              "ps aux --sort=-%mem | head",
+              "free -m"],
+            answer: 2,
+            explanation: "When investigating a possible memory leak or unusually high RAM usage, the first step is identifying the process using the most memory.\nps aux --sort=-%mem sorts processes by memory usage.\nhead shows the top consumers.\nAfter identifying the PID, further debugging can be done using tools such as pmap, top, or smem.",
           },
           {
             q: "You ran:\n\n```\ndf -h\n```\n\nOutput:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nWhat is the issue and what is the first step?",
@@ -3967,29 +3961,27 @@ export const TOPICS = [
               "Disk usage is healthy - 96% is normal for a production server",
             ],
             answer: 0,
-            explanation: "96% disk usage on root partition, only 2GB left out of 50.\n\nAt 100%, services stop writing logs, databases crash, and even SSH can go down.\n\nFirst step - find what's eating space:\n\ndu -sh /*\n\nUsually it's /var/log or /tmp.\n\nfsck repairs filesystem errors but doesn't free space on a full disk.\nDeleting all of /var/log is dangerous and may destroy critical logs. Systematic analysis with du is safer.\n96% is not normal. You should act below 85%.",
+            explanation: "The output shows 96% disk usage on root, only 2GB left out of 50GB.\nAt 100%, services stop writing logs, databases may crash, and SSH can go down.\nThe first step is to identify what is consuming space using du -sh /*.\nCommon culprits are /var/log or /tmp.\nfsck repairs filesystem errors and does not free space, and deleting all of /var/log risks destroying critical logs.",
           },
           {
             q: "A service won't start after a server reboot.\n\nWhich command will show the service logs?",
             options: [
               "systemctl restart service-name",
-              "journalctl -u service-name --no-pager -n 50",
-              "dmesg | tail",
               "cat /etc/systemd/system/service-name.service",
-            ],
-            answer: 1,
-            explanation: "Service won't start? Read the logs first:\n\n```\njournalctl -u service-name --no-pager -n 50\n```\n\nExample output:\n\n```\nMar 19 08:12:02 srv1 service-name[1423]: Error: failed to bind port 8080: address already in use\nMar 19 08:12:02 srv1 systemd[1]: service-name.service: Main process exited, code=exited, status=1/FAILURE\n```\n\n-n 50 limits to the last 50 lines - enough to spot the startup error.\n\nsystemctl restart without checking logs first is a mistake - the problem will return.\ndmesg shows kernel messages, not service logs.",
+              "dmesg | tail",
+              "journalctl -u service-name --no-pager -n 50"],
+            answer: 3,
+            explanation: "To understand why the service is not starting, you need to check its logs.\nThe command journalctl -u service-name --no-pager -n 50 shows the service logs from systemd (the Linux service manager) and helps identify the startup error.\nThe -n 50 option displays the last 50 lines, which are usually the most relevant to the recent failure.\nThis allows you to identify issues such as port conflicts, configuration errors, or process crashes.\nCommands like systemctl restart do not help with debugging, and dmesg shows kernel logs, not service-specific logs.",
           },
           {
             q: "You need to check if the nginx service is running.\n\nWhich command is most appropriate?",
             options: [
-              "systemctl status nginx",
               "cat /var/log/nginx/error.log",
+              "systemctl status nginx",
               "top -u nginx",
-              "netstat -tlnp",
-            ],
-            answer: 0,
-            explanation: "Want to know if nginx is running? One command:\n\nsystemctl status nginx\n\nYou get: active/inactive/failed, PID, uptime, and recent log lines.\n\nIf it's down, next step:\n\njournalctl -u nginx\n\ncat /var/log/nginx/error.log shows errors but won't tell you if the service is running now.\ntop -u nginx filters by user, but nginx doesn't always run as user 'nginx'.\nnetstat -tlnp shows ports but can't confirm which service owns them.",
+              "netstat -tlnp"],
+            answer: 1,
+            explanation: "systemctl status shows the service state: active, inactive, or failed.\nIt also displays the PID, uptime, and recent log lines.\nThis gives a complete picture in a single command.\ncat /var/log/nginx/error.log shows historical errors but does not indicate if the service is currently running.\ntop and netstat provide partial information and cannot reliably confirm service state.",
           },
           {
             q: "You want to follow a log file in real time.\n\nWhich command is most appropriate?",
@@ -4000,18 +3992,17 @@ export const TOPICS = [
               "head -100 /var/log/syslog",
             ],
             answer: 2,
-            explanation: "Need to watch a log file in real time:\n\ntail -f /var/log/syslog\n\nKeeps the file open and shows new lines as they're written. Standard tool during deploys.\n\nYou can combine with filtering:\n\ntail -f /var/log/syslog | grep ERROR\n\ncat dumps everything and exits, doesn't follow.\ngrep error searches and exits, doesn't show new lines.\nhead -100 shows the first 100 lines (oldest), the opposite of what you need.",
+            explanation: "tail -f keeps the file open and displays new lines as they are written.\nThis is the standard tool for watching logs in real time during deploys or debugging.\nCan be combined with filtering: tail -f /var/log/syslog | grep ERROR.\ncat prints all content and exits without following new lines.\ngrep searches and exits, and head shows lines from the start of the file (oldest).",
           },
           {
             q: "You see a process stuck in D state (uninterruptible sleep) in ps output.\n\nWhat is the likely cause?",
             options: [
-              "The process is waiting for a stalled I/O operation like disk or NFS",
+              "The process was manually suspended by sending it SIGSTOP",
               "The process is stuck in an infinite loop consuming excessive CPU",
               "The process is a zombie waiting to be reaped by its parent",
-              "The process was manually suspended by sending it SIGSTOP",
-            ],
-            answer: 0,
-            explanation: "A process in D state (uninterruptible sleep) is waiting for I/O that the kernel won't let you cancel.\n\nMost common causes: stuck NFS mount, failing disk, or storage driver issue.\n\nYou can't kill a D-state process with kill -9. The kernel blocks signals.\nYou have to fix the underlying I/O problem.\n\nHigh CPU shows as R (running), not D.\nZombie is Z state - finished but parent didn't collect exit status.\nSIGSTOP puts a process in T (stopped), not D.",
+              "The process is waiting for a stalled I/O operation like disk or NFS"],
+            answer: 3,
+            explanation: "D state (uninterruptible sleep) means the process is waiting for an I/O operation the kernel cannot cancel.\nCommon causes: stuck NFS mount, failing disk, or storage driver issue.\nA D-state process cannot be killed with kill -9 because the kernel blocks signals in this state.\nThe fix is to resolve the underlying I/O problem.\nAn infinite loop shows as R, zombie as Z, and SIGSTOP as T.",
           },
           {
             q: "You are trying to connect to a remote server on port 8080 but the connection fails.\n\nYou ran:\n\n```\ncurl -v http://remote-server:8080\n```\n\nOutput:\n\n```\n* connect to remote-server port 8080 failed: Connection refused\n```\n\nWhat does this mean?",
@@ -4022,18 +4013,17 @@ export const TOPICS = [
               "The SSL certificate is invalid and the handshake failed",
             ],
             answer: 1,
-            explanation: "Connection refused = the TCP SYN reached the server, but it replied with RST.\n\nDNS and routing work. The problem: nothing is listening on that port, or a firewall is rejecting it.\n\nA DNS issue would show Could not resolve host.\nSSL is only relevant after the TCP connection succeeds.",
+            explanation: "Connection refused means the TCP SYN packet reached the server, but it replied with RST (reject).\nThis proves DNS and routing are working, otherwise the request would not have arrived.\nThe issue is that no service is listening on port 8080, or a firewall is rejecting the connection.\nA DNS issue would show Could not resolve host.\nSSL is only relevant after the TCP connection succeeds.",
           },
           {
             q: "You ran:\n\n```\nlsof +D /var/log/ | head -20\n```\n\nWhy is this command useful?",
             options: [
-              "It shows processes holding open file handles in the directory",
-              "It deletes old log files that haven't been accessed recently",
               "It compresses log files and rotates them based on size",
-              "It displays the size of each log file in descending order",
-            ],
-            answer: 0,
-            explanation: "lsof +D shows processes holding open file handles in a directory.\n\nEspecially important before deleting logs:\nIf a process is still writing to a file you deleted, the inode isn't released.\ndu shows free space, df doesn't. Disk doesn't actually free up.\n\nFix - close the handle:\n\nsystemctl restart service-name\n\nOr logrotate with copytruncate.\n\nlsof doesn't delete, compress, or show file sizes.\nFor sizes use du -sh.",
+              "It deletes old log files that haven't been accessed recently",
+              "It shows processes holding open file handles in the directory",
+              "It displays the size of each log file in descending order"],
+            answer: 2,
+            explanation: "lsof +D shows processes holding open file handles in a directory.\nThis is especially important before deleting log files.\nIf a process is still writing to a deleted file, the inode is not released and disk space is not freed.\nKnowing which process holds the file is essential before taking action.\nlsof does not delete, compress, or show file sizes.",
           },
         ],
       },
@@ -4044,13 +4034,12 @@ export const TOPICS = [
           {
             q: "שרת מגיב לאט. מריצים top ורואים:\n\n```\ntop\n```\n\n```\n%Cpu(s): 72.5 us, 18.0 sy, 0.3 ni, 5.0 id, 4.0 wa, 0.0 hi, 0.2 si\n```\n\nמה מעיד על עומס גבוה על ה-CPU?",
             options: [
-              "ערך %id נמוך (5.0%) - המעבד כמעט לא פנוי",
               "ערך %wa גבוה (4.0%) - המעבד ממתין לדיסק",
+              "ערך %id נמוך (5.0%) - המעבד כמעט לא פנוי",
               "ערך %ni גבוה (0.3%) - תהליכים עם עדיפות שונה",
-              "ערך %si גבוה (0.2%) - פסיקות תוכנה תכופות",
-            ],
-            answer: 0,
-            explanation: "בשורת %Cpu(s) של top, השדה %id (idle) מציין כמה מהמעבד פנוי.\n\nכאן הערך הוא 5.0% בלבד, כלומר ה-CPU תפוס ב-95% מהזמן (%us + %sy = 90.5%).\n\n%wa מתייחס להמתנה לדיסק ולא לעומס מעבד ישיר.\n%ni ו-%si נמוכים מאוד ואינם מעידים על בעיה.",
+              "ערך %si גבוה (0.2%) - פסיקות תוכנה תכופות"],
+            answer: 1,
+            explanation: "%Cpu(s) מציג איך זמן ה-CPU מתחלק.\nus ו-sy הם זמן עבודה בפועל (אפליקציות + קרנל).\nid הוא זמן שהמעבד לא פעיל.\nwa הוא זמן המתנה ל-I/O (דיסק/רשת).\nni ו-si הם זמני עדיפות ופסיקות.\nכאן id נמוך (5%), כלומר רוב ה-CPU בשימוש ויש עומס גבוה.",
           },
           {
             q: "הרצת:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n       total  used  free  shared  buff/cache  available\nMem:    16G   15G  200M   100M       800M        500M\n```\n\nמה המצב?",
@@ -4061,18 +4050,17 @@ export const TOPICS = [
               "צריך restart כדי לשחרר זיכרון שנתפס ע\"י cache",
             ],
             answer: 1,
-            explanation: "בפלט free, העמודה שחשובה היא available, לא free.\n\navailable (500M) אומר כמה זיכרון באמת פנוי לתהליכים חדשים.\n500M מתוך 16G זה 3%. מסוכן.\n\nהמערכת עלולה להתחיל עם swap או OOM Killer.\n\nלזהות מי צורך:\n\nps aux --sort=-%mem | head\n\n\"רוב הזיכרון ב-cache\" היה נכון אם available היה גבוה. כאן הוא 500M.\nfree של 200M מטעה, Linux משתמש בזיכרון פנוי ל-cache.\nrestart משחרר אבל לא פותר. אותם תהליכים יצרכו שוב.",
+            explanation: "בפלט free, העמודה הקריטית היא available, לא free.\navailable (500M) מציג כמה זיכרון באמת פנוי לתהליכים חדשים.\n500M מתוך 16G זה כ-3%, מצב מסוכן.\nהמערכת עלולה להתחיל להשתמש ב-swap או להפעיל OOM Killer.\nfree (200M) מטעה כי Linux משתמש בזיכרון פנוי ל-cache, ולכן available הוא המדד האמיתי.",
           },
           {
             q: "הרצת:\n\n```\nuptime\n```\n\nפלט:\n\n```\n 14:23:01 up 3 days,  2:15,  2 users,  load average: 12.50, 11.80, 8.20\n```\n\nהשרת הוא 4-core. מה המצב?",
             options: [
               "השרת במצב תקין - load average תואם את מספר הליבות",
-              "ה-load average (12.5) גבוה פי 3 ממספר הליבות (4)",
-              "load average אינו תלוי במספר ליבות של המעבד",
               "העומס נובע מכך שיש 2 משתמשים מחוברים במקביל",
-            ],
-            answer: 1,
-            explanation: "load average 12.5 על שרת 4-core.\nזה אומר שבממוצע 8.5 תהליכים ממתינים בתור. עומס חמור.\n\nload 4.0 על 4 cores = 100%. load 12.5 = 312%.\nהמגמה עולה (8.2 → 11.8 → 12.5), המצב מחמיר.\n\nהצעד הבא:\n\ntop\n\nלבדוק אם הבעיה CPU (%us/%sy) או I/O (%wa).\n\n12.5 זה פי 3 ממספר הליבות, ממש לא נמוך.\nload average קשור ישירות למספר ליבות.\nמספר המשתמשים (2) לא קשור ל-load.",
+              "load average אינו תלוי במספר ליבות של המעבד",
+              "ה-load average (12.5) גבוה פי 3 ממספר הליבות (4)"],
+            answer: 3,
+            explanation: "load average 12.5 על שרת 4-core אומר שהעומס גבוה פי 3 מהקיבולת.\nload 4.0 על 4 cores זה 100% ניצולת. load 12.5 = כ-312%, עומס חמור.\nהמגמה עולה (8.2 → 11.8 → 12.5), מה שמצביע על מצב שמחמיר.\nload average מודד תהליכים שממתינים לריצה, וקשור ישירות למספר הליבות.\nמספר המשתמשים המחוברים (2) לא קשור ל-load.",
           },
           {
             q: "הרצת:\n\n```\nss -tlnp\n```\n\nפלט:\n\n```\nState    Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process\nLISTEN   0       128     0.0.0.0:80           0.0.0.0:*          users:((\"nginx\",pid=1234,fd=6))\nLISTEN   0       128     0.0.0.0:443          0.0.0.0:*          users:((\"nginx\",pid=1234,fd=7))\n```\n\nמה אנחנו רואים?",
@@ -4083,64 +4071,59 @@ export const TOPICS = [
               "nginx מאזין רק על localhost ולא נגיש מבחוץ",
             ],
             answer: 0,
-            explanation: "הפלט מראה שני listening sockets של nginx על פורטים 80 ו-443.\n\n0.0.0.0 אומר \"כל ממשקי הרשת\" - נגיש מבחוץ.\n\nLISTEN אומר שהפורט פתוח ומחכה. חיבורים פעילים לא נראים ב-`ss -l`.\n\nלראות חיבורים פעילים:\n\n`ss -tnp`\n\nnginx כן פועל, LISTEN מוכיח את זה.\nss לא מציג firewall. לבדוק עם `iptables -L`.\nאם היה רק localhost, הכתובת הייתה 127.0.0.1, לא 0.0.0.0.",
+            explanation: "הפלט מראה ש-nginx מאזין על פורטים 80 ו-443.\nהכתובת 0.0.0.0 אומרת שהשירות מאזין על כל ממשקי הרשת, כלומר נגיש מבחוץ.\nLISTEN מוכיח שהשירות פועל ומחכה לחיבורים נכנסים.\nאם הכתובת הייתה 127.0.0.1 זה היה רק localhost, לא נגיש מבחוץ.\nss לא מציג חוקי firewall, לכן נגישות מבחוץ צריכה בדיקה נפרדת.",
           },
           {
             q: "יש לך קובץ לוג בגודל 2GB ואתה צריך למצוא את כל השורות שמכילות \"ERROR\" מהשעה האחרונה.\n\nאיזו גישה הכי יעילה?",
             options: [
               "cat log.txt | grep ERROR",
-              "grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
               "tail -f log.txt",
-              "head -1000 log.txt | grep ERROR",
-            ],
-            answer: 1,
-            explanation: "קובץ לוג 2GB. צריך שגיאות מהשעה האחרונה.\n\nסינון כפול חוסך עיבוד:\n\ngrep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"\n\ngrep ישירות על הקובץ (בלי cat) יעיל יותר.\n\ncat | grep קורא את כל 2GB ומחזיר שגיאות מכל הזמנים.\ntail -f עוקב בזמן אמת, לא מחפש בהיסטוריה.\nhead -1000 מציג שורות מתחילת הקובץ, ההפך מהשעה האחרונה.",
+              "grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
+              "head -1000 log.txt | grep ERROR"],
+            answer: 2,
+            explanation: "בקובץ לוג של 2GB, סינון כפול חוסך עיבוד מיותר.\ngrep ERROR מסנן רק שורות שגיאה, ו-grep עם date מצמצם לשעה האחרונה.\ngrep ישירות על הקובץ (בלי cat) יעיל יותר כי לא יוצר pipe מיותר.\ncat | grep קורא את כל 2GB בלי סינון זמן.\ntail -f עוקב בזמן אמת ולא מחפש בהיסטוריה, ו-head מציג שורות מתחילת הקובץ.",
           },
           {
             q: "הרצת:\n\n```\nps aux\n```\n\nאתה רואה תהליך במצב Z (zombie).\n\nמה הדרך הנכונה לטפל בו?",
             options: [
-              "לשלוח kill -9 ישירות לתהליך ה-zombie עצמו",
               "לזהות את תהליך האב ולהפעיל אותו מחדש כדי שיקרא wait()",
+              "לשלוח kill -9 ישירות לתהליך ה-zombie עצמו",
               "להפעיל מחדש את השרת כדי לנקות את טבלת התהליכים",
-              "להתעלם מהתהליך כי zombies נעלמים מעצמם תמיד",
-            ],
-            answer: 1,
-            explanation: "תהליך zombie (Z) כבר סיים לרוץ, אבל הרשומה נשארת בטבלה.\nהסיבה: האב לא קרא wait() לאסוף exit status.\n\nzombie בודד לא בעיה. אלפים = bug באב.\n\nלגרום לאב לטפל:\n\n```\nkill -s SIGCHLD <parent_pid>\n```\n\nkill -9 על zombie לא עובד, הוא כבר מת.\nrestart שרת זה פטיש גדול מדי, zombie לא צורך משאבים.\nzombies לא נעלמים מעצמם.",
+              "להתעלם מהתהליך כי zombies נעלמים מעצמם תמיד"],
+            answer: 0,
+            explanation: "תהליך zombie (Z) כבר סיים לרוץ, אבל הרשומה שלו נשארת בטבלת התהליכים.\nהסיבה: תהליך האב לא קרא wait() כדי לאסוף את ה-exit status.\nהפתרון הוא לזהות את תהליך האב ולהפעיל אותו מחדש כדי שיטפל ב-zombies.\nkill -9 על zombie לא עובד כי התהליך כבר מת, אין מה להרוג.\nzombies לא נעלמים מעצמם ודורשים טיפול של תהליך האב.",
           },
           {
             q: "הרצת:\n\n```\niostat -x 1 3\n```\n\nפלט:\n\n```\nDevice   r/s    w/s   rkB/s   wkB/s  await  %util\nsda      5.00  450.00  20.00 51200.00 250.00  99.80\n```\n\nמה המסקנה?",
             options: [
-              "הדיסק רווי (%util 99.8%) עם await גבוה של 250ms",
+              "הבעיה היא רק בכמות הכתיבות הגבוהה לדיסק",
               "כמות הקריאות נמוכה (5/s) ומעידה על בעיית ביצועים",
               "הדיסק תקין - ערכי %util גבוהים רגילים בשרת עמוס",
-              "הבעיה היא רק בכמות הכתיבות הגבוהה לדיסק",
-            ],
-            answer: 0,
-            explanation: "iostat מראה שהדיסק רווי.\n\n%util 99.8% - הדיסק עסוק כל הזמן.\nawait 250ms - כל I/O לוקח רבע שנייה. ל-SSD תקין זה פחות מ-1ms.\nwkB/s 51,200 - כ-50MB/s כתיבה.\n\nכל תהליך שכותב לדיסק יואט.\n\nלזהות מי כותב:\n\niotop\n\nקריאות נמוכות (5/s) לא הבעיה, הכתיבות הן.\n%util 99.8% זה לא רגיל.\nawait הגבוה פוגע בכל פעולת I/O, לא רק כתיבות.",
+              "הדיסק רווי (%util 99.8%) עם await גבוה של 250ms"],
+            answer: 3,
+            explanation: "%util של 99.8% אומר שהדיסק עסוק כמעט כל הזמן, כלומר הוא רווי.\nawait של 250ms אומר שכל פעולת I/O לוקחת רבע שנייה. ל-SSD תקין הערך הוא מתחת ל-1ms.\nהשילוב של %util גבוה ו-await גבוה מצביע על דיסק שלא מספיק לעמוס.\nהכתיבות (450/s, כ-50MB/s) הן הגורם העיקרי, לא הקריאות (5/s).\nכל תהליך שניגש לדיסק יואט עד שהעומס יפחת.",
           },
           {
             q: "קונטיינר נהרג באופן בלתי צפוי.\n\nהרצת:\n\n```\ndmesg | tail -20\n```\n\nפלט:\n\n```\n[  512.123] Out of memory: Killed process 4521 (java)\n            total-vm:4048576kB, anon-rss:3145728kB\n```\n\nמה קרה ומה הפתרון?",
             options: [
-              "OOM Killer הרג את התהליך כי חרג ממגבלת הזיכרון",
-              "התהליך קרס בגלל segfault עקב גישה לזיכרון לא חוקי",
               "התהליך נהרג כי חרג ממגבלת ה-cgroup CPU shares",
-              "התהליך נהרג כי ה-swap נגמר והמערכת ביצעה graceful shutdown",
-            ],
-            answer: 0,
-            explanation: "\"Out of memory: Killed process\" ב-dmesg = OOM Killer.\nה-kernel הרג את התהליך כי נגמר הזיכרון.\n\nanon-rss (3GB) מראה כמה RAM השתמש. התהליך חרג מהמגבלה.\n\nלהגדיל memory limit או לייעל צריכה.\nב-Kubernetes:\n\nresources.limits.memory: \"4Gi\"\n\nsegfault מציג הודעת segmentation fault, לא Out of memory.\ncgroup CPU shares מגבילים CPU, לא הורגים תהליכים.\nOOM Killer הוא לא graceful shutdown, הוא הריגה מיידית ע\"י ה-kernel.",
+              "התהליך קרס בגלל segfault עקב גישה לזיכרון לא חוקי",
+              "OOM Killer הרג את התהליך כי חרג ממגבלת הזיכרון",
+              "התהליך נהרג כי ה-swap נגמר והמערכת ביצעה graceful shutdown"],
+            answer: 2,
+            explanation: "ההודעה Out of memory: Killed process ב-dmesg מציינת שה-OOM Killer (Out Of Memory Killer) של הקרנל הרג את התהליך בגלל מחסור בזיכרון.\nכאשר המערכת נגמרת מ-RAM ואין מספיק זיכרון פנוי, הקרנל בוחר תהליך שמנצל הרבה זיכרון ומסיים אותו כדי לפנות משאבים.\nבשורה המוצגת רואים שהתהליך java נהרג, והערך anon-rss מציין כמה זיכרון RAM בפועל התהליך השתמש.\nמצב כזה יכול להתרחש כאשר התהליך צורך יותר מדי זיכרון, או כאשר מוגדר לו memory limit נמוך מדי (למשל בקונטיינר).",
           },
         ],
         questionsEn: [
           {
             q: "A server is responding slowly. You run top and see:\n\n```\ntop\n```\n\n```\n%Cpu(s): 72.5 us, 18.0 sy, 0.3 ni, 5.0 id, 4.0 wa, 0.0 hi, 0.2 si\n```\n\nWhat indicates high CPU load?",
             options: [
-              "Low %id (5.0%) - the CPU is barely idle",
               "High %wa (4.0%) - the CPU is waiting for disk",
+              "Low %id (5.0%) - the CPU is barely idle",
               "High %ni (0.3%) - processes with altered priority",
-              "High %si (0.2%) - frequent software interrupts",
-            ],
-            answer: 0,
-            explanation: "In top's %Cpu(s) line, %id (idle) shows how much CPU is free.\n\nHere it's only 5.0%, meaning the CPU is 95% busy (%us + %sy = 90.5%).\n\n%wa refers to disk wait, not direct CPU load.\n%ni and %si are very low and don't indicate a problem.",
+              "High %si (0.2%) - frequent software interrupts"],
+            answer: 1,
+            explanation: "%Cpu(s) shows how CPU time is distributed.\nus and sy represent actual work (applications + kernel).\nid is idle time.\nwa is time waiting on I/O (disk/network).\nni and si are priority and interrupt times.\nHere id is low (5%), meaning most of the CPU is in use, indicating high load.",
           },
           {
             q: "You ran:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n       total  used  free  shared  buff/cache  available\nMem:    16G   15G  200M   100M       800M        500M\n```\n\nWhat is the situation?",
@@ -4151,18 +4134,17 @@ export const TOPICS = [
               "Need to restart the server to release memory held by cache",
             ],
             answer: 1,
-            explanation: "In free output, the column that matters is available, not free.\n\navailable (500M) tells you how much memory is actually usable.\n500M out of 16G is 3%. Dangerous.\n\nThe system may start swapping or trigger OOM Killer.\n\nFind who's consuming:\n\nps aux --sort=-%mem | head\n\n\"Most memory in cache\" would be true if available were high. Here it's 500M.\nfree of 200M is misleading. Linux uses free memory for cache.\nRestart frees memory but doesn't fix the problem. Same processes will eat it again.",
+            explanation: "In free output, the critical column is available, not free.\navailable (500M) shows how much memory is actually usable for new processes.\n500M out of 16G is about 3%, a dangerous state.\nThe system may start swapping or trigger OOM Killer.\nfree (200M) is misleading because Linux uses free memory for cache, so available is the real metric.",
           },
           {
             q: "You ran:\n\n```\nuptime\n```\n\nOutput:\n\n```\n 14:23:01 up 3 days,  2:15,  2 users,  load average: 12.50, 11.80, 8.20\n```\n\nThe server has 4 cores. What is the situation?",
             options: [
               "The server is in good shape - load average matches the core count",
-              "Load average (12.5) is 3x the core count (4) - severe load",
-              "Load average is not dependent on the number of CPU cores",
               "The load is caused by having 2 users connected simultaneously",
-            ],
-            answer: 1,
-            explanation: "Load average 12.5 on a 4-core server.\nThat means 8.5 processes are waiting in queue on average. Severe.\n\nLoad 4.0 on 4 cores = 100%. Load 12.5 = 312%.\nThe trend is rising (8.2 → 11.8 → 12.5), getting worse.\n\nNext step:\n\ntop\n\nCheck if the issue is CPU (%us/%sy) or I/O (%wa).\n\n12.5 is 3x the core count, not low at all.\nLoad average is directly related to core count.\nNumber of users (2) has nothing to do with load.",
+              "Load average is not dependent on the number of CPU cores",
+              "Load average (12.5) is 3x the core count (4) - severe load"],
+            answer: 3,
+            explanation: "Load average 12.5 on a 4-core server means the load is 3x the capacity.\nLoad 4.0 on 4 cores is 100% utilization. Load 12.5 equals about 312%, a severe state.\nThe trend is rising (8.2 → 11.8 → 12.5), indicating the situation is getting worse.\nLoad average measures processes waiting to run and is directly related to core count.\nThe number of connected users (2) has nothing to do with load.",
           },
           {
             q: "You ran:\n\n```\nss -tlnp\n```\n\nOutput:\n\n```\nState    Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process\nLISTEN   0       128     0.0.0.0:80           0.0.0.0:*          users:((\"nginx\",pid=1234,fd=6))\nLISTEN   0       128     0.0.0.0:443          0.0.0.0:*          users:((\"nginx\",pid=1234,fd=7))\n```\n\nWhat do we see?",
@@ -4173,51 +4155,47 @@ export const TOPICS = [
               "nginx is listening only on localhost and is not externally accessible",
             ],
             answer: 0,
-            explanation: "Output shows two listening sockets for nginx on ports 80 and 443.\n\n0.0.0.0 means \"all interfaces\" - accessible externally.\n\nLISTEN means the port is open and waiting. Active connections don't show in `ss -l`.\n\nTo see active connections:\n\n`ss -tnp`\n\nnginx is running. LISTEN proves it.\nss doesn't show firewall. Check with `iptables -L`.\nIf localhost-only, the address would be 127.0.0.1, not 0.0.0.0.",
+            explanation: "The output shows nginx listening on ports 80 and 443.\nThe address 0.0.0.0 means the service is listening on all network interfaces, so it is externally accessible.\nLISTEN state proves the service is running and waiting for incoming connections.\nIf the address were 127.0.0.1, it would be localhost only, not externally accessible.\nss does not show firewall rules, so external access requires separate verification.",
           },
           {
             q: "You have a 2GB log file and need to find all lines containing \"ERROR\" from the last hour.\n\nWhich approach is most efficient?",
             options: [
               "cat log.txt | grep ERROR",
-              "grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
               "tail -f log.txt",
-              "head -1000 log.txt | grep ERROR",
-            ],
-            answer: 1,
-            explanation: "2GB log file. Need errors from the last hour.\n\nDouble filtering saves processing:\n\ngrep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"\n\ngrep directly on the file (no cat) is more efficient.\n\ncat | grep reads all 2GB and returns errors from all time.\ntail -f follows real time, doesn't search history.\nhead -1000 shows lines from the start (oldest), opposite of the last hour.",
+              "grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"",
+              "head -1000 log.txt | grep ERROR"],
+            answer: 2,
+            explanation: "For a 2GB log file, double filtering avoids unnecessary processing.\ngrep ERROR filters only error lines, and grep with date narrows to the last hour.\ngrep directly on the file (without cat) is more efficient as it avoids an unnecessary pipe.\ncat | grep reads all 2GB without time filtering.\ntail -f follows in real time and does not search history, and head shows lines from the start of the file.",
           },
           {
             q: "You ran:\n\n```\nps aux\n```\n\nYou see a process in Z state (zombie).\n\nWhat is the correct way to handle it?",
             options: [
-              "Send kill -9 directly to the zombie process itself",
               "Identify the parent process and restart it so it calls wait()",
+              "Send kill -9 directly to the zombie process itself",
               "Restart the server to clear the entire process table",
-              "Ignore the process because zombies always disappear on their own",
-            ],
-            answer: 1,
-            explanation: "Zombie (Z) process already finished, but the entry stays in the process table.\nThe parent didn't call wait() to collect exit status.\n\nA single zombie is harmless. Thousands = bug in the parent.\n\nGet the parent to handle it:\n\n```\nkill -s SIGCHLD <parent_pid>\n```\n\nkill -9 on a zombie doesn't work, it's already dead.\nServer restart is overkill. A zombie uses no resources.\nZombies don't disappear on their own.",
+              "Ignore the process because zombies always disappear on their own"],
+            answer: 0,
+            explanation: "A zombie (Z) process has already finished running, but its entry remains in the process table.\nThe reason: the parent process did not call wait() to collect the exit status.\nThe fix is to identify the parent process and restart it so it handles the zombies.\nkill -9 on a zombie does not work because the process is already dead.\nZombies do not disappear on their own and require the parent process to handle them.",
           },
           {
             q: "You ran:\n\n```\niostat -x 1 3\n```\n\nOutput:\n\n```\nDevice   r/s    w/s   rkB/s   wkB/s  await  %util\nsda      5.00  450.00  20.00 51200.00 250.00  99.80\n```\n\nWhat is the conclusion?",
             options: [
-              "Disk is saturated (%util 99.8%) with high await of 250ms",
+              "The problem is only the high number of writes to disk",
               "The low read count (5/s) indicates a disk performance problem",
               "The disk is fine - high %util values are normal under load",
-              "The problem is only the high number of writes to disk",
-            ],
-            answer: 0,
-            explanation: "iostat shows the disk is saturated.\n\n%util 99.8% - the disk is busy all the time.\nawait 250ms - each I/O takes a quarter second. Normal for SSD is under 1ms.\nwkB/s 51,200 - about 50MB/s writes.\n\nEvery process writing to disk will slow down.\n\nFind who's writing:\n\niotop\n\nLow reads (5/s) aren't the problem, writes are.\n99.8% %util is not normal.\nHigh await hurts all I/O, not just writes.",
+              "Disk is saturated (%util 99.8%) with high await of 250ms"],
+            answer: 3,
+            explanation: "%util of 99.8% means the disk is busy nearly all the time, indicating saturation.\nawait of 250ms means each I/O operation takes a quarter second. Normal SSD is under 1ms.\nThe combination of high %util and high await indicates the disk cannot keep up with the load.\nWrites (450/s, about 50MB/s) are the main contributor, not reads (5/s).\nEvery process accessing the disk will slow down until the load decreases.",
           },
           {
             q: "A container was unexpectedly killed.\n\nYou ran:\n\n```\ndmesg | tail -20\n```\n\nOutput:\n\n```\n[  512.123] Out of memory: Killed process 4521 (java)\n            total-vm:4048576kB, anon-rss:3145728kB\n```\n\nWhat happened and what is the solution?",
             options: [
-              "OOM Killer terminated the process for exceeding its memory limit",
-              "The process crashed due to a segfault from invalid memory access",
               "The process was killed for exceeding its cgroup CPU shares limit",
-              "The process was killed because swap ran out and the system shut it down",
-            ],
-            answer: 0,
-            explanation: "\"Out of memory: Killed process\" in dmesg = OOM Killer.\nThe kernel killed the process because memory ran out.\n\nanon-rss (3GB) shows how much RAM it used. Process exceeded its limit.\n\nIncrease memory limit or optimize consumption.\nIn Kubernetes:\n\nresources.limits.memory: \"4Gi\"\n\nA segfault shows a segmentation fault message, not Out of memory.\ncgroup CPU shares throttle CPU, they don't kill processes.\nOOM Killer is not a graceful shutdown, it's an immediate kernel kill.",
+              "The process crashed due to a segfault from invalid memory access",
+              "OOM Killer terminated the process for exceeding its memory limit",
+              "The process was killed because swap ran out and the system shut it down"],
+            answer: 2,
+            explanation: "The message Out of memory: Killed process in dmesg indicates that the kernel OOM Killer terminated the process due to memory exhaustion.\nWhen the system runs out of available RAM, the kernel selects a memory-hungry process and kills it to free resources.\nIn the output we see that the java process was terminated, and the anon-rss value shows how much RAM the process was actually using.\nThis situation can happen when a process consumes too much memory or when its memory limit is set too low, such as inside a container.",
           },
         ],
       },
@@ -4228,24 +4206,22 @@ export const TOPICS = [
           {
             q: "אתה צריך לאבחן למה תהליך מסוים איטי.\n\nהרצת:\n\n```\nstrace -c -p 1234\n```\n\nפלט:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nמה המסקנה?",
             options: [
-              "85% על futex מצביע על lock contention חמור בין threads",
               "כמות קריאות read גבוהה מצביעה על חוסר ב-caching",
+              "85% על futex מצביע על lock contention חמור בין threads",
               "כמות כתיבות write גבוהה מצביעה על buffer קטן מדי",
-              "futex הוא חלק נורמלי מריצת תהליך ואין כאן בעיה",
-            ],
-            answer: 0,
-            explanation: "strace -c מסכם system calls לפי זמן.\n85% על futex = סימן אדום.\n\nfutex עומד מאחורי mutexes ו-semaphores.\nכשתהליך מבלה 85% על futex, הוא ממתין ל-locks במקום לעבוד.\nlock contention חמור.\n\nלראות על איזה address ממתינים:\n\nstrace -e futex -p 1234\n\nלזהות את ה-call stack:\n\nperf record -g -p 1234\n\nread תופס 8.3%, סביר.\nwrite תופס 3.1%, buffer לא ישנה כשהבעיה היא locks.\nfutex בכמויות קטנות נורמלי. 85% זה פתולוגי.",
+              "futex הוא חלק נורמלי מריצת תהליך ואין כאן בעיה"],
+            answer: 1,
+            explanation: "strace -c מסכם system calls לפי זמן שנצרך.\n85% מהזמן על futex הוא סימן אדום ל-lock contention חמור.\nfutex הוא ה-system call שעומד מאחורי mutexes ו-semaphores.\nכשתהליך מבלה 85% על futex, הוא ממתין ל-locks במקום לעשות עבודה אמיתית.\nfutex בכמויות קטנות הוא נורמלי, אבל 85% מצביע על בעיה ארכיטקטונית בקוד.",
           },
           {
             q: "שרת מדווח על latency גבוה לבקשות רשת.\n\nהרצת:\n\n```\ncat /proc/net/sockstat\n```\n\nפלט:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nמה הבעיה?",
             options: [
-              "orphan (12500) ו-TIME_WAIT (65000) מצביעים על חיבורים שלא נסגרים",
+              "כל המספרים בטווח הנורמלי עבור שרת תחת עומס",
               "מספר ה-TCP connections (28542) נמוך מדי עבור שרת פעיל",
               "צריכת הזיכרון של ה-TCP stack (95000 pages) היא תקינה",
-              "כל המספרים בטווח הנורמלי עבור שרת תחת עומס",
-            ],
-            answer: 0,
-            explanation: "/proc/net/sockstat חושף את מצב ה-TCP stack.\n\northan 12500 - חיבורים שאף process לא מחזיק. סגירה בלי graceful shutdown.\ntw 65000 - TIME_WAIT. קצב גבוה של חיבורים קצרי-חיים.\nmem 95000 - TCP memory, ייתכן שמתקרב למגבלה.\n\nלבדוק הגדרות:\n\nsysctl net.ipv4.tcp_tw_reuse\nsysctl net.ipv4.tcp_fin_timeout\n\nולוודא שהאפליקציה משתמשת ב-connection pooling.\n\n28542 inuse זה בסדר, הבעיה ב-orphans ו-TIME_WAIT.\n95000 pages זה גבוה, לא תקין.\nבשרת בריא orphan צריך להיות קרוב ל-0.",
+              "orphan (12500) ו-TIME_WAIT (65000) מצביעים על חיבורים שלא נסגרים"],
+            answer: 3,
+            explanation: "/proc/net/sockstat מציג סטטיסטיקות על מצב חיבורי ה-TCP במערכת.\nהערכים tw 65000 ו-orphan 12500 גבוהים מאוד ומעידים על מספר גדול של חיבורים שלא נסגרו בצורה תקינה.\nTIME_WAIT (tw) הוא מצב שבו חיבור TCP נשאר פתוח לזמן קצר אחרי סגירה כדי למנוע בעיות בפרוטוקול. מספר גדול מאוד של חיבורים במצב זה בדרך כלל מעיד על קצב גבוה של חיבורים קצרים.\norphan sockets הם חיבורים שאין להם תהליך שמנהל אותם יותר. מצב כזה יכול להיווצר כאשר תהליך נסגר לפני שהחיבור נסגר בצורה תקינה.\nכאשר יש הרבה TIME_WAIT ו-orphan sockets, זה יכול לגרום לעומס על ה-TCP stack ולפגוע בביצועי הרשת, ולכן זו כנראה הסיבה ל-latency הגבוה.",
           },
           {
             q: "הרצת:\n\n```\ncat /proc/buddyinfo\n```\n\nפלט:\n\n```\nNode 0, zone   Normal   1  0  0  0  0  0  0  0  0  0  0\n```\n\nמה המצב?",
@@ -4256,18 +4232,17 @@ export const TOPICS = [
               "יש בעיית swap שגורמת לפיצול דפים בזיכרון",
             ],
             answer: 0,
-            explanation: "buddyinfo מציג בלוקים פנויים ב-buddy allocator של ה-kernel.\nכל מספר = בלוקים מ-order 0 (4KB) עד order 10 (4MB).\n\n\"1 0 0 0 0 0 0 0 0 0 0\" = רק בלוק אחד של 4KB פנוי. שאר הגדלים אפס.\nfragmentation קיצוני.\n\nהקצאות שדורשות דפים רציפים (huge pages, DMA buffers) ייכשלו.\n\nלבקש מה-kernel לדחוס:\n\necho 1 > /proc/sys/vm/compact_memory\n\nהזיכרון לא ריק, הוא מלא ומפוצל.\nבמצב בריא היו מספרים חיוביים בכל order.\nswap לא פותר fragmentation.",
+            explanation: "buddyinfo מציג בלוקים פנויים ב-buddy allocator של הקרנל, מ-order 0 (4KB) עד order 10 (4MB).\nהפלט מראה רק בלוק אחד של 4KB פנוי, כל שאר הגדלים באפס.\nזה fragmentation קיצוני: הזיכרון לא ריק, אבל כל הבלוקים הגדולים מפוצלים.\nהקצאות שדורשות דפים רציפים (huge pages, DMA buffers) ייכשלו.\nבמצב בריא רואים מספרים חיוביים בכל ה-orders, ו-swap לא פותר fragmentation.",
           },
           {
-            q: "אתה חושד שתהליך מדליף file descriptors.\n\nהרצת:\n\n```\nls /proc/1234/fd | wc -l\n```\n\nפלט:\n\n```\n45892\n```\n\nוגם:\n\n```\ncat /proc/1234/limits | grep 'Max open files'\n```\n\nפלט:\n\n```\nMax open files    65536    65536    files\n```\n\nמה המצב ומה עלול לקרות?",
+            q: "אתה חושד שתהליך מדליף file descriptors.\n\nהרצת:\n\n```\n$ ls /proc/1234/fd | wc -l\n45892\n\n$ cat /proc/1234/limits | grep 'Max open files'\nMax open files    65536    65536    files\n```\n\nמה המצב ומה עלול לקרות?",
             options: [
-              "התהליך מתקרב למגבלה (45,892 מתוך 65,536) ויכשל עם EMFILE",
-              "מספר כזה של FDs פתוחים הוא תקין לשרת תחת עומס",
               "המגבלה של 65,536 נמוכה מדי ויש להגדיל אותה בהתאם",
-              "הפער בין soft limit ל-hard limit הוא שגורם לבעיה",
-            ],
-            answer: 0,
-            explanation: "45,892 FDs פתוחים מתוך 65,536.\n70% מהמגבלה, עם מגמת עלייה. FD leak.\n\nתהליך תקין פותח וסוגר FDs, לא צובר.\nב-65,536 כל open(), socket(), accept() ייכשלו עם EMFILE.\n\nלזהות מה דולף:\n\nlsof -p 1234 | awk '{print $5}' | sort | uniq -c | sort -rn\n\n45,892 FDs לא תקין. שרת בריא מחזיק מאות עד אלפים.\nהגדלת המגבלה רק דוחה קריסה.\nsoft ו-hard limit שניהם 65536, אין הבדל.",
+              "מספר כזה של FDs פתוחים הוא תקין לשרת תחת עומס",
+              "התהליך מתקרב למגבלה (45,892 מתוך 65,536) ויכשל עם EMFILE",
+              "הפער בין soft limit ל-hard limit הוא שגורם לבעיה"],
+            answer: 2,
+            explanation: "מה רואים בפלט:\nלתהליך יש 45,892 file descriptors פתוחים.\nהמגבלה (limit) היא 65,536.\n\nמה זה אומר:\nהתהליך צורך כ-70% מהמגבלה המותרת.\nשרת בריא בדרך כלל מחזיק מאות עד אלפים בודדים של FDs.\n45,892 זה חריג ומעיד על דליפת file descriptors.\n\nמה יקרה אם מגיעים למגבלה:\nכל קריאה ל-open(), socket() או accept() תיכשל עם שגיאת EMFILE.\nEMFILE אומר שהתהליך ניסה לפתוח קובץ או socket אבל הגיע למגבלת ה-FD.\n\nלמה הגדלת המגבלה לא פותרת:\nהגדלת ה-limit רק דוחה את הקריסה.\nצריך לזהות ולתקן את מקור הדליפה.",
           },
           {
             q: "הרצת:\n\n```\nsar -n DEV 1 5\n```\n\nפלט (ממוצע):\n\n```\nIFACE   rxpck/s  txpck/s   rxkB/s   txkB/s  rxdrop/s  txdrop/s\neth0    95000    92000    115000    110000     850       0\n```\n\nכרטיס הרשת הוא 1Gbps. מה הבעיה?",
@@ -4278,29 +4253,27 @@ export const TOPICS = [
               "הערכים תקינים לשרת בעומס גבוה - אין כאן חריגה מהנורמה",
             ],
             answer: 0,
-            explanation: "הקצב מתקרב למגבלת 1Gbps, ולכן הממשק כמעט רווי.\nrxdrop מצביע על איבוד מנות בצד הקליטה, לרוב בגלל עומס על ה-NIC או buffer מלא.\nזו בעיית bandwidth (NIC saturation), לא כמות מנות ולא פרוטוקול.",
+            explanation: "rxkB/s של 115MB/s מתקרב למגבלת 1Gbps (כ-125MB/s), כלומר הכרטיס ב-92% ניצולת.\nrxdrop/s של 850 מצביע על איבוד מנות בצד הקליטה בגלל ring buffer מלא.\ntxdrop/s של 0 אומר שהבעיה בקליטה, לא בשליחה.\nהשילוב של throughput קרוב למגבלה ואיבוד מנות מעיד על NIC saturation.\nזו בעיית bandwidth, לא פרוטוקול ולא כמות מנות.",
           },
           {
             q: "הרצת:\n\n```\nperf top\n```\n\nפלט:\n\n```\n  35.2%  [kernel]        [k] _raw_spin_lock\n  18.1%  [kernel]        [k] copy_user_generic_unrolled\n  12.4%  libc.so.6       [.] __memcpy_avx2\n   8.3%  myapp           [.] parse_request\n```\n\nמה המסקנה?",
             options: [
-              "35% על spinlock מצביע על contention חמור בין cores",
+              "kernel functions תמיד מובילות ב-perf והמצב תקין",
               "12% על memcpy מצביע על העתקות זיכרון לא יעילות",
               "parse_request הוא צוואר הבקבוק כפונקציה היחידה מהאפליקציה",
-              "kernel functions תמיד מובילות ב-perf והמצב תקין",
-            ],
-            answer: 0,
-            explanation: "perf top מראה איפה ה-CPU מבלה את הזמן.\n35% על _raw_spin_lock = סימן אדום.\n\nspinlock זה busy-wait, cores מסתובבים בלולאה ושורפים CPU.\nלרוב קשור ל-networking stack, I/O scheduler, או מבנה נתונים משותף.\n\nלזהות call stack מלא:\n\nperf record -g -a sleep 10\nperf report\n\nmemcpy תופס 12%, לא הבעיה העיקרית.\nparse_request ב-8.3%, spinlock גדול פי 4.\nkernel functions לא תמיד בראש. בעומס רגיל user-space מוביל.",
+              "35% על spinlock מצביע על contention חמור בין cores"],
+            answer: 3,
+            explanation: "perf top מראה איפה ה-CPU מבלה את רוב הזמן.\n35% על _raw_spin_lock מצביע על contention חמור בין cores.\nspinlock הוא busy-wait: cores מסתובבים בלולאה ושורפים CPU במקום לעבוד.\nלרוב זה קשור ל-networking stack, I/O scheduler, או מבנה נתונים משותף.\nבעומס רגיל kernel functions לא אמורות להוביל, וכאן spinlock גדול פי 4 מכל פונקציה אחרת.",
           },
           {
             q: "שרת לא מצליח ליצור חיבורי רשת חדשים.\n\nהרצת:\n\n```\nsysctl net.ipv4.ip_local_port_range\n```\n\nפלט:\n\n```\nnet.ipv4.ip_local_port_range = 32768    60999\n```\n\nוגם:\n\n```\nss -s\n```\n\nפלט:\n\n```\nTCP:   28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nמה הבעיה?",
             options: [
-              "טווח הפורטים (28,232) כמעט מלא עם 28,231 חיבורים פעילים",
               "מספר ה-orphaned connections גבוה מדי וצורך משאבים",
+              "טווח הפורטים (28,232) כמעט מלא עם 28,231 חיבורים פעילים",
               "25,000 established connections חורגים מיכולת השרת",
-              "הגדרות ה-TCP stack תקינות והבעיה היא ב-DNS resolution",
-            ],
-            answer: 0,
-            explanation: "ip_local_port_range = 32768-60999 = 28,232 פורטים.\nss -s מראה 28,231 חיבורים. נשאר פורט אחד.\n\n25,000 established + 3,200 TIME_WAIT = 28,200 תפוסים.\nחיבור חדש ייכשל עם EADDRNOTAVAIL.\n\nפתרון:\n\nsysctl -w net.ipv4.ip_local_port_range=\"1024 65535\"\nsysctl -w net.ipv4.tcp_tw_reuse=1\n\nלטווח ארוך: connection pooling.\n\northaned = 0, אין orphans.\n25,000 connections לא מעבר ליכולת, Linux מחזיק מיליונים.\nDNS לא קשור.",
+              "הגדרות ה-TCP stack תקינות והבעיה היא ב-DNS resolution"],
+            answer: 1,
+            explanation: "טווח הפורטים הזמין הוא 32768-60999, כלומר 28,232 פורטים בסך הכל.\nss -s מראה 28,231 חיבורים פעילים, נשאר פורט אחד בלבד.\nחיבור חדש ייכשל עם EADDRNOTAVAIL כי אין פורטים פנויים.\nהפתרון המיידי הוא להרחיב את הטווח או להפעיל tcp_tw_reuse.\nלטווח ארוך, connection pooling מונע מצב שבו כל בקשה פותחת חיבור חדש.",
           },
           {
             q: "אחרי שדרוג kernel, שרת מציג:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nמה error -12 מציין?",
@@ -4311,31 +4284,29 @@ export const TOPICS = [
               "Error -12 הוא שגיאת ACPI שנפרדת לחלוטין מה-driver",
             ],
             answer: 0,
-            explanation: "בקוד ה-kernel, ערכי שגיאה שליליים מוגדרים ב-errno.h.\n\n-1 = EPERM\n-2 = ENOENT\n-12 = ENOMEM\n-13 = EACCES\n-22 = EINVAL\n\nnouveau ניסה להקצות זיכרון DMA בזמן אתחול ונכשל.\nשכיח אחרי שדרוג kernel.\n\nלהשבית:\n\nnouveau.modeset=0\n\nאו להתקין proprietary NVIDIA driver.\n\nPermission error זה -1 או -13, לא -12.\nפגם פיזי יציג PCIe errors, לא ENOMEM.\nשגיאת ACPI בשורה הראשונה נפרדת מ-error -12.",
+            explanation: "בקרנל, ערכי שגיאה שליליים מוגדרים ב-errno.h, כאשר -12 הוא ENOMEM (אין זיכרון).\nה-driver nouveau ניסה להקצות זיכרון DMA בזמן אתחול ונכשל.\nזה שכיח אחרי שדרוג kernel כשה-driver לא תואם לגרסה החדשה.\nPermission error הוא -1 (EPERM) או -13 (EACCES), לא -12.\nפגם פיזי בחומרה היה מציג PCIe errors, לא ENOMEM.",
           },
         ],
         questionsEn: [
           {
             q: "You need to diagnose why a specific process is slow.\n\nYou ran:\n\n```\nstrace -c -p 1234\n```\n\nOutput:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nWhat is the conclusion?",
             options: [
-              "85% on futex indicates severe lock contention between threads",
               "High read call count indicates a need for better caching",
+              "85% on futex indicates severe lock contention between threads",
               "High write call count indicates the buffer size is too small",
-              "futex is a normal part of process execution and is not an issue",
-            ],
-            answer: 0,
-            explanation: "strace -c summarizes system calls by time.\n85% on futex = red flag.\n\nfutex is behind mutexes and semaphores.\nWhen a process spends 85% on futex, it's waiting for locks instead of working.\nSevere lock contention.\n\nSee which address they're waiting on:\n\nstrace -e futex -p 1234\n\nIdentify the call stack:\n\nperf record -g -p 1234\n\nread is 8.3%, reasonable.\nwrite is 3.1%. Buffer won't help when the bottleneck is locks.\nSome futex is normal. 85% is pathological.",
+              "futex is a normal part of process execution and is not an issue"],
+            answer: 1,
+            explanation: "strace -c summarizes system calls by time consumed.\n85% of time on futex is a red flag for severe lock contention.\nfutex is the system call behind mutexes and semaphores.\nWhen a process spends 85% on futex, it is waiting for locks instead of doing real work.\nSome futex usage is normal, but 85% indicates an architectural problem in the code.",
           },
           {
             q: "A server reports high latency for network requests.\n\nYou ran:\n\n```\ncat /proc/net/sockstat\n```\n\nOutput:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nWhat is the problem?",
             options: [
-              "Orphan (12500) and TIME_WAIT (65000) indicate connections not closing properly",
+              "All numbers are within normal range for a server under load",
               "TCP connection count (28542) is too low for an active server",
               "TCP stack memory usage (95000 pages) is within normal range",
-              "All numbers are within normal range for a server under load",
-            ],
-            answer: 0,
-            explanation: "/proc/net/sockstat exposes the TCP stack internals.\n\northan 12500 - connections no process owns. Closing without graceful shutdown.\ntw 65000 - TIME_WAIT. High rate of short-lived connections.\nmem 95000 - TCP memory, possibly approaching limits.\n\nCheck settings:\n\nsysctl net.ipv4.tcp_tw_reuse\nsysctl net.ipv4.tcp_fin_timeout\n\nMake sure the app uses connection pooling.\n\n28542 inuse is fine. The problem is orphans and TIME_WAIT.\n95000 pages is high, not normal.\nIn a healthy server orphan should be near 0.",
+              "Orphan (12500) and TIME_WAIT (65000) indicate connections not closing properly"],
+            answer: 3,
+            explanation: "/proc/net/sockstat shows statistics about the TCP connection state on the system.\nThe values tw 65000 and orphan 12500 are very high and indicate a large number of connections that were not closed cleanly.\nTIME_WAIT (tw) is a TCP state where a connection remains temporarily after closing to ensure protocol correctness. A very large number of connections in this state usually indicates a high rate of short-lived connections.\norphan sockets are connections that no longer have an owning process. This can happen when a process exits before the connection is properly closed.\nWhen many sockets are in TIME_WAIT or orphan state, it can put pressure on the TCP stack and degrade network performance, which likely explains the high latency.",
           },
           {
             q: "You ran:\n\n```\ncat /proc/buddyinfo\n```\n\nOutput:\n\n```\nNode 0, zone   Normal   1  0  0  0  0  0  0  0  0  0  0\n```\n\nWhat is the situation?",
@@ -4346,18 +4317,17 @@ export const TOPICS = [
               "There is a swap issue causing page fragmentation in memory",
             ],
             answer: 0,
-            explanation: "buddyinfo shows free blocks in the kernel's buddy allocator.\nEach number = blocks from order 0 (4KB) to order 10 (4MB).\n\n\"1 0 0 0 0 0 0 0 0 0 0\" = only one 4KB block free. Everything else is zero.\nExtreme fragmentation.\n\nAllocations needing contiguous pages (huge pages, DMA buffers) will fail.\n\nAsk the kernel to compact:\n\necho 1 > /proc/sys/vm/compact_memory\n\nMemory isn't empty, it's full and fragmented.\nA healthy system has positive numbers across all orders.\nSwap doesn't fix fragmentation.",
+            explanation: "buddyinfo shows free blocks in the kernel buddy allocator, from order 0 (4KB) to order 10 (4MB).\nThe output shows only one 4KB block free, all other sizes are zero.\nThis is extreme fragmentation: memory is not empty, but all large blocks are split up.\nAllocations requiring contiguous pages (huge pages, DMA buffers) will fail.\nA healthy system shows positive numbers across all orders, and swap does not fix fragmentation.",
           },
           {
-            q: "You suspect a process is leaking file descriptors.\n\nYou ran:\n\n```\nls /proc/1234/fd | wc -l\n```\n\nOutput:\n\n```\n45892\n```\n\nAnd:\n\n```\ncat /proc/1234/limits | grep 'Max open files'\n```\n\nOutput:\n\n```\nMax open files    65536    65536    files\n```\n\nWhat is the situation and what might happen?",
+            q: "You suspect a process is leaking file descriptors.\n\nYou ran:\n\n```\n$ ls /proc/1234/fd | wc -l\n45892\n\n$ cat /proc/1234/limits | grep 'Max open files'\nMax open files    65536    65536    files\n```\n\nWhat is the situation and what might happen?",
             options: [
-              "The process is approaching its limit (45,892/65,536) and may fail with EMFILE",
-              "This number of open FDs is normal for a server under heavy load",
               "The limit of 65,536 is too low and should be increased accordingly",
-              "The gap between soft limit and hard limit is what causes the problem",
-            ],
-            answer: 0,
-            explanation: "45,892 FDs open out of 65,536 limit.\n70% used, trending up. FD leak.\n\nA healthy process opens and closes FDs, doesn't accumulate them.\nAt 65,536, every open(), socket(), accept() fails with EMFILE.\n\nFind what's leaking:\n\nlsof -p 1234 | awk '{print $5}' | sort | uniq -c | sort -rn\n\n45,892 FDs is not normal. Healthy servers hold hundreds to low thousands.\nIncreasing the limit just delays the crash.\nSoft and hard limits are both 65536 here. No difference.",
+              "This number of open FDs is normal for a server under heavy load",
+              "The process is approaching its limit (45,892/65,536) and may fail with EMFILE",
+              "The gap between soft limit and hard limit is what causes the problem"],
+            answer: 2,
+            explanation: "What the output shows:\nThe process has 45,892 open file descriptors.\nThe limit is 65,536.\n\nWhat this means:\nThe process is using about 70% of its allowed limit.\nA healthy server typically holds hundreds to low thousands of FDs.\n45,892 is abnormal and indicates a file descriptor leak.\n\nWhat happens when the limit is reached:\nEvery call to open(), socket(), or accept() will fail with EMFILE.\nEMFILE means the process tried to open a file or socket but hit the FD limit.\n\nWhy increasing the limit does not help:\nRaising the limit only delays the crash.\nThe root cause (the leak) must be identified and fixed.",
           },
           {
             q: "You ran:\n\n```\nsar -n DEV 1 5\n```\n\nOutput (average):\n\n```\nIFACE   rxpck/s  txpck/s   rxkB/s   txkB/s  rxdrop/s  txdrop/s\neth0    95000    92000    115000    110000     850       0\n```\n\nThe network card is 1Gbps. What is the problem?",
@@ -4368,29 +4338,27 @@ export const TOPICS = [
               "Switching to UDP would reduce overhead and prevent packet drops",
             ],
             answer: 0,
-            explanation: "Three signals to diagnose NIC saturation.\n\nrxkB/s = 115 MB/s. 1Gbps capacity = 125 MB/s. Card is at 92%.\nrxdrop/s = 850. Ring buffer full, packets dropping.\ntxdrop/s = 0. Problem is receiving, not sending.\n\nPacket loss = retransmissions + latency.\n\nIncrease ring buffer:\n\nethtool -G eth0 rx 4096\n\nThe issue is bandwidth, not packet count.\ntxdrop = 0 is good. Problem is rxdrop.\nUDP doesn't fix NIC saturation.",
+            explanation: "rxkB/s of 115MB/s approaches the 1Gbps limit (about 125MB/s), meaning the card is at 92% utilization.\nrxdrop/s of 850 indicates packet loss on the receive side due to a full ring buffer.\ntxdrop/s of 0 means the problem is on the receive side, not the send side.\nThe combination of throughput near the limit and packet drops indicates NIC saturation.\nThis is a bandwidth issue, not a protocol or packet count issue.",
           },
           {
             q: "You ran:\n\n```\nperf top\n```\n\nOutput:\n\n```\n  35.2%  [kernel]        [k] _raw_spin_lock\n  18.1%  [kernel]        [k] copy_user_generic_unrolled\n  12.4%  libc.so.6       [.] __memcpy_avx2\n   8.3%  myapp           [.] parse_request\n```\n\nWhat is the conclusion?",
             options: [
-              "35% on spinlock indicates severe contention between cores",
+              "Kernel functions always lead in perf and the situation is normal",
               "12% on memcpy indicates inefficient memory copy operations",
               "parse_request is the bottleneck as the only application function",
-              "Kernel functions always lead in perf and the situation is normal",
-            ],
-            answer: 0,
-            explanation: "perf top shows where the CPU spends its time.\n35% on _raw_spin_lock = severe red flag.\n\nSpinlock is busy-wait. Cores spin in a loop and burn CPU.\nUsually related to networking stack, I/O scheduler, or shared data structures.\n\nIdentify the full call stack:\n\nperf record -g -a sleep 10\nperf report\n\nmemcpy at 12% isn't the main issue.\nparse_request at 8.3%, spinlock is 4x higher.\nKernel functions aren't always on top. Under normal load, user-space leads.",
+              "35% on spinlock indicates severe contention between cores"],
+            answer: 3,
+            explanation: "perf top shows where the CPU spends most of its time.\n35% on _raw_spin_lock indicates severe contention between cores.\nSpinlock is busy-wait: cores spin in a loop burning CPU instead of doing work.\nThis is usually related to the networking stack, I/O scheduler, or shared data structures.\nUnder normal load kernel functions should not lead, and here spinlock is 4x higher than any other function.",
           },
           {
             q: "A server cannot create new network connections.\n\nYou ran:\n\n```\nsysctl net.ipv4.ip_local_port_range\n```\n\nOutput:\n\n```\nnet.ipv4.ip_local_port_range = 32768    60999\n```\n\nAnd:\n\n```\nss -s\n```\n\nOutput:\n\n```\nTCP:   28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nWhat is the problem?",
             options: [
-              "The port range (28,232) is almost exhausted with 28,231 active connections",
               "Too many orphaned connections are consuming server resources",
+              "The port range (28,232) is almost exhausted with 28,231 active connections",
               "25,000 established connections exceeds the server's capacity",
-              "TCP stack settings are fine and the issue is DNS resolution",
-            ],
-            answer: 0,
-            explanation: "ip_local_port_range = 32768-60999 = 28,232 ports.\nss -s shows 28,231 connections. One port left.\n\n25,000 established + 3,200 TIME_WAIT = 28,200 consumed.\nNew connection will fail with EADDRNOTAVAIL.\n\nFix:\n\nsysctl -w net.ipv4.ip_local_port_range=\"1024 65535\"\nsysctl -w net.ipv4.tcp_tw_reuse=1\n\nLong term: connection pooling.\n\northaned = 0, no orphans.\n25,000 connections isn't beyond capacity. Linux handles millions.\nDNS is unrelated.",
+              "TCP stack settings are fine and the issue is DNS resolution"],
+            answer: 1,
+            explanation: "The available port range is 32768-60999, which is 28,232 ports total.\nss -s shows 28,231 active connections, leaving only one port available.\nNew connections will fail with EADDRNOTAVAIL because there are no free ports.\nThe immediate fix is to expand the range or enable tcp_tw_reuse.\nLong term, connection pooling prevents the situation where every request opens a new connection.",
           },
           {
             q: "After a kernel upgrade, a server shows:\n\n```\ndmesg | grep -i error\n```\n\nOutput:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nWhat does error -12 indicate?",
@@ -4401,7 +4369,7 @@ export const TOPICS = [
               "Error -12 is an ACPI error that is completely separate from the driver",
             ],
             answer: 0,
-            explanation: "In the kernel, negative error values are defined in errno.h.\n\n-1 = EPERM\n-2 = ENOENT\n-12 = ENOMEM\n-13 = EACCES\n-22 = EINVAL\n\nnouveau tried to allocate DMA memory during init and failed.\nCommon after kernel upgrades.\n\nDisable it:\n\nnouveau.modeset=0\n\nOr install the proprietary NVIDIA driver.\n\nPermission error is -1 or -13, not -12.\nPhysical defect would show PCIe errors, not ENOMEM.\nThe ACPI error on line 1 is separate from the -12 error.",
+            explanation: "In the kernel, negative error values are defined in errno.h, where -12 is ENOMEM (out of memory).\nThe nouveau driver tried to allocate DMA memory during initialization and failed.\nThis is common after kernel upgrades when the driver is not compatible with the new version.\nA permission error would be -1 (EPERM) or -13 (EACCES), not -12.\nA physical hardware defect would show PCIe errors, not ENOMEM.",
           },
         ],
       },
@@ -4677,7 +4645,7 @@ export const TOPICS = [
               "ה-namespace חוסם image updates",
             ],
             answer: 0,
-            explanation: "אם ה-tag ב-Git הוא latest וגם בקלאסטר הוא latest, ArgoCD רואה אותם כזהים.\nהוא לא בודק את ה-image digest, רק את ה-manifest.\nPod לא יעשה pull מחדש אם imagePullPolicy הוא IfNotPresent.\n\nפתרון: להשתמש ב-immutable tags (v1.2.3, git SHA) במקום latest.\nאו להגדיר imagePullPolicy: Always.",
+            explanation: "אם ה-image tag ב-Git הוא latest וגם בקלאסטר הוא latest, ArgoCD רואה אותם כזהים.\nהוא לא בודק את ה-image digest, רק את ה-manifest.\nPod לא יעשה pull מחדש אם imagePullPolicy הוא IfNotPresent.\n\nפתרון: להשתמש ב-immutable tags כמו v1.2.3 או git SHA במקום latest.\nאו להגדיר \u200EimagePullPolicy: Always.",
           },
           {
             q: "ארגון רוצה לאפשר rollback מהיר ב-production בלי לחכות ל-CI pipeline.\n\nמה הדרך הנכונה ב-GitOps?",
@@ -4700,7 +4668,7 @@ export const TOPICS = [
               "5 - סכום של clusters ו-apps",
             ],
             answer: 2,
-            explanation: "Matrix generator יוצר cartesian product (מכפלה קרטזית) של שני ה-generators.\n3 clusters x 2 apps = 6 Applications.\nכל Application מקבל combination ייחודית:\n- cluster-1 + payments\n- cluster-1 + orders\n- cluster-2 + payments\n- cluster-2 + orders\n- cluster-3 + payments\n- cluster-3 + orders",
+            explanation: "ה-Matrix generator ב-ApplicationSet יוצר Cartesian product (כל הצירופים האפשריים) בין הרשימות שמוגדרות ב-generators.\nבמקרה הזה יש 3 clusters שנבחרו לפי env: production, ויש 2 אפליקציות ברשימת elements (payments ו-orders).\nApplicationSet יוצר Application עבור כל שילוב של cluster ואפליקציה.\nלכן מספר ה-Applications שייווצרו הוא:\n3 clusters × 2 apps = 6 Applications.",
           },
         ],
       },
