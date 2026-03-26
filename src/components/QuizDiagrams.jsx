@@ -534,7 +534,117 @@ function ArgoCdSyncDiagram() {
   );
 }
 
-// ── 19. Role vs ClusterRole scope ───────────────────────────────────
+// ── 19. App of Apps hierarchy ──────────────────────────────────────
+function AppOfAppsDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={box(C.purple, C.purpleBg, { width: "100%", maxWidth: 280 })}>
+        <div style={label(C.purpleText, { marginBottom: 8 })}>Root Application</div>
+        <div style={row({ gap: 6 })}>
+          <div style={box(C.cyan, C.cyanBg, { padding: "6px 8px", flex: 1, minWidth: 0 })}>
+            <div style={label(C.cyanText, { fontSize: 9, marginBottom: 4 })}>App A</div>
+            <div style={row({ gap: 3 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 5px", fontSize: 7 })}>Deploy</div>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 5px", fontSize: 7 })}>Svc</div>
+            </div>
+          </div>
+          <div style={box(C.cyan, C.cyanBg, { padding: "6px 8px", flex: 1, minWidth: 0 })}>
+            <div style={label(C.cyanText, { fontSize: 9, marginBottom: 4 })}>App B</div>
+            <div style={row({ gap: 3 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 5px", fontSize: 7 })}>Deploy</div>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 5px", fontSize: 7 })}>Svc</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>cascade delete removes the entire hierarchy</div>
+    </div>
+  );
+}
+
+// ── 20. ApplicationSet Matrix generator ───────────────────────────────
+function AppSetMatrixDiagram() {
+  const clusters = ["prod-1", "prod-2", "prod-3"];
+  const apps = ["payments", "orders"];
+  return (
+    <div style={wrap}>
+      <div style={{ display: "grid", gridTemplateColumns: "auto repeat(3, 1fr)", gap: 4, width: "100%", maxWidth: 280 }}>
+        {/* header row */}
+        <div />
+        {clusters.map((c) => (
+          <div key={c} style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "3px 4px", fontSize: 8 })}>{c}</div>
+        ))}
+        {/* data rows */}
+        {apps.map((a) => (
+          <React.Fragment key={a}>
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "3px 6px", fontSize: 8 })}>{a}</div>
+            {clusters.map((c) => (
+              <div key={c} style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 4px", fontSize: 7 })}>App</div>
+            ))}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>Matrix: 3 clusters x 2 apps = 6 Applications</div>
+    </div>
+  );
+}
+
+// ── 21. GitOps reconciliation: prune vs selfHeal ──────────────────────
+function GitOpsReconcileDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 8, width: "100%", maxWidth: 280, flexWrap: "nowrap", alignItems: "stretch" })}>
+        <div style={box(C.amber, C.amberBg, { padding: "8px 6px", flex: 1, minWidth: 0 })}>
+          <div style={label(C.amberText, { fontSize: 9, marginBottom: 6 })}>prune</div>
+          <div style={col({ gap: 3 })}>
+            <div style={smallBox(C.red, C.redBg, C.redText, { padding: "3px 5px", fontSize: 7 })}>deleted from Git</div>
+            <div style={arrow({ fontSize: 11 })}>&darr;</div>
+            <div style={smallBox(C.red, C.redBg, C.redText, { padding: "3px 5px", fontSize: 7 })}>removed from cluster</div>
+          </div>
+        </div>
+        <div style={box(C.cyan, C.cyanBg, { padding: "8px 6px", flex: 1, minWidth: 0 })}>
+          <div style={label(C.cyanText, { fontSize: 9, marginBottom: 6 })}>selfHeal</div>
+          <div style={col({ gap: 3 })}>
+            <div style={smallBox(C.amber, C.amberBg, C.amberText, { padding: "3px 5px", fontSize: 7 })}>manual drift</div>
+            <div style={arrow({ fontSize: 11 })}>&darr;</div>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "3px 5px", fontSize: 7 })}>reverted to Git</div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>two auto-sync behaviors, independent settings</div>
+    </div>
+  );
+}
+
+// ── 22. ArgoCD multi-tenancy with AppProject ──────────────────────────
+function ArgoMultiTenancyDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={box(C.indigo, C.indigoBg, { width: "100%", maxWidth: 280 })}>
+        <div style={label(C.indigoText, { marginBottom: 8 })}>ArgoCD</div>
+        <div style={row({ gap: 6 })}>
+          <div style={box(C.cyan, C.cyanBg, { padding: "6px 6px", flex: 1, minWidth: 0 })}>
+            <div style={label(C.cyanText, { fontSize: 9, marginBottom: 4 })}>Project A</div>
+            <div style={col({ gap: 2 })}>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "2px 4px", fontSize: 7 })}>repo-a</div>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "2px 4px", fontSize: 7 })}>ns: team-a</div>
+            </div>
+          </div>
+          <div style={box(C.purple, C.purpleBg, { padding: "6px 6px", flex: 1, minWidth: 0 })}>
+            <div style={label(C.purpleText, { fontSize: 9, marginBottom: 4 })}>Project B</div>
+            <div style={col({ gap: 2 })}>
+              <div style={smallBox(C.amber, C.amberBg, C.amberText, { padding: "2px 4px", fontSize: 7 })}>repo-b</div>
+              <div style={smallBox(C.amber, C.amberBg, C.amberText, { padding: "2px 4px", fontSize: 7 })}>ns: team-b</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>AppProject isolates repos, namespaces, and RBAC</div>
+    </div>
+  );
+}
+
+// ── 23. Role vs ClusterRole scope ───────────────────────────────────
 function RoleScopeDiagram() {
   return (
     <div style={wrap}>
@@ -1849,6 +1959,10 @@ const COMPONENT_MAP = {
   HeadlessServiceDiagram,
   TopologySpreadDiagram,
   ArgoCdSyncDiagram,
+  AppOfAppsDiagram,
+  AppSetMatrixDiagram,
+  GitOpsReconcileDiagram,
+  ArgoMultiTenancyDiagram,
   RoleScopeDiagram,
   PsaAdmissionDiagram,
   ConfigMapMountDiagram,

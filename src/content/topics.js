@@ -4584,6 +4584,7 @@ export const TOPICS = [
           },
           {
             q: "מה ההבדל בין prune: true ל-selfHeal: true?",
+            tags: ["gitops-reconcile"],
             options: [
               "prune מוחק משאבים שנמחקו מ-Git, selfHeal מתקן drift בקלאסטר",
               "prune מתקן drift, selfHeal מוחק משאבים ישנים",
@@ -4623,6 +4624,7 @@ export const TOPICS = [
           },
           {
             q: "צוות Platform רוצה שכל צוות יוכל לנהל רק את ה-Applications שלו.\n\nאיך מממשים multi-tenancy ב-ArgoCD?",
+            tags: ["gitops-multitenancy"],
             options: [
               "ArgoCD instance נפרד לכל צוות",
               "AppProject per team עם הגבלות על repos, namespaces ו-RBAC roles",
@@ -4634,6 +4636,7 @@ export const TOPICS = [
           },
           {
             q: "ב-App of Apps pattern, ה-root Application מנהל Applications אחרים.\nמה קורה אם מוחקים את ה-root Application עם cascading delete?",
+            tags: ["gitops-app-of-apps"],
             options: [
               "רק ה-root Application נמחק, ה-child Applications נשארים",
               "ה-root וכל ה-child Applications נמחקים, אבל המשאבים שלהם נשארים בקלאסטר",
@@ -4689,6 +4692,7 @@ export const TOPICS = [
           },
           {
             q: "ApplicationSet עם Matrix generator:\n\n```yaml\ngenerators:\n- matrix:\n    generators:\n    - clusters:\n        selector:\n          matchLabels:\n            env: production\n    - list:\n        elements:\n        - app: payments\n          team: billing\n        - app: orders\n          team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
+            tags: ["gitops-appset-matrix"],
             options: [
               "3 - אחד לכל cluster",
               "2 - אחד לכל app",

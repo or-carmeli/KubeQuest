@@ -90,6 +90,10 @@ export const TAG_DIAGRAM_CONFIG = {
 
   // ── gitops ──────────────────────────────────────────────────────────────
   "gitops-sync":          { component: "ArgoCdSyncDiagram",          score: 4 },
+  "gitops-app-of-apps":   { component: "AppOfAppsDiagram",           score: 4 },
+  "gitops-appset-matrix": { component: "AppSetMatrixDiagram",        score: 4 },
+  "gitops-reconcile":     { component: "GitOpsReconcileDiagram",     score: 4 },
+  "gitops-multitenancy":  { component: "ArgoMultiTenancyDiagram",    score: 4 },
 
   // ── config ────────────────────────────────────────────────────────────
   "config-mount":         { component: "ConfigMapMountDiagram",      score: 4 },
