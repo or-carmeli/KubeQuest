@@ -1177,7 +1177,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Egress policy מאפשרת רק port 443. DNS (port 53) חסום.\nלהוסיף egress rule ל-port 53 (UDP+TCP) לאפשר DNS.\nכל egress policy חייבת לכלול port 53, אחרת name resolution נכשל.",
+                "\u2066Egress policy\u2069 זו מאפשרת תעבורה רק ל-\u2066port 443\u2069, ולכן תעבורת DNS נחסמת.\nDNS משתמש ב-\u2066port 53\u2069 (בדרך כלל UDP ולעיתים גם TCP), ולכן Pods לא מצליחים לבצע \u2066name resolution\u2069.\nכדי לאפשר DNS, צריך להוסיף כלל Egress שמאפשר תעבורה ל-\u2066port 53\u2069 (TCP ו-UDP), בדרך כלל לכיוון CoreDNS.",
             },
             {
               q: "ה-Ingress מחזיר שגיאת 503.\n\nהרצת:\n\n```\nkubectl describe ingress\n```\n\nפלט:\n\n```\nBackend: api-svc:80\n(<error: endpoints not found>)\n```\n\nמה הבעיה?",
@@ -1276,7 +1276,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Egress policy allows only port 443. DNS (port 53) is blocked.\nAdd egress rule for port 53 (UDP+TCP) to allow DNS resolution.\nEvery egress policy must include port 53, or name resolution fails.",
+                "This egress policy allows traffic only to port 443, so DNS traffic is blocked.\nDNS uses port 53 (usually UDP and sometimes TCP), so Pods cannot perform name resolution.\nTo fix this, an egress rule must allow traffic to port 53 (both TCP and UDP), typically toward CoreDNS.",
             },
             {
               q: "An Ingress returns a 503 error.\n\nCommand:\n\n```\nkubectl describe ingress\n```\n\nOutput:\n\n```\nBackend: api-svc:80\n(<error: endpoints not found>)\n```\n\nWhat is the problem?",
