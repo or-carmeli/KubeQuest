@@ -722,6 +722,7 @@ export const TOPICS = [
             },
             {
               q: "מה Service מסוג ClusterIP?",
+              tags: ["clusterip-service"],
               options: [
               "חשיפה חיצונית עם IP קבוע שמנתב תנועה ל-Nodes ב-cloud",
               "DNS חיצוני שמאפשר ל-Pods לגשת לשירותים מחוץ ל-Cluster",
@@ -826,6 +827,7 @@ export const TOPICS = [
             },
             {
               q: "What is a ClusterIP Service?",
+              tags: ["clusterip-service"],
               options: [
               "A VPN tunnel connecting Pods in different Clusters for secure communication",
               "External exposure that assigns a fixed IP reachable from outside the cluster via cloud DNS",

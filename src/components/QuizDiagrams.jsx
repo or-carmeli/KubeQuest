@@ -1450,6 +1450,37 @@ function RestartPolicyDiagram() {
 }
 
 // ── Service Stable IP ────────────────────────────────────────────────
+// ── ClusterIP Service ───────────────────────────────────────────────
+function ClusterIpDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 260, alignItems: "center" })}>
+        <div style={row({ gap: 8 })}>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 10px", fontSize: 10 })}>Pod A</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 10px", fontSize: 10 })}>Pod B</div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"} DNS</span>
+        </div>
+        <div style={box(C.cyan, C.cyanBg, { width: "100%", padding: "8px 12px", textAlign: "center" })}>
+          <div style={label(C.cyanText, { fontSize: 11, marginBottom: 2 })}>ClusterIP Service</div>
+          <div style={subLabel({ fontSize: 9 })}>10.96.0.10 (virtual IP)</div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"}</span>
+        </div>
+        <div style={row({ gap: 8 })}>
+          <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "5px 10px", fontSize: 10 })}>Pod 1</div>
+          <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "5px 10px", fontSize: 10 })}>Pod 2</div>
+        </div>
+        <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 6, border: "1px dashed rgba(255,255,255,0.1)", width: "100%", textAlign: "center" }}>
+          <span style={subLabel({ fontSize: 9 })}>internal only - not reachable from outside</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ServiceStableIpDiagram() {
   return (
     <div style={wrap}>
@@ -1760,6 +1791,7 @@ const COMPONENT_MAP = {
   EtcdQuorumDiagram,
   StackedVsExternalEtcdDiagram,
   KubeadmUpgradeDiagram,
+  ClusterIpDiagram,
   ServiceStableIpDiagram,
   IngressHostnameDiagram,
   StatefulSetVsDeploymentDiagram,
