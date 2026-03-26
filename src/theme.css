@@ -133,10 +133,23 @@ body {
   background: var(--bg-body);
 }
 
-/* Dashboard font boost — scales dev dashboard text up on desktop only */
+/* Dashboard font boost - scales dev dashboard text up on desktop only */
 @media (min-width: 768px) {
   .page-pad {
     font-size: 16px;
     zoom: 1.18;
+  }
+  /* On desktop the theory card doesn't need full-viewport height;
+     keep minHeight on mobile so the Start Quiz button stays reachable */
+  .topic-page {
+    min-height: auto !important;
+  }
+  .quiz-diagram {
+    font-size: 120%;
+    /* Widen the inner diagram wrapper on desktop */
+  }
+  .quiz-diagram > div {
+    max-width: 360px !important;
+    padding: 18px 16px 14px !important;
   }
 }

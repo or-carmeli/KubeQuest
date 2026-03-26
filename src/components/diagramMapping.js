@@ -142,6 +142,9 @@ export const TAG_DIAGRAM_CONFIG = {
   "etcd-topology":           { component: "StackedVsExternalEtcdDiagram",  score: 4 },
   "kubeadm-upgrade":         { component: "KubeadmUpgradeDiagram",         score: 4 },
   "kubelet-role":            { component: "KubeletDiagram",                score: 4 },
+  "kube-proxy-role":         { component: "KubeProxyDiagram",              score: 4 },
+  "etcd-restore":            { component: "EtcdRestoreDiagram",            score: 4 },
+  "cni-notready":            { component: "CniNotReadyDiagram",           score: 4 },
   "etcd-data":               { component: "EtcdDataDiagram",              score: 4 },
 
   // ── config (comparisons) ──────────────────────────────────────────

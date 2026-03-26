@@ -5629,7 +5629,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
       {!isStatusDomain && <>
       {/* TOPIC */}
       {screen==="topic"&&selectedTopic&&selectedLevel&&(
-        <div className="page-pad" style={{maxWidth:660,margin:"0 auto",padding:"12px 14px",animation:"fadeIn 0.3s ease",display:"flex",flexDirection:"column",minHeight:"calc(100dvh - 24px)"}}>
+        <div className="page-pad topic-page" style={{maxWidth:660,margin:"0 auto",padding:"12px 14px",animation:"fadeIn 0.3s ease",display:"flex",flexDirection:"column",minHeight:"calc(100dvh - 24px)"}}>
           <div style={{marginBottom:8,flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",direction:dir,marginBottom:4}}>
               <button className="back-btn" onClick={()=>setScreen("home")} aria-label={t("back")} style={{background:"var(--glass-4)",border:"1px solid var(--glass-9)",color:"var(--text-secondary)",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span aria-hidden="true">{dir==="rtl"?"→":"←"}</span></button>
