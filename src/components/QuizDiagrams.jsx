@@ -439,26 +439,26 @@ function IngressVsLbDiagram() {
   return (
     <div style={wrap}>
       <div style={row({ gap: 12, width: "100%", maxWidth: 280 })}>
-        <div style={col({ gap: 3, flex: 1 })}>
+        <div style={col({ gap: 6, flex: 1 })}>
           <div style={label(C.redText, { fontSize: 9 })}>Multiple LBs</div>
           <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>LB 1</div>
           <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>LB 2</div>
           <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>LB 3</div>
         </div>
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)", alignSelf: "stretch" }} />
-        <div style={col({ gap: 3, flex: 1 })}>
+        <div style={col({ gap: 6, flex: 1 })}>
           <div style={label(C.greenText, { fontSize: 9 })}>One Ingress</div>
-          <div style={box(C.cyan, C.cyanBg, { padding: "4px 6px", width: "100%" })}>
+          <div style={box(C.cyan, C.cyanBg, { padding: "6px 8px", width: "100%" })}>
             <div style={label(C.cyanText, { fontSize: 9 })}>Ingress</div>
           </div>
-          <div style={row({ gap: 3 })}>
+          <div style={row({ gap: 4 })}>
             <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 5px" })}>svc1</div>
             <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 5px" })}>svc2</div>
             <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 5px" })}>svc3</div>
           </div>
         </div>
       </div>
-      <div style={caption()}>cost-effective single entry point</div>
+      <div style={caption({ marginTop: 14 })}>cost-effective single entry point</div>
     </div>
   );
 }
