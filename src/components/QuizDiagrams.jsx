@@ -31,55 +31,55 @@ const C = {
 // ── shared style helpers ────────────────────────────────────────────
 const wrap = {
   display: "flex", flexDirection: "column", alignItems: "center",
-  padding: "14px 12px 10px", margin: "4px 0 2px",
+  padding: "16px 14px 12px", margin: "4px 0 2px",
   background: "rgba(255,255,255,0.02)",
   border: "1px solid rgba(255,255,255,0.06)",
-  borderRadius: 12, maxWidth: 300, width: "100%", alignSelf: "center",
+  borderRadius: 14, maxWidth: 320, width: "100%", alignSelf: "center",
   boxSizing: "border-box", overflow: "hidden",
   direction: "ltr",
 };
 
 const box = (border, bg, extra) => ({
-  border: `1.5px solid ${border}`, borderRadius: 10,
-  padding: "10px 14px 8px", background: bg,
+  border: `1.5px solid ${border}`, borderRadius: 11,
+  padding: "12px 16px 10px", background: bg,
   boxSizing: "border-box", ...extra,
 });
 
 const label = (color, extra) => ({
-  fontSize: 11, fontWeight: 700, color, fontFamily: MONO,
+  fontSize: 12, fontWeight: 700, color, fontFamily: MONO,
   letterSpacing: 0.5, textAlign: "center", ...extra,
 });
 
 const smallBox = (border, bg, color, extra) => ({
-  border: `1px solid ${border}`, borderRadius: 7,
-  padding: "6px 12px", background: bg,
-  fontSize: 10, fontWeight: 600, color, fontFamily: MONO,
+  border: `1px solid ${border}`, borderRadius: 8,
+  padding: "7px 14px", background: bg,
+  fontSize: 11, fontWeight: 600, color, fontFamily: MONO,
   letterSpacing: 0.3, textAlign: "center", whiteSpace: "nowrap",
   boxSizing: "border-box", ...extra,
 });
 
 const caption = (extra) => ({
-  fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 6,
+  fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 10,
   textAlign: "center", ...extra,
 });
 
 const arrow = (extra) => ({
-  fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: MONO, ...extra,
+  fontSize: 12, color: "rgba(255,255,255,0.6)", fontFamily: MONO, ...extra,
 });
 
 const row = (extra) => ({
-  display: "flex", gap: 8, justifyContent: "center", alignItems: "center",
+  display: "flex", gap: 10, justifyContent: "center", alignItems: "center",
   flexWrap: "wrap", ...extra,
 });
 
 const col = (extra) => ({
-  display: "flex", flexDirection: "column", alignItems: "center", gap: 6, ...extra,
+  display: "flex", flexDirection: "column", alignItems: "center", gap: 8, ...extra,
 });
 
-const dashed = { borderTop: "1px dashed rgba(255,255,255,0.10)" };
+const dashed = { borderTop: "1px dashed rgba(255,255,255,0.10)", margin: "2px 0" };
 
 const subLabel = (extra) => ({
-  fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: MONO,
+  fontSize: 10, color: "rgba(255,255,255,0.7)", fontFamily: MONO,
   letterSpacing: 0.2, ...extra,
 });
 
@@ -439,26 +439,26 @@ function IngressVsLbDiagram() {
   return (
     <div style={wrap}>
       <div style={row({ gap: 12, width: "100%", maxWidth: 280 })}>
-        <div style={col({ gap: 3, flex: 1 })}>
+        <div style={col({ gap: 6, flex: 1 })}>
           <div style={label(C.redText, { fontSize: 9 })}>Multiple LBs</div>
           <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>LB 1</div>
           <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>LB 2</div>
           <div style={smallBox(C.red, C.redBg, C.redText, { fontSize: 8, padding: "3px 6px" })}>LB 3</div>
         </div>
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)", alignSelf: "stretch" }} />
-        <div style={col({ gap: 3, flex: 1 })}>
+        <div style={col({ gap: 6, flex: 1 })}>
           <div style={label(C.greenText, { fontSize: 9 })}>One Ingress</div>
-          <div style={box(C.cyan, C.cyanBg, { padding: "4px 6px", width: "100%" })}>
+          <div style={box(C.cyan, C.cyanBg, { padding: "6px 8px", width: "100%" })}>
             <div style={label(C.cyanText, { fontSize: 9 })}>Ingress</div>
           </div>
-          <div style={row({ gap: 3 })}>
+          <div style={row({ gap: 4 })}>
             <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 5px" })}>svc1</div>
             <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 5px" })}>svc2</div>
             <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 5px" })}>svc3</div>
           </div>
         </div>
       </div>
-      <div style={caption()}>cost-effective single entry point</div>
+      <div style={caption({ marginTop: 14 })}>cost-effective single entry point</div>
     </div>
   );
 }
@@ -1164,7 +1164,7 @@ function CniNotReadyDiagram() {
           <div style={box(C.amber, C.amberBg, { padding: "8px 10px", flex: 1 })}>
             <div style={label(C.amberText, { fontSize: 9, marginBottom: 6 })}>Node</div>
             {stateBox("NotReady", C.amberText, C.amberBg, C.amber, "\u2718")}
-            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.4)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2718"}</div>
+            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.6)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2718"}</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
@@ -1175,7 +1175,7 @@ function CniNotReadyDiagram() {
           <div style={box(C.green, C.greenBg, { padding: "8px 10px", flex: 1 })}>
             <div style={label(C.greenText, { fontSize: 9, marginBottom: 6 })}>Node</div>
             {stateBox("Ready", C.greenText, C.greenBg, C.green, "\u2714")}
-            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.4)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2714"}</div>
+            <div style={{ marginTop: 5, fontSize: 8, color: "rgba(255,255,255,0.6)", textAlign: "center", fontFamily: MONO }}>Pod network {"\u2714"}</div>
           </div>
         </div>
       </div>
@@ -1214,7 +1214,7 @@ function EtcdDataDiagram() {
 // ── Control Plane Components ─────────────────────────────────────────
 function ControlPlaneDiagram() {
   const roleLabel = (text) => ({
-    fontSize: 8, color: "rgba(255,255,255,0.4)", fontFamily: MONO,
+    fontSize: 8, color: "rgba(255,255,255,0.6)", fontFamily: MONO,
     textAlign: "center", marginTop: 2, lineHeight: 1.2,
   });
   return (
@@ -1450,6 +1450,124 @@ function RestartPolicyDiagram() {
 }
 
 // ── Service Stable IP ────────────────────────────────────────────────
+// ── NetworkPolicy Default Behavior ──────────────────────────────────
+function NetworkPolicyDefaultDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 14, width: "100%", maxWidth: 280, alignItems: "flex-start" })}>
+        <div style={col({ gap: 6, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 10, fontWeight: 700 })}>No Policy</div>
+          <div style={row({ gap: 6 })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+            <span style={{ fontSize: 11, color: C.greenText }}>{"\u2194"}</span>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+          </div>
+          <div style={subLabel({ fontSize: 9, textAlign: "center" })}>all traffic allowed</div>
+        </div>
+        <div style={col({ gap: 6, flex: 1 })}>
+          <div style={subLabel({ textAlign: "center", fontSize: 10, fontWeight: 700 })}>With Policy</div>
+          <div style={row({ gap: 6 })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+            <span style={{ fontSize: 11, color: C.redText }}>{"\u2192"}{"\u2718"}</span>
+            <div style={smallBox(C.red, C.redBg, C.redText, { padding: "5px 8px", fontSize: 10 })}>Pod</div>
+          </div>
+          <div style={subLabel({ fontSize: 9, textAlign: "center" })}>only whitelist passes</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Egress NetworkPolicy ────────────────────────────────────────────
+function EgressPolicyDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 240, alignItems: "center" })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "6px 16px", fontSize: 11 })}>
+          Pod
+        </div>
+        <div style={{ textAlign: "center", padding: "3px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>outbound {"\u2193"}</span>
+        </div>
+        <div style={row({ gap: 8 })}>
+          <div style={col({ gap: 2, alignItems: "center" })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "4px 8px", fontSize: 9 })}>port 53</div>
+            <span style={{ fontSize: 10, color: C.greenText }}>{"\u2714"}</span>
+          </div>
+          <div style={col({ gap: 2, alignItems: "center" })}>
+            <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "4px 8px", fontSize: 9 })}>API</div>
+            <span style={{ fontSize: 10, color: C.greenText }}>{"\u2714"}</span>
+          </div>
+          <div style={col({ gap: 2, alignItems: "center" })}>
+            <div style={smallBox(C.red, C.redBg, C.redText, { padding: "4px 8px", fontSize: 9 })}>other</div>
+            <span style={{ fontSize: 10, color: C.redText }}>{"\u2718"}</span>
+          </div>
+        </div>
+      </div>
+      <div style={caption()}>egress policy: allow listed, block the rest</div>
+    </div>
+  );
+}
+
+// ── Port vs TargetPort ──────────────────────────────────────────────
+function PortTargetPortDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280, alignItems: "center" })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 14px", fontSize: 10 })}>
+          Client / Pod
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"} port: 80</span>
+        </div>
+        <div style={box(C.cyan, C.cyanBg, { width: "100%", padding: "8px 12px", textAlign: "center" })}>
+          <div style={label(C.cyanText, { fontSize: 11 })}>Service</div>
+          <div style={subLabel({ fontSize: 9 })}>10.96.0.10:80</div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"} targetPort: 8080</span>
+        </div>
+        <div style={box(C.purple, C.purpleBg, { width: "100%", padding: "8px 12px", textAlign: "center" })}>
+          <div style={label(C.purpleText, { fontSize: 11 })}>Container</div>
+          <div style={subLabel({ fontSize: 9 })}>listening on :8080</div>
+        </div>
+      </div>
+      <div style={caption()}>Service translates port 80 {"\u2192"} targetPort 8080</div>
+    </div>
+  );
+}
+
+// ── ClusterIP Service ───────────────────────────────────────────────
+function ClusterIpDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 260, alignItems: "center" })}>
+        <div style={row({ gap: 8 })}>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 10px", fontSize: 10 })}>Pod A</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { padding: "5px 10px", fontSize: 10 })}>Pod B</div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"} DNS</span>
+        </div>
+        <div style={box(C.cyan, C.cyanBg, { width: "100%", padding: "8px 12px", textAlign: "center" })}>
+          <div style={label(C.cyanText, { fontSize: 11, marginBottom: 2 })}>ClusterIP Service</div>
+          <div style={subLabel({ fontSize: 9 })}>10.96.0.10 (virtual IP)</div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>{"\u2193"}</span>
+        </div>
+        <div style={row({ gap: 8 })}>
+          <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "5px 10px", fontSize: 10 })}>Pod 1</div>
+          <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { padding: "5px 10px", fontSize: 10 })}>Pod 2</div>
+        </div>
+        <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 6, border: "1px dashed rgba(255,255,255,0.1)", width: "100%", textAlign: "center" }}>
+          <span style={subLabel({ fontSize: 9 })}>internal only - not reachable from outside</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ServiceStableIpDiagram() {
   return (
     <div style={wrap}>
@@ -1503,7 +1621,7 @@ function IngressHostnameDiagram() {
           </div>
         </div>
       </div>
-      <div style={caption()}>hostname routing -- one IP, multiple domains</div>
+      <div style={caption()}>hostname routing - one IP, multiple domains</div>
     </div>
   );
 }
@@ -1760,6 +1878,10 @@ const COMPONENT_MAP = {
   EtcdQuorumDiagram,
   StackedVsExternalEtcdDiagram,
   KubeadmUpgradeDiagram,
+  NetworkPolicyDefaultDiagram,
+  EgressPolicyDiagram,
+  PortTargetPortDiagram,
+  ClusterIpDiagram,
   ServiceStableIpDiagram,
   IngressHostnameDiagram,
   StatefulSetVsDeploymentDiagram,

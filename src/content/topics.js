@@ -722,6 +722,7 @@ export const TOPICS = [
             },
             {
               q: "מה Service מסוג ClusterIP?",
+              tags: ["clusterip-service"],
               options: [
               "חשיפה חיצונית עם IP קבוע שמנתב תנועה ל-Nodes ב-cloud",
               "DNS חיצוני שמאפשר ל-Pods לגשת לשירותים מחוץ ל-Cluster",
@@ -826,6 +827,7 @@ export const TOPICS = [
             },
             {
               q: "What is a ClusterIP Service?",
+              tags: ["clusterip-service"],
               options: [
               "A VPN tunnel connecting Pods in different Clusters for secure communication",
               "External exposure that assigns a fixed IP reachable from outside the cluster via cloud DNS",
@@ -903,7 +905,7 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "DNS, Ingress ו-Traffic.\n🔹 Service DNS:\u200E service.namespace.svc.cluster.local\n🔹 Ingress:\u200E ניתוב HTTP/HTTPS לפי path או hostname. דורש Ingress Controller\n🔹 TLS ב-Ingress:\u200E spec.tls עם Secret שמכיל certificate\n🔹 Egress NetworkPolicy:\u200E מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 externalTrafficPolicy:\u200E Local שומר על client IP (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 Debug Service:\u200E kubectl get endpoints. אם ריק = selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n  - hosts: [app.example.com]\n    secretName: tls-cert\n  rules:\n  - host: app.example.com",
+        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 \u2066Debug Service\u2069 - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n  - hosts: [app.example.com]\n    secretName: tls-cert\n  rules:\n  - host: app.example.com",
         theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy - Local preserves client IP (no SNAT), Cluster distributes to all Nodes.\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n  - hosts: [app.example.com]\n    secretName: tls-cert\n  rules:\n  - host: app.example.com",
         questions: [
             {
@@ -957,16 +959,17 @@ export const TOPICS = [
                 "ניתוב לפי path: /api מופנה ל-service-api, /web מופנה ל-service-web באותו Ingress.\nכל URL path מופנה ל-Service אחר לפי כללי ניתוב.\nמספר Services חולקים דומיין אחד.",
             },
             {
-              q: "מה egress NetworkPolicy?",
+              q: "מה \u2066egress NetworkPolicy\u2069?",
+              tags: ["egress-policy"],
               options: [
               "מגביל תנועה נכנסת ל-Pod לפי labels של Pod המקור",
               "מגביל bandwidth של Pod לפי annotations",
-              "מנהל DNS resolution עבור Pods ב-Namespace",
+              "מנהל \u2066DNS resolution\u2069 עבור Pods ב-Namespace",
               "מגביל תנועה יוצאת מ-Pods",
 ],
               answer: 3,
               explanation:
-                "Egress NetworkPolicy מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nעם policyTypes: [Egress], כל יציאה שלא מורשת. חסומה.\nחובה לאפשר port 53 (DNS), אחרת name resolution נכשל.",
+                "\u2066Egress NetworkPolicy\u2069 מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים \u2066policyTypes: [Egress]\u2069, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר port 53 (DNS), אחרת \u2066name resolution\u2069 נכשל.",
             },
             {
               q: "כיצד Ingress מנתב לפי hostname?",
@@ -979,7 +982,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\napi.example.com מופנה ל-Service אחד, web.example.com ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.",
+                "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n- host: api.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: api-svc\n- host: web.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: web-svc\n```",
             },
             {
               q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
@@ -1060,6 +1063,7 @@ export const TOPICS = [
             },
             {
               q: "What is an egress NetworkPolicy?",
+              tags: ["egress-policy"],
               options: [
               "Limits the bandwidth a Pod can use based on annotations",
               "Restricts inbound traffic to Pods based on labels of the source Pod",
@@ -1081,7 +1085,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Each Ingress rule has a host field for hostname-based routing.\napi.example.com → one Service, web.example.com → another.\nA single Ingress can serve multiple domains.",
+                "Each Ingress rule has a host field for hostname-based routing.\napi.example.com routes to one Service, web.example.com to another.\nA single Ingress can serve multiple domains.\n\n```yaml\nrules:\n- host: api.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: api-svc\n- host: web.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: web-svc\n```",
             },
             {
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
@@ -1115,16 +1119,17 @@ export const TOPICS = [
         theoryEn: "NetworkPolicy, kube-proxy, and Debugging\n🔹 Default - all Pods can reach all Pods (allow-all) without NetworkPolicy.\n🔹 NetworkPolicy - requires a CNI plugin (Calico, Cilium). Blocking DNS? Open port 53 in egress.\n🔹 ipBlock - restricts egress to specific CIDRs (e.g. 0.0.0.0/0 for internet access).\n🔹 IPVS vs iptables - IPVS uses hash tables (O(1) lookup), iptables uses chains (O(n)).\n🔹 Labels are case-sensitive - app: App ≠ app: app, causing empty Endpoints.\n🔹 Service FQDN - service.namespace.svc.cluster.local (missing .svc = DNS failure).\n🔹 Ingress 503 - \"endpoints not found\" means the backend Service selector doesn't match any Pods.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
         questions: [
             {
-              q: "מה קורה ללא NetworkPolicy?",
+              q: "מה קורה ללא \u2066NetworkPolicy\u2069?",
+              tags: ["networkpolicy-default"],
               options: [
               "רק תנועת HTTPS מותרת ותנועת HTTP נחסמת",
-              "כל תנועה חסומה ו-Pods לא מצליחים לתקשר עד שמגדירים allow rules",
+              "כל תנועה חסומה ו-Pods לא מצליחים לתקשר עד שמגדירים \u2066allow rules\u2069",
               "כל Pod יכול לדבר עם כל Pod",
               "רק Pods באותו Namespace מדברים אחד עם השני",
 ],
               answer: 2,
               explanation:
-                "ללא NetworkPolicy, ברירת המחדל היא allow-all. כל Pod מדבר עם כל Pod.\nברגע שמוסיפים NetworkPolicy ל-Pod, כל traffic שלא מורשה. חסום.\nNetworkPolicy עובד כ-whitelist. רק מה שמוגדר מותר.",
+                "ללא \u2066NetworkPolicy\u2069, ברירת המחדל היא \u2066allow-all\u2069 - כל Pod מדבר עם כל Pod.\nברגע שמוסיפים \u2066NetworkPolicy\u2069 ל-Pod, כל traffic שלא מורשה במפורש חסום.\n\u2066NetworkPolicy\u2069 עובד כ-whitelist - רק מה שמוגדר מותר.",
             },
             {
               q: "מה נדרש כדי ש-NetworkPolicy יעבוד?",
@@ -1136,7 +1141,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "NetworkPolicy היא רק spec. האכיפה תלויה ב-`CNI plugin`.\nCalico, Cilium ו-Weave אוכפים. Flannel ו-kubenet: לא.\nב-Flannel, NetworkPolicy נוצרת אבל לא נאכפת. אפס הגנה.",
+                "\u2066NetworkPolicy\u2069 הוא משאב שמגדיר חוקים לתעבורה בין Pods.\nאבל Kubernetes עצמו רק מספק את ה-API וה-spec להגדרה של החוקים.\nהאכיפה בפועל מתבצעת על ידי \u2066CNI plugin\u2069 (\u2066Container Network Interface\u2069, רכיב רשת שמחבר את ה-Pods לרשת).\nPlugins כמו Calico, Cilium או \u2066Weave Net\u2069 יודעים ליישם את חוקי ה-\u2066NetworkPolicy\u2069 ברמת הרשת.\nלעומת זאת, plugins כמו Flannel או kubenet לא תומכים באכיפה של \u2066NetworkPolicy\u2069.\nבמקרים כאלה אפשר להגדיר \u2066NetworkPolicy\u2069, אבל בפועל היא לא תשפיע על התעבורה בין ה-Pods.\nלכן כדי ש-\u2066NetworkPolicy\u2069 יעבוד בפועל, חייבים להשתמש ב-\u2066CNI plugin\u2069 שתומך בכך.",
             },
             {
               q: "מה היתרון של IPVS על iptables ב-kube-proxy?",
@@ -1148,7 +1153,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "IPVS משתמש ב-hash tables במקום iptables chains.\nביצועים טובים יותר כשיש אלפי Services ב-Cluster.\niptables = O(n) linear. IPVS = O(1) hashing.",
+                "kube-proxy מנתב תעבורה ל-Services בתוך הקלסטר באמצעות מנגנוני הרשת של לינוקס.\nב-iptables כל Service מיושם כשרשרת חוקים, ולכן החיפוש אחרי יעד נעשה בצורה סדרתית ככל שמספר החוקים גדל.\nלעומת זאת IPVS (\u2066IP Virtual Server\u2069, מנגנון \u2066load balancing\u2069 בתוך הקרנל של לינוקס) משתמש ב-\u2066hash tables\u2069 כדי למצוא את היעד במהירות.\nלכן בקלסטרים גדולים IPVS בדרך כלל מספק ביצועים וסקיילביליות טובים יותר.",
             },
             {
               q: "נניח שיש Service בשם `app-svc`.\n\nהפקודה `kubectl get endpoints` מחזירה:\n\n```\nNAME      ENDPOINTS\napp-svc   <none>\n```\n\nקיים Pod עם label:\n\n```yaml\napp: App\n```\n\nוב-Service מוגדר selector:\n\n```yaml\nspec:\n  selector:\n    app: app\n```\n\nמדוע ה-Service לא מנתב תעבורה ל-Pods?",
@@ -1160,7 +1165,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Labels הם case-sensitive. app: App ≠ app: app. כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-app: App כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים. • Pod לא Ready:\u200E לא הבעיה כאן. • Namespace:\u200E לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
+                "Labels הם \u2066case-sensitive\u2069.\n\u2066app: App ≠ app: app\u2069. כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-\u2066app: App\u2069 כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים.\n• Pod לא Ready: לא הבעיה כאן.\n• Namespace: לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
             },
             {
               q: "NetworkPolicy חוסמת DNS.\nPods לא מצליחים לפתור שמות.\n\nהגדרה:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n  - ports:\n    - port: 443\n```\n\nמה חסר?",
@@ -1172,7 +1177,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Egress policy מאפשרת רק port 443. DNS (port 53) חסום.\nלהוסיף egress rule ל-port 53 (UDP+TCP) לאפשר DNS.\nכל egress policy חייבת לכלול port 53, אחרת name resolution נכשל.",
+                "\u2066Egress policy\u2069 זו מאפשרת תעבורה רק ל-\u2066port 443\u2069, ולכן תעבורת DNS נחסמת.\nDNS משתמש ב-\u2066port 53\u2069 (בדרך כלל UDP ולעיתים גם TCP), ולכן Pods לא מצליחים לבצע \u2066name resolution\u2069.\nכדי לאפשר DNS, צריך להוסיף כלל Egress שמאפשר תעבורה ל-\u2066port 53\u2069 (TCP ו-UDP), בדרך כלל לכיוון CoreDNS.",
             },
             {
               q: "ה-Ingress מחזיר שגיאת 503.\n\nהרצת:\n\n```\nkubectl describe ingress\n```\n\nפלט:\n\n```\nBackend: api-svc:80\n(<error: endpoints not found>)\n```\n\nמה הבעיה?",
@@ -1214,6 +1219,7 @@ export const TOPICS = [
         questionsEn: [
             {
               q: "What happens without a NetworkPolicy?",
+              tags: ["networkpolicy-default"],
               options: [
               "Only Pods within the same Namespace can communicate with each other",
               "All traffic is blocked and Pods cannot communicate until allow rules are defined",
@@ -1234,7 +1240,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "NetworkPolicy is just a spec. Enforcement depends on the CNI plugin.\nCalico, Cilium, Weave enforce it. Flannel, kubenet do not.\nOn Flannel, NetworkPolicy is created but completely ignored. Zero protection.",
+                "NetworkPolicy is a Kubernetes resource that defines traffic rules between Pods.\nHowever, Kubernetes itself only provides the API and specification for defining these rules.\nThe actual enforcement is performed by the CNI plugin (Container Network Interface, the networking component that connects Pods to the cluster network).\nPlugins such as Calico, Cilium, or Weave Net implement and enforce NetworkPolicy rules at the network level.\nIn contrast, plugins like Flannel or kubenet do not enforce NetworkPolicy.\nIn those cases, a NetworkPolicy object can exist in the cluster but it will have no effect on Pod traffic.\nTherefore, for NetworkPolicy to actually work, the cluster must use a CNI plugin that supports NetworkPolicy enforcement.",
             },
             {
               q: "What is the advantage of IPVS over iptables in kube-proxy?",
@@ -1246,7 +1252,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "IPVS uses hash tables instead of iptables linear chains.\nMuch better performance with thousands of Services.\niptables = O(n) linear scan. IPVS = O(1) hash lookup.",
+                "kube-proxy routes traffic to Services inside the cluster using Linux networking mechanisms.\nWith iptables, each Service becomes a chain of rules, so packets are matched sequentially as the rule set grows.\nIn contrast, IPVS (IP Virtual Server, a load balancing subsystem in the Linux kernel) uses hash tables to quickly locate the correct backend.\nBecause of this, IPVS usually provides better performance and scalability in large clusters.",
             },
             {
               q: "Given a Service named `app-svc`.\n\nRunning `kubectl get endpoints` returns:\n\n```\nNAME      ENDPOINTS\napp-svc   <none>\n```\n\nThe Pod has this label:\n\n```yaml\napp: App\n```\n\nThe Service selector is:\n\n```yaml\nspec:\n  selector:\n    app: app\n```\n\nWhy is the Service not routing traffic to the Pods?",
@@ -1270,7 +1276,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Egress policy allows only port 443. DNS (port 53) is blocked.\nAdd egress rule for port 53 (UDP+TCP) to allow DNS resolution.\nEvery egress policy must include port 53, or name resolution fails.",
+                "This egress policy allows traffic only to port 443, so DNS traffic is blocked.\nDNS uses port 53 (usually UDP and sometimes TCP), so Pods cannot perform name resolution.\nTo fix this, an egress rule must allow traffic to port 53 (both TCP and UDP), typically toward CoreDNS.",
             },
             {
               q: "An Ingress returns a 503 error.\n\nCommand:\n\n```\nkubectl describe ingress\n```\n\nOutput:\n\n```\nBackend: api-svc:80\n(<error: endpoints not found>)\n```\n\nWhat is the problem?",

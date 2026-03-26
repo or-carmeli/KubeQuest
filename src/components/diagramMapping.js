@@ -152,7 +152,11 @@ export const TAG_DIAGRAM_CONFIG = {
   "configmap-vs-secret":     { component: "ConfigMapVsSecretDiagram",     score: 4 },
   "limitrange-vs-quota":     { component: "LimitRangeVsQuotaDiagram",     score: 4 },
 
-  // ── networking (dns) ──────────────────────────────────────────────
+  // ── networking ────────────────────────────────────────────────────
+  "networkpolicy-default":   { component: "NetworkPolicyDefaultDiagram",    score: 4 },
+  "egress-policy":           { component: "EgressPolicyDiagram",            score: 4 },
+  "port-mapping":            { component: "PortTargetPortDiagram",         score: 4 },
+  "clusterip-service":       { component: "ClusterIpDiagram",             score: 4 },
   "dns-flow":                { component: "DnsResolutionDiagram",         score: 4 },
 
   // ── troubleshooting (status flows) ────────────────────────────────
