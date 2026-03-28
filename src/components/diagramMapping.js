@@ -19,6 +19,7 @@ export const TAG_DOMAINS = {
   security:    "Config & Security",
   scheduling:  "Scheduling",
   gitops:      "ArgoCD & GitOps",
+  linux:       "OS & Linux",
 };
 
 // domain prefix → human-readable domain
@@ -37,7 +38,8 @@ export function domainOf(tag) {
     gitops: "gitops",
     helm: "storage", cronjob: "workloads", namespace: "security", oom: "workloads", restart: "workloads",
     kubelet: "cluster-ops", requests: "security", configmap: "security", limitrange: "security",
-    dns: "networking", crashloop: "workloads", imagepull: "workloads",
+    dns: "networking", crashloop: "workloads", imagepull: "workloads", connection: "networking", lsof: "cluster-ops",
+    process: "linux", memory: "linux", linux: "linux", tcp: "networking", fd: "linux",
   };
   return map[prefix] || "other";
 }
@@ -166,4 +168,14 @@ export const TAG_DIAGRAM_CONFIG = {
   // ── troubleshooting (status flows) ────────────────────────────────
   "crashloop-flow":          { component: "CrashLoopDiagram",             score: 5 },
   "imagepull-flow":          { component: "ImagePullDiagram",             score: 4 },
+  "connection-refused":      { component: "ConnectionRefusedDiagram",     score: 4 },
+  "lsof-deleted-files":      { component: "LsofDeletedFilesDiagram",     score: 4 },
+
+  // ── linux / OS ───────────────────────────────────────────────────────
+  "process-d-state":         { component: "DStateDiagram",               score: 4 },
+  "memory-available":        { component: "MemoryAvailableDiagram",      score: 4 },
+  "process-zombie":          { component: "ZombieProcessDiagram",        score: 4 },
+  "linux-oom-killer":        { component: "LinuxOomKillerDiagram",       score: 4 },
+  "tcp-socket-leak":         { component: "TcpSocketLeakDiagram",        score: 4 },
+  "fd-leak":                 { component: "FdLeakDiagram",               score: 4 },
 };
