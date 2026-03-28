@@ -744,7 +744,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n```\n\nכל Pod עם label של \u200Eapp: my-app ייכנס לרשימת ה-Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
+                "Service מגדיר selector עם labels, ו-Endpoints controller מוצא Pods תואמים.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n    - port: 80\n      targetPort: 8080\n```\n\nכל Pod עם label של \u200Eapp: my-app ייכנס לרשימת ה-Endpoints.\nkube-proxy מנתב traffic לאחד מה-Endpoints.",
             },
             {
               q: "מה ההבדל בין port ל-targetPort ב-Service?",
@@ -849,7 +849,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "A Service defines a label selector. The Endpoints controller finds matching Pods.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n  - port: 80\n    targetPort: 8080\n```\n\nEvery Pod with the label app: my-app is added to the Endpoints list.\nkube-proxy routes traffic to one of the healthy endpoints.",
+                "A Service defines a label selector. The Endpoints controller finds matching Pods.\n\n```yaml\nspec:\n  selector:\n    app: my-app\n  ports:\n    - port: 80\n      targetPort: 8080\n```\n\nEvery Pod with the label app: my-app is added to the Endpoints list.\nkube-proxy routes traffic to one of the healthy endpoints.",
             },
             {
               q: "What is the difference between port and targetPort in a Service?",
@@ -905,8 +905,8 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 \u2066Debug Service\u2069 - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n  - hosts: [app.example.com]\n    secretName: tls-cert\n  rules:\n  - host: app.example.com",
-        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy - Local preserves client IP (no SNAT), Cluster distributes to all Nodes.\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n  - hosts: [app.example.com]\n    secretName: tls-cert\n  rules:\n  - host: app.example.com",
+        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 \u2066Debug Service\u2069 - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
+        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy - Local preserves client IP (no SNAT), Cluster distributes to all Nodes.\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
         questions: [
             {
               q: "מה ה-DNS name של service בשם api ב-namespace בשם prod?",
@@ -943,7 +943,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "מגדירים Secret מסוג kubernetes.io/tls עם tls.crt ו-tls.key.\nמפנים ל-Secret ב-spec.tls של ה-Ingress עם שמות ה-hosts.\nה-Ingress Controller מבצע TLS termination אוטומטית.\n\nדוגמה:\n```yaml\nspec:\n  tls:\n  - hosts:\n    - app.example.com\n    secretName: app-tls-secret\n```",
+                "מגדירים Secret מסוג kubernetes.io/tls עם tls.crt ו-tls.key.\nמפנים ל-Secret ב-spec.tls של ה-Ingress עם שמות ה-hosts.\nה-Ingress Controller מבצע TLS termination אוטומטית.\n\nדוגמה:\n```yaml\nspec:\n  tls:\n    - hosts:\n        - app.example.com\n      secretName: app-tls-secret\n```",
             },
             {
               q: "מה path-based routing ב-Ingress?",
@@ -982,7 +982,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n- host: api.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: api-svc\n- host: web.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: web-svc\n```",
+                "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n  - host: api.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: api-svc\n  - host: web.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: web-svc\n```",
             },
             {
               q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
@@ -1085,7 +1085,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Each Ingress rule has a host field for hostname-based routing.\napi.example.com routes to one Service, web.example.com to another.\nA single Ingress can serve multiple domains.\n\n```yaml\nrules:\n- host: api.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: api-svc\n- host: web.example.com\n  http:\n    paths:\n    - path: /\n      backend:\n        service:\n          name: web-svc\n```",
+                "Each Ingress rule has a host field for hostname-based routing.\napi.example.com routes to one Service, web.example.com to another.\nA single Ingress can serve multiple domains.\n\n```yaml\nrules:\n  - host: api.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: api-svc\n  - host: web.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: web-svc\n```",
             },
             {
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
@@ -1168,7 +1168,7 @@ export const TOPICS = [
                 "Labels הם \u2066case-sensitive\u2069.\n\u2066app: App ≠ app: app\u2069. כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-\u2066app: App\u2069 כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים.\n• Pod לא Ready: לא הבעיה כאן.\n• Namespace: לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
             },
             {
-              q: "NetworkPolicy חוסמת DNS.\nPods לא מצליחים לפתור שמות.\n\nהגדרה:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n  - ports:\n    - port: 443\n```\n\nמה חסר?",
+              q: "NetworkPolicy חוסמת DNS.\nPods לא מצליחים לפתור שמות.\n\nהגדרה:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n    - ports:\n        - port: 443\n```\n\nמה חסר?",
               options: [
               "ingress rule",
               "TLS certificate",
@@ -1204,7 +1204,7 @@ export const TOPICS = [
                 "FQDN מלא: service.namespace.svc.cluster.local.\napi-svc.backend.cluster.local חסר .svc ולא יפעל.\napi-svc.backend עובד בזכות search domains אבל אינו FQDN.",
             },
             {
-              q: "ה-Pod לא מצליח להגיע לאינטרנט.\n\nהרצת:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nתוצאה: timeout\n\nהגדרת NetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n  - to:\n    - podSelector: {}\n```\n\nמה חסר?",
+              q: "ה-Pod לא מצליח להגיע לאינטרנט.\n\nהרצת:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nתוצאה: timeout\n\nהגדרת NetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nמה חסר?",
               options: [
               "ingress rule לאפשר תגובות נכנסות",
               "Service מסוג LoadBalancer ב-Namespace",
@@ -1267,7 +1267,7 @@ export const TOPICS = [
                 "Labels are case-sensitive. app: App ≠ app: app → empty Endpoints.\nChange selector to app: App to match the Pod label.\n• Wrong port: connection error, not empty Endpoints. • Not Ready: different issue. • Namespace: not relevant here.\nAlways verify with `kubectl get endpoints` and `kubectl get pods --show-labels`.",
             },
             {
-              q: "A NetworkPolicy blocks DNS.\nPods cannot resolve names.\n\nPolicy:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n  - ports:\n    - port: 443\n```\n\nWhat is missing?",
+              q: "A NetworkPolicy blocks DNS.\nPods cannot resolve names.\n\nPolicy:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n    - ports:\n        - port: 443\n```\n\nWhat is missing?",
               options: [
               "A TLS certificate",
               "A namespaceSelector",
@@ -1303,7 +1303,7 @@ export const TOPICS = [
                 "Full FQDN: service.namespace.svc.cluster.local.\napi-svc.backend.cluster.local is missing .svc and won't resolve.\napi-svc.backend works via search domains but is not a FQDN.",
             },
             {
-              q: "A Pod cannot reach the internet.\n\nCommand:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nResult: timeout\n\nNetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n  - to:\n    - podSelector: {}\n```\n\nWhat is missing?",
+              q: "A Pod cannot reach the internet.\n\nCommand:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nResult: timeout\n\nNetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nWhat is missing?",
               options: [
               "A LoadBalancer Service in the Namespace",
               "An egress rule with ipBlock: cidr: 0.0.0.0/0 to allow external IPs",
@@ -2187,8 +2187,8 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "RBAC, אבטחה ומגבלות Namespace.\n🔹 Role:\u200E הרשאות ב-Namespace אחד. ClusterRole = כלל הקלאסטר\n🔹 RoleBinding:\u200E קושר Role ל-Subject (User/ServiceAccount)\n🔹 ServiceAccount:\u200E זהות Pod בקלאסטר\n🔹 PSA:\u200E Pod Security Admission. label על Namespace אוכף restricted/baseline/privileged\n🔹 Admission Webhook:\u200E validating/mutating, רץ לפני שמירה ל-etcd\n🔹 LimitRange vs ResourceQuota:\u200E LimitRange = לכל Container, ResourceQuota = סך ה-Namespace\n🔹 seccomp:\u200E מגביל syscalls לצמצום שטח התקיפה\n🔹 External Secrets Operator:\u200E מסנכרן secrets מ-AWS/GCP/Azure דרך SecretStore\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
-        theoryEn: "RBAC, Security, and Namespace Limits\n🔹 Role - permissions scoped to one Namespace. ClusterRole = cluster-wide.\n🔹 RoleBinding - binds a Role to a Subject (User or ServiceAccount).\n🔹 ServiceAccount - identity for a Pod within the cluster.\n🔹 PSA - Pod Security Admission. Namespace label enforces restricted/baseline/privileged standards.\n🔹 Admission webhooks - validating/mutating hooks that run before saving to etcd.\n🔹 LimitRange vs ResourceQuota - LimitRange = per-container defaults, ResourceQuota = Namespace aggregate.\n🔹 seccomp - restricts syscalls to reduce attack surface.\n🔹 External Secrets Operator - syncs secrets from AWS/GCP/Azure via SecretStore + ExternalSecret.\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\",\"list\",\"watch\"]",
+        theory: "RBAC, אבטחה ומגבלות Namespace.\n🔹 Role:\u200E הרשאות ב-Namespace אחד. ClusterRole = כלל הקלאסטר\n🔹 RoleBinding:\u200E קושר Role ל-Subject (User/ServiceAccount)\n🔹 ServiceAccount:\u200E זהות Pod בקלאסטר\n🔹 PSA:\u200E Pod Security Admission. label על Namespace אוכף restricted/baseline/privileged\n🔹 Admission Webhook:\u200E validating/mutating, רץ לפני שמירה ל-etcd\n🔹 LimitRange vs ResourceQuota:\u200E LimitRange = לכל Container, ResourceQuota = סך ה-Namespace\n🔹 seccomp:\u200E מגביל syscalls לצמצום שטח התקיפה\n🔹 External Secrets Operator:\u200E מסנכרן secrets מ-AWS/GCP/Azure דרך SecretStore\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n  - apiGroups: [\"\"]\n    resources: [\"pods\"]\n    verbs: [\"get\",\"list\",\"watch\"]",
+        theoryEn: "RBAC, Security, and Namespace Limits\n🔹 Role - permissions scoped to one Namespace. ClusterRole = cluster-wide.\n🔹 RoleBinding - binds a Role to a Subject (User or ServiceAccount).\n🔹 ServiceAccount - identity for a Pod within the cluster.\n🔹 PSA - Pod Security Admission. Namespace label enforces restricted/baseline/privileged standards.\n🔹 Admission webhooks - validating/mutating hooks that run before saving to etcd.\n🔹 LimitRange vs ResourceQuota - LimitRange = per-container defaults, ResourceQuota = Namespace aggregate.\n🔹 seccomp - restricts syscalls to reduce attack surface.\n🔹 External Secrets Operator - syncs secrets from AWS/GCP/Azure via SecretStore + ExternalSecret.\nCODE:\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nrules:\n  - apiGroups: [\"\"]\n    resources: [\"pods\"]\n    verbs: [\"get\",\"list\",\"watch\"]",
         questions: [
             {
               q: "מה ההבדל בין Role ל-ClusterRole?",
@@ -2289,7 +2289,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "External Secrets Operator (ESO) מסנכרן secrets מ-provider חיצוני (כמו AWS Secrets Manager) לתוך Kubernetes Secrets באופן אוטומטי.\nהערכים עצמם נשארים ב-provider - רק ההגדרות נשמרות ב-Git.\n\nשלושת המשאבים המרכזיים:\n• SecretStore - מגדיר את החיבור ל-provider החיצוני (AWS, GCP, Vault וכו׳)\n• ExternalSecret - מגדיר איזה secret למשוך ואיך למפות אותו\n• Kubernetes Secret - נוצר אוטומטית בתוך ה-Cluster על ידי ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n  - secretKey: password\n    remoteRef:\n      key: prod/db/password\n```",
+                "External Secrets Operator (ESO) מסנכרן secrets מ-provider חיצוני (כמו AWS Secrets Manager) לתוך Kubernetes Secrets באופן אוטומטי.\nהערכים עצמם נשארים ב-provider - רק ההגדרות נשמרות ב-Git.\n\nשלושת המשאבים המרכזיים:\n• SecretStore - מגדיר את החיבור ל-provider החיצוני (AWS, GCP, Vault וכו׳)\n• ExternalSecret - מגדיר איזה secret למשוך ואיך למפות אותו\n• Kubernetes Secret - נוצר אוטומטית בתוך ה-Cluster על ידי ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n    - secretKey: password\n      remoteRef:\n        key: prod/db/password\n```",
             },
         ],
         questionsEn: [
@@ -2392,7 +2392,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "External Secrets Operator (ESO) syncs secrets from an external provider (like AWS Secrets Manager) into Kubernetes Secrets automatically.\nThe actual secret values stay in the provider - only the configuration resources are stored in Git.\n\nThree key resources:\n• SecretStore - defines the connection to the external provider (AWS, GCP, Vault, etc.)\n• ExternalSecret - defines which secret to pull and how to map it\n• Kubernetes Secret - created automatically inside the cluster by ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n  - secretKey: password\n    remoteRef:\n      key: prod/db/password\n```",
+                "External Secrets Operator (ESO) syncs secrets from an external provider (like AWS Secrets Manager) into Kubernetes Secrets automatically.\nThe actual secret values stay in the provider - only the configuration resources are stored in Git.\n\nThree key resources:\n• SecretStore - defines the connection to the external provider (AWS, GCP, Vault, etc.)\n• ExternalSecret - defines which secret to pull and how to map it\n• Kubernetes Secret - created automatically inside the cluster by ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n    - secretKey: password\n      remoteRef:\n        key: prod/db/password\n```",
             },
         ],
       },
@@ -4531,7 +4531,7 @@ export const TOPICS = [
               "להוסיף replicas: null ל-manifests ב-Git",
             ],
             answer: 1,
-            explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\n```yaml\nignoreDifferences:\n- group: apps\n  kind: Deployment\n  jsonPointers:\n  - /spec/replicas\n```\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
+            explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\n```yaml\nignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n      - /spec/replicas\n```\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
           },
           {
             q: "ב-ArgoCD, מה Sync Waves מאפשר לך לעשות?",
@@ -4564,7 +4564,7 @@ export const TOPICS = [
               "צריך למחוק את ה-Application דרך CLI ולא דרך UI",
             ],
             answer: 0,
-            explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n  - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
+            explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n    - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
             q: "מה ההבדל בין prune: true ל-selfHeal: true?",
@@ -4639,7 +4639,7 @@ export const TOPICS = [
               "להעביר ל-client-side apply במקום server-side",
             ],
             answer: 0,
-            explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\n```yaml\nignoreDifferences:\n- group: \"*\"\n  kind: \"*\"\n  managedFieldsManagers:\n  - \"kube-controller-manager\"\n```\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
+            explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\n```yaml\nignoreDifferences:\n  - group: \"*\"\n    kind: \"*\"\n    managedFieldsManagers:\n      - \"kube-controller-manager\"\n```\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
           },
           {
             q: "sync של אפליקציה גדולה נכשל עם:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nמה הבעיה ומה הפתרון?",
@@ -4675,7 +4675,7 @@ export const TOPICS = [
             explanation: "ArgoCD Rollback מחזיר את הקלאסטר ל-sync state קודם מתוך ההיסטוריה.\nזה מהיר כי הוא לא דורש שינוי ב-Git.\nאבל חשוב להבין: אחרי rollback, האפליקציה תהיה OutOfSync עד שה-Git יתעדכן.\n\ngit revert הוא הפתרון ה-GitOps טהור, אבל דורש pipeline.\nב-production emergency, rollback ב-ArgoCD ואז git revert הוא הגישה המעשית.",
           },
           {
-            q: "ApplicationSet עם Matrix generator:\n\n```yaml\ngenerators:\n- matrix:\n    generators:\n    - clusters:\n        selector:\n          matchLabels:\n            env: production\n    - list:\n        elements:\n        - app: payments\n          team: billing\n        - app: orders\n          team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
+            q: "ApplicationSet עם Matrix generator:\n\n```yaml\ngenerators:\n  - matrix:\n      generators:\n        - clusters:\n            selector:\n              matchLabels:\n                env: production\n        - list:\n            elements:\n              - app: payments\n                team: billing\n              - app: orders\n                team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
             tags: ["gitops-appset-matrix"],
             options: [
               "3 - אחד לכל cluster",
