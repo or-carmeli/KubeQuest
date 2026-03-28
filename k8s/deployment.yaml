@@ -19,7 +19,7 @@ spec:
         - name: kubequest
           image: ghcr.io/or-carmeli/kubequest:2.4.0  # pin to release tag; use @sha256:<digest> for immutable deploys
           ports:
-            - containerPort: 80
+            - containerPort: 8080
 
           # Resource requests and limits prevent OOMKilled and noisy-neighbour issues
           resources:
@@ -34,7 +34,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 15
 
@@ -42,7 +42,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 3
             periodSeconds: 10
 
@@ -50,7 +50,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false   # nginx needs to write tmp files
-            runAsNonRoot: false             # nginx requires root to bind port 80
+            runAsNonRoot: true
 
       # Graceful shutdown: wait for in-flight requests before terminating
       terminationGracePeriodSeconds: 30
