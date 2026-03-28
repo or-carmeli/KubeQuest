@@ -182,6 +182,23 @@ describe("slash normalization regression", () => {
       const ltrs = ltrTexts(result);
       expect(ltrs.some((t) => t.includes("Secret/ConfigMap"))).toBe(true);
     });
+
+    it("/tmp. trailing dot excluded from path (sentence punctuation)", () => {
+      const result = renderBidiInner("הצרכנים הגדולים הם /var/log או /tmp.", "he", "t");
+      const ltrs = ltrTexts(result);
+
+      // Paths should be captured without trailing dot
+      expect(ltrs.some((t) => t.includes("/var/log"))).toBe(true);
+      expect(ltrs.some((t) => t.includes("/tmp"))).toBe(true);
+      // The dot should NOT be inside an LTR span (it's sentence punctuation)
+      expect(ltrs.some((t) => t.endsWith("."))).toBe(false);
+    });
+
+    it("/var/log/app.log keeps internal dots", () => {
+      const result = renderBidiInner("/var/log/app.log", "he", "t");
+      const ltrs = ltrTexts(result);
+      expect(ltrs.some((t) => t.includes("/var/log/app.log"))).toBe(true);
+    });
   });
 });
 
@@ -378,7 +395,7 @@ describe("rendering path integrity", () => {
 // ─── REGRESSION: CLI colon-separator handling ────────────────────────────────
 
 describe("CLI colon-separator regression", () => {
-  it("kubectl describe: does NOT capture colon as part of command", () => {
+  it("kubectl describe: renders as inline keyword, not TerminalBlock", () => {
     const input = "kubectl describe: events ומידע מפורט על resource";
     const result = renderBidiBlock(input, "he");
     const text = flattenText(result);
@@ -387,34 +404,37 @@ describe("CLI colon-separator regression", () => {
     expect(text).toContain("kubectl describe");
     expect(text).toContain("events");
 
-    // Find TerminalBlock elements (rendered by splitCliParts for CLI commands)
+    // "command: description" patterns render inline (keyword handler), not as TerminalBlock
     const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
-    expect(termBlocks.length).toBe(1);
+    expect(termBlocks.length).toBe(0);
 
-    // The CLI command should be just "kubectl describe" without trailing colon
-    const cliText = flattenText(termBlocks[0]).trim();
-    expect(cliText).toBe("kubectl describe");
+    // The command should be in an LTR span without trailing colon
+    const ltrs = ltrTexts(result);
+    expect(ltrs).toContain("kubectl describe");
   });
 
-  it("kubectl logs: does NOT capture colon as part of command", () => {
+  it("kubectl logs: renders as inline keyword, not TerminalBlock", () => {
     const input = "kubectl logs: לוגים של קונטיינר";
     const result = renderBidiBlock(input, "he");
 
+    // Should be inline, not TerminalBlock
     const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
-    expect(termBlocks.length).toBe(1);
-    const cliText = flattenText(termBlocks[0]).trim();
-    expect(cliText).toBe("kubectl logs");
+    expect(termBlocks.length).toBe(0);
+
+    const ltrs = ltrTexts(result);
+    expect(ltrs).toContain("kubectl logs");
   });
 
-  it("kubectl get pods -A: does NOT capture colon as part of command", () => {
+  it("kubectl get pods -A: renders as inline keyword, not TerminalBlock", () => {
     const input = "kubectl get pods -A: כל ה-Pods בכל ה-Namespaces";
     const result = renderBidiBlock(input, "he");
 
-    // 4-token command renders as TerminalBlock
+    // Should be inline keyword, not TerminalBlock
     const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
-    expect(termBlocks.length).toBe(1);
-    const cliText = flattenText(termBlocks[0]).trim();
-    expect(cliText).toBe("kubectl get pods -A");
+    expect(termBlocks.length).toBe(0);
+
+    const ltrs = ltrTexts(result);
+    expect(ltrs.some((t) => t.includes("kubectl get pods"))).toBe(true);
   });
 
   it("port numbers with colon (8080:80) are still captured correctly in renderBidi", () => {
@@ -522,5 +542,111 @@ describe("U+200E LTR mark stripping", () => {
     const text = flattenText(result);
 
     expect(text).toContain("Term:");
+  });
+});
+
+// ─── REGRESSION: Linux CLI commands in Hebrew text ──────────────────────────
+
+describe("Linux CLI commands bidi rendering", () => {
+  it("ps aux --sort=-%mem renders as single LTR unit in renderBidi", () => {
+    const input = "ps aux --sort=-%mem ממיין תהליכים לפי שימוש בזיכרון";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    // The entire command should be in one LTR span, not fragmented
+    expect(ltrs.some((t) => t.includes("ps aux") && t.includes("--sort=-%mem"))).toBe(true);
+  });
+
+  it("lsof +D /var/log renders as single LTR unit in renderBidi", () => {
+    const input = "lsof +D /var/log עוזר לזהות איזה תהליך מחזיק את הקובץ";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs.some((t) => t.includes("lsof") && t.includes("/var/log"))).toBe(true);
+  });
+
+  it("ss -tlnp | grep 8080 renders as single LTR unit in renderBidi", () => {
+    const input = "ss -tlnp | grep 8080 כדי לבדוק אם יש תהליך שמאזין";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs.some((t) => t.includes("ss -tlnp") && t.includes("grep 8080"))).toBe(true);
+  });
+
+  it("du -sh /* renders as single LTR unit in renderBidi", () => {
+    const input = "du -sh /* שמציגה את הגודל של כל תיקייה";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs.some((t) => t.includes("du -sh /*"))).toBe(true);
+  });
+
+  it("systemctl restart kubelet renders as TerminalBlock in renderBidiBlock", () => {
+    const input = "הרץ systemctl restart kubelet כדי לאתחל";
+    const result = renderBidiBlock(input, "he");
+
+    const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
+    expect(termBlocks.length).toBe(1);
+    const cliText = flattenText(termBlocks[0]).trim();
+    expect(cliText).toBe("systemctl restart kubelet");
+  });
+
+  it("tail -f /var/log/syslog renders as single LTR unit", () => {
+    const input = "tail -f /var/log/syslog עוקב אחרי לוגים בזמן אמת";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+
+    expect(ltrs.some((t) => t.includes("tail -f /var/log/syslog"))).toBe(true);
+  });
+
+  it("ps aux: description renders colon correctly (theory card format)", () => {
+    const input = "ps aux: תמונת מצב של כל התהליכים הרצים במערכת";
+    const result = renderBidiBlock(input, "he");
+    const text = flattenText(result);
+
+    // Command and description should both be present
+    expect(text).toContain("ps aux");
+    expect(text).toContain("תמונת מצב");
+
+    // Should be inline keyword, not TerminalBlock (colon means label format)
+    const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
+    expect(termBlocks.length).toBe(0);
+
+    // "ps aux" should be in an LTR span
+    const ltrs = ltrTexts(result);
+    expect(ltrs.some((t) => t.includes("ps aux"))).toBe(true);
+  });
+
+  it("free -h: description renders colon correctly (theory card format)", () => {
+    const input = "free -h: סיכום שימוש בזיכרון";
+    const result = renderBidiBlock(input, "he");
+
+    const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
+    expect(termBlocks.length).toBe(0);
+
+    const ltrs = ltrTexts(result);
+    expect(ltrs.some((t) => t.includes("free -h"))).toBe(true);
+  });
+
+  it("renderBidiInner merges adjacent LTR parts into single span", () => {
+    // Even when CLI_COMMAND_RE doesn't match, adjacent Latin+flag parts should merge
+    const input = "האופציה +D מחפשת קבצים פתוחים";
+    const result = renderBidiInner(input, "he", "t");
+    const ltrs = ltrTexts(result);
+
+    // +D should be in an LTR span
+    expect(ltrs.some((t) => t.includes("+D") || t.includes("D"))).toBe(true);
+  });
+
+  // @regression - flag with numeric argument must stay in same LTR span
+  // Without this fix, "-n 50" renders as "50 -n" because the number is left
+  // as neutral text that gets bidi-reordered in RTL context.
+  it("flag with numeric argument stays together: -n 50", () => {
+    const input = "האופציה -n 50 מגבילה את הפלט";
+    const result = renderBidiInner(input, "he", "t");
+    const ltrs = ltrTexts(result);
+
+    // -n 50 should be captured as a single LTR span
+    expect(ltrs.some((t) => t.includes("-n 50"))).toBe(true);
   });
 });

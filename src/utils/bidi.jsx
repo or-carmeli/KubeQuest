@@ -94,31 +94,55 @@ export function renderBidiInner(text, lang, keyPrefix) {
   if (!hasHebrew(text)) {
     return <span key={keyPrefix} dir="ltr" style={{unicodeBidi:"isolate"}}>{text}</span>;
   }
-  // Split on: flag sequences (--flag, -f), slash-paths (/api/v1), Latin word sequences, or left-arrow
+  // Split on: flag sequences (--flag, -f, +D), slash-paths (/api/v1), Latin word sequences, or left-arrow
   // Slash-paths require NOT preceded by Hebrew to avoid capturing "/ServiceAccount" from "משתמש/ServiceAccount"
   // Colon is only captured mid-token when followed by an alphanumeric char (port:8080, key:value)
   // but NOT when followed by whitespace/Hebrew (B: בדוק) — keeps sentence colons in RTL flow.
-  const parts = text.split(/((?:(?<![\u0590-\u05FF])--?[A-Za-z][\w\-]*(?:=[^\s\u0590-\u05FF]*)?(?:\s+(?=(?:--?)?[A-Za-z]))?)+|(?:(?<![\u0590-\u05EA])\/[A-Za-z][A-Za-z0-9\-_/.:]*)|(?:[A-Za-z](?:[A-Za-z0-9\-_/=]|:[A-Za-z0-9]|\.[A-Za-z0-9])*(?:\s+(?=(?:--?)?[A-Za-z]))?)+|[←])/);
+  // The flag pattern also matches +[A-Z] (e.g. lsof +D) for commands that use + flags.
+  // The flag sub-pattern captures an optional trailing numeric argument (e.g. -n 50, --tail 100)
+  // so that the number stays in the same LTR run as the flag and doesn't get bidi-reordered.
+  // Slash-path uses (?<!\.) lookbehind to exclude trailing dots that are sentence
+  // punctuation (e.g. "/tmp." → captures "/tmp", leaves "." for RTL flow).
+  // Dots mid-path (/var/log.d/) are fine since they're followed by more path chars.
+  const parts = text.split(/((?:(?<![\u0590-\u05FF])(?:--?|\+)[A-Za-z][\w\-]*(?:=[^\s\u0590-\u05FF]*)?(?:\s+\d[\d.]*)?(?:\s+(?=(?:--?|\+)?[A-Za-z]))?)+|(?:(?<![\u0590-\u05EA])\/[A-Za-z][A-Za-z0-9\-_/.:]*(?<!\.))|(?:[A-Za-z](?:[A-Za-z0-9\-_/=]|:[A-Za-z0-9]|\.[A-Za-z0-9])*(?:\s+(?=(?:--?|\+)?[A-Za-z]))?)+|[←])/);
   if (parts.length <= 1) return text;
-  const startsWithLatin = /^[A-Za-z]/.test(text) || /^--?[A-Za-z]/.test(text) || /^\/[A-Za-z]/.test(text);
-  return parts.map((part, idx) => {
-    const k = `${keyPrefix}-${idx}`;
-    if (/^[A-Za-z]/.test(part) || /^--?[A-Za-z]/.test(part) || /^\/[A-Za-z]/.test(part)) {
-      return [idx === 0 && startsWithLatin && lang === "he" ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",margin:"0 2px"}}>{"\u2066"}{part}{"\u2069"}</span>];
+  // Merge adjacent LTR parts separated only by whitespace into a single LTR span.
+  // Without merging, "ps aux" and "--sort=-%mem" become separate LTR islands
+  // that get visually reversed in RTL paragraph context.
+  const isLtr = (p) => p && (/^[A-Za-z]/.test(p) || /^(?:--?|\+)[A-Za-z]/.test(p) || /^\/[A-Za-z]/.test(p));
+  const merged = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (isLtr(parts[i])) {
+      let combined = parts[i];
+      // Keep merging while the next separator is whitespace-only and the part after is LTR
+      while (i + 2 < parts.length && parts[i + 1] && /^\s+$/.test(parts[i + 1]) && isLtr(parts[i + 2])) {
+        combined += parts[i + 1] + parts[i + 2];
+        i += 2;
+      }
+      merged.push({ type: "ltr", value: combined });
+    } else if (/^[←]$/.test(parts[i])) {
+      merged.push({ type: "arrow", value: parts[i] });
+    } else if (parts[i]) {
+      merged.push({ type: "rtl", value: parts[i] });
     }
-    // Left-arrow - wrap in LTR isolation to prevent bidi reordering
-    if (/^[←]$/.test(part)) {
-      return <span key={k} dir="ltr" style={{unicodeBidi:"isolate",padding:"0 2px"}}>{part}</span>;
+  }
+  const startsWithLtr = merged.length > 0 && merged[0].type === "ltr";
+  return merged.map((item, idx) => {
+    const k = `${keyPrefix}-${idx}`;
+    if (item.type === "ltr") {
+      return [idx === 0 && startsWithLtr && lang === "he" ? "\u200F" : null, <span key={k} dir="ltr" style={{unicodeBidi:"isolate",margin:"0 2px"}}>{"\u2066"}{item.value}{"\u2069"}</span>];
+    }
+    if (item.type === "arrow") {
+      return <span key={k} dir="ltr" style={{unicodeBidi:"isolate",padding:"0 2px"}}>{item.value}</span>;
     }
     // Non-matched (RTL) text - keep in natural RTL flow.
     // Using dir="rtl" + unicodeBidi:"isolate" (no extra Unicode chars) prevents
     // short Hebrew words like "או" from being visually corrupted at line-wrap boundaries.
     // Prepend RTL mark (U+200F) to punctuation-only segments following an LTR span
     // so neutral chars like "." don't get visually absorbed by the preceding LTR run.
-    if (!part) return null;
-    if (lang !== "he") return part;
-    const needsAnchor = idx > 0 && /^[\s]*[.,;:!?)}\]>]/.test(part);
-    return <span key={k} dir="rtl" style={{unicodeBidi:"isolate"}}>{needsAnchor ? "\u200F" : ""}{part}</span>;
+    if (lang !== "he") return item.value;
+    const needsAnchor = idx > 0 && /^[\s]*[.,;:!?)}\]>]/.test(item.value);
+    return <span key={k} dir="rtl" style={{unicodeBidi:"isolate"}}>{needsAnchor ? "\u200F" : ""}{item.value}</span>;
   });
 }
 
@@ -282,7 +306,7 @@ export function renderBidi(text, lang, opts) {
 // so parenthetical explanations like "(see memory usage)" are not captured as part of the command).
 // The (?![-–—](?:\s|$)) lookahead prevents a standalone dash/en-dash/em-dash separator
 // (e.g. "helm install - deploys…") from being swallowed into the command match.
-export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|crictl|etcdctl|curl|wget)(?:\s+(?![-\u2013\u2014](?:\s|$))(?!(?:is|are|was|were|has|can|will|the|a|an|on|in|of|to|for|from|with|not|and|or|but|it|this|that|which|what|however|because|fails|returns|shows|sets|sees|stops|manages|watches|requests|runs|cluster|running|package|packages)(?:\s|$|[.,;:!?]))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
+export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|crictl|etcdctl|curl|wget|ps|lsof|head|tail|grep|df|du|free|top|ss|systemctl|journalctl|dmesg|strace|perf|iostat|sar|cat|ls|find|awk|sed|wc|vmstat|netstat|tcpdump|iptables|sysctl|mount|umount|uptime|apt|yum|pip|npm|make|fsck)(?:\s+(?![-\u2013\u2014](?:\s|$))(?!(?:is|are|was|were|has|can|will|the|a|an|on|in|of|to|for|from|with|not|and|or|but|it|its|this|that|these|those|which|what|how|however|because|fails|returns|shows|sets|sees|stops|manages|watches|requests|runs|cluster|running|package|packages|memory|space|point|file|files|output|process|them|up|down|over|all|every|most|about|by|at|as|into|only|also|so|if|be|no|yes|do|does|did|used|using|when|then|after|before|during|between|against|without|under|through)(?:\s|$|[.,;:!?]))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
 
 // Splits text on CLI commands and renders commands as LTR code blocks on separate lines.
 export function splitCliParts(text, lang, keyPrefix) {
@@ -327,6 +351,17 @@ export function renderBidiBlock(text, lang) {
       }
     }
     return lang === "he" ? renderBidi(text, lang) : renderBidiInner(text, lang, "e");
+  }
+  // If the CLI command is used as a keyword label ("ps aux: description"),
+  // delegate to renderBidi which handles the "Keyword: explanation" pattern inline,
+  // keeping the colon between the command and the description.
+  // Without this, splitCliParts extracts the command as a standalone TerminalBlock
+  // and orphans the colon at the start of the Hebrew description line.
+  if (lang === "he") {
+    const kwCheck = bare.match(/^([A-Za-z][^:\u0590-\u05EA]*):\s+([\s\S]+)$/);
+    if (kwCheck && hasHebrew(kwCheck[2])) {
+      return renderBidi(text, lang);
+    }
   }
   // CLI command found (any language): handle backtick-wrapped inline code first,
   // then CLI commands in remaining segments

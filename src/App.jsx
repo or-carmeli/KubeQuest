@@ -3938,11 +3938,11 @@ export default function K8sQuestApp() {
       if (isNewSection) {
         // Section divider (not before first section)
         if (sectionIdx > 0) {
-          elements.push(<div key={`div-${i}`} style={{height:1,background:"rgba(255,255,255,0.06)",margin:"14px 0 12px"}}/>);
+          elements.push(<div key={`div-${i}`} style={{height:1,background:"rgba(255,255,255,0.06)",margin:"10px 0 8px"}}/>);
         }
         sectionIdx++;
         isNewSection = false;
-        elements.push(<div key={i} style={{color:"var(--text-primary)",fontSize:16,fontWeight:800,marginBottom:6,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{line}</div>);
+        elements.push(<div key={i} style={{color:"var(--text-primary)",fontSize:13,fontWeight:700,marginBottom:4,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{line}</div>);
       } else {
         // Description line - smaller, dimmer
         elements.push(<div key={i} style={{color:"var(--text-secondary)",fontSize:13,lineHeight:1.6,marginBottom:6,direction:dir,textAlign:dir==="rtl"?"right":"left"}}>{renderBidiBlock(line,lang)}</div>);
