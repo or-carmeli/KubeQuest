@@ -30,14 +30,14 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@sentry/react": "^10.45.0",
-    "@supabase/supabase-js": "^2.99.3",
+    "@sentry/react": "^10.46.0",
+    "@supabase/supabase-js": "^2.100.1",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^2.0.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "web-vitals": "^5.1.0"
+    "web-vitals": "^5.2.0"
   },
   "devDependencies": {
     "@sentry/vite-plugin": "^5.1.1",
