@@ -84,7 +84,7 @@ const subLabel = (extra) => ({
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// DIAGRAM COMPONENTS -19 kept (score >= 4)
+// DIAGRAM COMPONENTS -25 kept (score >= 4)
 //
 // Removed 9 low-value diagrams:
 //   PortTargetPortDiagram  (score 2) -trivial port mapping, text sufficient
@@ -1167,6 +1167,253 @@ function ImagePullDiagram() {
   );
 }
 
+// ── Connection Refused (TCP RST) ────────────────────────────────────
+function ConnectionRefusedDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={row({ gap: 24, width: "100%", maxWidth: 300, alignItems: "flex-start" })}>
+        <div style={col({ gap: 0, flex: 1, alignItems: "center" })}>
+          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "7px 14px", fontSize: 10 })}>
+            Client
+          </div>
+        </div>
+        <div style={col({ gap: 0, flex: 1, alignItems: "center" })}>
+          <div style={smallBox(C.red, C.redBg, C.redText, { padding: "7px 14px", fontSize: 10 })}>
+            Server:8080
+          </div>
+        </div>
+      </div>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 260, marginTop: 6 })}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
+          <span style={{ fontSize: 10, color: C.cyanText, fontFamily: MONO, whiteSpace: "nowrap" }}>SYN</span>
+          <div style={{ flex: 1, borderTop: "1px solid rgba(6,182,212,0.4)", position: "relative" }}>
+            <span style={{ position: "absolute", right: -2, top: -5, color: "rgba(6,182,212,0.6)", fontSize: 10 }}>{"\u25B6"}</span>
+          </div>
+        </div>
+        <div style={{ height: 6 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
+          <div style={{ flex: 1, borderTop: "1px solid rgba(239,68,68,0.4)", position: "relative" }}>
+            <span style={{ position: "absolute", left: -2, top: -5, color: "rgba(239,68,68,0.6)", fontSize: 10 }}>{"\u25C0"}</span>
+          </div>
+          <span style={{ fontSize: 10, color: C.redText, fontFamily: MONO, whiteSpace: "nowrap" }}>RST</span>
+        </div>
+      </div>
+      <div style={{ marginTop: 8 }}>
+        <div style={smallBox(C.red, C.redBg, C.redText, { padding: "5px 16px", fontSize: 10 })}>
+          Connection refused
+        </div>
+      </div>
+      <div style={caption()}>no process listening on port = kernel sends RST</div>
+    </div>
+  );
+}
+
+// ── lsof deleted files (open FD after rm) ───────────────────────────
+function LsofDeletedFilesDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+          nginx writes to /var/log/app.log
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        </div>
+        <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+          rm /var/log/app.log
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        </div>
+        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+          file gone from ls, disk still full
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        </div>
+        <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+          lsof +D /var/log → nginx holds FD
+        </div>
+      </div>
+      <div style={caption()}>deleted file + open FD = disk space not freed</div>
+    </div>
+  );
+}
+
+// ── D state (uninterruptible sleep) ─────────────────────────────────
+function DStateDiagram() {
+  const steps = [
+    { text: "Process requests I/O",    color: C.green,  bg: C.greenBg,  textColor: C.greenText },
+    { text: "Kernel handles I/O op",   color: C.indigo, bg: C.indigoBg, textColor: C.indigoText },
+    { text: "I/O stalls (disk / NFS)", color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
+    { text: "D state — no signals",    color: C.red,    bg: C.redBg,    textColor: C.redText },
+  ];
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div style={smallBox(s.color, s.bg, s.textColor, { width: "100%", padding: "7px 14px", fontSize: 10 })}>
+              {s.text}
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>kernel I/O wait — even SIGKILL blocked until I/O completes</div>
+    </div>
+  );
+}
+
+// ── Memory: available vs free ───────────────────────────────────────
+function MemoryAvailableDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 6, width: "100%", maxWidth: 280 })}>
+        <div style={label(C.dim, { fontSize: 10, marginBottom: 2 })}>16 GB total</div>
+        <div style={{ width: "100%", position: "relative", height: 32, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: 0, left: 0, width: "93.75%", height: "100%", background: C.redBg, borderRight: `2px solid ${C.redText}` }} />
+          <div style={{ position: "absolute", top: 0, left: 0, width: "68.75%", height: "100%", background: C.amberBg, borderRight: `2px dashed ${C.amberText}` }} />
+        </div>
+        <div style={row({ gap: 12, justifyContent: "center" })}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: C.amberBg, border: `1px solid ${C.amber}` }} />
+            <span style={{ fontSize: 9, color: C.amberText, fontFamily: MONO }}>used 15G</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: C.redBg, border: `1px solid ${C.red}` }} />
+            <span style={{ fontSize: 9, color: C.redText, fontFamily: MONO }}>available 500M</span>
+          </div>
+        </div>
+        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "5px 14px", fontSize: 9 })}>
+          ~3% left — swap or OOM Killer imminent
+        </div>
+      </div>
+      <div style={caption()}>available (not free) is the real metric</div>
+    </div>
+  );
+}
+
+// ── Zombie process lifecycle ────────────────────────────────────────
+function ZombieProcessDiagram() {
+  const steps = [
+    { text: "Parent forks child",      color: C.indigo, bg: C.indigoBg, textColor: C.indigoText },
+    { text: "Child process exits",     color: C.green,  bg: C.greenBg,  textColor: C.greenText },
+    { text: "Parent skips wait()",     color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
+    { text: "Zombie (Z) in table",     color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "Fix: restart parent",     color: C.cyan,   bg: C.cyanBg,   textColor: C.cyanText },
+  ];
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div style={smallBox(s.color, s.bg, s.textColor, { width: "100%", padding: "7px 14px", fontSize: 10 })}>
+              {s.text}
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>zombie = exited child, parent never called wait()</div>
+    </div>
+  );
+}
+
+// ── Linux OOM Killer flow ───────────────────────────────────────────
+function LinuxOomKillerDiagram() {
+  const steps = [
+    { text: "RAM nearly exhausted",     color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
+    { text: "Kernel OOM Killer fires",  color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "Picks highest-memory PID", color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "Process killed (SIGKILL)", color: C.purple, bg: C.purpleBg, textColor: C.purpleText },
+  ];
+
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div style={smallBox(s.color, s.bg, s.textColor, { width: "100%", padding: "7px 14px", fontSize: 10 })}>
+              {s.text}
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ textAlign: "center", padding: "2px 0" }}>
+                <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={caption()}>dmesg: "Out of memory: Killed process"</div>
+    </div>
+  );
+}
+
+// ── TCP connection leak (orphan + TIME_WAIT) ────────────────────────
+function TcpSocketLeakDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "7px 14px", fontSize: 10 })}>
+          Active TCP connections
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+        </div>
+        <div style={row({ gap: 6, width: "100%" })}>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText, { flex: 1, padding: "7px 6px", fontSize: 9 })}>
+            orphan: 12.5K
+          </div>
+          <div style={smallBox(C.red, C.redBg, C.redText, { flex: 1, padding: "7px 6px", fontSize: 9 })}>
+            TIME_WAIT: 65K
+          </div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+        </div>
+        <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { width: "100%", padding: "7px 14px", fontSize: 10 })}>
+          TCP stack pressure → latency
+        </div>
+      </div>
+      <div style={caption()}>connections not closing properly → resource exhaustion</div>
+    </div>
+  );
+}
+
+// ── File descriptor exhaustion ──────────────────────────────────────
+function FdLeakDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 6, width: "100%", maxWidth: 280 })}>
+        <div style={label(C.dim, { fontSize: 10, marginBottom: 0 })}>FD limit: 65,536</div>
+        <div style={{ width: "100%", position: "relative", height: 32, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: 0, left: 0, width: "70%", height: "100%", background: C.amberBg, borderRight: `2px solid ${C.amberText}` }} />
+        </div>
+        <div style={row({ gap: 4, justifyContent: "space-between", width: "100%" })}>
+          <span style={{ fontSize: 9, color: C.amberText, fontFamily: MONO }}>45,892 open</span>
+          <span style={{ fontSize: 9, color: C.redText, fontFamily: MONO }}>~70% used</span>
+        </div>
+        <div style={{ ...dashed, width: "100%", margin: "2px 0" }} />
+        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+          At limit → EMFILE on open/socket/accept
+        </div>
+      </div>
+      <div style={caption()}>FD leak — raising limit only delays the crash</div>
+    </div>
+  );
+}
+
 // ── Kubelet Role ────────────────────────────────────────────────────
 function KubeletDiagram() {
   return (
@@ -2001,6 +2248,14 @@ const COMPONENT_MAP = {
   StatefulSetVsDeploymentDiagram,
   WaitForConsumerDiagram,
   PodStatusPhasesDiagram,
+  ConnectionRefusedDiagram,
+  LsofDeletedFilesDiagram,
+  DStateDiagram,
+  MemoryAvailableDiagram,
+  ZombieProcessDiagram,
+  LinuxOomKillerDiagram,
+  TcpSocketLeakDiagram,
+  FdLeakDiagram,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
