@@ -39,7 +39,7 @@
         { "key": "Access-Control-Allow-Origin", "value": "https://kubequest.online" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com https://*.ingest.us.sentry.io https://ipapi.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.google.com; font-src 'self' data:; connect-src 'self' https://knzawpdrpahilmohzpbl.supabase.co https://va.vercel-scripts.com https://vitals.vercel-insights.com https://*.ingest.us.sentry.io https://ipapi.co https://formspree.io; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
         }
       ]
     }
