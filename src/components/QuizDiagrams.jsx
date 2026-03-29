@@ -485,6 +485,67 @@ function HeadlessServiceDiagram() {
   );
 }
 
+// ── 16b. externalTrafficPolicy: Cluster vs Local ────────────────────
+function ExternalTrafficPolicyDiagram() {
+  const panelBox = (border, bg, extra) => ({
+    border: `1.5px solid ${border}`, borderRadius: 10,
+    padding: "10px 8px 8px", background: bg, flex: 1, minWidth: 0,
+    boxSizing: "border-box", ...extra,
+  });
+  const nodeBox = (border, bg, extra) => ({
+    border: `1px solid ${border}`, borderRadius: 8,
+    padding: "6px 6px 5px", background: bg, width: "100%",
+    boxSizing: "border-box", ...extra,
+  });
+  const badge = (color, text) => (
+    <span style={{ fontSize: 7, color, fontFamily: MONO, fontWeight: 700, letterSpacing: 0.3 }}>{text}</span>
+  );
+  return (
+    <div style={{ ...wrap, maxWidth: 340 }}>
+      <div style={row({ gap: 8, width: "100%", alignItems: "stretch", flexWrap: "nowrap" })}>
+        {/* ── Cluster panel ── */}
+        <div style={panelBox(C.amber, C.amberBg)}>
+          <div style={label(C.amberText, { fontSize: 9, marginBottom: 6 })}>Cluster</div>
+          <div style={col({ gap: 3, width: "100%" })}>
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { fontSize: 8, padding: "3px 6px" })}>Client</div>
+            <div style={arrow({ fontSize: 10 })}>&#8595;</div>
+            <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { fontSize: 8, padding: "3px 6px" })}>LB</div>
+            <div style={arrow({ fontSize: 10 })}>&#8595;</div>
+            <div style={nodeBox(C.amber, "rgba(245,158,11,0.03)")}>
+              <div style={subLabel({ marginBottom: 3 })}>Node 1</div>
+              <div style={smallBox("transparent", "transparent", C.dim, { fontSize: 8, padding: "2px 4px", border: "1px dashed rgba(255,255,255,0.15)" })}>no Pod</div>
+            </div>
+            <div style={arrow({ fontSize: 10 })}>&#8595; {badge(C.amberText, "SNAT")}</div>
+            <div style={nodeBox(C.green, "rgba(16,185,129,0.03)")}>
+              <div style={subLabel({ marginBottom: 3 })}>Node 2</div>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 6px" })}>Pod</div>
+            </div>
+            <div style={{ fontSize: 8, color: C.redText, fontFamily: MONO, textAlign: "center", marginTop: 2 }}>Pod sees Node IP</div>
+          </div>
+        </div>
+        {/* ── divider ── */}
+        <div style={{ width: 1, background: "rgba(255,255,255,0.08)", alignSelf: "stretch" }} />
+        {/* ── Local panel ── */}
+        <div style={panelBox(C.green, C.greenBg)}>
+          <div style={label(C.greenText, { fontSize: 9, marginBottom: 6 })}>Local</div>
+          <div style={col({ gap: 3, width: "100%" })}>
+            <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { fontSize: 8, padding: "3px 6px" })}>Client</div>
+            <div style={arrow({ fontSize: 10 })}>&#8595;</div>
+            <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { fontSize: 8, padding: "3px 6px" })}>LB</div>
+            <div style={arrow({ fontSize: 10 })}>&#8595;</div>
+            <div style={nodeBox(C.green, "rgba(16,185,129,0.03)")}>
+              <div style={subLabel({ marginBottom: 3 })}>Node 1</div>
+              <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "3px 6px" })}>Pod</div>
+            </div>
+            <div style={{ fontSize: 8, color: C.greenText, fontFamily: MONO, textAlign: "center", marginTop: 2 }}>Client IP preserved</div>
+          </div>
+        </div>
+      </div>
+      <div style={caption({ marginTop: 10 })}>Cluster = any Pod + SNAT &nbsp;|&nbsp; Local = same Node + real IP</div>
+    </div>
+  );
+}
+
 // ── 17. Topology Spread ─────────────────────────────────────────────
 function TopologySpreadDiagram() {
   return (
@@ -2204,6 +2265,7 @@ const COMPONENT_MAP = {
   TaintsTolerationsDiagram,
   IngressVsLbDiagram,
   HeadlessServiceDiagram,
+  ExternalTrafficPolicyDiagram,
   TopologySpreadDiagram,
   ArgoCdSyncDiagram,
   AppOfAppsDiagram,
@@ -2341,7 +2403,7 @@ export function getDiagramForQuestion(tags) {
 
 // Tags that intentionally have no diagram -suppress dev warnings
 const _knownInfoTags = new Set([
-  "port-mapping", "traffic-policy", "admission-control",
+  "port-mapping", "admission-control",
   "resource-limits", "node-lifecycle", "storage-interface",
   "storage-zone", "image-pull", "dns-resolution",
   "kubeadm-join", "kubeadm-init",

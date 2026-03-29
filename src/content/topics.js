@@ -130,7 +130,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion. CronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
+                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion.\nCronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
             },
             {
               q: "מה resource requests ב-Pod?",
@@ -353,7 +353,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
+                "QoS (Quality of Service) קובע את סדר העדיפויות של Pods כש-Node חווה לחץ משאבים.\nה-QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
             },
             {
               q: "מה ephemeral container ב-Kubernetes?",
@@ -481,13 +481,13 @@ export const TOPICS = [
               tags: ["daemonset-topology"],
               options: [
               "שה-Pod רץ פעם אחת עד להשלמה ולא מופעל מחדש. התנהגות של Job",
-              "DaemonSet מבטיח Pod אחד רץ על כל Node ב-Cluster",
+              "DaemonSet מבטיח ש-Pod אחד רץ על כל Node בקלסטר",
               "שה-Pod רץ רק על Node שמסומן עם label מתאים דרך nodeSelector",
               "שה-Pod מופעל מחדש לפי לוח זמנים קבוע. התנהגות של CronJob",
 ],
               answer: 1,
               explanation:
-                "DaemonSet מבטיח Pod אחד על כל Node ב-Cluster.\nכש-Node חדש מצטרף, Pod נוסף אוטומטית. כש-Pod נכשל, הוא מופעל מחדש.\nשימושי ל-logging (Fluentd), monitoring (node-exporter), ו-CNI plugins.",
+                "DaemonSet מבטיח ש-Pod אחד רץ על כל Node בקלסטר.\nכש-Node חדש מצטרף, Pod נוסף אוטומטית. כש-Pod נכשל, הוא מופעל מחדש.\nשימושי ל-logging (Fluentd), monitoring (node-exporter), ו-CNI plugins.",
             },
             {
               q: "מה תפקיד ה-HPA ב-Kubernetes?",
@@ -513,7 +513,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "OOMKilled (exit code 137): הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-resources.limits.memory.\nה-Linux kernel אוכף מגבלות זיכרון דרך cgroups. כשהקונטיינר מנסה להקצות יותר מהמותר, ה-OOM Killer הורג את התהליך כדי להגן על ה-Node.\n\nאיתור:\nkubectl describe pod <pod>\nReason: OOMKilled | Exit Code: 137\nה-Pod עלול להיכנס ל-CrashLoopBackOff.\n\nפתרון: הגדל limits.memory, או חפש memory leak בקוד.",
+                "OOMKilled (exit code 137): הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-`limits.memory`.\nפתרון: הגדל `limits.memory`, או חפש memory leak בקוד.",
             },
             {
               q: "מה התפקיד של topologySpreadConstraints בתזמון Pods ב-Kubernetes?",
@@ -550,7 +550,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "StatefulSet יוצר Pods בסדר (OrderedReady):\u200E Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר podManagementPolicy: Parallel.\n• PVC: Pod-1 לא נוצר בכלל. • Quota:\u200E גם Pod-0 לא היה עולה. • imagePullSecret:\u200E היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
+                "StatefulSet יוצר Pods בסדר (OrderedReady):\u200E Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר `podManagementPolicy: Parallel`.\n• PVC: Pod-1 לא נוצר בכלל. • Quota:\u200E גם Pod-0 לא היה עולה. • imagePullSecret:\u200E היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
             },
             {
               q: "עדכון Rolling update נתקע.\n\nהרצת:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nפלט:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nבנוסף, מוגדר maxUnavailable: 0\n\nמה הסיבה?",
@@ -574,7 +574,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "selector (app: backend) לא תואם ל-labels של ה-Pods (app: backend-v2).\nלסנכרן בין selector.matchLabels ל-template.metadata.labels.\nDeployment מוצא את ה-Pods שלו אך ורק לפי selector. אי-התאמה = אפס שליטה.",
+                "הבעיה היא חוסר התאמה בין ה-labels של ה-Pods לבין ה-selector של ה-Deployment.\nה-Deployment מחפש Pods עם:\n```yaml\napp: backend\n```\nאבל ה-Pods מסומנים עם:\n```\napp=backend-v2\n```\nב-Kubernetes ה-Deployment מנהל Pods רק אם ה-labels שלהם תואמים בדיוק ל-selector.\nכאן אין התאמה, ולכן ה-Deployment לא מזהה את ה-Pods ולא מנהל אותם.",
             },
         ],
         questionsEn: [
@@ -615,7 +615,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "OOMKilled (exit code 137): container exceeded the memory limit defined in resources.limits.memory.\nThe Linux kernel enforces memory limits via cgroups. When a container tries to allocate beyond the allowed limit, the OOM Killer terminates the process to protect the Node.\n\nDetection:\nkubectl describe pod <pod>\nReason: OOMKilled | Exit Code: 137\nPod may restart and enter CrashLoopBackOff.\n\nFix: increase limits.memory, or investigate a memory leak in the app.",
+                "OOMKilled (exit code 137): container exceeded the memory limit defined in `limits.memory`.\nFix: increase `limits.memory`, or investigate a memory leak in the app.",
             },
             {
               q: "What is the role of topologySpreadConstraints in Kubernetes scheduling?",
@@ -676,7 +676,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Selector (app: backend) doesn't match Pod labels (app: backend-v2).\nAlign selector.matchLabels with template.metadata.labels.\nA Deployment finds its Pods solely by selector. Mismatch = zero control.",
+                "The issue is a mismatch between the Pod labels and the Deployment selector.\nThe Deployment is looking for Pods with:\n```yaml\napp: backend\n```\nBut the Pods are labeled:\n```\napp=backend-v2\n```\nIn Kubernetes, a Deployment manages Pods only if their labels match the selector exactly.\nSince the labels do not match, the Deployment does not recognize or manage those Pods.",
             },
         ],
       },
@@ -774,6 +774,7 @@ export const TOPICS = [
             },
             {
               q: "מה מטרת Ingress ב-Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "סוג Pod מיוחד שאחראי על ניהול חיבורי HTTPS",
               "storage manager שמנהל PVCs מסוג network storage",
@@ -879,6 +880,7 @@ export const TOPICS = [
             },
             {
               q: "What is the purpose of an Ingress in Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "Routes HTTP/HTTPS by path or hostname to different Services through one entry point",
               "A special Pod type responsible for managing HTTPS connections to the API server",
@@ -905,8 +907,8 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 \u2066Debug Service\u2069 - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
-        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy - Local preserves client IP (no SNAT), Cluster distributes to all Nodes.\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
+        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 `Debug Service` - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
+        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy:\n  Local - preserves client IP (no SNAT)\n  Cluster - distributes to all Nodes\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
         questions: [
             {
               q: "מה ה-DNS name של service בשם api ב-namespace בשם prod?",
@@ -969,7 +971,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "\u2066Egress NetworkPolicy\u2069 מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים \u2066policyTypes: [Egress]\u2069, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר port 53 (DNS), אחרת \u2066name resolution\u2069 נכשל.",
+                "Egress NetworkPolicy מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים `policyTypes: [Egress]`, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר `port 53 (DNS)`, אחרת name resolution נכשל.",
             },
             {
               q: "כיצד Ingress מנתב לפי hostname?",
@@ -985,13 +987,13 @@ export const TOPICS = [
                 "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n  - host: api.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: api-svc\n  - host: web.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: web-svc\n```",
             },
             {
-              q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
+              q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`",
               tags: ["traffic-policy"],
               options: [
               "Cluster מפזר עומס שווה בין כל ה-Pods; Local שולח תנועה רק ל-Pod הקרוב ביותר",
               "Local דורש externalIPs מוגדרים; Cluster עובד עם כל סוגי Service כולל ClusterIP",
               "Local מעביר תנועה רק ל-Pods על אותו Node ושומר client IP; Cluster מעביר לכל Pod ומבצע SNAT",
-              "Local שומר על session affinity אוטומטי; Cluster דורש הגדרת sessionAffinity: ClientIP",
+              "Local שומר על session affinity אוטומטי; Cluster דורש הגדרת `sessionAffinity: ClientIP`",
 ],
               answer: 2,
               explanation:
@@ -1091,7 +1093,7 @@ export const TOPICS = [
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
               tags: ["traffic-policy"],
               options: [
-              "Local maintains automatic session affinity; Cluster requires explicit sessionAffinity: ClientIP",
+              "Local maintains automatic session affinity; Cluster requires explicit `sessionAffinity: ClientIP`",
               "Local routes traffic only to Pods on the same Node and preserves client IP; Cluster forwards to any Pod and performs SNAT",
               "Local requires configured externalIPs; Cluster works with all Service types including ClusterIP",
               "Cluster distributes load equally across all Pods; Local sends traffic only to the nearest Pod",
@@ -1115,7 +1117,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "NetworkPolicy, kube-proxy ו-debug.\n🔹 ברירת מחדל: allow-all בין כל ה-Pods\n🔹 NetworkPolicy:\u200E דורש CNI תומך (Calico, Cilium). חוסם DNS? פתח port 53 ב-egress\n🔹 ipBlock:\u200E מגביל egress ל-CIDR ספציפי (לדוגמה 0.0.0.0/0 לאינטרנט)\n🔹 IPVS vs iptables:\u200E IPVS משתמש ב-hash tables (O(1)), iptables ב-chains (O(n))\n🔹 Labels:\u200E case-sensitive. app: App ≠ app: app = endpoints ריקים\n🔹 Service FQDN:\u200E service.namespace.svc.cluster.local (חסר .svc = כשל DNS)\n🔹 Ingress 503:\u200E endpoints not found = selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
+        theory: "NetworkPolicy, kube-proxy ו-debug.\n🔹 ברירת מחדל: allow-all בין כל ה-Pods\n🔹 NetworkPolicy:\u200E דורש CNI תומך (Calico, Cilium). חוסם DNS? פתח port 53 ב-egress\n🔹 ipBlock:\u200E מגביל egress ל-CIDR ספציפי (לדוגמה 0.0.0.0/0 לאינטרנט)\n🔹 `IPVS` vs `iptables` - IPVS משתמש ב-hash tables עם O(1), iptables ב-chains עם O(n)\n🔹 Labels:\u200E case-sensitive. app: App ≠ app: app = endpoints ריקים\n🔹 Service FQDN:\u200E service.namespace.svc.cluster.local (חסר .svc = כשל DNS)\n🔹 `Ingress 503` - הודעת `endpoints not found` מסמנת שה-selector של ה-Service לא תואם Pods\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
         theoryEn: "NetworkPolicy, kube-proxy, and Debugging\n🔹 Default - all Pods can reach all Pods (allow-all) without NetworkPolicy.\n🔹 NetworkPolicy - requires a CNI plugin (Calico, Cilium). Blocking DNS? Open port 53 in egress.\n🔹 ipBlock - restricts egress to specific CIDRs (e.g. 0.0.0.0/0 for internet access).\n🔹 IPVS vs iptables - IPVS uses hash tables (O(1) lookup), iptables uses chains (O(n)).\n🔹 Labels are case-sensitive - app: App ≠ app: app, causing empty Endpoints.\n🔹 Service FQDN - service.namespace.svc.cluster.local (missing .svc = DNS failure).\n🔹 Ingress 503 - \"endpoints not found\" means the backend Service selector doesn't match any Pods.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
         questions: [
             {
@@ -1165,7 +1167,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Labels הם \u2066case-sensitive\u2069.\n\u2066app: App ≠ app: app\u2069. כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-\u2066app: App\u2069 כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים.\n• Pod לא Ready: לא הבעיה כאן.\n• Namespace: לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
+                "Labels הם case-sensitive.\n`app: App` ≠ `app: app` - כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-`app: App` כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים.\n• Pod לא Ready: לא הבעיה כאן.\n• Namespace: לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
             },
             {
               q: "NetworkPolicy חוסמת DNS.\nPods לא מצליחים לפתור שמות.\n\nהגדרה:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n    - ports:\n        - port: 443\n```\n\nמה חסר?",
@@ -1189,7 +1191,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "מה אומרת השגיאה:\nendpoints not found אומר שה-Service קיים, אבל אין לו Endpoints.\n\nאיך Endpoints נוצרים:\nכש-Service מוגדר עם selector, Kubernetes מחפש Pods עם labels תואמים.\nאם יש Pods תואמים, הם נרשמים כ-Endpoints של ה-Service.\nאם אין Pods תואמים, רשימת ה-Endpoints ריקה.\n\nלמה זה גורם ל-503:\nה-Ingress מנתב traffic ל-Service, אבל ה-Service לא יודע לאן להעביר אותו כי אין Endpoints.\nלכן ה-Ingress Controller מחזיר 503 (Service Unavailable).\n\nאיך מתקנים:\nבודקים את ה-selector של ה-Service ואת ה-labels של ה-Pods ומוודאים שהם תואמים.",
+                "השגיאה אומרת שה-Service קיים, אבל אין לו Endpoints.\nEndpoints נוצרים כשיש Pods שה-labels שלהם תואמים ל-selector של ה-Service.\nאם אין Pods תואמים, לא נוצרים Endpoints, ולכן ה-Ingress לא יודע לאן להעביר את הבקשה ומחזיר 503 (Service Unavailable).\nבדרך כלל הסיבה היא חוסר התאמה בין ה-selector של ה-Service לבין ה-labels של ה-Pods.",
             },
             {
               q: "ה-Pod מנסה לגשת ל-Service ולא מצליח.\n\nכתובת שנוסתה:\n\n```\napi-svc.backend.cluster.local\n```\n\nמה ה-FQDN הנכון של Service בשם api-svc ב-Namespace backend?",
@@ -1208,12 +1210,12 @@ export const TOPICS = [
               options: [
               "ingress rule לאפשר תגובות נכנסות",
               "Service מסוג LoadBalancer ב-Namespace",
-              "הגדרת hostNetwork: true ב-spec של ה-Pod",
-              "egress rule עם ipBlock: cidr: 0.0.0.0/0 לאפשר גישה ל-IPs חיצוניים",
+              "הגדרת `hostNetwork: true` ב-spec של ה-Pod",
+              "egress rule עם `ipBlock: {cidr: 0.0.0.0/0}` לאפשר גישה ל-IPs חיצוניים",
 ],
               answer: 3,
               explanation:
-                "podSelector:{} מאפשר תנועה רק ל-Pods. IPs חיצוניים חסומים.\nלהוסיף egress rule עם ipBlock: {cidr: '0.0.0.0/0'} + port 53 ל-DNS.\npodSelector מכסה רק Pods בתוך ה-Cluster, לא IPs חיצוניים.",
+                "`podSelector: {}` מאפשר תנועה רק ל-Pods. IPs חיצוניים חסומים.\nלהוסיף egress rule עם `ipBlock: {cidr: 0.0.0.0/0}` + `port 53` ל-DNS.\npodSelector מכסה רק Pods בתוך ה-Cluster, לא IPs חיצוניים.",
             },
         ],
         questionsEn: [
@@ -1288,7 +1290,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "What the error means:\nendpoints not found means the Service exists, but it has no Endpoints.\n\nHow Endpoints are created:\nWhen a Service has a selector, Kubernetes looks for Pods with matching labels.\nIf matching Pods exist, they are registered as Endpoints for that Service.\nIf no Pods match, the Endpoints list is empty.\n\nWhy this causes a 503:\nThe Ingress routes traffic to the Service, but the Service has nowhere to send it because there are no Endpoints.\nSo the Ingress Controller returns 503 (Service Unavailable).\n\nHow to fix:\nCheck the Service selector and the Pod labels and make sure they match.",
+                "The error means the Service exists, but it has no Endpoints.\nEndpoints are created when Pods have labels that match the Service selector.\nIf no Pods match, no Endpoints are created, so the Ingress has nowhere to route the request and returns 503 (Service Unavailable).\nThe most common cause is a mismatch between the Service selector and the Pod labels.",
             },
             {
               q: "A Pod tries to access a Service and fails.\n\nAddress tried:\n\n```\napi-svc.backend.cluster.local\n```\n\nWhat is the correct FQDN for Service api-svc in Namespace backend?",
@@ -1306,13 +1308,13 @@ export const TOPICS = [
               q: "A Pod cannot reach the internet.\n\nCommand:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nResult: timeout\n\nNetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nWhat is missing?",
               options: [
               "A LoadBalancer Service in the Namespace",
-              "An egress rule with ipBlock: cidr: 0.0.0.0/0 to allow external IPs",
+              "An egress rule with `ipBlock: {cidr: 0.0.0.0/0}` to allow external IPs",
               "An ingress rule to allow response traffic",
-              "Setting hostNetwork: true in the Pod spec",
+              "Setting `hostNetwork: true` in the Pod spec",
 ],
               answer: 1,
               explanation:
-                "podSelector:{} allows traffic only to Pods. External IPs are blocked.\nAdd egress rule with ipBlock: {cidr: '0.0.0.0/0'} + port 53 for DNS.\npodSelector covers only in-cluster Pods, not external IPs.",
+                "`podSelector: {}` allows traffic only to Pods. External IPs are blocked.\nAdd egress rule with `ipBlock: {cidr: 0.0.0.0/0}` + `port 53` for DNS.\npodSelector covers only in-cluster Pods, not external IPs.",
             },
         ],
       },
@@ -2059,16 +2061,16 @@ export const TOPICS = [
                 "LimitRange מגדיר ברירות מחדל ומגבלות CPU/Memory per-container ב-Namespace.\nמזריק default values ואוכף min/max אם container לא מציין requests/limits.\nללא LimitRange, Pod בודד יכול לצרוך את כל משאבי ה-Node.",
             },
             {
-              q: "מה עושה ההגדרה runAsNonRoot: true ב-securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
+              q: "מה עושה ההגדרה `runAsNonRoot: true` ב-securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
               "מצפינה את מערכת הקבצים של הקונטיינר",
-              "מונעת מהקונטיינר לרוץ כמשתמש root (UID 0)",
+              "מונעת מהקונטיינר לרוץ כמשתמש root (`UID 0`)",
               "מגבילה את צריכת ה-CPU של הקונטיינר לפי limits",
               "מגבילה את גישת הרשת של הקונטיינר",
 ],
               answer: 1,
               explanation:
-                "ההגדרה runAsNonRoot: true מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (UID 0).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
+                "ההגדרה `runAsNonRoot: true` מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (`UID 0`).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -2160,16 +2162,16 @@ export const TOPICS = [
                 "LimitRange sets default and max CPU/Memory per container in a Namespace.\nAuto-injects defaults and enforces min/max if containers don't specify them.\nWithout LimitRange, a single Pod can consume all Node resources.",
             },
             {
-              q: "What does the runAsNonRoot: true setting do in securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
+              q: "What does the `runAsNonRoot: true` setting do in securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
               "Encrypts the container's filesystem",
-              "Prevents the container from running as root user (UID 0)",
+              "Prevents the container from running as root user (`UID 0`)",
               "Limits the container's CPU usage according to limits",
               "Restricts the container's network access",
 ],
               answer: 1,
               explanation:
-                "The runAsNonRoot: true setting ensures the process inside the container does not run as root (UID 0).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
+                "The `runAsNonRoot: true` setting ensures the process inside the container does not run as root (`UID 0`).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
             },
             {
               q: "What is the difference between resource requests and limits?",
@@ -4290,7 +4292,7 @@ export const TOPICS = [
             explanation: "טווח הפורטים הזמין הוא 32768-60999, כלומר 28,232 פורטים בסך הכל.\nss -s מראה 28,231 חיבורים פעילים, נשאר פורט אחד בלבד.\nחיבור חדש ייכשל עם EADDRNOTAVAIL כי אין פורטים פנויים.\nהפתרון המיידי הוא להרחיב את הטווח או להפעיל tcp_tw_reuse.\nלטווח ארוך, connection pooling מונע מצב שבו כל בקשה פותחת חיבור חדש.",
           },
           {
-            q: "אתה בודק שגיאות בלוגים של הקרנל ומריץ:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של הקרנל, מספרים שליליים מייצגים קודי שגיאה מוגדרים (\u2066errno\u2069).\n\nמה \u2066error -12\u2069 מציין ככל הנראה",
+            q: "אתה בודק שגיאות בלוגים של הקרנל ומריץ:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של הקרנל, מספרים שליליים מייצגים קודי שגיאה מוגדרים (\u2066errno\u2069).\n\nמה `error -12` מציין ככל הנראה",
             options: [
               "\u2066ENOMEM\u2069 - הקרנל לא הצליח להקצות זיכרון עבור ה-\u2066driver\u2069",
               "\u2066EACCES\u2069 - ה-\u2066driver\u2069 דורש הרשאות \u2066root\u2069 כדי להיטען",
@@ -4567,7 +4569,7 @@ export const TOPICS = [
             explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n    - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
-            q: "מה ההבדל בין prune: true ל-selfHeal: true?",
+            q: "מה ההבדל בין prune לבין selfHeal במנגנון auto-sync של ArgoCD",
             tags: ["gitops-reconcile"],
             options: [
               "prune מוחק משאבים שנמחקו מ-Git, selfHeal מתקן drift בקלאסטר",
@@ -4576,7 +4578,7 @@ export const TOPICS = [
               "prune פועל פעם ביום, selfHeal פועל בזמן אמת",
             ],
             answer: 0,
-            explanation: "prune: true - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\nselfHeal: true - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
+            explanation: "`prune: true` - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\n`selfHeal: true` - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
           },
           {
             q: "sync נכשל עם השגיאה:\n\n```\none or more objects failed to apply:\nnamespace \"payments\" not found\n```\n\nמה הפתרון?",

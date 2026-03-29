@@ -16,6 +16,7 @@ import {
   renderHebrewPrefixTerms,
   renderBidi,
   renderBidiBlock,
+  CLI_COMMAND_RE,
 } from "./bidi";
 import { TerminalBlock } from "../components/CodeBlocks";
 
@@ -444,6 +445,60 @@ describe("CLI colon-separator regression", () => {
 
     // The port-forward command with port mapping should be together
     expect(ltrs.some((t) => t.includes("8080:80"))).toBe(true);
+  });
+});
+
+// ─── REGRESSION: CLI tool name inside longer words ───────────────────────────
+
+describe("CLI tool name inside longer words regression", () => {
+  // @regression - "liveness probe" was split into "livene" + CLI match "ss probe"
+  // because "ss" is a CLI tool and the regex had no word-boundary lookbehind.
+  it("liveness probe is NOT split by CLI_COMMAND_RE", () => {
+    expect(CLI_COMMAND_RE.test("liveness probe")).toBe(false);
+  });
+
+  it("readiness probe is NOT split by CLI_COMMAND_RE", () => {
+    expect(CLI_COMMAND_RE.test("readiness probe")).toBe(false);
+  });
+
+  it("renderBidi keeps 'liveness probe' intact in Hebrew text", () => {
+    const input = "מה liveness probe עושה";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+    expect(ltrs.some((t) => t.includes("liveness probe"))).toBe(true);
+    // "ss probe" should only appear as part of "liveness probe", never standalone
+    expect(ltrs.some((t) => t.includes("ss probe") && !t.includes("liveness probe"))).toBe(false);
+  });
+
+  it("renderBidiBlock keeps 'readiness probe' intact in Hebrew text", () => {
+    const input = "מה readiness probe עושה";
+    const result = renderBidiBlock(input, "he");
+    const text = flattenText(result);
+    expect(text).toContain("readiness probe");
+    // Should NOT create a TerminalBlock for "ss probe"
+    const termBlocks = findElements(result, (el) => el.type === TerminalBlock);
+    expect(termBlocks.length).toBe(0);
+  });
+
+  it("standalone ss command still works", () => {
+    expect(CLI_COMMAND_RE.test("ss -tulnp")).toBe(true);
+  });
+});
+
+// ─── REGRESSION: Hebrew prefix term with trailing English words ──────────────
+
+describe("Hebrew prefix term with trailing English words regression", () => {
+  // @regression - "מה-CNI plugin" was rendered as "pluginCNI" because
+  // HE_PREFIX_TERM_RE captured "ה-CNI" but left "plugin" as a separate
+  // LTR span that got visually reversed in RTL context.
+  it("CNI plugin stays together after Hebrew prefix", () => {
+    const input = "מגבלת קצב הרשת שה-Pod מקבל מה-CNI plugin";
+    const result = renderBidi(input, "he");
+    const ltrs = ltrTexts(result);
+    // "CNI plugin" should be in the same LTR span, not split
+    expect(ltrs.some((t) => t.includes("CNI plugin"))).toBe(true);
+    // "plugin" should NOT appear alone as a separate LTR span
+    expect(ltrs.some((t) => t === "plugin")).toBe(false);
   });
 });
 
