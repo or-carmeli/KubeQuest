@@ -130,7 +130,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion. CronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
+                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion.\nCronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
             },
             {
               q: "מה resource requests ב-Pod?",
@@ -353,7 +353,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
+                "QoS (Quality of Service) קובע את סדר העדיפויות של Pods כש-Node חווה לחץ משאבים.\nה-QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
             },
             {
               q: "מה ephemeral container ב-Kubernetes?",
@@ -481,13 +481,13 @@ export const TOPICS = [
               tags: ["daemonset-topology"],
               options: [
               "שה-Pod רץ פעם אחת עד להשלמה ולא מופעל מחדש. התנהגות של Job",
-              "DaemonSet מבטיח Pod אחד רץ על כל Node ב-Cluster",
+              "DaemonSet מבטיח ש-Pod אחד רץ על כל Node בקלסטר",
               "שה-Pod רץ רק על Node שמסומן עם label מתאים דרך nodeSelector",
               "שה-Pod מופעל מחדש לפי לוח זמנים קבוע. התנהגות של CronJob",
 ],
               answer: 1,
               explanation:
-                "DaemonSet מבטיח Pod אחד על כל Node ב-Cluster.\nכש-Node חדש מצטרף, Pod נוסף אוטומטית. כש-Pod נכשל, הוא מופעל מחדש.\nשימושי ל-logging (Fluentd), monitoring (node-exporter), ו-CNI plugins.",
+                "DaemonSet מבטיח ש-Pod אחד רץ על כל Node בקלסטר.\nכש-Node חדש מצטרף, Pod נוסף אוטומטית. כש-Pod נכשל, הוא מופעל מחדש.\nשימושי ל-logging (Fluentd), monitoring (node-exporter), ו-CNI plugins.",
             },
             {
               q: "מה תפקיד ה-HPA ב-Kubernetes?",
@@ -550,7 +550,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "StatefulSet יוצר Pods בסדר (OrderedReady):\u200E Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר podManagementPolicy: Parallel.\n• PVC: Pod-1 לא נוצר בכלל. • Quota:\u200E גם Pod-0 לא היה עולה. • imagePullSecret:\u200E היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
+                "StatefulSet יוצר Pods בסדר (OrderedReady):\u200E Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר `podManagementPolicy: Parallel`.\n• PVC: Pod-1 לא נוצר בכלל. • Quota:\u200E גם Pod-0 לא היה עולה. • imagePullSecret:\u200E היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
             },
             {
               q: "עדכון Rolling update נתקע.\n\nהרצת:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nפלט:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nבנוסף, מוגדר maxUnavailable: 0\n\nמה הסיבה?",
@@ -574,7 +574,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "selector (app: backend) לא תואם ל-labels של ה-Pods (app: backend-v2).\nלסנכרן בין selector.matchLabels ל-template.metadata.labels.\nDeployment מוצא את ה-Pods שלו אך ורק לפי selector. אי-התאמה = אפס שליטה.",
+                "הבעיה היא חוסר התאמה בין ה-labels של ה-Pods לבין ה-selector של ה-Deployment.\nה-Deployment מחפש Pods עם:\n```yaml\napp: backend\n```\nאבל ה-Pods מסומנים עם:\n```\napp=backend-v2\n```\nב-Kubernetes ה-Deployment מנהל Pods רק אם ה-labels שלהם תואמים בדיוק ל-selector.\nכאן אין התאמה, ולכן ה-Deployment לא מזהה את ה-Pods ולא מנהל אותם.",
             },
         ],
         questionsEn: [
@@ -676,7 +676,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Selector (app: backend) doesn't match Pod labels (app: backend-v2).\nAlign selector.matchLabels with template.metadata.labels.\nA Deployment finds its Pods solely by selector. Mismatch = zero control.",
+                "The issue is a mismatch between the Pod labels and the Deployment selector.\nThe Deployment is looking for Pods with:\n```yaml\napp: backend\n```\nBut the Pods are labeled:\n```\napp=backend-v2\n```\nIn Kubernetes, a Deployment manages Pods only if their labels match the selector exactly.\nSince the labels do not match, the Deployment does not recognize or manage those Pods.",
             },
         ],
       },
@@ -774,6 +774,7 @@ export const TOPICS = [
             },
             {
               q: "מה מטרת Ingress ב-Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "סוג Pod מיוחד שאחראי על ניהול חיבורי HTTPS",
               "storage manager שמנהל PVCs מסוג network storage",
@@ -879,6 +880,7 @@ export const TOPICS = [
             },
             {
               q: "What is the purpose of an Ingress in Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "Routes HTTP/HTTPS by path or hostname to different Services through one entry point",
               "A special Pod type responsible for managing HTTPS connections to the API server",
@@ -905,8 +907,8 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 \u2066Debug Service\u2069 - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
-        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy - Local preserves client IP (no SNAT), Cluster distributes to all Nodes.\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
+        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 \u2066Debug Service\u2069 -\n  `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
+        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy:\n  Local - preserves client IP (no SNAT)\n  Cluster - distributes to all Nodes\n🔹 Debugging Services -\n  kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
         questions: [
             {
               q: "מה ה-DNS name של service בשם api ב-namespace בשם prod?",
@@ -969,7 +971,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "\u2066Egress NetworkPolicy\u2069 מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים \u2066policyTypes: [Egress]\u2069, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר port 53 (DNS), אחרת \u2066name resolution\u2069 נכשל.",
+                "Egress NetworkPolicy מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים `policyTypes: [Egress]`, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר `port 53 (DNS)`, אחרת name resolution נכשל.",
             },
             {
               q: "כיצד Ingress מנתב לפי hostname?",
