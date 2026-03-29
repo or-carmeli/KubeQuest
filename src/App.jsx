@@ -3597,14 +3597,21 @@ export default function K8sQuestApp() {
 
   // Get the active step data, preferring server-fetched steps when available.
   // Normalizes server column names (prompt_he → promptHe) to match offline format.
+  // Merges local fallback fields (answer, explanation) that the server RPC
+  // intentionally omits for security — needed for guest mode and RPC error fallback.
   const getIncidentStep = (idx) => {
     if (incidentSteps && incidentSteps[idx]) {
       const s = incidentSteps[idx];
+      const local = selectedIncident?.steps?.[idx];
       return {
         ...s,
         promptHe: s.prompt_he ?? s.promptHe,
         optionsHe: s.options_he ?? s.optionsHe,
         explanationHe: s.explanation_he ?? s.explanationHe,
+        // Fallback: merge local answer/explanation when server omits them
+        answer: s.answer ?? local?.answer,
+        explanation: s.explanation ?? local?.explanation,
+        explanationHe: s.explanation_he ?? s.explanationHe ?? local?.explanationHe,
       };
     }
     return selectedIncident?.steps?.[idx];
