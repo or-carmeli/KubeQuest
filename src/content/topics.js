@@ -2856,16 +2856,16 @@ export const TOPICS = [
                 "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade.\n`helm template` רק מרנדר YAML בלי להתקין. `helm rollback` לא מקבל --set. `helm show values` מציג ערכים בלבד.\nלשינויים מרובים עדיף --values (-f) עם קובץ YAML מותאם.",
             },
             {
-              q: "כיצד מרחיבים PVC?",
+              q: "כיצד מגדילים את נפח האחסון של PVC קיים ב-Kubernetes",
               options: [
-              "מגדירים allowVolumeExpansion: true ב-StorageClass ומגדילים spec.resources.requests.storage",
-              "kubectl merge-pvc\nיוצרים PVC שני ומשתמשים לאיחוד הנפחים",
+              "מעדכנים את שדה `capacity.storage` ישירות ב-PV המחובר ל-PVC",
               "מוחקים את ה-PVC ויוצרים חדש עם גודל גדול יותר באותו StorageClass",
-              "משנים את ה-PV הקיים ישירות ומעדכנים את capacity.storage בו",
+              "מגדילים את `spec.resources.requests.storage` ב-PVC כש-StorageClass תומך בהרחבה",
+              "יוצרים PVC נוסף ומאחדים את שני הנפחים באמצעות `kubectl merge-pvc`",
 ],
-              answer: 0,
+              answer: 2,
               explanation:
-                "ה-StorageClass חייב להגדיר allowVolumeExpansion: true.\nאז מגדילים spec.resources.requests.storage ב-PVC וה-provisioner מרחיב את הדיסק.\nהקטנה לא נתמכת, ובחלק מה-backends נדרש Pod restart.",
+                "כדי להרחיב PVC, ה-StorageClass חייב להגדיר `allowVolumeExpansion: true`.\nאחרי שזה מוגדר, מגדילים את הערך של `spec.resources.requests.storage` ב-PVC:\n```yaml\nspec:\n  resources:\n    requests:\n      storage: 20Gi\n```\nה-provisioner מרחיב את הדיסק אוטומטית. הקטנה לא נתמכת, ובחלק מה-backends נדרש Pod restart.",
             },
             {
               q: "מה הפקודה\n\n```\nhelm template\n```\n\nעושה?",
@@ -2956,16 +2956,16 @@ export const TOPICS = [
                 "--set key=value overrides values from values.yaml at install/upgrade time.\n`helm template` only renders YAML without installing. `helm rollback` does not accept --set. `helm show values` only displays values.\nFor multiple overrides, use --values (-f) with a custom YAML file.",
             },
             {
-              q: "How do you expand a PVC?",
+              q: "How do you increase the storage size of an existing PVC in Kubernetes",
               options: [
-              "Edit the existing PV directly and update its capacity.storage field",
-              "kubectl merge-pvc\nCreate a second PVC and use to combine the volumes",
-              "Set allowVolumeExpansion: true in the StorageClass then increase spec.resources.requests.storage",
+              "Update the `capacity.storage` field directly on the PV bound to the PVC",
               "Delete the PVC and recreate it with a larger size in the same StorageClass",
+              "Increase `spec.resources.requests.storage` in the PVC when the StorageClass supports expansion",
+              "Create an additional PVC and merge both volumes using `kubectl merge-pvc`",
 ],
               answer: 2,
               explanation:
-                "The StorageClass must have allowVolumeExpansion: true.\nThen increase spec.resources.requests.storage in the PVC and the provisioner resizes the disk.\nShrinking is not supported, and some backends require a Pod restart.",
+                "To expand a PVC, the StorageClass must have `allowVolumeExpansion: true`.\nOnce that is set, increase the value of `spec.resources.requests.storage` in the PVC:\n```yaml\nspec:\n  resources:\n    requests:\n      storage: 20Gi\n```\nThe provisioner resizes the disk automatically. Shrinking is not supported, and some backends require a Pod restart.",
             },
             {
               q: "What does the command\n\n```\nhelm template\n```\n\ndo?",
