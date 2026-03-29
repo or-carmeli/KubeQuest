@@ -2613,7 +2613,7 @@ export const TOPICS = [
     descriptionEn: "PV · StorageClass · Helm · Operators",
     levels: {
       easy: {
-        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 \u200FPV\u200F: יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 \u200FPVC\u200F: בקשה לאחסון מ-Pod\n🔹 \u200FHelm Chart\u200F: חבילה של Kubernetes manifests עם templates\n🔹 \u200Fhelm install\u200F: מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
+        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 \u200FPV\u200F: יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 \u200FPVC\u200F: בקשה לאחסון מ-Pod\n🔹 \u200FHelm Chart\u200F: חבילה של Kubernetes manifests עם templates\n🔹 \u200Fhelm install\u200F מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         theoryEn: "PersistentVolumes and Helm Basics\n🔹 PersistentVolume (PV) - a storage resource in the cluster, provisioned by an administrator.\n🔹 PersistentVolumeClaim (PVC) - a request by a Pod for a specific amount of storage.\n🔹 Helm Chart - a package of Kubernetes manifests with configurable templates.\n🔹 `helm install` - deploys a Chart to the cluster and creates a named Release.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         questions: [
             {
@@ -4444,9 +4444,9 @@ export const TOPICS = [
             tags: ["gitops-sync"],
             options: [
               "Synced אומר שהמצב תואם Git, Healthy אומר שהמשאבים עובדים תקין",
-              "Synced ו-Healthy זה אותו דבר, רק שמות שונים",
-              "Healthy אומר שהמצב תואם Git, Synced אומר שה-Pods רצים",
-              "Synced מתייחס ל-repo ו-Healthy מתייחס ל-ArgoCD עצמו",
+              "Synced ו-Healthy שניהם מתארים את הקשר בין Git לקלאסטר",
+              "Healthy אומר שהמצב תואם Git, Synced אומר שה-Pods עובדים תקין",
+              "Synced מתייחס לחיבור בין ArgoCD ל-repo, Healthy למצב ה-controller",
             ],
             answer: 0,
             explanation: "אלה שני מדדים נפרדים:\nSync Status - האם המצב בקלאסטר תואם את Git (Synced / OutOfSync).\nHealth Status - האם המשאבים עצמם תקינים (Healthy / Degraded / Progressing).\nאפשר להיות Synced אבל Degraded, למשל כשה-manifests הוחלו אבל ה-Pod נופל ב-CrashLoopBackOff.",
@@ -4476,10 +4476,10 @@ export const TOPICS = [
           {
             q: "מהנדס רואה שאפליקציה ב-ArgoCD מסומנת Synced אבל Degraded.\n\nמה הסיבה הסבירה?",
             options: [
-              "ה-manifests ב-Git לא תקינים",
+              "ה-manifests ב-Git מכילים שגיאות syntax שלא עברו validation",
               "ה-manifests הוחלו בהצלחה אבל ה-Pods נכשלים ב-runtime",
-              "ArgoCD לא מצליח להתחבר ל-Git",
-              "ה-namespace לא קיים בקלאסטר",
+              "ArgoCD לא מצליח להתחבר ל-Git repo ולכן לא יכול לסנכרן",
+              "ה-namespace שמוגדר ב-destination לא קיים בקלאסטר עדיין",
             ],
             answer: 1,
             explanation: "Synced = ה-manifests הוחלו בהצלחה, הקלאסטר תואם את Git.\nDegraded = יש בעיה ב-runtime, למשל Pod ב-CrashLoopBackOff או ImagePullBackOff.\nהבעיה היא לא ב-manifests עצמם אלא באפליקציה או ב-image.\nאם Git לא נגיש, ה-sync status היה Unknown, לא Synced.",
@@ -4488,10 +4488,10 @@ export const TOPICS = [
             q: "מפתח דוחף שינוי ל-Git.\nArgoCD מוגדר עם auto-sync ו-self-heal.\n\nמהנדס אחר עושה `kubectl edit` ומשנה משהו ידנית בקלאסטר.\n\nמה יקרה?",
             tags: ["gitops-sync"],
             options: [
-              "השינוי הידני יישאר כי הוא נעשה אחרון",
+              "השינוי הידני יישאר כי ArgoCD לא עוקב אחרי שינויים בקלאסטר",
               "ArgoCD יזהה את ה-drift ויחזיר את המצב למה שמוגדר ב-Git",
-              "ArgoCD יציג התראה אבל לא ישנה כלום",
-              "ArgoCD ייכשל כי יש conflict בין Git לקלאסטר",
+              "ArgoCD יציג התראה ב-UI וימתין לאישור ידני לפני תיקון",
+              "ArgoCD ימזג את השינוי הידני לתוך ה-Git repo אוטומטית",
             ],
             answer: 1,
             explanation: "self-heal אומר ש-ArgoCD לא רק מסנכרן כשיש שינוי ב-Git, אלא גם מתקן drift בקלאסטר.\nאם מישהו שינה משהו ידנית, ArgoCD יזהה את ההבדל ויחזיר את המצב למה שמוגדר ב-Git.\nזה מבטיח שה-Git repo נשאר ה-source of truth האמיתי.",
@@ -4507,8 +4507,8 @@ export const TOPICS = [
             options: [
               "ArgoCD יתעלם מהשינוי כי ConfigMap כבר קיים בקלאסטר",
               "ArgoCD ימחק את ה-ConfigMap מהקלאסטר כי הוא כבר לא ב-Git",
-              "ArgoCD יציג אזהרה אבל לא ימחק כלום",
-              "ArgoCD ייכשל ב-sync כי חסר manifest",
+              "ArgoCD יציג אזהרה ב-UI וימתין לאישור לפני מחיקה",
+              "ArgoCD ייכשל ב-sync כי הוא מצפה שכל המשאבים קיימים",
             ],
             answer: 1,
             explanation: "prune: true אומר ל-ArgoCD למחוק מהקלאסטר משאבים שכבר לא קיימים ב-Git.\nבלי prune, ArgoCD היה מתעלם ממשאבים שנמחקו מ-Git.\nזה חשוב להבין כי prune יכול למחוק משאבים בלי אזהרה.",
@@ -4527,10 +4527,10 @@ export const TOPICS = [
           {
             q: "צוות משתמש ב-HPA שמשנה את מספר ה-replicas אוטומטית.\nArgoCD כל הזמן מציג OutOfSync כי replicas בקלאסטר שונה מ-Git.\n\nמה הפתרון?",
             options: [
-              "לכבות את ה-HPA ולנהל replicas רק דרך Git",
+              "לכבות את ה-HPA ולנהל את מספר ה-replicas רק דרך Git",
               "להגדיר ignoreDifferences על /spec/replicas ב-Application",
-              "להגדיר auto-sync כדי שתמיד יחזור ל-Git",
-              "להוסיף replicas: null ל-manifests ב-Git",
+              "להפעיל selfHeal כדי שה-replicas תמיד יחזרו לערך ב-Git",
+              "להסיר את שדה replicas מה-manifests ולהגדיר minReplicas ב-HPA",
             ],
             answer: 1,
             explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\n```yaml\nignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n      - /spec/replicas\n```\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
@@ -4573,9 +4573,9 @@ export const TOPICS = [
             tags: ["gitops-reconcile"],
             options: [
               "prune מוחק משאבים שנמחקו מ-Git, selfHeal מתקן drift בקלאסטר",
-              "prune מתקן drift, selfHeal מוחק משאבים ישנים",
-              "prune עובד רק עם Helm, selfHeal עובד עם כל סוגי manifests",
-              "prune פועל פעם ביום, selfHeal פועל בזמן אמת",
+              "prune מתקן drift שנוצר ידנית, selfHeal מוחק משאבים שנמחקו מ-Git",
+              "prune עובד רק עם Helm charts, selfHeal עובד רק עם plain manifests",
+              "prune מטפל ב-resources ברמת cluster, selfHeal ב-resources ברמת namespace",
             ],
             answer: 0,
             explanation: "`prune: true` - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\n`selfHeal: true` - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
@@ -4583,10 +4583,10 @@ export const TOPICS = [
           {
             q: "sync נכשל עם השגיאה:\n\n```\none or more objects failed to apply:\nnamespace \"payments\" not found\n```\n\nמה הפתרון?",
             options: [
-              "ליצור את ה-namespace ידנית ב-cluster",
-              "להוסיף את ה-namespace כמשאב ב-Git עם sync wave נמוך, או להפעיל CreateNamespace",
-              "למחוק את ה-Application ב-ArgoCD וליצור מחדש",
-              "לשנות את ה-destination namespace ל-default",
+              "ליצור את ה-namespace ידנית בקלאסטר ולהריץ sync שוב מה-UI",
+              "להוסיף Namespace manifest ב-Git עם sync wave נמוך, או להפעיל CreateNamespace",
+              "למחוק את ה-Application ב-ArgoCD וליצור אותה מחדש עם destination חדש",
+              "להעביר את כל ה-manifests ב-Git ל-namespace default כדי לעקוף את הבעיה",
             ],
             answer: 1,
             explanation: "הפתרון הנכון ב-GitOps הוא אחד משניים:\n1. להוסיף Namespace manifest ב-Git עם sync wave 0- כדי שייווצר ראשון.\n2. להפעיל CreateNamespace=true ב-syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n  - CreateNamespace=true\n\nיצירה ידנית עובדת אבל עוקפת GitOps.",
@@ -4600,10 +4600,10 @@ export const TOPICS = [
           {
             q: "ארגון מנהל 50 microservices ב-3 environments.\nכל שירות צריך Application נפרד ב-ArgoCD.\n\nמה הגישה הטובה ביותר?",
             options: [
-              "ליצור 150 Application manifests ידנית ב-Git",
+              "ליצור 150 Application manifests ידנית ב-Git עם Kustomize overlays per env",
               "להשתמש ב-ApplicationSet עם Matrix generator שמשלב clusters ו-Git directories",
-              "ליצור script שמריץ argocd app create בלולאה",
-              "להשתמש ב-Helm umbrella chart שמכיל את כל ה-Applications",
+              "ליצור CI script שמריץ argocd app create בלולאה עבור כל service ו-env",
+              "להשתמש ב-Helm umbrella chart עם subchart נפרד לכל microservice",
             ],
             answer: 1,
             explanation: "ApplicationSet עם Matrix generator משלב שני generators:\n- clusters: כל ה-environments (dev, staging, prod)\n- git directories: כל ה-microservices\n\nMatrix יוצר קומבינציה: 50 services x 3 environments = 150 Applications אוטומטית.\nהוספת service או environment חדש מייצרת Applications אוטומטית.",
@@ -4612,10 +4612,10 @@ export const TOPICS = [
             q: "צוות Platform רוצה שכל צוות יוכל לנהל רק את ה-Applications שלו.\n\nאיך מממשים multi-tenancy ב-ArgoCD?",
             tags: ["gitops-multitenancy"],
             options: [
-              "ArgoCD instance נפרד לכל צוות",
+              "ArgoCD instance נפרד לכל צוות עם Ingress ו-SSO משלו",
               "AppProject per team עם הגבלות על repos, namespaces ו-RBAC roles",
-              "Namespace per team ב-ArgoCD namespace",
-              "Git branch per team עם branch protection",
+              "Namespace per team בתוך argocd namespace עם ResourceQuotas",
+              "Git branch per team עם branch protection ו-webhook per branch",
             ],
             answer: 1,
             explanation: "AppProject מאפשר הגדרת הרשאות granular:\n- sourceRepos: אילו repos כל צוות יכול להשתמש\n- destinations: אילו namespaces/clusters מותרים\n- clusterResourceWhitelist: אילו cluster-level resources מותרים\n\nבשילוב עם RBAC ב-ArgoCD:\np, role:team-a, applications, *, team-a-project/*, allow\n\ninstance נפרד זה overhead מיותר.",
@@ -4647,9 +4647,9 @@ export const TOPICS = [
             q: "sync של אפליקציה גדולה נכשל עם:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nמה הבעיה ומה הפתרון?",
             options: [
               "ה-Application manifests חורגים מ-gRPC message size limit של ArgoCD",
-              "הקלאסטר אזל לו הזיכרון",
-              "ה-Git repo גדול מדי ל-clone",
-              "ArgoCD server צריך יותר CPU",
+              "הקלאסטר חורג מ-memory limits ו-OOMKill מונע את ה-sync",
+              "ה-Git repo חורג מגודל clone מקסימלי של argocd-repo-server",
+              "ה-argocd-server חורג ממגבלת CPU ולא מסוגל לרנדר manifests",
             ],
             answer: 0,
             explanation: "ArgoCD משתמש ב-gRPC לתקשורת פנימית.\nברירת המחדל של gRPC message size הוא 4MB.\nאפליקציות גדולות (הרבה manifests, CRDs כבדים) חורגות מהמגבלה.\n\nפתרון - להגדיל את ה-limit ב-argocd-server ו-argocd-repo-server:\n\n--max-recv-msg-size=8388608\n\nאו לפצל את האפליקציה ל-Applications קטנים יותר.",
@@ -4680,10 +4680,10 @@ export const TOPICS = [
             q: "ApplicationSet עם Matrix generator:\n\n```yaml\ngenerators:\n  - matrix:\n      generators:\n        - clusters:\n            selector:\n              matchLabels:\n                env: production\n        - list:\n            elements:\n              - app: payments\n                team: billing\n              - app: orders\n                team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
             tags: ["gitops-appset-matrix"],
             options: [
-              "3 - אחד לכל cluster",
-              "2 - אחד לכל app",
-              "6 - cartesian product של clusters x apps",
-              "5 - סכום של clusters ו-apps",
+              "3 - Application אחד לכל cluster שתואם את ה-selector",
+              "2 - Application אחד לכל app שמוגדר ברשימת elements",
+              "6 - cartesian product של 3 clusters כפול 2 apps",
+              "5 - סכום של 3 clusters ועוד 2 apps מה-list generator",
             ],
             answer: 2,
             explanation: "ה-Matrix generator ב-ApplicationSet יוצר Cartesian product (כל הצירופים האפשריים) בין הרשימות שמוגדרות ב-generators.\nבמקרה הזה יש 3 clusters שנבחרו לפי env: production, ויש 2 אפליקציות ברשימת elements (payments ו-orders).\nApplicationSet יוצר Application עבור כל שילוב של cluster ואפליקציה.\nלכן מספר ה-Applications שייווצרו הוא:\n3 clusters × 2 apps = 6 Applications.",
