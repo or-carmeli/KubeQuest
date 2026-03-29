@@ -1,0 +1,37 @@
+name: Seed Content
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/content/**"
+
+concurrency:
+  group: seed-content
+  cancel-in-progress: true
+
+jobs:
+  seed:
+    name: Seed Database
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Seed content to Supabase
+        run: node scripts/seed-questions.mjs --reseed
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
