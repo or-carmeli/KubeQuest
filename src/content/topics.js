@@ -130,7 +130,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion. CronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
+                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion.\nCronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
             },
             {
               q: "מה resource requests ב-Pod?",
@@ -353,7 +353,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
+                "QoS (Quality of Service) קובע את סדר העדיפויות של Pods כש-Node חווה לחץ משאבים.\nה-QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
             },
             {
               q: "מה ephemeral container ב-Kubernetes?",
@@ -481,13 +481,13 @@ export const TOPICS = [
               tags: ["daemonset-topology"],
               options: [
               "שה-Pod רץ פעם אחת עד להשלמה ולא מופעל מחדש. התנהגות של Job",
-              "DaemonSet מבטיח Pod אחד רץ על כל Node ב-Cluster",
+              "DaemonSet מבטיח ש-Pod אחד רץ על כל Node בקלסטר",
               "שה-Pod רץ רק על Node שמסומן עם label מתאים דרך nodeSelector",
               "שה-Pod מופעל מחדש לפי לוח זמנים קבוע. התנהגות של CronJob",
 ],
               answer: 1,
               explanation:
-                "DaemonSet מבטיח Pod אחד על כל Node ב-Cluster.\nכש-Node חדש מצטרף, Pod נוסף אוטומטית. כש-Pod נכשל, הוא מופעל מחדש.\nשימושי ל-logging (Fluentd), monitoring (node-exporter), ו-CNI plugins.",
+                "DaemonSet מבטיח ש-Pod אחד רץ על כל Node בקלסטר.\nכש-Node חדש מצטרף, Pod נוסף אוטומטית. כש-Pod נכשל, הוא מופעל מחדש.\nשימושי ל-logging (Fluentd), monitoring (node-exporter), ו-CNI plugins.",
             },
             {
               q: "מה תפקיד ה-HPA ב-Kubernetes?",
@@ -513,7 +513,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "OOMKilled (exit code 137): הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-resources.limits.memory.\nה-Linux kernel אוכף מגבלות זיכרון דרך cgroups. כשהקונטיינר מנסה להקצות יותר מהמותר, ה-OOM Killer הורג את התהליך כדי להגן על ה-Node.\n\nאיתור:\nkubectl describe pod <pod>\nReason: OOMKilled | Exit Code: 137\nה-Pod עלול להיכנס ל-CrashLoopBackOff.\n\nפתרון: הגדל limits.memory, או חפש memory leak בקוד.",
+                "OOMKilled (exit code 137): הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-`limits.memory`.\nפתרון: הגדל `limits.memory`, או חפש memory leak בקוד.",
             },
             {
               q: "מה התפקיד של topologySpreadConstraints בתזמון Pods ב-Kubernetes?",
@@ -550,7 +550,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "StatefulSet יוצר Pods בסדר (OrderedReady):\u200E Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר podManagementPolicy: Parallel.\n• PVC: Pod-1 לא נוצר בכלל. • Quota:\u200E גם Pod-0 לא היה עולה. • imagePullSecret:\u200E היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
+                "StatefulSet יוצר Pods בסדר (OrderedReady):\u200E Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר `podManagementPolicy: Parallel`.\n• PVC: Pod-1 לא נוצר בכלל. • Quota:\u200E גם Pod-0 לא היה עולה. • imagePullSecret:\u200E היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
             },
             {
               q: "עדכון Rolling update נתקע.\n\nהרצת:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nפלט:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nבנוסף, מוגדר maxUnavailable: 0\n\nמה הסיבה?",
@@ -574,7 +574,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "selector (app: backend) לא תואם ל-labels של ה-Pods (app: backend-v2).\nלסנכרן בין selector.matchLabels ל-template.metadata.labels.\nDeployment מוצא את ה-Pods שלו אך ורק לפי selector. אי-התאמה = אפס שליטה.",
+                "הבעיה היא חוסר התאמה בין ה-labels של ה-Pods לבין ה-selector של ה-Deployment.\nה-Deployment מחפש Pods עם:\n```yaml\napp: backend\n```\nאבל ה-Pods מסומנים עם:\n```\napp=backend-v2\n```\nב-Kubernetes ה-Deployment מנהל Pods רק אם ה-labels שלהם תואמים בדיוק ל-selector.\nכאן אין התאמה, ולכן ה-Deployment לא מזהה את ה-Pods ולא מנהל אותם.",
             },
         ],
         questionsEn: [
@@ -615,7 +615,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "OOMKilled (exit code 137): container exceeded the memory limit defined in resources.limits.memory.\nThe Linux kernel enforces memory limits via cgroups. When a container tries to allocate beyond the allowed limit, the OOM Killer terminates the process to protect the Node.\n\nDetection:\nkubectl describe pod <pod>\nReason: OOMKilled | Exit Code: 137\nPod may restart and enter CrashLoopBackOff.\n\nFix: increase limits.memory, or investigate a memory leak in the app.",
+                "OOMKilled (exit code 137): container exceeded the memory limit defined in `limits.memory`.\nFix: increase `limits.memory`, or investigate a memory leak in the app.",
             },
             {
               q: "What is the role of topologySpreadConstraints in Kubernetes scheduling?",
@@ -676,7 +676,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Selector (app: backend) doesn't match Pod labels (app: backend-v2).\nAlign selector.matchLabels with template.metadata.labels.\nA Deployment finds its Pods solely by selector. Mismatch = zero control.",
+                "The issue is a mismatch between the Pod labels and the Deployment selector.\nThe Deployment is looking for Pods with:\n```yaml\napp: backend\n```\nBut the Pods are labeled:\n```\napp=backend-v2\n```\nIn Kubernetes, a Deployment manages Pods only if their labels match the selector exactly.\nSince the labels do not match, the Deployment does not recognize or manage those Pods.",
             },
         ],
       },
@@ -774,6 +774,7 @@ export const TOPICS = [
             },
             {
               q: "מה מטרת Ingress ב-Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "סוג Pod מיוחד שאחראי על ניהול חיבורי HTTPS",
               "storage manager שמנהל PVCs מסוג network storage",
@@ -879,6 +880,7 @@ export const TOPICS = [
             },
             {
               q: "What is the purpose of an Ingress in Kubernetes?",
+              tags: ["ingress-routing"],
               options: [
               "Routes HTTP/HTTPS by path or hostname to different Services through one entry point",
               "A special Pod type responsible for managing HTTPS connections to the API server",
@@ -905,8 +907,8 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 \u2066Debug Service\u2069 - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
-        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy - Local preserves client IP (no SNAT), Cluster distributes to all Nodes.\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
+        theory: "DNS, Ingress ו-Traffic\n🔹 \u2066Service DNS\u2069 - \u2066service.namespace.svc.cluster.local\u2069\n🔹 Ingress - ניתוב HTTP/HTTPS לפי path או hostname. דורש \u2066Ingress Controller\u2069\n🔹 TLS ב-Ingress - \u2066spec.tls\u2069 עם Secret שמכיל certificate\n🔹 \u2066Egress NetworkPolicy\u2069 - מגביל תעבורה יוצאת. חייב לפתוח port 53 ל-DNS\n🔹 \u2066externalTrafficPolicy\u2069 - Local שומר על \u2066client IP\u2069 (בלי SNAT), Cluster מפזר לכל ה-Nodes\n🔹 `Debug Service` - `kubectl get endpoints` אם ריק, ה-selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
+        theoryEn: "DNS, Ingress, and Traffic Routing\n🔹 Service DNS - format: service.namespace.svc.cluster.local.\n🔹 Ingress - routes HTTP/HTTPS by path or hostname. Requires an Ingress Controller (nginx, traefik).\n🔹 TLS in Ingress - configured via spec.tls with a Secret containing the certificate.\n🔹 Egress NetworkPolicy - restricts outbound traffic. Must allow port 53 for DNS resolution.\n🔹 externalTrafficPolicy:\n  Local - preserves client IP (no SNAT)\n  Cluster - distributes to all Nodes\n🔹 Debugging Services - kubectl get endpoints. Empty = selector mismatch with Pod labels.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: Ingress\nspec:\n  tls:\n    - hosts: [app.example.com]\n      secretName: tls-cert\n  rules:\n    - host: app.example.com",
         questions: [
             {
               q: "מה ה-DNS name של service בשם api ב-namespace בשם prod?",
@@ -969,7 +971,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "\u2066Egress NetworkPolicy\u2069 מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים \u2066policyTypes: [Egress]\u2069, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר port 53 (DNS), אחרת \u2066name resolution\u2069 נכשל.",
+                "Egress NetworkPolicy מגדיר לאילו יעדים Pod מורשה לשלוח תנועה.\nכשמגדירים `policyTypes: [Egress]`, כל תנועה יוצאת חסומה אלא אם הותרה במפורש.\nחובה לאפשר `port 53 (DNS)`, אחרת name resolution נכשל.",
             },
             {
               q: "כיצד Ingress מנתב לפי hostname?",
@@ -985,13 +987,13 @@ export const TOPICS = [
                 "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n  - host: api.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: api-svc\n  - host: web.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: web-svc\n```",
             },
             {
-              q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
+              q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`",
               tags: ["traffic-policy"],
               options: [
               "Cluster מפזר עומס שווה בין כל ה-Pods; Local שולח תנועה רק ל-Pod הקרוב ביותר",
               "Local דורש externalIPs מוגדרים; Cluster עובד עם כל סוגי Service כולל ClusterIP",
               "Local מעביר תנועה רק ל-Pods על אותו Node ושומר client IP; Cluster מעביר לכל Pod ומבצע SNAT",
-              "Local שומר על session affinity אוטומטי; Cluster דורש הגדרת sessionAffinity: ClientIP",
+              "Local שומר על session affinity אוטומטי; Cluster דורש הגדרת `sessionAffinity: ClientIP`",
 ],
               answer: 2,
               explanation:
@@ -1091,7 +1093,7 @@ export const TOPICS = [
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
               tags: ["traffic-policy"],
               options: [
-              "Local maintains automatic session affinity; Cluster requires explicit sessionAffinity: ClientIP",
+              "Local maintains automatic session affinity; Cluster requires explicit `sessionAffinity: ClientIP`",
               "Local routes traffic only to Pods on the same Node and preserves client IP; Cluster forwards to any Pod and performs SNAT",
               "Local requires configured externalIPs; Cluster works with all Service types including ClusterIP",
               "Cluster distributes load equally across all Pods; Local sends traffic only to the nearest Pod",
@@ -1115,7 +1117,7 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "NetworkPolicy, kube-proxy ו-debug.\n🔹 ברירת מחדל: allow-all בין כל ה-Pods\n🔹 NetworkPolicy:\u200E דורש CNI תומך (Calico, Cilium). חוסם DNS? פתח port 53 ב-egress\n🔹 ipBlock:\u200E מגביל egress ל-CIDR ספציפי (לדוגמה 0.0.0.0/0 לאינטרנט)\n🔹 IPVS vs iptables:\u200E IPVS משתמש ב-hash tables (O(1)), iptables ב-chains (O(n))\n🔹 Labels:\u200E case-sensitive. app: App ≠ app: app = endpoints ריקים\n🔹 Service FQDN:\u200E service.namespace.svc.cluster.local (חסר .svc = כשל DNS)\n🔹 Ingress 503:\u200E endpoints not found = selector לא תואם\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
+        theory: "NetworkPolicy, kube-proxy ו-debug.\n🔹 ברירת מחדל: allow-all בין כל ה-Pods\n🔹 NetworkPolicy:\u200E דורש CNI תומך (Calico, Cilium). חוסם DNS? פתח port 53 ב-egress\n🔹 ipBlock:\u200E מגביל egress ל-CIDR ספציפי (לדוגמה 0.0.0.0/0 לאינטרנט)\n🔹 `IPVS` vs `iptables` - IPVS משתמש ב-hash tables עם O(1), iptables ב-chains עם O(n)\n🔹 Labels:\u200E case-sensitive. app: App ≠ app: app = endpoints ריקים\n🔹 Service FQDN:\u200E service.namespace.svc.cluster.local (חסר .svc = כשל DNS)\n🔹 `Ingress 503` - הודעת `endpoints not found` מסמנת שה-selector של ה-Service לא תואם Pods\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
         theoryEn: "NetworkPolicy, kube-proxy, and Debugging\n🔹 Default - all Pods can reach all Pods (allow-all) without NetworkPolicy.\n🔹 NetworkPolicy - requires a CNI plugin (Calico, Cilium). Blocking DNS? Open port 53 in egress.\n🔹 ipBlock - restricts egress to specific CIDRs (e.g. 0.0.0.0/0 for internet access).\n🔹 IPVS vs iptables - IPVS uses hash tables (O(1) lookup), iptables uses chains (O(n)).\n🔹 Labels are case-sensitive - app: App ≠ app: app, causing empty Endpoints.\n🔹 Service FQDN - service.namespace.svc.cluster.local (missing .svc = DNS failure).\n🔹 Ingress 503 - \"endpoints not found\" means the backend Service selector doesn't match any Pods.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
         questions: [
             {
@@ -1165,7 +1167,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Labels הם \u2066case-sensitive\u2069.\n\u2066app: App ≠ app: app\u2069. כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-\u2066app: App\u2069 כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים.\n• Pod לא Ready: לא הבעיה כאן.\n• Namespace: לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
+                "Labels הם case-sensitive.\n`app: App` ≠ `app: app` - כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-`app: App` כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים.\n• Pod לא Ready: לא הבעיה כאן.\n• Namespace: לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
             },
             {
               q: "NetworkPolicy חוסמת DNS.\nPods לא מצליחים לפתור שמות.\n\nהגדרה:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n    - ports:\n        - port: 443\n```\n\nמה חסר?",
@@ -1189,7 +1191,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "מה אומרת השגיאה:\nendpoints not found אומר שה-Service קיים, אבל אין לו Endpoints.\n\nאיך Endpoints נוצרים:\nכש-Service מוגדר עם selector, Kubernetes מחפש Pods עם labels תואמים.\nאם יש Pods תואמים, הם נרשמים כ-Endpoints של ה-Service.\nאם אין Pods תואמים, רשימת ה-Endpoints ריקה.\n\nלמה זה גורם ל-503:\nה-Ingress מנתב traffic ל-Service, אבל ה-Service לא יודע לאן להעביר אותו כי אין Endpoints.\nלכן ה-Ingress Controller מחזיר 503 (Service Unavailable).\n\nאיך מתקנים:\nבודקים את ה-selector של ה-Service ואת ה-labels של ה-Pods ומוודאים שהם תואמים.",
+                "השגיאה אומרת שה-Service קיים, אבל אין לו Endpoints.\nEndpoints נוצרים כשיש Pods שה-labels שלהם תואמים ל-selector של ה-Service.\nאם אין Pods תואמים, לא נוצרים Endpoints, ולכן ה-Ingress לא יודע לאן להעביר את הבקשה ומחזיר 503 (Service Unavailable).\nבדרך כלל הסיבה היא חוסר התאמה בין ה-selector של ה-Service לבין ה-labels של ה-Pods.",
             },
             {
               q: "ה-Pod מנסה לגשת ל-Service ולא מצליח.\n\nכתובת שנוסתה:\n\n```\napi-svc.backend.cluster.local\n```\n\nמה ה-FQDN הנכון של Service בשם api-svc ב-Namespace backend?",
@@ -1208,12 +1210,12 @@ export const TOPICS = [
               options: [
               "ingress rule לאפשר תגובות נכנסות",
               "Service מסוג LoadBalancer ב-Namespace",
-              "הגדרת hostNetwork: true ב-spec של ה-Pod",
-              "egress rule עם ipBlock: cidr: 0.0.0.0/0 לאפשר גישה ל-IPs חיצוניים",
+              "הגדרת `hostNetwork: true` ב-spec של ה-Pod",
+              "egress rule עם `ipBlock: {cidr: 0.0.0.0/0}` לאפשר גישה ל-IPs חיצוניים",
 ],
               answer: 3,
               explanation:
-                "podSelector:{} מאפשר תנועה רק ל-Pods. IPs חיצוניים חסומים.\nלהוסיף egress rule עם ipBlock: {cidr: '0.0.0.0/0'} + port 53 ל-DNS.\npodSelector מכסה רק Pods בתוך ה-Cluster, לא IPs חיצוניים.",
+                "`podSelector: {}` מאפשר תנועה רק ל-Pods. IPs חיצוניים חסומים.\nלהוסיף egress rule עם `ipBlock: {cidr: 0.0.0.0/0}` + `port 53` ל-DNS.\npodSelector מכסה רק Pods בתוך ה-Cluster, לא IPs חיצוניים.",
             },
         ],
         questionsEn: [
@@ -1288,7 +1290,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "What the error means:\nendpoints not found means the Service exists, but it has no Endpoints.\n\nHow Endpoints are created:\nWhen a Service has a selector, Kubernetes looks for Pods with matching labels.\nIf matching Pods exist, they are registered as Endpoints for that Service.\nIf no Pods match, the Endpoints list is empty.\n\nWhy this causes a 503:\nThe Ingress routes traffic to the Service, but the Service has nowhere to send it because there are no Endpoints.\nSo the Ingress Controller returns 503 (Service Unavailable).\n\nHow to fix:\nCheck the Service selector and the Pod labels and make sure they match.",
+                "The error means the Service exists, but it has no Endpoints.\nEndpoints are created when Pods have labels that match the Service selector.\nIf no Pods match, no Endpoints are created, so the Ingress has nowhere to route the request and returns 503 (Service Unavailable).\nThe most common cause is a mismatch between the Service selector and the Pod labels.",
             },
             {
               q: "A Pod tries to access a Service and fails.\n\nAddress tried:\n\n```\napi-svc.backend.cluster.local\n```\n\nWhat is the correct FQDN for Service api-svc in Namespace backend?",
@@ -1306,13 +1308,13 @@ export const TOPICS = [
               q: "A Pod cannot reach the internet.\n\nCommand:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nResult: timeout\n\nNetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nWhat is missing?",
               options: [
               "A LoadBalancer Service in the Namespace",
-              "An egress rule with ipBlock: cidr: 0.0.0.0/0 to allow external IPs",
+              "An egress rule with `ipBlock: {cidr: 0.0.0.0/0}` to allow external IPs",
               "An ingress rule to allow response traffic",
-              "Setting hostNetwork: true in the Pod spec",
+              "Setting `hostNetwork: true` in the Pod spec",
 ],
               answer: 1,
               explanation:
-                "podSelector:{} allows traffic only to Pods. External IPs are blocked.\nAdd egress rule with ipBlock: {cidr: '0.0.0.0/0'} + port 53 for DNS.\npodSelector covers only in-cluster Pods, not external IPs.",
+                "`podSelector: {}` allows traffic only to Pods. External IPs are blocked.\nAdd egress rule with `ipBlock: {cidr: 0.0.0.0/0}` + `port 53` for DNS.\npodSelector covers only in-cluster Pods, not external IPs.",
             },
         ],
       },
@@ -2059,16 +2061,16 @@ export const TOPICS = [
                 "LimitRange מגדיר ברירות מחדל ומגבלות CPU/Memory per-container ב-Namespace.\nמזריק default values ואוכף min/max אם container לא מציין requests/limits.\nללא LimitRange, Pod בודד יכול לצרוך את כל משאבי ה-Node.",
             },
             {
-              q: "מה עושה ההגדרה runAsNonRoot: true ב-securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
+              q: "מה עושה ההגדרה `runAsNonRoot: true` ב-securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
               "מצפינה את מערכת הקבצים של הקונטיינר",
-              "מונעת מהקונטיינר לרוץ כמשתמש root (UID 0)",
+              "מונעת מהקונטיינר לרוץ כמשתמש root (`UID 0`)",
               "מגבילה את צריכת ה-CPU של הקונטיינר לפי limits",
               "מגבילה את גישת הרשת של הקונטיינר",
 ],
               answer: 1,
               explanation:
-                "ההגדרה runAsNonRoot: true מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (UID 0).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
+                "ההגדרה `runAsNonRoot: true` מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (`UID 0`).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -2160,16 +2162,16 @@ export const TOPICS = [
                 "LimitRange sets default and max CPU/Memory per container in a Namespace.\nAuto-injects defaults and enforces min/max if containers don't specify them.\nWithout LimitRange, a single Pod can consume all Node resources.",
             },
             {
-              q: "What does the runAsNonRoot: true setting do in securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
+              q: "What does the `runAsNonRoot: true` setting do in securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
               "Encrypts the container's filesystem",
-              "Prevents the container from running as root user (UID 0)",
+              "Prevents the container from running as root user (`UID 0`)",
               "Limits the container's CPU usage according to limits",
               "Restricts the container's network access",
 ],
               answer: 1,
               explanation:
-                "The runAsNonRoot: true setting ensures the process inside the container does not run as root (UID 0).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
+                "The `runAsNonRoot: true` setting ensures the process inside the container does not run as root (`UID 0`).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
             },
             {
               q: "What is the difference between resource requests and limits?",
@@ -2474,7 +2476,7 @@ export const TOPICS = [
                 "ל-my-sa אין הרשאת list pods ב-namespace prod. RBAC חוסם.\nליצור Role עם הרשאת list pods ו-RoleBinding שמקשר ל-my-sa.\n• מחיקת SA לא פותרת חוסר הרשאות • cluster-admin סיכון אבטחי • default SA גם ללא הרשאות.\nב-RBAC כל גישה חייבת Role + RoleBinding מפורשים.",
             },
             {
-              q: "ניסיון לפרוס Deployment נכשל עם השגיאה:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nמה קורה?",
+              q: "הפקודה `kubectl apply` נכשלה עם השגיאה הבאה:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nמה המשמעות של השגיאה",
               options: [
               "ה-Namespace שצוין ב-Deployment לא קיים ב-Cluster",
               "Admission webhook חסם את ה-image כי הוא לא מ-registry מאושר",
@@ -2483,7 +2485,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Kyverno admission webhook חוסם images שלא מ-gcr.io/. policy-as-code.\nלשנות את ה-image למקור מ-gcr.io/ או לעדכן את ה-policy.\n• API crash = לא הייתה הודעת שגיאה • RBAC = \"forbidden\" לא \"webhook denied\" • Namespace missing = שגיאה אחרת.\nAdmission webhook רץ לפני שמירה ב-etcd ויכול לחסום כל create/update.",
+                "השגיאה מגיעה מ-Kyverno admission webhook.\nKyverno הוא מנגנון policy-as-code שמאכף חוקים על משאבי Kubernetes בזמן יצירה או עדכון.\nבמקרה הזה קיימת מדיניות שמאפשרת להשתמש רק ב-container images שמגיעים מ-`gcr.io`.\nכאשר ה-Deployment מנסה להשתמש ב-image מ-registry אחר, ה-admission webhook חוסם את הבקשה ולכן ה-API server מחזיר שגיאה.\nכדי לפתור: להשתמש ב-image מ-`gcr.io` או לעדכן את ה-Kyverno policy.\n• `webhook denied` = admission webhook חסם • `forbidden` = RBAC • API crash = לא הייתה הודעת שגיאה מובנית.",
             },
             {
               q: "ה-Deployment נדחה על ידי PSA עם policy מסוג restricted.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nאיזה securityContext צריך להגדיר ל-container כדי לעמוד במדיניות?",
@@ -2574,7 +2576,7 @@ export const TOPICS = [
                 "my-sa lacks list pods permission in namespace prod. RBAC blocks the request.\nCreate a Role with list pods permission and a RoleBinding to my-sa.\n• Deleting SA doesn't fix missing permissions • cluster-admin is a security risk • default SA also has no permissions.\nIn RBAC, every API access requires explicit Role + RoleBinding.",
             },
             {
-              q: "A Deployment fails to deploy with the error:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nWhat is happening?",
+              q: "`kubectl apply` failed with the following error:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nWhat does this error mean",
               options: [
               "The Kubernetes API server has crashed and is not responding",
               "The Namespace specified in the Deployment does not exist in the Cluster",
@@ -2583,7 +2585,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Kyverno admission webhook blocks images not from gcr.io/. Policy-as-code enforcement.\nChange the image to one from gcr.io/ or update the Kyverno policy.\n• API crash = no structured error message • RBAC = \"forbidden\" not \"webhook denied\" • Missing namespace = different error.\nAdmission webhooks run before etcd save and can block any create/update request.",
+                "The error comes from a Kyverno admission webhook.\nKyverno is a policy-as-code engine that enforces rules on Kubernetes resources during creation or update.\nIn this case, a policy only allows container images from `gcr.io`.\nWhen the Deployment tries to use an image from another registry, the admission webhook blocks the request and the API server returns an error.\nTo fix: use an image from `gcr.io` or update the Kyverno policy.\n• `webhook denied` = admission webhook blocked • `forbidden` = RBAC • API crash = no structured error message.",
             },
             {
               q: "A Deployment is rejected by PSA with a restricted policy.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nWhich securityContext must you set on the container to comply?",
@@ -2611,7 +2613,7 @@ export const TOPICS = [
     descriptionEn: "PV · StorageClass · Helm · Operators",
     levels: {
       easy: {
-        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 \u200FPV\u200F: יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 \u200FPVC\u200F: בקשה לאחסון מ-Pod\n🔹 \u200FHelm Chart\u200F: חבילה של Kubernetes manifests עם templates\n🔹 \u200Fhelm install\u200F: מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
+        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 \u200FPV\u200F: יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 \u200FPVC\u200F: בקשה לאחסון מ-Pod\n🔹 \u200FHelm Chart\u200F: חבילה של Kubernetes manifests עם templates\n🔹 \u200Fhelm install\u200F מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         theoryEn: "PersistentVolumes and Helm Basics\n🔹 PersistentVolume (PV) - a storage resource in the cluster, provisioned by an administrator.\n🔹 PersistentVolumeClaim (PVC) - a request by a Pod for a specific amount of storage.\n🔹 Helm Chart - a package of Kubernetes manifests with configurable templates.\n🔹 `helm install` - deploys a Chart to the cluster and creates a named Release.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
         questions: [
             {
@@ -2649,7 +2651,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Helm הוא package manager ל-Kubernetes. כמו apt או npm.\nChart הוא חבילה של YAML templates עם ערכי ברירת מחדל ב-values.yaml.\nבמקום לנהל עשרות קבצי YAML, מתקינים Chart אחד ומגדירים עם values.",
+                "Helm הוא package manager ל-Kubernetes, בדומה ל-apt או npm.\nChart הוא חבילה שמכילה templates של Kubernetes resources וקובץ values.yaml עם ערכי ברירת מחדל.\nבזמן התקנה, Helm מרנדר את ה-templates לפי ה-values ומייצר manifests סופיים שנשלחים לקלאסטר.\nבמקום לנהל עשרות קבצי YAML ידנית, מתקינים Chart אחד ומגדירים רק את מה שצריך לשנות.",
             },
             {
               q: "מה הפקודה להתקנת Helm Chart\u200F?",
@@ -2748,7 +2750,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Helm is Kubernetes' package manager. Like apt or npm.\nA Chart bundles YAML templates with configurable defaults in values.yaml.\nInstead of managing dozens of YAML files, install one Chart and configure with values.",
+                "Helm is a package manager for Kubernetes, similar to apt or npm.\nA Chart is a package containing Kubernetes resource templates and a values.yaml file with configurable defaults.\nDuring installation, Helm renders the templates using the values and produces final manifests that are applied to the cluster.\nInstead of managing dozens of YAML files manually, you install one Chart and override only what you need.",
             },
             {
               q: "What command installs a Helm Chart?",
@@ -2854,16 +2856,16 @@ export const TOPICS = [
                 "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade.\n`helm template` רק מרנדר YAML בלי להתקין. `helm rollback` לא מקבל --set. `helm show values` מציג ערכים בלבד.\nלשינויים מרובים עדיף --values (-f) עם קובץ YAML מותאם.",
             },
             {
-              q: "כיצד מרחיבים PVC?",
+              q: "כיצד מגדילים את נפח האחסון של PVC קיים ב-Kubernetes",
               options: [
-              "מגדירים allowVolumeExpansion: true ב-StorageClass ומגדילים spec.resources.requests.storage",
-              "kubectl merge-pvc\nיוצרים PVC שני ומשתמשים לאיחוד הנפחים",
+              "מעדכנים את שדה `capacity.storage` ישירות ב-PV המחובר ל-PVC",
               "מוחקים את ה-PVC ויוצרים חדש עם גודל גדול יותר באותו StorageClass",
-              "משנים את ה-PV הקיים ישירות ומעדכנים את capacity.storage בו",
+              "מגדילים את `spec.resources.requests.storage` ב-PVC כש-StorageClass תומך בהרחבה",
+              "יוצרים PVC נוסף ומאחדים את שני הנפחים באמצעות `kubectl merge-pvc`",
 ],
-              answer: 0,
+              answer: 2,
               explanation:
-                "ה-StorageClass חייב להגדיר allowVolumeExpansion: true.\nאז מגדילים spec.resources.requests.storage ב-PVC וה-provisioner מרחיב את הדיסק.\nהקטנה לא נתמכת, ובחלק מה-backends נדרש Pod restart.",
+                "כדי להרחיב PVC, ה-StorageClass חייב להגדיר `allowVolumeExpansion: true`.\nאחרי שזה מוגדר, מגדילים את הערך של `spec.resources.requests.storage` ב-PVC:\n```yaml\nspec:\n  resources:\n    requests:\n      storage: 20Gi\n```\nה-provisioner מרחיב את הדיסק אוטומטית. הקטנה לא נתמכת, ובחלק מה-backends נדרש Pod restart.",
             },
             {
               q: "מה הפקודה\n\n```\nhelm template\n```\n\nעושה?",
@@ -2954,16 +2956,16 @@ export const TOPICS = [
                 "--set key=value overrides values from values.yaml at install/upgrade time.\n`helm template` only renders YAML without installing. `helm rollback` does not accept --set. `helm show values` only displays values.\nFor multiple overrides, use --values (-f) with a custom YAML file.",
             },
             {
-              q: "How do you expand a PVC?",
+              q: "How do you increase the storage size of an existing PVC in Kubernetes",
               options: [
-              "Edit the existing PV directly and update its capacity.storage field",
-              "kubectl merge-pvc\nCreate a second PVC and use to combine the volumes",
-              "Set allowVolumeExpansion: true in the StorageClass then increase spec.resources.requests.storage",
+              "Update the `capacity.storage` field directly on the PV bound to the PVC",
               "Delete the PVC and recreate it with a larger size in the same StorageClass",
+              "Increase `spec.resources.requests.storage` in the PVC when the StorageClass supports expansion",
+              "Create an additional PVC and merge both volumes using `kubectl merge-pvc`",
 ],
               answer: 2,
               explanation:
-                "The StorageClass must have allowVolumeExpansion: true.\nThen increase spec.resources.requests.storage in the PVC and the provisioner resizes the disk.\nShrinking is not supported, and some backends require a Pod restart.",
+                "To expand a PVC, the StorageClass must have `allowVolumeExpansion: true`.\nOnce that is set, increase the value of `spec.resources.requests.storage` in the PVC:\n```yaml\nspec:\n  resources:\n    requests:\n      storage: 20Gi\n```\nThe provisioner resizes the disk automatically. Shrinking is not supported, and some backends require a Pod restart.",
             },
             {
               q: "What does the command\n\n```\nhelm template\n```\n\ndo?",
@@ -3084,7 +3086,7 @@ export const TOPICS = [
                 "Immediate יוצר PV מיד, אך הוא עלול להיווצר ב-Zone שונה מה-Pod.\nWaitForFirstConsumer מעכב יצירת PV עד שה-Pod מתזמן ל-Node, ויוצר PV באותה Zone.\nקריטי בסביבות multi-AZ כמו AWS EKS.",
             },
             {
-              q: "ה-PVC נשאר במצב Pending.\n\nהרצת:\n\n```\nkubectl describe pvc\n```\n\nפלט:\n\n```\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nמה הבעיה?",
+              q: "ה-PVC נשאר במצב Pending.\n\n```\n$ kubectl describe pvc\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nמה הבעיה",
               options: [
               "ה-StorageClass בשם fast-ssd לא קיים ב-Cluster",
               "ה-PVC וה-Pod נמצאים ב-Namespaces שונים",
@@ -3186,7 +3188,7 @@ export const TOPICS = [
                 "Immediate creates a PV right away, but it might end up in a different Zone than the Pod.\nWaitForFirstConsumer delays PV creation until the Pod is scheduled, then creates it in the same Zone.\nCritical in multi-AZ environments like AWS EKS.",
             },
             {
-              q: "A PVC stays in Pending state.\n\nCommand:\n\n```\nkubectl describe pvc\n```\n\nOutput:\n\n```\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nWhat is wrong?",
+              q: "A PVC stays in Pending state.\n\n```\n$ kubectl describe pvc\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nWhat is wrong",
               options: [
               "The PVC requests more storage than the Cluster can provide",
               "The StorageClass named fast-ssd does not exist in the Cluster",
@@ -3704,7 +3706,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "`etcdctl snapshot save` יוצר snapshot מלא של etcd:\u200E כל מצב ה-Cluster.\nחובה לציין --endpoints, --cacert, --cert, ו--key לאימות.\nזהו הכלי הראשי ל-Disaster Recovery.",
+                "`etcdctl snapshot save` יוצר snapshot מלא של מסד הנתונים של etcd.\nה-snapshot מכיל את כל מצב ה-cluster בזמן הצילום (כל ה-keys והנתונים).\nבדרך כלל צריך לציין גם:\n`--endpoints`, `--cacert`, `--cert`, `--key` כדי להתחבר ל-etcd בצורה מאובטחת.\nקובץ ה-snapshot משמש בעיקר ל-Disaster Recovery כדי לשחזר את מצב ה-cluster במקרה של תקלה.",
             },
             {
               q: "ה-Pod רץ, אבל ה-liveness probe נכשל שוב ושוב.\n\nהפלט של `kubectl describe pod` מציג:\n\n```\nError: Liveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nמה בודקים?",
@@ -3802,7 +3804,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "`etcdctl snapshot save` creates a full snapshot of etcd: the entire cluster state.\nMust provide --endpoints, --cacert, --cert, and --key for authentication.\nThis is the standard backup method for disaster recovery.",
+                "`etcdctl snapshot save` creates a full snapshot of the etcd database.\nThe snapshot contains the entire cluster state at the moment it was taken (all keys and data).\nIn most environments you also need to specify\n`--endpoints`, `--cacert`, `--cert`, and `--key` in order to connect to etcd securely.\nThe snapshot file is mainly used for disaster recovery, allowing the cluster state to be restored if etcd fails.",
             },
             {
               q: "A Pod is running, but the liveness probe keeps failing.\n\nThe output of `kubectl describe pod` shows:\n\n```\nError: Liveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nWhat do you check?",
@@ -4290,7 +4292,7 @@ export const TOPICS = [
             explanation: "טווח הפורטים הזמין הוא 32768-60999, כלומר 28,232 פורטים בסך הכל.\nss -s מראה 28,231 חיבורים פעילים, נשאר פורט אחד בלבד.\nחיבור חדש ייכשל עם EADDRNOTAVAIL כי אין פורטים פנויים.\nהפתרון המיידי הוא להרחיב את הטווח או להפעיל tcp_tw_reuse.\nלטווח ארוך, connection pooling מונע מצב שבו כל בקשה פותחת חיבור חדש.",
           },
           {
-            q: "אתה בודק שגיאות בלוגים של הקרנל ומריץ:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של הקרנל, מספרים שליליים מייצגים קודי שגיאה מוגדרים (\u2066errno\u2069).\n\nמה \u2066error -12\u2069 מציין ככל הנראה",
+            q: "אתה בודק שגיאות בלוגים של הקרנל ומריץ:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של הקרנל, מספרים שליליים מייצגים קודי שגיאה מוגדרים (\u2066errno\u2069).\n\nמה `error -12` מציין ככל הנראה",
             options: [
               "\u2066ENOMEM\u2069 - הקרנל לא הצליח להקצות זיכרון עבור ה-\u2066driver\u2069",
               "\u2066EACCES\u2069 - ה-\u2066driver\u2069 דורש הרשאות \u2066root\u2069 כדי להיטען",
@@ -4442,9 +4444,9 @@ export const TOPICS = [
             tags: ["gitops-sync"],
             options: [
               "Synced אומר שהמצב תואם Git, Healthy אומר שהמשאבים עובדים תקין",
-              "Synced ו-Healthy זה אותו דבר, רק שמות שונים",
-              "Healthy אומר שהמצב תואם Git, Synced אומר שה-Pods רצים",
-              "Synced מתייחס ל-repo ו-Healthy מתייחס ל-ArgoCD עצמו",
+              "Synced ו-Healthy שניהם מתארים את הקשר בין Git לקלאסטר",
+              "Healthy אומר שהמצב תואם Git, Synced אומר שה-Pods עובדים תקין",
+              "Synced מתייחס לחיבור בין ArgoCD ל-repo, Healthy למצב ה-controller",
             ],
             answer: 0,
             explanation: "אלה שני מדדים נפרדים:\nSync Status - האם המצב בקלאסטר תואם את Git (Synced / OutOfSync).\nHealth Status - האם המשאבים עצמם תקינים (Healthy / Degraded / Progressing).\nאפשר להיות Synced אבל Degraded, למשל כשה-manifests הוחלו אבל ה-Pod נופל ב-CrashLoopBackOff.",
@@ -4474,10 +4476,10 @@ export const TOPICS = [
           {
             q: "מהנדס רואה שאפליקציה ב-ArgoCD מסומנת Synced אבל Degraded.\n\nמה הסיבה הסבירה?",
             options: [
-              "ה-manifests ב-Git לא תקינים",
+              "ה-manifests ב-Git מכילים שגיאות syntax שלא עברו validation",
               "ה-manifests הוחלו בהצלחה אבל ה-Pods נכשלים ב-runtime",
-              "ArgoCD לא מצליח להתחבר ל-Git",
-              "ה-namespace לא קיים בקלאסטר",
+              "ArgoCD לא מצליח להתחבר ל-Git repo ולכן לא יכול לסנכרן",
+              "ה-namespace שמוגדר ב-destination לא קיים בקלאסטר עדיין",
             ],
             answer: 1,
             explanation: "Synced = ה-manifests הוחלו בהצלחה, הקלאסטר תואם את Git.\nDegraded = יש בעיה ב-runtime, למשל Pod ב-CrashLoopBackOff או ImagePullBackOff.\nהבעיה היא לא ב-manifests עצמם אלא באפליקציה או ב-image.\nאם Git לא נגיש, ה-sync status היה Unknown, לא Synced.",
@@ -4486,10 +4488,10 @@ export const TOPICS = [
             q: "מפתח דוחף שינוי ל-Git.\nArgoCD מוגדר עם auto-sync ו-self-heal.\n\nמהנדס אחר עושה `kubectl edit` ומשנה משהו ידנית בקלאסטר.\n\nמה יקרה?",
             tags: ["gitops-sync"],
             options: [
-              "השינוי הידני יישאר כי הוא נעשה אחרון",
+              "השינוי הידני יישאר כי ArgoCD לא עוקב אחרי שינויים בקלאסטר",
               "ArgoCD יזהה את ה-drift ויחזיר את המצב למה שמוגדר ב-Git",
-              "ArgoCD יציג התראה אבל לא ישנה כלום",
-              "ArgoCD ייכשל כי יש conflict בין Git לקלאסטר",
+              "ArgoCD יציג התראה ב-UI וימתין לאישור ידני לפני תיקון",
+              "ArgoCD ימזג את השינוי הידני לתוך ה-Git repo אוטומטית",
             ],
             answer: 1,
             explanation: "self-heal אומר ש-ArgoCD לא רק מסנכרן כשיש שינוי ב-Git, אלא גם מתקן drift בקלאסטר.\nאם מישהו שינה משהו ידנית, ArgoCD יזהה את ההבדל ויחזיר את המצב למה שמוגדר ב-Git.\nזה מבטיח שה-Git repo נשאר ה-source of truth האמיתי.",
@@ -4505,8 +4507,8 @@ export const TOPICS = [
             options: [
               "ArgoCD יתעלם מהשינוי כי ConfigMap כבר קיים בקלאסטר",
               "ArgoCD ימחק את ה-ConfigMap מהקלאסטר כי הוא כבר לא ב-Git",
-              "ArgoCD יציג אזהרה אבל לא ימחק כלום",
-              "ArgoCD ייכשל ב-sync כי חסר manifest",
+              "ArgoCD יציג אזהרה ב-UI וימתין לאישור לפני מחיקה",
+              "ArgoCD ייכשל ב-sync כי הוא מצפה שכל המשאבים קיימים",
             ],
             answer: 1,
             explanation: "prune: true אומר ל-ArgoCD למחוק מהקלאסטר משאבים שכבר לא קיימים ב-Git.\nבלי prune, ArgoCD היה מתעלם ממשאבים שנמחקו מ-Git.\nזה חשוב להבין כי prune יכול למחוק משאבים בלי אזהרה.",
@@ -4525,10 +4527,10 @@ export const TOPICS = [
           {
             q: "צוות משתמש ב-HPA שמשנה את מספר ה-replicas אוטומטית.\nArgoCD כל הזמן מציג OutOfSync כי replicas בקלאסטר שונה מ-Git.\n\nמה הפתרון?",
             options: [
-              "לכבות את ה-HPA ולנהל replicas רק דרך Git",
+              "לכבות את ה-HPA ולנהל את מספר ה-replicas רק דרך Git",
               "להגדיר ignoreDifferences על /spec/replicas ב-Application",
-              "להגדיר auto-sync כדי שתמיד יחזור ל-Git",
-              "להוסיף replicas: null ל-manifests ב-Git",
+              "להפעיל selfHeal כדי שה-replicas תמיד יחזרו לערך ב-Git",
+              "להסיר את שדה replicas מה-manifests ולהגדיר minReplicas ב-HPA",
             ],
             answer: 1,
             explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\n```yaml\nignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n      - /spec/replicas\n```\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
@@ -4567,24 +4569,24 @@ export const TOPICS = [
             explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n    - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
-            q: "מה ההבדל בין prune: true ל-selfHeal: true?",
+            q: "מה ההבדל בין prune לבין selfHeal במנגנון auto-sync של ArgoCD",
             tags: ["gitops-reconcile"],
             options: [
               "prune מוחק משאבים שנמחקו מ-Git, selfHeal מתקן drift בקלאסטר",
-              "prune מתקן drift, selfHeal מוחק משאבים ישנים",
-              "prune עובד רק עם Helm, selfHeal עובד עם כל סוגי manifests",
-              "prune פועל פעם ביום, selfHeal פועל בזמן אמת",
+              "prune מתקן drift שנוצר ידנית, selfHeal מוחק משאבים שנמחקו מ-Git",
+              "prune עובד רק עם Helm charts, selfHeal עובד רק עם plain manifests",
+              "prune מטפל ב-resources ברמת cluster, selfHeal ב-resources ברמת namespace",
             ],
             answer: 0,
-            explanation: "prune: true - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\nselfHeal: true - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
+            explanation: "`prune: true` - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\n`selfHeal: true` - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
           },
           {
             q: "sync נכשל עם השגיאה:\n\n```\none or more objects failed to apply:\nnamespace \"payments\" not found\n```\n\nמה הפתרון?",
             options: [
-              "ליצור את ה-namespace ידנית ב-cluster",
-              "להוסיף את ה-namespace כמשאב ב-Git עם sync wave נמוך, או להפעיל CreateNamespace",
-              "למחוק את ה-Application ב-ArgoCD וליצור מחדש",
-              "לשנות את ה-destination namespace ל-default",
+              "ליצור את ה-namespace ידנית בקלאסטר ולהריץ sync שוב מה-UI",
+              "להוסיף Namespace manifest ב-Git עם sync wave נמוך, או להפעיל CreateNamespace",
+              "למחוק את ה-Application ב-ArgoCD וליצור אותה מחדש עם destination חדש",
+              "להעביר את כל ה-manifests ב-Git ל-namespace default כדי לעקוף את הבעיה",
             ],
             answer: 1,
             explanation: "הפתרון הנכון ב-GitOps הוא אחד משניים:\n1. להוסיף Namespace manifest ב-Git עם sync wave 0- כדי שייווצר ראשון.\n2. להפעיל CreateNamespace=true ב-syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n  - CreateNamespace=true\n\nיצירה ידנית עובדת אבל עוקפת GitOps.",
@@ -4598,10 +4600,10 @@ export const TOPICS = [
           {
             q: "ארגון מנהל 50 microservices ב-3 environments.\nכל שירות צריך Application נפרד ב-ArgoCD.\n\nמה הגישה הטובה ביותר?",
             options: [
-              "ליצור 150 Application manifests ידנית ב-Git",
+              "ליצור 150 Application manifests ידנית ב-Git עם Kustomize overlays per env",
               "להשתמש ב-ApplicationSet עם Matrix generator שמשלב clusters ו-Git directories",
-              "ליצור script שמריץ argocd app create בלולאה",
-              "להשתמש ב-Helm umbrella chart שמכיל את כל ה-Applications",
+              "ליצור CI script שמריץ argocd app create בלולאה עבור כל service ו-env",
+              "להשתמש ב-Helm umbrella chart עם subchart נפרד לכל microservice",
             ],
             answer: 1,
             explanation: "ApplicationSet עם Matrix generator משלב שני generators:\n- clusters: כל ה-environments (dev, staging, prod)\n- git directories: כל ה-microservices\n\nMatrix יוצר קומבינציה: 50 services x 3 environments = 150 Applications אוטומטית.\nהוספת service או environment חדש מייצרת Applications אוטומטית.",
@@ -4610,10 +4612,10 @@ export const TOPICS = [
             q: "צוות Platform רוצה שכל צוות יוכל לנהל רק את ה-Applications שלו.\n\nאיך מממשים multi-tenancy ב-ArgoCD?",
             tags: ["gitops-multitenancy"],
             options: [
-              "ArgoCD instance נפרד לכל צוות",
+              "ArgoCD instance נפרד לכל צוות עם Ingress ו-SSO משלו",
               "AppProject per team עם הגבלות על repos, namespaces ו-RBAC roles",
-              "Namespace per team ב-ArgoCD namespace",
-              "Git branch per team עם branch protection",
+              "Namespace per team בתוך argocd namespace עם ResourceQuotas",
+              "Git branch per team עם branch protection ו-webhook per branch",
             ],
             answer: 1,
             explanation: "AppProject מאפשר הגדרת הרשאות granular:\n- sourceRepos: אילו repos כל צוות יכול להשתמש\n- destinations: אילו namespaces/clusters מותרים\n- clusterResourceWhitelist: אילו cluster-level resources מותרים\n\nבשילוב עם RBAC ב-ArgoCD:\np, role:team-a, applications, *, team-a-project/*, allow\n\ninstance נפרד זה overhead מיותר.",
@@ -4645,9 +4647,9 @@ export const TOPICS = [
             q: "sync של אפליקציה גדולה נכשל עם:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nמה הבעיה ומה הפתרון?",
             options: [
               "ה-Application manifests חורגים מ-gRPC message size limit של ArgoCD",
-              "הקלאסטר אזל לו הזיכרון",
-              "ה-Git repo גדול מדי ל-clone",
-              "ArgoCD server צריך יותר CPU",
+              "הקלאסטר חורג מ-memory limits ו-OOMKill מונע את ה-sync",
+              "ה-Git repo חורג מגודל clone מקסימלי של argocd-repo-server",
+              "ה-argocd-server חורג ממגבלת CPU ולא מסוגל לרנדר manifests",
             ],
             answer: 0,
             explanation: "ArgoCD משתמש ב-gRPC לתקשורת פנימית.\nברירת המחדל של gRPC message size הוא 4MB.\nאפליקציות גדולות (הרבה manifests, CRDs כבדים) חורגות מהמגבלה.\n\nפתרון - להגדיל את ה-limit ב-argocd-server ו-argocd-repo-server:\n\n--max-recv-msg-size=8388608\n\nאו לפצל את האפליקציה ל-Applications קטנים יותר.",
@@ -4678,10 +4680,10 @@ export const TOPICS = [
             q: "ApplicationSet עם Matrix generator:\n\n```yaml\ngenerators:\n  - matrix:\n      generators:\n        - clusters:\n            selector:\n              matchLabels:\n                env: production\n        - list:\n            elements:\n              - app: payments\n                team: billing\n              - app: orders\n                team: commerce\n```\n\nכמה Applications ייווצרו אם יש 3 production clusters?",
             tags: ["gitops-appset-matrix"],
             options: [
-              "3 - אחד לכל cluster",
-              "2 - אחד לכל app",
-              "6 - cartesian product של clusters x apps",
-              "5 - סכום של clusters ו-apps",
+              "3 - Application אחד לכל cluster שתואם את ה-selector",
+              "2 - Application אחד לכל app שמוגדר ברשימת elements",
+              "6 - cartesian product של 3 clusters כפול 2 apps",
+              "5 - סכום של 3 clusters ועוד 2 apps מה-list generator",
             ],
             answer: 2,
             explanation: "ה-Matrix generator ב-ApplicationSet יוצר Cartesian product (כל הצירופים האפשריים) בין הרשימות שמוגדרות ב-generators.\nבמקרה הזה יש 3 clusters שנבחרו לפי env: production, ויש 2 אפליקציות ברשימת elements (payments ו-orders).\nApplicationSet יוצר Application עבור כל שילוב של cluster ואפליקציה.\nלכן מספר ה-Applications שייווצרו הוא:\n3 clusters × 2 apps = 6 Applications.",

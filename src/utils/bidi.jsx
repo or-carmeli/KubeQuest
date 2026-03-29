@@ -154,7 +154,10 @@ export function renderBidiInner(text, lang, keyPrefix) {
 // Trailing dots that are sentence punctuation (before whitespace, end, or another punct)
 // are excluded from the term capture so "ב-v1.25." keeps "." outside the term.
 // Dots inside tokens (v1.25, svc.cluster.local) are fine - they're followed by alphanumeric.
-export const HE_PREFIX_TERM_RE = /([\u0590-\u05FF])-([A-Za-z][A-Za-z0-9\-_./]*[A-Za-z0-9]|[A-Za-z])/g;
+// The optional trailing (?:\s+[A-Za-z][\w]*) captures additional English words that follow
+// the initial term (e.g. "ה-CNI plugin" → prefix=ה, term="CNI plugin") so they stay in the
+// same LTR span and don't get visually reversed in RTL context.
+export const HE_PREFIX_TERM_RE = /([\u0590-\u05FF])-([A-Za-z][A-Za-z0-9\-_./]*[A-Za-z0-9](?:\s+[A-Za-z][\w]*)*|[A-Za-z])/g;
 
 export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
   if (lang !== "he" || !HE_PREFIX_TERM_RE.test(text)) return null;
@@ -304,9 +307,12 @@ export function renderBidi(text, lang, opts) {
 // Regex to detect CLI commands in mixed text.
 // Matches: CLI tool name + one or more argument tokens (excludes Hebrew chars and opening parens
 // so parenthetical explanations like "(see memory usage)" are not captured as part of the command).
+// The (?<![a-zA-Z]) lookbehind prevents matching tool names inside longer words
+// (e.g. "liveness" contains "ss", "readiness" contains "ss" — without the lookbehind,
+// "liveness probe" would be split into "livene" + CLI match "ss probe").
 // The (?![-–—](?:\s|$)) lookahead prevents a standalone dash/en-dash/em-dash separator
 // (e.g. "helm install - deploys…") from being swallowed into the command match.
-export const CLI_COMMAND_RE = /((?:kubectl|docker|helm|aws|git|kubeadm|crictl|etcdctl|curl|wget|ps|lsof|head|tail|grep|df|du|free|top|ss|systemctl|journalctl|dmesg|strace|perf|iostat|sar|cat|ls|find|awk|sed|wc|vmstat|netstat|tcpdump|iptables|sysctl|mount|umount|uptime|apt|yum|pip|npm|make|fsck)(?:\s+(?![-\u2013\u2014](?:\s|$))(?!(?:is|are|was|were|has|can|will|the|a|an|on|in|of|to|for|from|with|not|and|or|but|it|its|this|that|these|those|which|what|how|however|because|fails|returns|shows|sets|sees|stops|manages|watches|requests|runs|cluster|running|package|packages|memory|space|point|file|files|output|process|them|up|down|over|all|every|most|about|by|at|as|into|only|also|so|if|be|no|yes|do|does|did|used|using|when|then|after|before|during|between|against|without|under|through)(?:\s|$|[.,;:!?]))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
+export const CLI_COMMAND_RE = /((?<![a-zA-Z\u0590-\u05EA])(?:kubectl|docker|helm|aws|git|kubeadm|crictl|etcdctl|curl|wget|ps|lsof|head|tail|grep|df|du|free|top|ss|systemctl|journalctl|dmesg|strace|perf|iostat|sar|cat|ls|find|awk|sed|wc|vmstat|netstat|tcpdump|iptables|sysctl|mount|umount|uptime|apt|yum|pip|npm|make|fsck)(?:\s+(?![-\u2013\u2014](?:\s|$))(?!(?:is|are|was|were|has|can|will|the|a|an|on|in|of|to|for|from|with|not|and|or|but|it|its|this|that|these|those|which|what|how|however|because|fails|returns|shows|sets|sees|stops|manages|watches|requests|runs|cluster|running|package|packages|memory|space|point|file|files|output|process|them|up|down|over|all|every|most|about|by|at|as|into|only|also|so|if|be|no|yes|do|does|did|used|using|when|then|after|before|during|between|against|without|under|through)(?:\s|$|[.,;:!?]))(?::[^\s]|[^\s\u0590-\u05FF(:])+)+)(?<![.,;:!?])/;
 
 // Splits text on CLI commands and renders commands as LTR code blocks on separate lines.
 export function splitCliParts(text, lang, keyPrefix) {

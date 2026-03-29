@@ -77,6 +77,7 @@ export const TAG_DIAGRAM_CONFIG = {
   "ingress-vs-lb":        { component: "IngressVsLbDiagram",         score: 4 },
   "network-policy-flow":  { component: "NetworkPolicyDiagram",       score: 4 },
   "headless-dns":         { component: "HeadlessServiceDiagram",     score: 4 },
+  "traffic-policy":       { component: "ExternalTrafficPolicyDiagram", score: 5 },
 
   // ── storage ─────────────────────────────────────────────────────────────
   "storage-binding":      { component: "PvPvcDiagram",               score: 4 },
