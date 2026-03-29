@@ -2061,16 +2061,16 @@ export const TOPICS = [
                 "LimitRange מגדיר ברירות מחדל ומגבלות CPU/Memory per-container ב-Namespace.\nמזריק default values ואוכף min/max אם container לא מציין requests/limits.\nללא LimitRange, Pod בודד יכול לצרוך את כל משאבי ה-Node.",
             },
             {
-              q: "מה עושה ההגדרה runAsNonRoot: true ב-securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
+              q: "מה עושה ההגדרה `runAsNonRoot: true` ב-securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
               "מצפינה את מערכת הקבצים של הקונטיינר",
-              "מונעת מהקונטיינר לרוץ כמשתמש root (UID 0)",
+              "מונעת מהקונטיינר לרוץ כמשתמש root (`UID 0`)",
               "מגבילה את צריכת ה-CPU של הקונטיינר לפי limits",
               "מגבילה את גישת הרשת של הקונטיינר",
 ],
               answer: 1,
               explanation:
-                "ההגדרה runAsNonRoot: true מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (UID 0).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
+                "ההגדרה `runAsNonRoot: true` מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (`UID 0`).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -2162,16 +2162,16 @@ export const TOPICS = [
                 "LimitRange sets default and max CPU/Memory per container in a Namespace.\nAuto-injects defaults and enforces min/max if containers don't specify them.\nWithout LimitRange, a single Pod can consume all Node resources.",
             },
             {
-              q: "What does the runAsNonRoot: true setting do in securityContext?\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
+              q: "What does the `runAsNonRoot: true` setting do in securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
               options: [
               "Encrypts the container's filesystem",
-              "Prevents the container from running as root user (UID 0)",
+              "Prevents the container from running as root user (`UID 0`)",
               "Limits the container's CPU usage according to limits",
               "Restricts the container's network access",
 ],
               answer: 1,
               explanation:
-                "The runAsNonRoot: true setting ensures the process inside the container does not run as root (UID 0).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
+                "The `runAsNonRoot: true` setting ensures the process inside the container does not run as root (`UID 0`).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
             },
             {
               q: "What is the difference between resource requests and limits?",
