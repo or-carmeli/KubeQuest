@@ -1062,15 +1062,16 @@ function renderQuestion(qText, lang, animate) {
           const codeLang = langMatch?.[1] || "";
           const code = para.replace(/^```\w*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
 
+          // Terminal command block (check before YAML auto-detection so
+          // command output like "Events:\n  Warning ..." isn't misclassified)
+          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)(?:\s|$)/m.test(code);
+          if (isCommand && codeLang !== "yaml" && codeLang !== "yml") {
+            return <TerminalBlock key={idx} animate={animate}>{code}</TerminalBlock>;
+          }
+
           // YAML block
           if (codeLang === "yaml" || codeLang === "yml" || (!codeLang && /^\s*[\w.\-/]+:\s/m.test(code) && /\n\s+\w/.test(code))) {
             return <YamlBlock key={idx}>{code}</YamlBlock>;
-          }
-
-          // Terminal command block
-          const isCommand = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)(?:\s|$)/m.test(code);
-          if (isCommand) {
-            return <TerminalBlock key={idx} animate={animate}>{code}</TerminalBlock>;
           }
 
           // Error output block

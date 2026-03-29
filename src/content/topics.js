@@ -2473,7 +2473,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "ל-my-sa אין הרשאת list pods ב-namespace prod. RBAC חוסם.\nליצור Role עם הרשאת list pods ו-RoleBinding שמקשר ל-my-sa.\n• מחיקת SA לא פותרת חוסר הרשאות • cluster-admin סיכון אבטחי • default SA גם ללא הרשאות.\nב-RBAC כל גישה חייבת Role + RoleBinding מפורשים.",
+                "ל־my-sa אין הרשאה לבצע list על משאב pods ב־namespace prod, ולכן מתקבלת שגיאת RBAC.\nהפתרון הנכון הוא ליצור Role שמעניק הרשאת list על pods בתוך prod, ואז לקשור אותו ל־ServiceAccount בשם my-sa באמצעות RoleBinding.",
             },
             {
               q: "הפקודה `kubectl apply` נכשלה עם השגיאה הבאה:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nמה המשמעות של השגיאה",
@@ -3095,7 +3095,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "ה\u2011PVC מפנה ל\u2011StorageClass בשם \u2066fast-ssd\u2069 שלא קיים ב\u2011Cluster\u200F.\nללא \u2066StorageClass\u2069\u200F, ה\u2011provisioner לא יודע ליצור \u2066PV\u2069\u200F.\nהריצו kubectl get storageclass לראות מה קיים.\n\u2066PVC\u2069 גדול מדי = שגיאה על \u2066capacity\u2069\n\u2066Node\u2069 מלא = לא קשור ל\u2011provisioning\n\u2066Namespace\u2069 שונה = שגיאה אחרת\u200F",
+                "ה\u2011PVC מבקש StorageClass בשם fast\u2011ssd, אבל StorageClass כזה לא קיים ב\u2011cluster.\nלכן ה\u2011provisioner לא יכול ליצור PersistentVolume עבור ה\u2011PVC, והוא נשאר במצב Pending.\nאפשר לאמת זאת עם:\nkubectl get storageclass",
             },
             {
               q: "הרצת:\n\n```\nhelm upgrade\n```\n\nה-upgrade כשל באמצע.\nRelease ב-\u200Estatus failed.\nה-ConfigMap עודכן חלקית.\n\nמה הצעד הבא?",
@@ -3493,7 +3493,7 @@ export const TOPICS = [
                 "הודעת Insufficient cpu אומרת של-Kubernetes אין Node עם מספיק CPU פנוי כדי להריץ את ה-Pod.\nה-scheduler של Kubernetes (הרכיב שמחליט על איזה Node להריץ Pod) משווה את ה-cpu requests שהוגדרו ב-Pod מול ה-capacity הזמין בכל Node.\nבמקרה הזה הבקשה ל-CPU גדולה ממה שזמין ב-Nodes, ולכן ה-Pod נשאר במצב Pending.\nכדי לפתור את הבעיה ניתן להקטין את ה-cpu requests, לפנות משאבים ב-Nodes קיימים, או להוסיף Nodes חדשים לקלאסטר.",
             },
             {
-              q: "מה קורה כש-liveness probe נכשל?",
+              q: "מה קורה כש-liveness probe נכשל",
               tags: ["probe-comparison"],
               options: [
               "Pod מוגדר NotReady",
