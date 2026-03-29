@@ -1210,12 +1210,12 @@ export const TOPICS = [
               options: [
               "ingress rule לאפשר תגובות נכנסות",
               "Service מסוג LoadBalancer ב-Namespace",
-              "הגדרת hostNetwork: true ב-spec של ה-Pod",
-              "egress rule עם ipBlock: cidr: 0.0.0.0/0 לאפשר גישה ל-IPs חיצוניים",
+              "הגדרת `hostNetwork: true` ב-spec של ה-Pod",
+              "egress rule עם `ipBlock: {cidr: 0.0.0.0/0}` לאפשר גישה ל-IPs חיצוניים",
 ],
               answer: 3,
               explanation:
-                "podSelector:{} מאפשר תנועה רק ל-Pods. IPs חיצוניים חסומים.\nלהוסיף egress rule עם ipBlock: {cidr: '0.0.0.0/0'} + port 53 ל-DNS.\npodSelector מכסה רק Pods בתוך ה-Cluster, לא IPs חיצוניים.",
+                "`podSelector: {}` מאפשר תנועה רק ל-Pods. IPs חיצוניים חסומים.\nלהוסיף egress rule עם `ipBlock: {cidr: 0.0.0.0/0}` + `port 53` ל-DNS.\npodSelector מכסה רק Pods בתוך ה-Cluster, לא IPs חיצוניים.",
             },
         ],
         questionsEn: [
@@ -1308,13 +1308,13 @@ export const TOPICS = [
               q: "A Pod cannot reach the internet.\n\nCommand:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nResult: timeout\n\nNetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nWhat is missing?",
               options: [
               "A LoadBalancer Service in the Namespace",
-              "An egress rule with ipBlock: cidr: 0.0.0.0/0 to allow external IPs",
+              "An egress rule with `ipBlock: {cidr: 0.0.0.0/0}` to allow external IPs",
               "An ingress rule to allow response traffic",
-              "Setting hostNetwork: true in the Pod spec",
+              "Setting `hostNetwork: true` in the Pod spec",
 ],
               answer: 1,
               explanation:
-                "podSelector:{} allows traffic only to Pods. External IPs are blocked.\nAdd egress rule with ipBlock: {cidr: '0.0.0.0/0'} + port 53 for DNS.\npodSelector covers only in-cluster Pods, not external IPs.",
+                "`podSelector: {}` allows traffic only to Pods. External IPs are blocked.\nAdd egress rule with `ipBlock: {cidr: 0.0.0.0/0}` + `port 53` for DNS.\npodSelector covers only in-cluster Pods, not external IPs.",
             },
         ],
       },
