@@ -4569,7 +4569,7 @@ export const TOPICS = [
             explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n    - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
-            q: "מה ההבדל בין prune: true ל-selfHeal: true?",
+            q: "מה ההבדל בין prune לבין selfHeal במנגנון auto-sync של ArgoCD",
             tags: ["gitops-reconcile"],
             options: [
               "prune מוחק משאבים שנמחקו מ-Git, selfHeal מתקן drift בקלאסטר",
@@ -4578,7 +4578,7 @@ export const TOPICS = [
               "prune פועל פעם ביום, selfHeal פועל בזמן אמת",
             ],
             answer: 0,
-            explanation: "prune: true - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\nselfHeal: true - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
+            explanation: "`prune: true` - כשמשאב נמחק מ-Git, ArgoCD ימחק אותו גם מהקלאסטר.\n`selfHeal: true` - כשמישהו משנה משהו ידנית בקלאסטר, ArgoCD יחזיר את המצב ל-Git.\nשניהם פועלים בזמן אמת כחלק מ-auto-sync.\nשניהם עובדים עם כל סוגי manifests.",
           },
           {
             q: "sync נכשל עם השגיאה:\n\n```\none or more objects failed to apply:\nnamespace \"payments\" not found\n```\n\nמה הפתרון?",
