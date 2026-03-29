@@ -1191,7 +1191,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "מה אומרת השגיאה:\nendpoints not found אומר שה-Service קיים, אבל אין לו Endpoints.\n\nאיך Endpoints נוצרים:\nכש-Service מוגדר עם selector, Kubernetes מחפש Pods עם labels תואמים.\nאם יש Pods תואמים, הם נרשמים כ-Endpoints של ה-Service.\nאם אין Pods תואמים, רשימת ה-Endpoints ריקה.\n\nלמה זה גורם ל-503:\nה-Ingress מנתב traffic ל-Service, אבל ה-Service לא יודע לאן להעביר אותו כי אין Endpoints.\nלכן ה-Ingress Controller מחזיר 503 (Service Unavailable).\n\nאיך מתקנים:\nבודקים את ה-selector של ה-Service ואת ה-labels של ה-Pods ומוודאים שהם תואמים.",
+                "השגיאה אומרת שה-Service קיים, אבל אין לו Endpoints.\nEndpoints נוצרים כשיש Pods שה-labels שלהם תואמים ל-selector של ה-Service.\nאם אין Pods תואמים, לא נוצרים Endpoints, ולכן ה-Ingress לא יודע לאן להעביר את הבקשה ומחזיר 503 (Service Unavailable).\nבדרך כלל הסיבה היא חוסר התאמה בין ה-selector של ה-Service לבין ה-labels של ה-Pods.",
             },
             {
               q: "ה-Pod מנסה לגשת ל-Service ולא מצליח.\n\nכתובת שנוסתה:\n\n```\napi-svc.backend.cluster.local\n```\n\nמה ה-FQDN הנכון של Service בשם api-svc ב-Namespace backend?",
@@ -1290,7 +1290,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "What the error means:\nendpoints not found means the Service exists, but it has no Endpoints.\n\nHow Endpoints are created:\nWhen a Service has a selector, Kubernetes looks for Pods with matching labels.\nIf matching Pods exist, they are registered as Endpoints for that Service.\nIf no Pods match, the Endpoints list is empty.\n\nWhy this causes a 503:\nThe Ingress routes traffic to the Service, but the Service has nowhere to send it because there are no Endpoints.\nSo the Ingress Controller returns 503 (Service Unavailable).\n\nHow to fix:\nCheck the Service selector and the Pod labels and make sure they match.",
+                "The error means the Service exists, but it has no Endpoints.\nEndpoints are created when Pods have labels that match the Service selector.\nIf no Pods match, no Endpoints are created, so the Ingress has nowhere to route the request and returns 503 (Service Unavailable).\nThe most common cause is a mismatch between the Service selector and the Pod labels.",
             },
             {
               q: "A Pod tries to access a Service and fails.\n\nAddress tried:\n\n```\napi-svc.backend.cluster.local\n```\n\nWhat is the correct FQDN for Service api-svc in Namespace backend?",
