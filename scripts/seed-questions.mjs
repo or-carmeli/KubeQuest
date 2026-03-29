@@ -62,6 +62,7 @@ for (const topic of TOPICS) {
           options: q.options,
           answer: q.answer,
           explanation: q.explanation,
+          tags: q.tags || [],
         });
       }
     }
@@ -76,6 +77,7 @@ for (const topic of TOPICS) {
           options: q.options,
           answer: q.answer,
           explanation: q.explanation,
+          tags: q.tags || [],
         });
       }
     }
@@ -115,6 +117,7 @@ for (const [lang, questions] of Object.entries(DAILY_QUESTIONS)) {
       options: q.options,
       answer: q.answer,
       explanation: q.explanation,
+      tags: q.tags || [],
     });
   }
 }
@@ -152,6 +155,7 @@ for (const incident of INCIDENTS) {
     answer: step.answer,
     explanation: step.explanation,
     explanation_he: step.explanationHe,
+    tags: step.tags || [],
   }));
 
   const { error: stepError } = await supabase.from("incident_steps").insert(stepRows);
