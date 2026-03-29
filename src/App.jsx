@@ -3334,6 +3334,31 @@ export default function K8sQuestApp() {
     if (isGuest) window.va?.track?.("guest_play_started", { topic: topic.name || topic.id });
   };
 
+  /** Build a shuffled pool of topic-only questions (excludes daily questions). */
+  const buildTopicsPool = (language) => {
+    const all = [];
+    AVAILABLE_TOPICS.forEach(topic => {
+      LEVEL_ORDER.forEach(level => {
+        const qs = getLocalizedField(topic.levels[level], "questions", language);
+        qs.forEach(q => all.push(q));
+      });
+    });
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    return all;
+  };
+
+  /** Filter out any daily questions that may have leaked into a server response. */
+  const excludeDailyQuestions = (questions) => {
+    const dailyTexts = new Set();
+    Object.values(DAILY_QUESTIONS).forEach(pool => {
+      pool.forEach(dq => dailyTexts.add(dq.q.slice(0, 80)));
+    });
+    return questions.filter(q => !dailyTexts.has((q.q || "").slice(0, 80)));
+  };
+
   const startMixedQuiz = async () => {
     quizRunIdRef.current = Date.now().toString(36);
     liveIndexRef.current = 0;
@@ -3344,36 +3369,22 @@ export default function K8sQuestApp() {
     if (supabase && !isGuest) {
       setLoadingQuestions(true);
       try {
-        rawQs = await fetchMixedQuestions(supabase, lang, 10);
+        const serverQs = await fetchMixedQuestions(supabase, lang, 10);
+        rawQs = excludeDailyQuestions(serverQs);
+        // Backfill from topics pool if daily questions were filtered out
+        if (rawQs.length < 10) {
+          const backfill = buildTopicsPool(lang)
+            .filter(q => !rawQs.some(r => r.q === q.q))
+            .slice(0, 10 - rawQs.length);
+          rawQs = [...rawQs, ...backfill];
+        }
       } catch (err) {
         captureError(err, { flow: "fetchMixedQuestions", screen, isGuest });
-        const all = [];
-        AVAILABLE_TOPICS.forEach(topic => {
-          LEVEL_ORDER.forEach(level => {
-            const qs = getLocalizedField(topic.levels[level], "questions", lang);
-            qs.forEach(q => all.push(q));
-          });
-        });
-        for (let i = all.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [all[i], all[j]] = [all[j], all[i]];
-        }
-        rawQs = all.slice(0, 10);
+        rawQs = buildTopicsPool(lang).slice(0, 10);
       }
       setLoadingQuestions(false);
     } else {
-      const all = [];
-      AVAILABLE_TOPICS.forEach(topic => {
-        LEVEL_ORDER.forEach(level => {
-          const qs = getLocalizedField(topic.levels[level], "questions", lang);
-          qs.forEach(q => all.push(q));
-        });
-      });
-      for (let i = all.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [all[i], all[j]] = [all[j], all[i]];
-      }
-      rawQs = all.slice(0, 10);
+      rawQs = buildTopicsPool(lang).slice(0, 10);
     }
     setMixedQuestions(shuffleOptions(rawQs));
     isRetryRef.current = false;
