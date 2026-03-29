@@ -513,7 +513,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "OOMKilled (exit code 137): הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-resources.limits.memory.\nה-Linux kernel אוכף מגבלות זיכרון דרך cgroups. כשהקונטיינר מנסה להקצות יותר מהמותר, ה-OOM Killer הורג את התהליך כדי להגן על ה-Node.\n\nאיתור:\nkubectl describe pod <pod>\nReason: OOMKilled | Exit Code: 137\nה-Pod עלול להיכנס ל-CrashLoopBackOff.\n\nפתרון: הגדל limits.memory, או חפש memory leak בקוד.",
+                "OOMKilled (exit code 137): הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-`limits.memory`.\nפתרון: הגדל `limits.memory`, או חפש memory leak בקוד.",
             },
             {
               q: "מה התפקיד של topologySpreadConstraints בתזמון Pods ב-Kubernetes?",
@@ -615,7 +615,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "OOMKilled (exit code 137): container exceeded the memory limit defined in resources.limits.memory.\nThe Linux kernel enforces memory limits via cgroups. When a container tries to allocate beyond the allowed limit, the OOM Killer terminates the process to protect the Node.\n\nDetection:\nkubectl describe pod <pod>\nReason: OOMKilled | Exit Code: 137\nPod may restart and enter CrashLoopBackOff.\n\nFix: increase limits.memory, or investigate a memory leak in the app.",
+                "OOMKilled (exit code 137): container exceeded the memory limit defined in `limits.memory`.\nFix: increase `limits.memory`, or investigate a memory leak in the app.",
             },
             {
               q: "What is the role of topologySpreadConstraints in Kubernetes scheduling?",
