@@ -2476,7 +2476,7 @@ export const TOPICS = [
                 "ל-my-sa אין הרשאת list pods ב-namespace prod. RBAC חוסם.\nליצור Role עם הרשאת list pods ו-RoleBinding שמקשר ל-my-sa.\n• מחיקת SA לא פותרת חוסר הרשאות • cluster-admin סיכון אבטחי • default SA גם ללא הרשאות.\nב-RBAC כל גישה חייבת Role + RoleBinding מפורשים.",
             },
             {
-              q: "ניסיון לפרוס Deployment נכשל עם השגיאה:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nמה קורה?",
+              q: "הפקודה `kubectl apply` נכשלה עם השגיאה הבאה:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nמה המשמעות של השגיאה",
               options: [
               "ה-Namespace שצוין ב-Deployment לא קיים ב-Cluster",
               "Admission webhook חסם את ה-image כי הוא לא מ-registry מאושר",
@@ -2485,7 +2485,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Kyverno admission webhook חוסם images שלא מ-gcr.io/. policy-as-code.\nלשנות את ה-image למקור מ-gcr.io/ או לעדכן את ה-policy.\n• API crash = לא הייתה הודעת שגיאה • RBAC = \"forbidden\" לא \"webhook denied\" • Namespace missing = שגיאה אחרת.\nAdmission webhook רץ לפני שמירה ב-etcd ויכול לחסום כל create/update.",
+                "השגיאה מגיעה מ-Kyverno admission webhook.\nKyverno הוא מנגנון policy-as-code שמאכף חוקים על משאבי Kubernetes בזמן יצירה או עדכון.\nבמקרה הזה קיימת מדיניות שמאפשרת להשתמש רק ב-container images שמגיעים מ-`gcr.io`.\nכאשר ה-Deployment מנסה להשתמש ב-image מ-registry אחר, ה-admission webhook חוסם את הבקשה ולכן ה-API server מחזיר שגיאה.\nכדי לפתור: להשתמש ב-image מ-`gcr.io` או לעדכן את ה-Kyverno policy.\n• `webhook denied` = admission webhook חסם • `forbidden` = RBAC • API crash = לא הייתה הודעת שגיאה מובנית.",
             },
             {
               q: "ה-Deployment נדחה על ידי PSA עם policy מסוג restricted.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nאיזה securityContext צריך להגדיר ל-container כדי לעמוד במדיניות?",
@@ -2576,7 +2576,7 @@ export const TOPICS = [
                 "my-sa lacks list pods permission in namespace prod. RBAC blocks the request.\nCreate a Role with list pods permission and a RoleBinding to my-sa.\n• Deleting SA doesn't fix missing permissions • cluster-admin is a security risk • default SA also has no permissions.\nIn RBAC, every API access requires explicit Role + RoleBinding.",
             },
             {
-              q: "A Deployment fails to deploy with the error:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nWhat is happening?",
+              q: "`kubectl apply` failed with the following error:\n\n```\nError from server: admission webhook 'validate.kyverno.svc'\ndenied the request:\nContainer image must come from 'gcr.io/'\n```\n\nWhat does this error mean",
               options: [
               "The Kubernetes API server has crashed and is not responding",
               "The Namespace specified in the Deployment does not exist in the Cluster",
@@ -2585,7 +2585,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Kyverno admission webhook blocks images not from gcr.io/. Policy-as-code enforcement.\nChange the image to one from gcr.io/ or update the Kyverno policy.\n• API crash = no structured error message • RBAC = \"forbidden\" not \"webhook denied\" • Missing namespace = different error.\nAdmission webhooks run before etcd save and can block any create/update request.",
+                "The error comes from a Kyverno admission webhook.\nKyverno is a policy-as-code engine that enforces rules on Kubernetes resources during creation or update.\nIn this case, a policy only allows container images from `gcr.io`.\nWhen the Deployment tries to use an image from another registry, the admission webhook blocks the request and the API server returns an error.\nTo fix: use an image from `gcr.io` or update the Kyverno policy.\n• `webhook denied` = admission webhook blocked • `forbidden` = RBAC • API crash = no structured error message.",
             },
             {
               q: "A Deployment is rejected by PSA with a restricted policy.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nWhich securityContext must you set on the container to comply?",
