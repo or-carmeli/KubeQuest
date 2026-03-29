@@ -899,25 +899,37 @@ function HelmChartDiagram() {
   return (
     <div style={wrap}>
       <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+        {/* Chart package */}
         <div style={box(C.indigo, C.indigoBg, { width: "100%", padding: "8px 10px" })}>
           <div style={label(C.indigoText, { marginBottom: 6, fontSize: 10 })}>Helm Chart</div>
           <div style={row({ gap: 6 })}>
             <div style={smallBox(C.purple, C.purpleBg, C.purpleText, { fontSize: 8, padding: "3px 6px" })}>templates/</div>
             <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>+</span>
             <div style={smallBox(C.amber, C.amberBg, C.amberText, { fontSize: 8, padding: "3px 6px" })}>values.yaml</div>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>+</span>
+            <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { fontSize: 8, padding: "3px 6px" })}>Chart.yaml</div>
           </div>
         </div>
+        {/* Rendering step */}
         <div style={col({ gap: 1 })}>
-          <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>helm install</span>
+          <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>helm install / upgrade</span>
+          <div style={arrow()}>↓</div>
+        </div>
+        <div style={box(C.purple, C.purpleBg, { width: "100%", padding: "6px 10px" })}>
+          <div style={label(C.purpleText, { fontSize: 9 })}>Rendered Manifests</div>
+        </div>
+        {/* Apply to cluster */}
+        <div style={col({ gap: 1 })}>
+          <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>apply to cluster</span>
           <div style={arrow()}>↓</div>
         </div>
         <div style={row({ gap: 6 })}>
-          <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "4px 6px" })}>Deploy</div>
+          <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "4px 6px" })}>Deployment</div>
           <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "4px 6px" })}>Service</div>
           <div style={smallBox(C.green, C.greenBg, C.greenText, { fontSize: 8, padding: "4px 6px" })}>ConfigMap</div>
         </div>
       </div>
-      <div style={caption()}>templates + values = rendered K8s resources</div>
+      <div style={caption()}>templates + values → rendered manifests → K8s resources</div>
     </div>
   );
 }

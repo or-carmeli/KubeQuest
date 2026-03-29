@@ -2651,7 +2651,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Helm הוא package manager ל-Kubernetes. כמו apt או npm.\nChart הוא חבילה של YAML templates עם ערכי ברירת מחדל ב-values.yaml.\nבמקום לנהל עשרות קבצי YAML, מתקינים Chart אחד ומגדירים עם values.",
+                "Helm הוא package manager ל-Kubernetes, בדומה ל-apt או npm.\nChart הוא חבילה שמכילה templates של Kubernetes resources וקובץ values.yaml עם ערכי ברירת מחדל.\nבזמן התקנה, Helm מרנדר את ה-templates לפי ה-values ומייצר manifests סופיים שנשלחים לקלאסטר.\nבמקום לנהל עשרות קבצי YAML ידנית, מתקינים Chart אחד ומגדירים רק את מה שצריך לשנות.",
             },
             {
               q: "מה הפקודה להתקנת Helm Chart\u200F?",
@@ -2750,7 +2750,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Helm is Kubernetes' package manager. Like apt or npm.\nA Chart bundles YAML templates with configurable defaults in values.yaml.\nInstead of managing dozens of YAML files, install one Chart and configure with values.",
+                "Helm is a package manager for Kubernetes, similar to apt or npm.\nA Chart is a package containing Kubernetes resource templates and a values.yaml file with configurable defaults.\nDuring installation, Helm renders the templates using the values and produces final manifests that are applied to the cluster.\nInstead of managing dozens of YAML files manually, you install one Chart and override only what you need.",
             },
             {
               q: "What command installs a Helm Chart?",
