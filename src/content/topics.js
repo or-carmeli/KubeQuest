@@ -4292,7 +4292,7 @@ export const TOPICS = [
             explanation: "טווח הפורטים הזמין הוא 32768-60999, כלומר 28,232 פורטים בסך הכל.\nss -s מראה 28,231 חיבורים פעילים, נשאר פורט אחד בלבד.\nחיבור חדש ייכשל עם EADDRNOTAVAIL כי אין פורטים פנויים.\nהפתרון המיידי הוא להרחיב את הטווח או להפעיל tcp_tw_reuse.\nלטווח ארוך, connection pooling מונע מצב שבו כל בקשה פותחת חיבור חדש.",
           },
           {
-            q: "אתה בודק שגיאות בלוגים של הקרנל ומריץ:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של הקרנל, מספרים שליליים מייצגים קודי שגיאה מוגדרים (\u2066errno\u2069).\n\nמה \u2066error -12\u2069 מציין ככל הנראה",
+            q: "אתה בודק שגיאות בלוגים של הקרנל ומריץ:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של הקרנל, מספרים שליליים מייצגים קודי שגיאה מוגדרים (\u2066errno\u2069).\n\nמה `error -12` מציין ככל הנראה",
             options: [
               "\u2066ENOMEM\u2069 - הקרנל לא הצליח להקצות זיכרון עבור ה-\u2066driver\u2069",
               "\u2066EACCES\u2069 - ה-\u2066driver\u2069 דורש הרשאות \u2066root\u2069 כדי להיטען",
