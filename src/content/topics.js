@@ -3086,7 +3086,7 @@ export const TOPICS = [
                 "Immediate יוצר PV מיד, אך הוא עלול להיווצר ב-Zone שונה מה-Pod.\nWaitForFirstConsumer מעכב יצירת PV עד שה-Pod מתזמן ל-Node, ויוצר PV באותה Zone.\nקריטי בסביבות multi-AZ כמו AWS EKS.",
             },
             {
-              q: "ה-PVC נשאר במצב Pending.\n\nהרצת:\n\n```\nkubectl describe pvc\n```\n\nפלט:\n\n```\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nמה הבעיה?",
+              q: "ה-PVC נשאר במצב Pending.\n\n```\n$ kubectl describe pvc\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nמה הבעיה",
               options: [
               "ה-StorageClass בשם fast-ssd לא קיים ב-Cluster",
               "ה-PVC וה-Pod נמצאים ב-Namespaces שונים",
@@ -3188,7 +3188,7 @@ export const TOPICS = [
                 "Immediate creates a PV right away, but it might end up in a different Zone than the Pod.\nWaitForFirstConsumer delays PV creation until the Pod is scheduled, then creates it in the same Zone.\nCritical in multi-AZ environments like AWS EKS.",
             },
             {
-              q: "A PVC stays in Pending state.\n\nCommand:\n\n```\nkubectl describe pvc\n```\n\nOutput:\n\n```\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nWhat is wrong?",
+              q: "A PVC stays in Pending state.\n\n```\n$ kubectl describe pvc\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nWhat is wrong",
               options: [
               "The PVC requests more storage than the Cluster can provide",
               "The StorageClass named fast-ssd does not exist in the Cluster",
