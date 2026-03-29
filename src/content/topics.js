@@ -3706,7 +3706,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "`etcdctl snapshot save` יוצר snapshot מלא של etcd:\u200E כל מצב ה-Cluster.\nחובה לציין --endpoints, --cacert, --cert, ו--key לאימות.\nזהו הכלי הראשי ל-Disaster Recovery.",
+                "`etcdctl snapshot save` יוצר snapshot מלא של מסד הנתונים של etcd.\nה-snapshot מכיל את כל מצב ה-cluster בזמן הצילום (כל ה-keys והנתונים).\nבדרך כלל צריך לציין גם:\n`--endpoints`, `--cacert`, `--cert`, `--key` כדי להתחבר ל-etcd בצורה מאובטחת.\nקובץ ה-snapshot משמש בעיקר ל-Disaster Recovery כדי לשחזר את מצב ה-cluster במקרה של תקלה.",
             },
             {
               q: "ה-Pod רץ, אבל ה-liveness probe נכשל שוב ושוב.\n\nהפלט של `kubectl describe pod` מציג:\n\n```\nError: Liveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nמה בודקים?",
@@ -3804,7 +3804,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "`etcdctl snapshot save` creates a full snapshot of etcd: the entire cluster state.\nMust provide --endpoints, --cacert, --cert, and --key for authentication.\nThis is the standard backup method for disaster recovery.",
+                "`etcdctl snapshot save` creates a full snapshot of the etcd database.\nThe snapshot contains the entire cluster state at the moment it was taken (all keys and data).\nIn most environments you also need to specify\n`--endpoints`, `--cacert`, `--cert`, and `--key` in order to connect to etcd securely.\nThe snapshot file is mainly used for disaster recovery, allowing the cluster state to be restored if etcd fails.",
             },
             {
               q: "A Pod is running, but the liveness probe keeps failing.\n\nThe output of `kubectl describe pod` shows:\n\n```\nError: Liveness probe failed:\nHTTP probe failed with statuscode: 404\n```\n\nWhat do you check?",
