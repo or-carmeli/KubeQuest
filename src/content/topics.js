@@ -987,13 +987,13 @@ export const TOPICS = [
                 "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n  - host: api.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: api-svc\n  - host: web.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: web-svc\n```",
             },
             {
-              q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`?",
+              q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`",
               tags: ["traffic-policy"],
               options: [
               "Cluster מפזר עומס שווה בין כל ה-Pods; Local שולח תנועה רק ל-Pod הקרוב ביותר",
               "Local דורש externalIPs מוגדרים; Cluster עובד עם כל סוגי Service כולל ClusterIP",
               "Local מעביר תנועה רק ל-Pods על אותו Node ושומר client IP; Cluster מעביר לכל Pod ומבצע SNAT",
-              "Local שומר על session affinity אוטומטי; Cluster דורש הגדרת sessionAffinity: ClientIP",
+              "Local שומר על session affinity אוטומטי; Cluster דורש הגדרת `sessionAffinity: ClientIP`",
 ],
               answer: 2,
               explanation:
@@ -1093,7 +1093,7 @@ export const TOPICS = [
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
               tags: ["traffic-policy"],
               options: [
-              "Local maintains automatic session affinity; Cluster requires explicit sessionAffinity: ClientIP",
+              "Local maintains automatic session affinity; Cluster requires explicit `sessionAffinity: ClientIP`",
               "Local routes traffic only to Pods on the same Node and preserves client IP; Cluster forwards to any Pod and performs SNAT",
               "Local requires configured externalIPs; Cluster works with all Service types including ClusterIP",
               "Cluster distributes load equally across all Pods; Local sends traffic only to the nearest Pod",
