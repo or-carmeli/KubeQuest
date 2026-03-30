@@ -8,6 +8,11 @@ import { readFileSync, writeFileSync } from "fs";
 const FILE = new URL("../src/content/topics.js", import.meta.url).pathname;
 let src = readFileSync(FILE, "utf-8");
 
+/** Escape a string for safe embedding inside a JS double-quoted string literal. */
+function escapeForJS(s) {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
 // ── Content fixes: map from question substring → [newOptions, correctIndex] ──
 // The correct answer is at the given index BEFORE shuffling.
 const FIXES = {
@@ -361,7 +366,7 @@ for (const [qSubstr, [newOpts, correctIdx]] of Object.entries(FIXES)) {
   const indent = indentMatch ? indentMatch[1] : "              ";
 
   // Build new options block
-  const optLines = newOpts.map(o => `${indent}"${o.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",`).join("\n");
+  const optLines = newOpts.map(o => `${indent}"${escapeForJS(o)}",`).join("\n");
   const newOptBlock = `options: [\n${optLines}\n${indent}]`;
 
   // Replace options block
@@ -512,7 +517,7 @@ for (const [qSubstr, [newOpts, correctIdx]] of Object.entries(FIXES)) {
   const beforeOpt = src.slice(optStart - 20, optStart);
   const indentMatch = beforeOpt.match(/\n(\s+)$/);
   const indent = indentMatch ? indentMatch[1] : "              ";
-  const optLines = newOpts.map(o => `${indent}"${o.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",`).join("\n");
+  const optLines = newOpts.map(o => `${indent}"${escapeForJS(o)}",`).join("\n");
   const newOptBlock = `options: [\n${optLines}\n${indent}]`;
   src = src.slice(0, optStart) + newOptBlock + src.slice(optEnd + 1);
   const newOptEnd = src.indexOf("],", optStart);

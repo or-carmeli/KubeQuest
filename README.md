@@ -1,8 +1,8 @@
 # ☸️ KubeQuest
 
-**Interactive Kubernetes learning game for DevOps engineers.**
+**Interactive Kubernetes learning game for DevOps/SRE engineers.**
 
-Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, and build CKA-level knowledge - through interactive quizzes, incident simulations, and daily challenges. The learning path covers the core domains commonly tested in the Certified Kubernetes Administrator (CKA) exam.
+Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, and build production-level knowledge - through interactive quizzes, incident simulations, and daily challenges.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-kubequest.online-00D4FF?style=flat-square&logo=vercel)](https://www.kubequest.online/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
@@ -40,6 +40,10 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 - [Testing](#testing)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
+- [Performance Insights](#performance-insights-dev-only-observability)
+- [Changelog](#changelog)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ---
 
@@ -64,7 +68,7 @@ Practice real-world Kubernetes scenarios, sharpen your troubleshooting skills, a
 
 ## Learning Path
 
-The learning path is structured around the core knowledge areas expected for CKA-level Kubernetes proficiency:
+The learning path is structured around core Kubernetes knowledge areas:
 
 | # | Topic | Key Areas |
 |---|-------|-----------|
@@ -75,9 +79,7 @@ The learning path is structured around the core knowledge areas expected for CKA
 | 5 | **Storage & Helm** | PV/PVC, StorageClass, dynamic provisioning, access modes, Helm |
 | 6 | **Troubleshooting & Debugging** | CrashLoopBackOff, ImagePullBackOff, Node NotReady, DNS issues, probe failures |
 | 7 | **OS & Linux Deep Dive** | Processes, memory, CPU, networking, container runtime internals |
-| 8 | **Argo & GitOps** | ArgoCD, sync policies, ApplicationSets, App of Apps *(coming soon)* |
-
-> KubeQuest is not affiliated with or endorsed by the Linux Foundation or CNCF. CKA is a trademark of the Cloud Native Computing Foundation.
+| 8 | **Argo & GitOps** | ArgoCD, sync policies, ApplicationSets, App of Apps *(Coming Soon)* |
 
 ---
 
@@ -185,7 +187,7 @@ flowchart LR
     style DB fill:#111827,stroke:#F59E0B,stroke-width:2px,color:#fff
 ```
 
-Four layers of defense — no layer trusts the one above it:
+Six layers of defense — no layer trusts the one above it:
 
 | Layer | Controls |
 |-------|----------|
@@ -561,50 +563,26 @@ Key test areas:
 
 ```
 src/
-  App.jsx              # Main application (UI + state)
-  main.jsx             # Entry point (Sentry init, Web Vitals, React mount)
-  api/
-    quiz.js            # Quiz, daily, incident, leaderboard RPCs
-    monitoring.js      # System status monitoring RPCs
-  content/
-    topics.js          # Quiz questions by topic and level
-    incidents.js       # Incident Mode scenarios
-    dailyQuestions.js  # Daily Challenge question pool
-  components/
-    RoadmapView.jsx    # Visual learning path
-    StatsView.jsx      # User statistics dashboard
-    StatusView.jsx     # System status monitor
-    WeakAreaCard.jsx   # Lowest-accuracy topic card
-    ErrorBoundary.jsx       # Crash recovery wrapper + Sentry capture
-    PerformanceInsights.jsx # Dev-only observability dashboard (real telemetry)
-  utils/
-    telemetry.js            # Sentry wrapper (error capture, scrubbing, web vitals)
-    storage.js              # Safe localStorage layer with corruption recovery
-    bidi.jsx                # BiDi text rendering for Hebrew/English mixed content
-    quizPersistence.js      # localStorage helpers for quiz resume
-    realTelemetry.js        # Real client-side telemetry collector
-    hybridTelemetry.js      # Snapshot builder with time-range filtering
-    mockTelemetry.js        # Analysis engine (health, insights, confidence)
+  App.jsx                  # Main application (UI + state)
+  main.jsx                 # Entry point (Sentry init, Web Vitals, React mount)
+  api/                     # Supabase RPCs (quiz, monitoring, analytics, telemetry)
+  content/                 # Quiz questions, daily challenges, incidents, scenarios
+  components/              # UI components (quiz, roadmap, stats, status, architecture)
+    architecture/          # Architecture scenario components
+    shared/                # Reusable UI primitives
+  hooks/                   # Custom React hooks
+  utils/                   # Helpers (storage, i18n, bidi, telemetry, persistence)
 public/
-  sw.js                # Service worker (offline cache, build-stamped)
-k8s/                   # Kubernetes manifests (namespace, deployment, service, ingress, HPA)
-  policies/            # Kyverno policies (trusted registries, no-latest, resource limits)
+  sw.js                    # Service worker (offline cache, build-stamped)
+k8s/                       # Kubernetes manifests (namespace, deployment, service, ingress, HPA)
+  policies/                # Kyverno policies (trusted registries, no-latest, resource limits)
 supabase/
-  migrations/          # Database schema and RPCs (11 migrations)
-  functions/
-    health-check/      # Edge Function - real-time service health checks
+  migrations/              # Database schema and RPCs
+  functions/               # Edge Functions (health-check, collect-metrics)
 .github/
-  workflows/
-    ci.yml             # PR gate (build, npm audit, Gitleaks, CodeQL, Trivy, K8s policies)
-    docker.yml         # Container build, scan, push, SBOM, provenance, Cosign sign
-    security.yml       # Weekly security scanning (npm audit, Trivy, CodeQL)
-    synthetic-monitor.yml  # Smoke tests every 6h (homepage, assets, response time, headers)
-    uptime.yml         # External uptime checks every 30 min
-  dependabot.yml       # Weekly dependency updates (npm, Docker, Actions)
-docs/
-  monitoring.md        # Health-check monitoring documentation
-  observability.md     # Full observability guide (Sentry, alerts, SLOs, web vitals)
-  k8s-admission-policies.md  # Runtime admission policy guide (Kyverno, OPA, Cosign)
+  workflows/               # CI, Docker, security, synthetic monitoring, uptime, seed
+  dependabot.yml           # Weekly dependency updates (npm, Docker, Actions)
+docs/                      # Monitoring, observability, K8s admission policies
 ```
 
 ---

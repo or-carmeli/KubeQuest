@@ -278,7 +278,7 @@ function processTopicsFile() {
         }
         // Insert hint before answer line
         const indent = lines[answerLineIdx].match(/^(\s*)/)[1];
-        newLines.push(`${indent}hint: "${hint.replace(/"/g, '\\"')}",`);
+        newLines.push(`${indent}hint: "${hint.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",`);
         newLines.push(lines[i]); // the answer line
         i++;
         added++;
@@ -341,7 +341,7 @@ function processDailyFile() {
       const hint = generateHint(qText, tags, lang);
 
       // Insert hint before answer:
-      line = line.replace(/,answer:/, `,hint:"${hint.replace(/"/g, '\\"')}",answer:`);
+      line = line.replace(/,answer:/, `,hint:"${hint.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",answer:`);
       added++;
     }
     // Also handle multi-line questions in dailyQuestions
@@ -366,9 +366,9 @@ function processDailyFile() {
             const hint = generateHint(qText, tags, lang);
             // Insert hint into the line with answer
             if (lines[j].includes(',answer:')) {
-              lines[j] = lines[j].replace(/,answer:/, `,hint:"${hint.replace(/"/g, '\\"')}",answer:`);
+              lines[j] = lines[j].replace(/,answer:/, `,hint:"${hint.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",answer:`);
             } else {
-              lines[j] = lines[j].replace(/answer:/, `hint: "${hint.replace(/"/g, '\\"')}",\n              answer:`);
+              lines[j] = lines[j].replace(/answer:/, `hint: "${hint.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",\n              answer:`);
             }
             added++;
           }
