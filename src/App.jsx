@@ -5814,10 +5814,15 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     <button
                       onClick={async()=>{
                         const q=currentQuestions[questionIndex];
-                        if(typeof q.answer==="number"){setHintVisible(true);return;}
+                        if(typeof q.answer==="number"){
+                          // Local hint: eliminate one wrong answer (interview-style)
+                          const wrong=q.options.map((_,i)=>i).filter(i=>i!==q.answer&&(selectedAnswer===null||i!==selectedAnswer));
+                          if(wrong.length>0){const pick=wrong[Math.floor(Math.random()*wrong.length)];const label=t("optionLabels")[pick];setServerHintText(lang==="he"?`תשובה ${label} לא נכונה`:`Option ${label} is incorrect`);}
+                          setHintVisible(true);return;
+                        }
                         if(supabase&&q.id&&!hintLoading){
                           setHintLoading(true);
-                          try{const source=selectedTopic?.id==="daily"?"daily":"quiz";const res=await fetchQuestionHint(supabase,q.id,source);if(res?.hint){setServerHintText(res.hint);setHintVisible(true);}}
+                          try{const source=selectedTopic?.id==="daily"?"daily":"quiz";const res=await fetchQuestionHint(supabase,q.id,source);if(res?.hint){const h=res.hint;const short=h.length>50?h.slice(0,47)+"...":h;setServerHintText(short);setHintVisible(true);}}
                           catch(err){console.warn("[hint]",err);}
                           finally{setHintLoading(false);}
                         }
@@ -5837,7 +5842,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </div>
                   {hintVisible&&(
                     <div role="note" dir={dir} style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"11px 14px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,unicodeBidi:"isolate",wordBreak:"break-word",overflowWrap:"anywhere",animation:"fadeIn 0.2s ease"}}>
-                      {renderBidiBlock((()=>{const raw=serverHintText||(currentQuestions[questionIndex]?.explanation||"").split(/[.\n]/)[0].trim();if(!raw)return"";return raw.length>50?raw.slice(0,47)+"...":raw;})(), lang)}
+                      {serverHintText ? renderBidiBlock(serverHintText, lang) : null}
                     </div>
                   )}
                 </div>
