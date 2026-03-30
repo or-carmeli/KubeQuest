@@ -1338,6 +1338,7 @@ export default function K8sQuestApp() {
   const isGuest = user?.id === "guest";
   const achievementsLoaded = useRef(false);
   const loadingDataRef = useRef(false); // prevents concurrent loadUserData calls
+  const rankInitializedRef = useRef(false); // skip confetti on initial rank load
   const prevLangRef = useRef(lang);     // tracks previous lang for mid-quiz language switch detection
   const quizRunIdRef  = useRef(null);
   const prefetchedAnswerRef = useRef(null); // { idx, questionId, result } - cached answer-check RPC
@@ -2549,9 +2550,11 @@ export default function K8sQuestApp() {
       const rankData = await fetchUserRank(supabase, user.id);
       if (rankData) {
         setUserRank(prev => {
-          if (prev && rankData.rank && prev.rank && rankData.rank < prev.rank) {
+          // Only show confetti after the initial load — not on app startup
+          if (rankInitializedRef.current && prev && rankData.rank && prev.rank && rankData.rank < prev.rank) {
             setShowConfetti("rare"); setTimeout(() => setShowConfetti(null), 2200);
           }
+          rankInitializedRef.current = true;
           return rankData;
         });
       }
@@ -2718,6 +2721,7 @@ export default function K8sQuestApp() {
       setUserRank(null);
       setSaveError("");
       achievementsLoaded.current = false;
+      rankInitializedRef.current = false;
       loadingDataRef.current = false;
       setDataLoaded(true);
       return;
@@ -2735,6 +2739,7 @@ export default function K8sQuestApp() {
     setSaveError("");
     try { localStorage.removeItem("topicStats_v1"); } catch {}
     achievementsLoaded.current = false;
+    rankInitializedRef.current = false;
     loadingDataRef.current = false;
     setDataLoaded(true);
   };
@@ -2813,6 +2818,8 @@ export default function K8sQuestApp() {
     const saved = resumeData;
     if (!saved) return;
     submittingRef.current = false;
+    prefetchAbortRef.current?.abort();
+    prefetchedAnswerRef.current = null;
 
     // Resolve topic object
     let topic = null;
@@ -3280,12 +3287,15 @@ export default function K8sQuestApp() {
       updateDailyStreak();
       window.va?.track?.("quiz_completed", { score: finalCorrect, totalQuestions: currentQuestions.length, topic: selectedTopic?.name || selectedTopic?.id });
       if (finalCorrect < currentQuestions.length) window.va?.track?.("quiz_failed", { score: finalCorrect, topic: selectedTopic?.name || selectedTopic?.id });
+      setScreen("topicComplete");
       } catch (err) {
         console.error("[QUIZ] nextQuestion error:", err.message);
         captureError(err, { flow: "nextQuestion", screen, isGuest, extra: { topic: selectedTopic?.id, level: selectedLevel, questionIndex } });
         submittingRef.current = false;
+        // Still transition to completion screen - data was partially applied
+        // and staying on the quiz screen with stale state would be worse.
+        setScreen("topicComplete");
       }
-      setScreen("topicComplete");
     } else {
       submittingRef.current = false;
       prefetchAbortRef.current?.abort();
@@ -3347,6 +3357,8 @@ export default function K8sQuestApp() {
     lastSessionScoreRef.current = 0; bestImprovedRef.current = true;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setHintVisible(false); setServerHintText(null); setEliminatedOption(null);
+    setTryAgainActive(false); setTryAgainSelected(null);
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? (INTERVIEW_DURATIONS[level] || 25) : (TIMER_DURATIONS[level] || 30));
     setScreen("topic");
     if (isGuest) achievementsLoaded.current = true;
@@ -3415,6 +3427,8 @@ export default function K8sQuestApp() {
     setShowExplanation(false);    topicCorrectRef.current = 0; lastSessionScoreRef.current = 0; bestImprovedRef.current = true;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setHintVisible(false); setServerHintText(null); setEliminatedOption(null);
+    setTryAgainActive(false); setTryAgainSelected(null);
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? INTERVIEW_DURATIONS.mixed : TIMER_DURATIONS.mixed);
     setScreen("topic");
     window.va?.track?.("quiz_started", { topic: "Mixed Quiz", difficulty: "mixed", mode: "mixed" });
@@ -3435,6 +3449,8 @@ export default function K8sQuestApp() {
     setShowExplanation(false);    topicCorrectRef.current = 0; lastSessionScoreRef.current = 0; bestImprovedRef.current = true;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setHintVisible(false); setServerHintText(null); setEliminatedOption(null);
+    setTryAgainActive(false); setTryAgainSelected(null);
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? INTERVIEW_DURATIONS.mixed : TIMER_DURATIONS.mixed);
     setScreen("topic");
     window.va?.track?.("quiz_started", { topic: "Mixed Quiz", difficulty: "mixed", mode: "mixed_replay" });
@@ -3483,6 +3499,8 @@ export default function K8sQuestApp() {
     setShowExplanation(false);    topicCorrectRef.current = 0; lastSessionScoreRef.current = 0; bestImprovedRef.current = true;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setHintVisible(false); setServerHintText(null); setEliminatedOption(null);
+    setTryAgainActive(false); setTryAgainSelected(null);
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? INTERVIEW_DURATIONS.daily : TIMER_DURATIONS.daily);
     setScreen("topic");
     window.va?.track?.("quiz_started", { topic: "Daily Challenge", difficulty: "daily", mode: "daily" });
@@ -3573,6 +3591,8 @@ export default function K8sQuestApp() {
     setShowExplanation(false);    topicCorrectRef.current = 0; lastSessionScoreRef.current = 0; bestImprovedRef.current = true;
     setQuizHistory([]); setShowReview(false); setShowConfetti(false);
     setSessionScore(0); setRetryMode(false); setAllowNextLevel(false);
+    setHintVisible(false); setServerHintText(null); setEliminatedOption(null);
+    setTryAgainActive(false); setTryAgainSelected(null);
     if (timerEnabled || isInterviewMode) setTimeLeft(isInterviewMode ? INTERVIEW_DURATIONS.mixed : TIMER_DURATIONS.mixed);
     setScreen("topic");
     setShowBookmarks(false);
@@ -3630,7 +3650,6 @@ export default function K8sQuestApp() {
         ...s,
         promptHe: s.prompt_he ?? s.promptHe,
         optionsHe: s.options_he ?? s.optionsHe,
-        explanationHe: s.explanation_he ?? s.explanationHe,
         // Fallback: merge local answer/explanation when server omits them
         answer: s.answer ?? local?.answer,
         explanation: s.explanation ?? local?.explanation,

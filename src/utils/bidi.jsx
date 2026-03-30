@@ -190,8 +190,8 @@ export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
     let value = p.value;
     let gap = null;
     if (parts[i + 1]?.type === "prefixTerm" && /\s+$/.test(value)) {
-      gap = value.match(/(\s+)$/)[1];
-      value = value.slice(0, -gap.length);
+      gap = value.match(/(\s+)$/)?.[1] ?? null;
+      if (gap) value = value.slice(0, -gap.length);
     }
     // Extract trailing sentence punctuation (?.!) from the LAST text segment
     // so it renders outside the bidi isolation span. Without this, punctuation
@@ -200,7 +200,7 @@ export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
     let trailingPunct = null;
     if (i === parts.length - 1 && /[.?!]+$/.test(value)) {
       const punctMatch = value.match(/([.?!]+)$/);
-      trailingPunct = punctMatch[1];
+      trailingPunct = punctMatch?.[1] ?? null;
       value = value.slice(0, -trailingPunct.length);
     }
     return [
