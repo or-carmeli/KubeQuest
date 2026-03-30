@@ -6182,7 +6182,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </button>;
               })()}
               {/* Next level button */}
-              {selectedTopic.id!=="mixed"&&effectivelyComplete&&getNextLevel(selectedLevel)&&(()=>{
+              {selectedTopic.id!=="mixed"&&selectedTopic.id!=="daily"&&effectivelyComplete&&getNextLevel(selectedLevel)&&(()=>{
                 const nextLvl=getNextLevel(selectedLevel);
                 const nextCfg=LEVEL_CONFIG[nextLvl];
                 return(
