@@ -19,7 +19,7 @@ export async function fetchQuizQuestions(supabase, topicId, level, lang) {
 
 /**
  * Fetch random mixed questions across all topics (WITHOUT answers).
- * Returns: [{ id, q, options, level }]
+ * Returns: [{ id, q, options, level, topic_id }]
  */
 export async function fetchMixedQuestions(supabase, lang, limit = 10) {
   const { data, error } = await supabase.rpc("get_mixed_questions", {

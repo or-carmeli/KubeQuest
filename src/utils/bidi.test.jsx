@@ -693,6 +693,18 @@ describe("Linux CLI commands bidi rendering", () => {
     expect(ltrs.some((t) => t.includes("+D") || t.includes("D"))).toBe(true);
   });
 
+  // @regression - colon+space between two LTR tokens must merge them
+  // Without this fix, "runAsNonRoot: true" splits into two LTR islands
+  // with ": " in RTL flow, causing bidi reversal to "true :runAsNonRoot".
+  it("key: value pair stays together: runAsNonRoot: true", () => {
+    const input = "ההגדרה runAsNonRoot: true מבטיחה";
+    const result = renderBidiInner(input, "he", "t");
+    const ltrs = ltrTexts(result);
+
+    // "runAsNonRoot: true" should be a single LTR span
+    expect(ltrs.some((t) => t.includes("runAsNonRoot: true"))).toBe(true);
+  });
+
   // @regression - flag with numeric argument must stay in same LTR span
   // Without this fix, "-n 50" renders as "50 -n" because the number is left
   // as neutral text that gets bidi-reordered in RTL context.

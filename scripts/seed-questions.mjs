@@ -64,6 +64,7 @@ for (const topic of TOPICS) {
           answer: q.answer,
           explanation: q.explanation,
           tags: q.tags || [],
+          hint: q.hint || null,
         });
       }
     }
@@ -79,6 +80,7 @@ for (const topic of TOPICS) {
           answer: q.answer,
           explanation: q.explanation,
           tags: q.tags || [],
+          hint: q.hint || null,
         });
       }
     }
@@ -119,6 +121,7 @@ for (const [lang, questions] of Object.entries(DAILY_QUESTIONS)) {
       answer: q.answer,
       explanation: q.explanation,
       tags: q.tags || [],
+      hint: q.hint || null,
     });
   }
 }

@@ -117,16 +117,19 @@ export function renderBidiInner(text, lang, keyPrefix) {
   // Dots mid-path (/var/log.d/) are fine since they're followed by more path chars.
   const parts = text.split(/((?:(?<![\u0590-\u05FF])(?:--?|\+)[A-Za-z][\w\-]*(?:=[^\s\u0590-\u05FF]*)?(?:\s+\d[\d.]*)?(?:\s+(?=(?:--?|\+)?[A-Za-z]))?)+|(?:(?<![\u0590-\u05EA])\/[A-Za-z][A-Za-z0-9\-_/.:]*(?<!\.))|(?:[A-Za-z](?:[A-Za-z0-9\-_/=]|:[A-Za-z0-9]|\.[A-Za-z0-9])*(?:\s+(?=(?:--?|\+)?[A-Za-z]))?)+|[←])/);
   if (parts.length <= 1) return text;
-  // Merge adjacent LTR parts separated only by whitespace into a single LTR span.
-  // Without merging, "ps aux" and "--sort=-%mem" become separate LTR islands
-  // that get visually reversed in RTL paragraph context.
+  // Merge adjacent LTR parts separated only by whitespace (or colon+space)
+  // into a single LTR span. Without merging, "ps aux" and "--sort=-%mem"
+  // become separate LTR islands that get visually reversed in RTL paragraph
+  // context. The colon+space case prevents "runAsNonRoot: true" from being
+  // split into two LTR islands with ": " in RTL flow, which causes the bidi
+  // algorithm to reverse them to "true :runAsNonRoot".
   const isLtr = (p) => p && (/^[A-Za-z]/.test(p) || /^(?:--?|\+)[A-Za-z]/.test(p) || /^\/[A-Za-z]/.test(p));
   const merged = [];
   for (let i = 0; i < parts.length; i++) {
     if (isLtr(parts[i])) {
       let combined = parts[i];
-      // Keep merging while the next separator is whitespace-only and the part after is LTR
-      while (i + 2 < parts.length && parts[i + 1] && /^\s+$/.test(parts[i + 1]) && isLtr(parts[i + 2])) {
+      // Keep merging while the next separator is whitespace-only or colon+space and the part after is LTR
+      while (i + 2 < parts.length && parts[i + 1] && /^(?:\s+|:\s+)$/.test(parts[i + 1]) && isLtr(parts[i + 2])) {
         combined += parts[i + 1] + parts[i + 2];
         i += 2;
       }

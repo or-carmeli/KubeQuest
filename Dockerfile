@@ -15,7 +15,7 @@ RUN npm run build
 FROM nginx:alpine AS runner
 
 # Patch OS-level vulnerabilities
-RUN apk upgrade --no-cache && apk add --no-cache libexpat
+RUN apk upgrade --no-cache && apk add --no-cache libexpat libpng
 
 # Copy built assets (owned by nginx user for non-root operation)
 COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html
