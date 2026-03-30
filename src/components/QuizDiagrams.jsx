@@ -2069,24 +2069,16 @@ function StatefulSetVsDeploymentDiagram() {
 function WaitForConsumerDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
-        <div style={subLabel({ textAlign: "center", marginBottom: 6, fontSize: 10 })}>Immediate</div>
-        <div style={row({ gap: 4 })}>
-          <div style={smallBox(C.amber, C.amberBg, C.amberText)}>PVC created</div>
-          <span style={arrow()}>&rarr;</span>
-          <div style={smallBox(C.amber, C.amberBg, C.amberText)}>PV bound (any zone)</div>
-        </div>
-        <div style={{ ...dashed, width: "100%", margin: "10px 0" }} />
-        <div style={subLabel({ textAlign: "center", marginBottom: 6, fontSize: 10 })}>WaitForFirstConsumer</div>
-        <div style={row({ gap: 4 })}>
-          <div style={smallBox(C.green, C.greenBg, C.greenText)}>PVC created</div>
-          <span style={arrow()}>&rarr;</span>
-          <div style={smallBox(C.green, C.greenBg, C.greenText)}>Pod scheduled</div>
-          <span style={arrow()}>&rarr;</span>
-          <div style={smallBox(C.green, C.greenBg, C.greenText)}>PV bound (same zone)</div>
+      <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
+        <div style={row({ gap: 6, flexWrap: "nowrap", justifyContent: "center" })}>
+          <div style={smallBox(C.green, C.greenBg, C.greenText)}>PVC</div>
+          <div style={arrow({ fontSize: 13 })}>→</div>
+          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText)}>Pod scheduled</div>
+          <div style={arrow({ fontSize: 13 })}>→</div>
+          <div style={smallBox(C.amber, C.amberBg, C.amberText)}>PV bound</div>
         </div>
       </div>
-      <div style={caption()}>WaitForFirstConsumer ensures PV and Pod are co-located</div>
+      <div style={caption()}>PV is created in the same zone as the Pod</div>
     </div>
   );
 }

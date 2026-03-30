@@ -3130,7 +3130,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Kubernetes מחבר בין PVC ל-PV לפי התאמה של כמה פרמטרים:\n`storageClassName`\n`accessModes`\nגודל האחסון (ה-PV חייב להיות גדול או שווה לבקשה של ה-PVC)\nכאשר נמצא PV מתאים, Kubernetes יוצר binding בין ה-PVC ל-PV.\nPV הוא משאב ברמת ה-cluster, ולכן הוא לא שייך ל-Namespace מסוים.\nלאחר ה-binding, ה-PVC וה-PV נשארים מקושרים עד שאחד מהם נמחק.",
+                "Kubernetes מחבר בין PVC ל-PV כאשר המאפיינים שלהם תואמים.\nההתאמה מתבצעת לפי:\n\u200F• `storageClassName`\n\u200F• `accessModes`\n\u200F• storage capacity\nבנוסף, גודל ה-PV חייב להיות גדול או שווה לבקשה של ה-PVC.\nכאשר נמצא PV מתאים, Kubernetes יוצר binding בין ה-PVC ל-PV.\nלאחר ה-binding הם נשארים מקושרים עד שאחד מהם נמחק.",
             },
         ],
         questionsEn: [
@@ -3238,13 +3238,13 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "Kubernetes binds a PVC to a PV based on matching parameters:\n`storageClassName`\n`accessModes`\nstorage capacity (the PV must be greater than or equal to the PVC request)\nWhen a suitable PV is found, Kubernetes creates a binding between the PVC and the PV.\nNote that a PV is a cluster-level resource, so it does not belong to a specific Namespace.\nAfter binding, the PVC and PV remain linked until one of them is deleted.",
+                "Kubernetes binds a PVC to a PV when their properties match.\nThe match is based on:\n• `storageClassName`\n• `accessModes`\n• requested storage capacity\nThe PV must have equal or greater capacity than the PVC request.\nOnce matched, Kubernetes creates a binding between them and they remain bound until one of them is deleted.",
             },
         ],
       },
       hard: {
-        theory: "אחסון מתקדם, Helm ו-debug.\n🔹 CSI:\u200E Container Storage Interface, סטנדרט לדריברים\n🔹 VolumeSnapshot:\u200E גיבוי נקודתי של PV\n🔹 Helm Hooks:\u200E פעולות בשלבים: pre-install, post-upgrade\n🔹 StatefulSet Storage:\u200E volumeClaimTemplates יוצר PVC ייחודי לכל Pod\n🔹 WaitForFirstConsumer:\u200E ממתין לתזמון Pod לפני binding, מבטיח אותו AZ\n🔹 PVC Pending:\u200E StorageClass לא קיים? PV לא תואם? בדוק describe pvc\n🔹 helm rollback:\u200E מחזיר Release לגרסה קודמת אחרי upgrade כושל\n🔹 EBS:\u200E single-AZ. Pod ב-AZ אחר לא יכול לעלות עם PV מ-AZ אחר\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
-        theoryEn: "Advanced Storage, Helm, and Debugging\n🔹 CSI - Container Storage Interface, a standard API for storage drivers.\n🔹 VolumeSnapshot - creates a point-in-time backup of a PersistentVolume.\n🔹 Helm Hooks - run Jobs at lifecycle stages (pre-install, post-upgrade).\n🔹 StatefulSet storage - volumeClaimTemplates creates a unique PVC per Pod.\n🔹 WaitForFirstConsumer - delays PV binding until Pod is scheduled, ensuring same AZ.\n🔹 PVC Pending - StorageClass not found? No matching PV? Check kubectl describe pvc.\n🔹 helm rollback - reverts a Release to a previous revision after a failed upgrade.\n🔹 EBS is single-AZ - a Pod on a Node in a different AZ cannot mount an EBS volume.\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
+        theory: "אחסון מתקדם, Helm ו-debug.\n🔹 CSI:\u200E Container Storage Interface, סטנדרט לדריברים\n🔹 VolumeSnapshot:\u200E גיבוי נקודתי של PV\n🔹 Helm Hooks:\u200E פעולות בשלבים: pre-install, post-upgrade\n🔹 StatefulSet Storage:\u200E volumeClaimTemplates יוצר PVC ייחודי לכל Pod\n🔹 WaitForFirstConsumer:\u200E ממתין לתזמון Pod לפני binding, מבטיח אותו AZ\n🔹 helm rollback:\u200E מחזיר Release לגרסה קודמת אחרי upgrade כושל\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
+        theoryEn: "Advanced Storage, Helm, and Debugging\n🔹 CSI - Container Storage Interface, a standard API for storage drivers.\n🔹 VolumeSnapshot - creates a point-in-time backup of a PersistentVolume.\n🔹 Helm Hooks - run Jobs at lifecycle stages (pre-install, post-upgrade).\n🔹 StatefulSet storage - volumeClaimTemplates creates a unique PVC per Pod.\n🔹 WaitForFirstConsumer - delays PV binding until Pod is scheduled, ensuring same AZ.\n🔹 helm rollback - reverts a Release to a previous revision after a failed upgrade.\nCODE:\napiVersion: snapshot.storage.k8s.io/v1\nkind: VolumeSnapshot\nspec:\n  source:\n    persistentVolumeClaimName: my-pvc",
         questions: [
             {
               q: "מה תפקיד CSI ב-Kubernetes?",
@@ -3315,7 +3315,7 @@ export const TOPICS = [
                 "Immediate יוצר PV מיד, אך הוא עלול להיווצר ב-Zone שונה מה-Pod.\nWaitForFirstConsumer מעכב יצירת PV עד שה-Pod מתזמן ל-Node, ויוצר PV באותה Zone.\nקריטי בסביבות multi-AZ כמו AWS EKS.",
             },
             {
-              q: "ה-PVC נשאר במצב Pending.\n\n```\n$ kubectl describe pvc\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nמה הבעיה",
+              q: "ה-PVC נשאר במצב Pending.\n\n```\nkubectl describe pvc\n\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nמה הבעיה",
               options: [
               "ה-StorageClass בשם fast-ssd לא קיים ב-Cluster",
               "ה-PVC וה-Pod נמצאים ב-Namespaces שונים",
@@ -3330,29 +3330,29 @@ export const TOPICS = [
             {
               q: "הרצת:\n\n```\nhelm upgrade\n```\n\nה-upgrade כשל באמצע.\nRelease ב-\u200Estatus failed.\nה-ConfigMap עודכן חלקית.\n\nמה הצעד הבא?",
               options: [
-              "helm upgrade שוב",
-              "helm rollback my-release [last-good-revision]\nלהחזיר למצב עקבי",
-              "מחק ה-Release",
-              "מחק ConfigMap",
+              "להריץ `helm upgrade` שוב עם אותם פרמטרים",
+              "להריץ `helm rollback` לגרסה האחרונה התקינה",
+              "למחוק את ה-Release ולהתקין מחדש",
+              "למחוק את ה-ConfigMap ולהריץ שוב",
 ],
-              hint: "חשבו על איך הגדרות חיצוניות מגיעות ל-Pod.",
+              hint: "חשבו מה קורה כשחלק מהמשאבים עודכנו וחלק לא.",
               answer: 1,
               explanation:
-                "כש-helm upgrade נכשל, חלק מה-resources עלולים להישאר במצב לא עקבי.\nהצעד הבטוח הוא לבצע helm rollback כדי להחזיר את ה-release לגרסה האחרונה שעבדה.\nhelm rollback my-release [last-good-revision] מחזיר את ה-release לגרסה תקינה ומבטל את השינויים החלקיים שנוצרו במהלך ה-upgrade.\nניתן להשתמש ב-helm history my-release כדי לראות את רשימת ה-revisions (גרסאות deployment שנשמרות על ידי Helm) ולבחור לאיזו גרסה לחזור.",
+                "כאשר `helm upgrade` נכשל, חלק מהמשאבים עלולים להישאר במצב לא עקבי.\n`helm rollback` מחזיר את ה-Release לגרסה קודמת שעבדה.\nניתן לראות את רשימת הגרסאות עם `helm history` ולבחור לאיזו גרסה לחזור.",
             },
             {
-              q: "Pod עם PVC ב-AWS EKS.\nה-Pod עבר ל-Node ב-Availability Zone אחרת.\nה-PVC מראה סטטוס Bound, אבל ה-Pod לא מצליח לעלות.\n\nמה הסיבה?",
+              q: "Pod עם PVC ב-AWS EKS עובר ל-Node שנמצא ב-Availability Zone אחרת.\nה-PVC נמצא במצב Bound, אבל ה-Pod לא מצליח לעלות.\n\nמה הסיבה הסבירה ביותר",
               tags: ["storage-zone"],
               options: [
-              "NetworkPolicy חוסמת גישה מה-Node החדש ל-storage",
-              "ה-EBS Volume נמצא ב-AZ אחרת מה-Node. EBS הוא single-AZ",
-              "ה-PVC נמחק ונוצר מחדש עם ID שונה",
-              "ה-StorageClass שגוי ולא תומך ב-multi-AZ",
+              "ה-PV נמחק אוטומטית כשה-Pod עבר Node ונוצר PV חדש ריק",
+              "ה-EBS Volume הוא single-AZ ולא ניתן לחבר אותו ל-Node ב-AZ אחר",
+              "ה-kubelet ב-Node החדש לא מצליח לאמת את ה-PVC מול ה-API Server",
+              "ה-CSI driver לא הותקן על ה-Node החדש ולכן ה-mount נכשל",
 ],
-              hint: "חשבו על הקצאת אחסון שנשמר מעבר לחיי Pod.",
+              hint: "חשבו על מגבלות פיזיות של דיסקים בענן.",
               answer: 1,
               explanation:
-                "EBS Volumes הם single-AZ. אפשר לחבר רק ל-Node באותה Availability Zone.\nה-PVC מראה Bound כי ה-PV קיים, אבל ה-attach נכשל כי ה-Node ב-AZ אחרת.\nהפתרון: StorageClass עם volumeBindingMode: WaitForFirstConsumer שמבטיח PV באותה AZ כמו ה-Pod.",
+                "EBS Volumes הם single-AZ ולא ניתן לחבר אותם ל-Node ב-AZ אחר.\nה-PVC מראה Bound כי ה-PV קיים, אבל ה-attach נכשל בגלל מגבלת ה-AZ.\nהפתרון: להגדיר StorageClass עם volumeBindingMode: WaitForFirstConsumer כדי שה-PV ייווצר באותו AZ כמו ה-Pod.",
             },
         ],
         questionsEn: [
@@ -3425,7 +3425,7 @@ export const TOPICS = [
                 "Immediate creates a PV right away, but it might end up in a different Zone than the Pod.\nWaitForFirstConsumer delays PV creation until the Pod is scheduled, then creates it in the same Zone.\nCritical in multi-AZ environments like AWS EKS.",
             },
             {
-              q: "A PVC stays in Pending state.\n\n```\n$ kubectl describe pvc\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nWhat is wrong",
+              q: "A PVC stays in Pending state.\n\n```\nkubectl describe pvc\n\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nWhat is wrong",
               options: [
               "The PVC requests more storage than the Cluster can provide",
               "The StorageClass named fast-ssd does not exist in the Cluster",
@@ -3440,29 +3440,29 @@ export const TOPICS = [
             {
               q: "Command:\n\n```\nhelm upgrade\n```\n\nThe upgrade failed midway.\nRelease status: failed.\nA ConfigMap is half-updated.\n\nWhat is the next step?",
               options: [
-              "Delete the ConfigMap",
-              "helm upgrade again",
-              "Delete the Release",
-              "helm rollback my-release [last-good-revision]\nto return to a consistent state",
+              "Run `helm upgrade` again with the same parameters",
+              "Run `helm rollback` to the last working revision",
+              "Delete the Release and reinstall from scratch",
+              "Delete the ConfigMap and try again",
 ],
-              hint: "Think about how external configuration reaches a Pod.",
-              answer: 3,
+              hint: "Think about what happens when some resources updated and some did not.",
+              answer: 1,
               explanation:
-                "When a helm upgrade fails, some resources may remain in an inconsistent state.\nThe safe step is to run helm rollback to restore the release to the last working revision.\nhelm rollback my-release [last-good-revision] restores the release to a healthy version and cancels the partial changes created during the upgrade.\nYou can use helm history my-release to see the list of revisions (deployment versions stored by Helm) and choose which one to roll back to.",
+                "When `helm upgrade` fails, some resources may remain in an inconsistent state.\n`helm rollback` restores the Release to a previous working revision.\nYou can view the list of revisions with `helm history` and choose which one to roll back to.",
             },
             {
-              q: "A Pod with a PVC on AWS EKS.\nThe Pod moved to a Node in a different Availability Zone.\nThe PVC shows Bound status, but the Pod fails to start.\n\nWhat is the cause?",
+              q: "A Pod with a PVC on AWS EKS is scheduled to a Node in a different Availability Zone.\nThe PVC is Bound, but the Pod stays Pending.\n\nWhat is the most likely cause",
               tags: ["storage-zone"],
               options: [
-              "The StorageClass is wrong and does not support multi-AZ",
-              "The PVC was deleted and recreated with a different ID",
-              "A NetworkPolicy is blocking access from the new Node to storage",
-              "The EBS Volume is in a different AZ than the Node. EBS is single-AZ",
+              "The PV was automatically deleted when the Pod moved and a new empty PV was created",
+              "The EBS volume is single-AZ and cannot be attached to a Node in another AZ",
+              "The kubelet on the new Node cannot validate the PVC against the API Server",
+              "The CSI driver is not installed on the new Node so the mount fails",
 ],
-              hint: "Think about storage that persists beyond a Pod's lifetime.",
-              answer: 3,
+              hint: "Think about physical limitations of cloud disks.",
+              answer: 1,
               explanation:
-                "EBS Volumes are single-AZ. They can only attach to a Node in the same Availability Zone.\nThe PVC shows Bound because the PV exists, but the attach fails since the Node is in a different AZ.\nFix: Use a StorageClass with volumeBindingMode: WaitForFirstConsumer to ensure the PV is in the Pod's AZ.",
+                "EBS volumes are single-AZ and cannot be attached to a Node in a different AZ.\nThe PVC shows Bound because the PV exists, but the attach fails due to the AZ constraint.\nThe fix is to configure the StorageClass with volumeBindingMode: WaitForFirstConsumer so the PV is created in the same AZ as the Pod.",
             },
         ],
       },
