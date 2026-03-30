@@ -78,7 +78,11 @@ export function renderBidiInner(text, lang, keyPrefix) {
   if (!text || (!/[A-Za-z]/.test(text) && !/[←]/.test(text) && !/(->|<-)/.test(text))) return text;
   // Normalize ASCII arrows to Unicode, then replace with bidi-safe alternatives:
   // Line-start → (bullet) becomes "· ", mid-text → becomes ":"
-  text = text.replace(/-->/g, "\u2192").replace(/<--/g, "\u2190").replace(/->/g, "\u2192").replace(/<-(?!-)/g, "\u2190");
+  // Replace multi-char ASCII arrows with Unicode equivalents.
+  // Order matters: longer sequences first to avoid partial matches.
+  text = text.split('-->').join("\u2192");
+  text = text.split('<--').join("\u2190");
+  text = text.replace(/->/g, "\u2192").replace(/<-(?!-)/g, "\u2190");
   text = text.replace(/^→\s*/gm, "· ").replace(/\s*→\s*/g, ": ");
   // @regression - Hebrew↔Latin slash normalization
   // Prevents the bidi bug where "משתמש/ServiceAccount" was rendered as a "/ServiceAccount"
@@ -190,8 +194,8 @@ export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
     let value = p.value;
     let gap = null;
     if (parts[i + 1]?.type === "prefixTerm" && /\s+$/.test(value)) {
-      gap = value.match(/(\s+)$/)[1];
-      value = value.slice(0, -gap.length);
+      gap = value.match(/(\s+)$/)?.[1] ?? null;
+      if (gap) value = value.slice(0, -gap.length);
     }
     // Extract trailing sentence punctuation (?.!) from the LAST text segment
     // so it renders outside the bidi isolation span. Without this, punctuation
@@ -200,7 +204,7 @@ export function renderHebrewPrefixTerms(text, lang, keyPrefix) {
     let trailingPunct = null;
     if (i === parts.length - 1 && /[.?!]+$/.test(value)) {
       const punctMatch = value.match(/([.?!]+)$/);
-      trailingPunct = punctMatch[1];
+      trailingPunct = punctMatch?.[1] ?? null;
       value = value.slice(0, -trailingPunct.length);
     }
     return [
@@ -235,7 +239,8 @@ export function renderBidi(text, lang, opts) {
 
   // DNS/FQDN template patterns (e.g. <service-name>.<namespace>.svc.cluster.local)
   // Render as a single isolated LTR span to prevent bidi fragmentation on <> and dots
-  if (/^[<\w][\w.<>\-]*\.svc\.cluster\.local$/.test(text.trim()) || /^<[\w-]+>(\.<[\w-]+>)*(\.[a-z.]+)*$/.test(text.trim())) {
+  const _t = text.trim();
+  if ((_t.endsWith('.svc.cluster.local') && /^[\w<>.\-]+$/.test(_t)) || /^<[\w-]+>(\.<[\w-]+>)*(\.[a-z]+)*$/.test(_t)) {
     return <span dir="ltr" style={{unicodeBidi:"isolate"}}>{text}</span>;
   }
 

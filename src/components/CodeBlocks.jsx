@@ -84,7 +84,7 @@ export function TerminalBlock({ children, variant, label, animate }) {
   const isError = variant === "error";
   const isYaml = variant === "yaml";
   const prefersReduced = usePrefersReducedMotion();
-  const rawText = children || "";
+  const rawText = typeof children === "string" ? children : String(children ?? "");
 
   // Split content into command lines and output lines
   const allLines = rawText.split("\n");

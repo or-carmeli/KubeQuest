@@ -361,7 +361,7 @@ for (const [qSubstr, [newOpts, correctIdx]] of Object.entries(FIXES)) {
   const indent = indentMatch ? indentMatch[1] : "              ";
 
   // Build new options block
-  const optLines = newOpts.map(o => `${indent}"${o.replace(/"/g, '\\"')}",`).join("\n");
+  const optLines = newOpts.map(o => `${indent}"${o.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",`).join("\n");
   const newOptBlock = `options: [\n${optLines}\n${indent}]`;
 
   // Replace options block
@@ -512,7 +512,7 @@ for (const [qSubstr, [newOpts, correctIdx]] of Object.entries(FIXES)) {
   const beforeOpt = src.slice(optStart - 20, optStart);
   const indentMatch = beforeOpt.match(/\n(\s+)$/);
   const indent = indentMatch ? indentMatch[1] : "              ";
-  const optLines = newOpts.map(o => `${indent}"${o.replace(/"/g, '\\"')}",`).join("\n");
+  const optLines = newOpts.map(o => `${indent}"${o.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}",`).join("\n");
   const newOptBlock = `options: [\n${optLines}\n${indent}]`;
   src = src.slice(0, optStart) + newOptBlock + src.slice(optEnd + 1);
   const newOptEnd = src.indexOf("],", optStart);
