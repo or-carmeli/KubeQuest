@@ -575,7 +575,7 @@ export const TOPICS = [
               hint: "חשבו על מה מונע מה-Scheduler לשבץ את ה-Pod.",
               answer: 2,
               explanation:
-                "כל 3 ה-Nodes מסומנים עם taint (dedicated=gpu) וה-Pod חסר toleration תואם.\nלהוסיף toleration ל-spec של ה-Pod שמתאים ל-taint.\n• Node חדש:\u200E עוקף, לא פותר. • CPU request:\u200E לא רלוונטי. • Namespace:\u200E לא משפיע על taints.\nTaint = \"כניסה אסורה\". Toleration = אישור כניסה ב-spec של ה-Pod.",
+                "השגיאה אומרת שלכל ה-Nodes יש taint בשם dedicated=gpu.\nל-Pod אין toleration שמתאים ל-taint הזה, ולכן ה-scheduler לא יכול להציב אותו על אף Node.\nכדי לפתור את הבעיה צריך להוסיף ל-Pod toleration מתאים ל-taint dedicated=gpu.",
             },
             {
               q: "StatefulSet עם 3 replicas רץ ב-Cluster.\nPod-0 לא במצב Ready, ו-Pod-1 נשאר במצב Pending.\n\nמה הסיבה הסבירה ביותר?",
@@ -685,7 +685,7 @@ export const TOPICS = [
               hint: "Think about what prevents the Scheduler from placing the Pod.",
               answer: 1,
               explanation:
-                "All 3 Nodes have taint dedicated=gpu and the Pod lacks a matching toleration.\nAdd a toleration to the Pod spec matching the taint.\n• New Node: workaround, not a fix. • CPU request: irrelevant. • Namespace: has no effect on taints.\nTaint = \"no entry\". Toleration = Pod's permission to run on that Node.",
+                "The error indicates that all nodes have the taint dedicated=gpu.\nThe Pod does not have a matching toleration, so the scheduler cannot place it on any node.\nTo resolve this, add a toleration to the Pod that matches the dedicated=gpu taint.",
             },
             {
               q: "A StatefulSet with 3 replicas is running in the cluster.\nPod-0 is not Ready, and Pod-1 remains in Pending state.\n\nWhat is the most likely reason?",
@@ -1054,7 +1054,7 @@ export const TOPICS = [
               hint: "חשבו על ניתוב בקשות מבחוץ לשירותים פנימיים.",
               answer: 3,
               explanation:
-                "כל rule ב-Ingress מכיל שדה host שמגדיר hostname ספציפי.\n\u2066api.example.com\u2069 מופנה ל-Service אחד, \u2066web.example.com\u2069 ל-Service אחר.\nIngress אחד יכול לשרת מספר דומיינים.\n\n```yaml\nrules:\n  - host: api.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: api-svc\n  - host: web.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: web-svc\n```",
+                "Ingress מנתב בקשות לפי הערך של השדה host בתוך rules.\nכאשר מגיעה בקשה עם hostname מסוים (למשל \u2066api.example.com\u2069), ה-Ingress Controller משווה אותו ל-host המוגדר בכל rule ומנתב את הבקשה ל-Service המתאים.\nכך ניתן להשתמש ב-Ingress אחד כדי לנתב מספר hostnames שונים.",
             },
             {
               q: "נניח שיש לך Service ב-Kubernetes עם ההגדרה הבאה:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nמה ההבדל בין `externalTrafficPolicy: Local` לבין `externalTrafficPolicy: Cluster`",
@@ -1165,7 +1165,7 @@ export const TOPICS = [
               hint: "Think about routing external requests to internal services.",
               answer: 3,
               explanation:
-                "Each Ingress rule has a host field for hostname-based routing.\napi.example.com routes to one Service, web.example.com to another.\nA single Ingress can serve multiple domains.\n\n```yaml\nrules:\n  - host: api.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: api-svc\n  - host: web.example.com\n    http:\n      paths:\n        - path: /\n          backend:\n            service:\n              name: web-svc\n```",
+                "Ingress routes requests based on the host field defined in its rules.\nWhen a request arrives with a specific hostname (for example api.example.com), the Ingress controller matches it against the host values in the rules and routes the request to the corresponding Service.\nThis allows a single Ingress resource to route traffic for multiple hostnames.",
             },
             {
               q: "Given a Kubernetes Service with the following spec:\n```yaml\nspec:\n  type: LoadBalancer\n  externalTrafficPolicy: Local\n```\nWhat is the difference between `externalTrafficPolicy: Local` and `externalTrafficPolicy: Cluster`?",
@@ -1251,7 +1251,7 @@ export const TOPICS = [
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
               answer: 0,
               explanation:
-                "Labels הם case-sensitive.\n`app: App` ≠ `app: app` - כתוצאה מכך Endpoints ריקים.\nלתקן selector ל-`app: App` כדי שיתאים ל-label.\n• port שגוי: שגיאת חיבור, לא Endpoints ריקים.\n• Pod לא Ready: לא הבעיה כאן.\n• Namespace: לא רלוונטי.\nבדוק `kubectl get endpoints` ו-`kubectl get pods --show-labels`.",
+                "Labels ב-Kubernetes הם case-sensitive.\nב-Pod מוגדר label:\n`app: App`\nאבל ה-Service מחפש Pods עם selector:\n`app: app`\nמאחר ש-App ו-app שונים, ה-Service לא מוצא Pods מתאימים ולכן לא נוצרים Endpoints.\nכדי לפתור את הבעיה צריך להתאים בין ה-labels של ה-Pod לבין ה-selector של ה-Service.",
             },
             {
               q: "NetworkPolicy חוסמת DNS.\nPods לא מצליחים לפתור שמות.\n\nהגדרה:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n    - ports:\n        - port: 443\n```\n\nמה חסר?",
@@ -1358,7 +1358,7 @@ export const TOPICS = [
               hint: "Think about what the command does behind the scenes.",
               answer: 0,
               explanation:
-                "Labels are case-sensitive. app: App ≠ app: app → empty Endpoints.\nChange selector to app: App to match the Pod label.\n• Wrong port: connection error, not empty Endpoints. • Not Ready: different issue. • Namespace: not relevant here.\nAlways verify with `kubectl get endpoints` and `kubectl get pods --show-labels`.",
+                "Kubernetes labels are case-sensitive.\nThe Pod has the label:\n`app: App`\nBut the Service selector looks for:\n`app: app`\nSince App and app are different values, the Service cannot match any Pods and therefore no Endpoints are created.\nTo fix the issue, the Pod labels and the Service selector must match exactly.",
             },
             {
               q: "A NetworkPolicy blocks DNS.\nPods cannot resolve names.\n\nPolicy:\n\n```yaml\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n  egress:\n    - ports:\n        - port: 443\n```\n\nWhat is missing?",
@@ -1945,7 +1945,7 @@ export const TOPICS = [
                 "`kubeadm token create --print-join-command` יוצר token חדש ומדפיס את פקודת ה-join המלאה.\nTokens תקפים 24 שעות כברירת מחדל.\nלרשימת tokens קיימים: `kubeadm token list`.",
             },
             {
-              q: "CSR חדש מופיע עם `kubectl get csr`.\n\nפלט:\n\n```\nNAME        AGE  SIGNERNAME                     REQUESTOR       CONDITION\ncsr-abc12   2m   kubernetes.io/kubelet-serving  system:node:w3  Pending\n```\n\nמה עושים?",
+              q: "CSR (Certificate Signing Request) חדש מופיע עם `kubectl get csr`.\n\nפלט:\n\n```\nNAME        AGE  SIGNERNAME                     REQUESTOR       CONDITION\ncsr-abc12   2m   kubernetes.io/kubelet-serving  system:node:w3  Pending\n```\n\nמה עושים?",
               tags: ["certificate-csr"],
               options: [
               "CSR מאושר אוטומטית, אין צורך בפעולה",
@@ -2221,7 +2221,7 @@ export const TOPICS = [
               hint: "חשבו על הגדרות אבטחה ברמת הקונטיינר.",
               answer: 1,
               explanation:
-                "ההגדרה \u200Frun\u200BAs\u200BNon\u200BRoot: true\u200F מבטיחה שהקונטיינר לא ירוץ כמשתמש root (UID 0).\nכאשר Kubernetes יוצר את ה-container, הוא בודק את המשתמש שהקונטיינר אמור לרוץ איתו.\nאם ה-container מוגדר לרוץ כ-root, ה-Pod לא יתחיל וייכשל ביצירה.\nזהו מנגנון אבטחה שמטרתו למנוע מהרצת קונטיינרים עם הרשאות גבוהות מדי.",
+                "ההגדרה `runAsNonRoot: true` מבטיחה שהקונטיינר לא ירוץ כמשתמש root (UID 0).\nכאשר Kubernetes יוצר את ה-container, הוא בודק את המשתמש שהקונטיינר אמור לרוץ איתו.\nאם ה-container מוגדר לרוץ כ-root, ה-Pod לא יתחיל וייכשל ביצירה.\nזהו מנגנון אבטחה שמטרתו למנוע מהרצת קונטיינרים עם הרשאות גבוהות מדי.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -2370,13 +2370,13 @@ export const TOPICS = [
               q: "מה תפקיד RoleBinding?",
               tags: ["rbac-binding"],
               options: [
-              "שכפול הרשאות Role אחד ל-Namespace אחר",
-              "הגדרת כללי RBAC חדשים בתוך Namespace",
-              "הסלמת הרשאות Role קיים לרמת ClusterRole",
-              "חיבור בין Role למשתמש או ServiceAccount בתוך Namespace",
+              "שכפול הרשאות של Role אחד ל-Namespace אחר",
+              "חיבור בין Role למשתמש או ServiceAccount",
+              "הסלמת הרשאות של Role קיים לרמת ClusterRole",
+              "הגדרת כללי RBAC חדשים בתוך ה-Namespace",
 ],
               hint: "חשבו על חיבור בין הרשאות לזהויות.",
-              answer: 3,
+              answer: 1,
               explanation:
                 "RoleBinding קושר Role ל-subject (User, Group, או ServiceAccount) ב-Namespace.\nללא RoleBinding, ה-Role לא נאכף על אף ישות.\nלגישה ברמת Cluster: ClusterRoleBinding.",
             },
@@ -2391,7 +2391,7 @@ export const TOPICS = [
               hint: "חשבו על איך Pod מוכיח מי הוא כשהוא פונה לשירותים.",
               answer: 0,
               explanation:
-                "ServiceAccount הוא זהות מכונה עבור Pods. לא למשתמשים אנושיים.\nKubernetes מזריק token אוטומטית ל-Pod לאימות מול API server.\nלכל Namespace יש ServiceAccount בשם default.",
+                "ServiceAccount הוא זהות עבור Pods שרצים ב-Kubernetes.\nהוא מאפשר ל-Pod להזדהות מול Kubernetes API server ולבצע פעולות בהתאם להרשאות שהוגדרו לו ב-RBAC.\nכאשר Pod נוצר, Kubernetes מצרף אליו token של ServiceAccount, שמאפשר ל-Pod לגשת ל-API של Kubernetes.\nלכל Namespace קיים ServiceAccount בשם default, שמשמש Pods אם לא מוגדר ServiceAccount אחר.",
             },
             {
               q: "נניח שיש לך Namespace עם ה-label הבא:\n`pod-security.kubernetes.io/enforce=restricted`\nב-Kubernetes, מה עושה Pod Security Admission?",
@@ -2502,7 +2502,7 @@ export const TOPICS = [
               hint: "Think about how a Pod proves who it is when making requests.",
               answer: 3,
               explanation:
-                "ServiceAccount is a machine identity for Pods. Not for human users.\nKubernetes auto-mounts a token for Pod-to-API authentication.\nRBAC controls what actions the ServiceAccount can perform.",
+                "A ServiceAccount provides an identity for Pods running in Kubernetes.\nIt allows a Pod to authenticate to the Kubernetes API server and perform actions according to the permissions granted through RBAC.\nWhen a Pod is created, Kubernetes can attach a ServiceAccount token to the Pod, which allows it to access the Kubernetes API.\nEach Namespace has a ServiceAccount named default, which is used by Pods if no other ServiceAccount is specified.",
             },
             {
               q: "Given a Namespace with the following label:\n`pod-security.kubernetes.io/enforce=restricted`\nWhat does Pod Security Admission do?",
@@ -2822,17 +2822,17 @@ export const TOPICS = [
                 "PV הוא יחידת אחסון שה-admin מגדיר: גודל, access modes, ו-storage backend.\nPVC היא הבקשה של ה-Pod לאחסון.\nKubernetes מחבר אוטומטית PVC ל-PV שמתאים לדרישות.",
             },
             {
-              q: "מה AccessMode ReadWriteOnce?",
+              q: "PVC מוגדר עם accessMode: ReadWriteOnce. מה המשמעות",
               hint: "חשבו כמה Nodes יכולים לגשת ל-Volume ובאיזה אופן.",
               options: [
-              "כתיבה מ-Node אחד בלבד",
-              "קריאה וכתיבה מ-node אחד בו-זמנית",
-              "קריאה בלבד",
-              "קריאה מכל ה-Nodes",
+              "קריאה וכתיבה מכל ה-Nodes במקביל",
+              "קריאה בלבד מ-Node אחד בלבד",
+              "קריאה וכתיבה מ-Node אחד בלבד",
+              "כתיבה מ-Node אחד, קריאה מכולם",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
-                "RWO מאפשר mount לקריאה וכתיבה מ-Node אחד בלבד. מתאים לרוב ה-databases.\nRWX מאפשר כמה Nodes במקביל (דורש NFS/EFS).\nROX:\u200E קריאה בלבד ממספר Nodes.",
+                "ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה מ-Node אחד בלבד.\nמספר Pods על אותו Node יכולים להשתמש ב-Volume.\nלהשוואה:\nReadWriteMany (RWX) - קריאה וכתיבה ממספר Nodes (דורש NFS/EFS).\nReadOnlyMany (ROX) - קריאה בלבד ממספר Nodes.",
             },
             {
               q: "מה תפקיד Helm Chart\u200F?",
@@ -2898,7 +2898,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "emptyDir שורד restarts של קונטיינרים בתוך אותו Pod.\nברגע שה-Pod נמחק או מועבר ל-Node אחר, הנתונים נמחקים לחלוטין.",
+                "emptyDir הוא volume זמני שנוצר כאשר ה-Pod מתחיל לרוץ על ה-Node.\nהנתונים נשמרים כל עוד ה-Pod רץ על אותו Node, ולכן הם שורדים restart של containers בתוך ה-Pod.\nכאשר ה-Pod נמחק או מתוזמן מחדש על Node אחר, ה-emptyDir נמחק וכל הנתונים שבו הולכים לאיבוד.",
             },
             {
               q: "מה תפקיד values.yaml ב-Helm Chart\u200F?",
@@ -2929,17 +2929,17 @@ export const TOPICS = [
                 "PV is a piece of real storage provisioned in the cluster (EBS, NFS, local drive).\nPVC is a request from a Pod asking for storage with specific access requirements.\nKubernetes automatically matches a PVC to a suitable PV.",
             },
             {
-              q: "What is AccessMode ReadWriteOnce?",
+              q: "A PVC is configured with accessMode: ReadWriteOnce. What does this mean",
               hint: "Think about how many Nodes can access the Volume and in what way.",
               options: [
-              "Read and write from one node at a time",
-              "Write from one Node only",
-              "Read from all Nodes",
-              "Read-only",
+              "Read and write from all Nodes simultaneously",
+              "Read-only access from a single Node only",
+              "Read and write from a single Node only",
+              "Write from one Node, read from all Nodes",
 ],
-              answer: 0,
+              answer: 2,
               explanation:
-                "RWO allows read/write mount from a single Node at a time. Suitable for most databases.\nRWX allows multiple Nodes simultaneously (requires NFS or EFS).\nROX: read-only access from multiple Nodes.",
+                "ReadWriteOnce (RWO) allows read/write mount from a single Node at a time.\nMultiple Pods on the same Node can use the volume.\nFor comparison:\nReadWriteMany (RWX) - read/write from multiple Nodes (requires NFS/EFS).\nReadOnlyMany (ROX) - read-only from multiple Nodes.",
             },
             {
               q: "What is a Helm Chart?",
@@ -3005,7 +3005,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "emptyDir survives container restarts within the same Pod.\nOnce the Pod is deleted or rescheduled to another Node, the data is gone permanently.",
+                "emptyDir is a temporary volume created when a Pod is scheduled on a Node.\nThe data persists as long as the Pod runs on that Node, so it survives container restarts inside the Pod.\nIf the Pod is deleted or scheduled on another Node, the emptyDir is removed and all data stored in it is lost.",
             },
             {
               q: "What is helm values.yaml?",
@@ -3103,7 +3103,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "`helm rollback` מחזיר Release ל-revision ספציפי מתוך ההיסטוריה.\nהריצו `helm history` כדי לראות את כל ה-revisions עם תאריכים וסטטוסים, ואז בחרו את ה-revision הרצוי.\nמאחורי הקלעים, rollback הוא למעשה upgrade חדש עם manifests ישנים - ולכן נוצר revision חדש.",
+                "`helm rollback` מחזיר את ה-Release למצב של revision קודם.\nHelm משתמש ב-manifests מה-revision שנבחר ומבצע למעשה upgrade חדש עם ההגדרות הישנות.\nהתוצאה היא:\nהמשאבים ב-cluster חוזרים למצב של אותו revision\nנוצר revision חדש בהיסטוריה\nאפשר לראות את כל ה-revisions עם:\n`helm history <release>`",
             },
             {
               q: "מה אומר PVC בסטטוס Pending?",
@@ -3130,7 +3130,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "K8s מחבר PVC ל-PV לפי storageClassName, accessModes, ו-capacity (PV >= PVC).\nהשם לא חייב להתאים. PV הוא cluster-level resource ולא משויך ל-Namespace.\nלאחר binding הם קשורים עד שאחד נמחק.",
+                "Kubernetes מחבר בין PVC ל-PV לפי התאמה של כמה פרמטרים:\n`storageClassName`\n`accessModes`\nגודל האחסון (ה-PV חייב להיות גדול או שווה לבקשה של ה-PVC)\nכאשר נמצא PV מתאים, Kubernetes יוצר binding בין ה-PVC ל-PV.\nPV הוא משאב ברמת ה-cluster, ולכן הוא לא שייך ל-Namespace מסוים.\nלאחר ה-binding, ה-PVC וה-PV נשארים מקושרים עד שאחד מהם נמחק.",
             },
         ],
         questionsEn: [
@@ -3211,7 +3211,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "`helm rollback` reverts a Release to a specific revision from its history.\nRun `helm history` to see all revisions with timestamps and statuses, then pick the revision you want.\nUnder the hood, a rollback is technically a new upgrade using old manifests - so it creates a new revision number.",
+                "`helm rollback` returns the Release to the state of a previous revision.\nHelm uses the manifests from the selected revision and effectively performs a new upgrade using the older configuration.\nThe result is:\nThe resources in the cluster return to the state of that revision\nA new revision is created in the release history\nYou can view all revisions with:\n`helm history <release>`",
             },
             {
               q: "What does a PVC in Pending status mean?",
@@ -3238,7 +3238,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "K8s binds a PVC to a PV by matching storageClassName, accessModes, and capacity (PV >= PVC).\nPV names do not need to match PVC names. PVs are cluster-level resources and are not namespaced.\nAfter binding they are locked together until one is deleted.",
+                "Kubernetes binds a PVC to a PV based on matching parameters:\n`storageClassName`\n`accessModes`\nstorage capacity (the PV must be greater than or equal to the PVC request)\nWhen a suitable PV is found, Kubernetes creates a binding between the PVC and the PV.\nNote that a PV is a cluster-level resource, so it does not belong to a specific Namespace.\nAfter binding, the PVC and PV remain linked until one of them is deleted.",
             },
         ],
       },
@@ -3790,7 +3790,7 @@ export const TOPICS = [
               hint: "חשבו על מה מעכב את סיום מחיקת המשאב.",
               answer: 2,
               explanation:
-                "Finalizer מונע מחיקה עד ש-controller חיצוני מנקה אותו. אפילו --force לא עוזר.\nכשה-controller לא זמין, ה-Pod תקוע.\nפתרון: `kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'` מסיר finalizers ידנית.",
+                "Pod יכול להישאר במצב Terminating אם מוגדר עליו finalizer.\nfinalizers הם מנגנון שמונע מחיקה של משאב עד שתהליך מסוים מסיים פעולת ניקוי.\nכאשר מוחקים Pod, Kubernetes מסמן אותו למחיקה אך לא מסיר אותו עד שה-controller שאחראי על ה-finalizer מסיר אותו מהרשימה.\nאם ה-controller לא רץ או לא מסיר את ה-finalizer, ה-Pod יישאר במצב Terminating גם אם משתמשים ב---force.\nבמקרה כזה ניתן להסיר את ה-finalizer ידנית:\n`kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'`",
             },
             {
               q: "ה-Node ב-DiskPressure.\n\nהרצת:\n\n```\nkubectl describe node\n```\n\nפלט:\n\n```\nConditions:\n  DiskPressure True\n```\n\nמה הסיבות הנפוצות?",
@@ -3899,7 +3899,7 @@ export const TOPICS = [
               hint: "Think about what blocks resource deletion from completing.",
               answer: 2,
               explanation:
-                "A finalizer blocks deletion until an external controller clears it. Even --force can't bypass it.\nIf the controller is unavailable, the Pod stays stuck.\nFix: `kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'` removes finalizers manually.",
+                "A Pod can remain in the Terminating state if it has a finalizer.\nFinalizers prevent a resource from being deleted until a specific cleanup process completes.\nWhen a Pod is deleted, Kubernetes marks it for deletion but keeps it until the controller responsible for the finalizer removes it.\nIf that controller is not running or never removes the finalizer, the Pod may stay Terminating even when using --force.\nIn such cases, the finalizer can be removed manually:\n`kubectl patch pod my-pod -p '{\"metadata\":{\"finalizers\":null}}'`",
             },
             {
               q: "A Node shows DiskPressure.\n\nCommand:\n\n```\nkubectl describe node\n```\n\nOutput:\n\n```\nConditions:\n  DiskPressure True\n```\n\nWhat are the common causes?",
@@ -3934,17 +3934,17 @@ export const TOPICS = [
                 "לפני rollback חשוב להבין מה השתנה.\nlogs --previous מציג output מה-crash, ו-describe pod מציג Events.\nרק אחרי שמבינים את הסיבה, מחליטים לתקן code או לעשות rollout undo.",
             },
             {
-              q: "ה-Node מראה NotReady.\nPods מפונים ממנו.\n\nהרצת:\n\n```\nkubectl get nodes\n```\n\nמה שתי הפעולות הראשונות שלך?",
+              q: "Node במצב NotReady ו-Pods מתחילים להתפנות ממנו. מה הפעולות הראשונות לבדיקה",
               options: [
-              "kubectl drain <name> --force\nלהעביר Pods ואז למחוק ולהצטרף מחדש",
-              "kubectl describe node <name>\nלבדוק Conditions ו-Events, ואז SSH ל-Node ולהריץ systemctl status kubelet",
-              "kubectl cordon <name>\nואז לבדוק kubelet status דרך systemctl על ה-Node",
-              "kubectl delete node <name>\nולתת ל-cluster autoscaler להפעיל Node חדש",
+              "להריץ `kubectl drain` ולהעביר Pods ל-Nodes אחרים",
+              "למחוק את ה-Node מה-Cluster ולצרף אותו מחדש",
+              "לבדוק עם `kubectl describe node` ו-`systemctl status kubelet`",
+              "להריץ `kubectl cordon` ולהמתין לשחזור אוטומטי",
 ],
               hint: "חשבו על מה גורם ל-Node להפסיק לקבל עומסים.",
-              answer: 1,
+              answer: 2,
               explanation:
-                "describe node מציג Conditions ו-Events. המקום הראשון לחפש.\nSSH ל-Node ו-systemctl status kubelet לוודא שרץ.\nסיבות נפוצות: kubelet נפל, TLS cert פג, או disk/memory pressure.",
+                "כאשר Node עובר למצב NotReady, הצעד הראשון הוא לאסוף מידע.\n`kubectl describe node` מציג את ה-Conditions וה-Events של ה-Node, ומסייע לזהות את הסיבה (למשל disk pressure, memory pressure, או בעיית תקשורת).\nלאחר מכן, SSH ל-Node והרצת `systemctl status kubelet` מאפשרת לבדוק אם ה-kubelet רץ ואם יש שגיאות בהפעלה שלו.\nסיבות נפוצות למצב NotReady: kubelet לא רץ, certificate שפג תוקף, או לחץ על דיסק או זיכרון.",
             },
             {
               q: "מה תפקיד הפקודה `kubectl drain` ומתי משתמשים בה?",
@@ -4040,17 +4040,17 @@ export const TOPICS = [
                 "Before rollback, understand what changed.\nlogs --previous shows the crash output, describe pod shows the Events timeline.\nOnly after understanding the cause. Decide to fix code or run rollout undo.",
             },
             {
-              q: "A Node shows NotReady.\nPods on it are being evicted.\n\nCommand:\n\n```\nkubectl get nodes\n```\n\nWhat are your first two steps?",
+              q: "A Node is in NotReady state and Pods are being evicted from it. What are the first troubleshooting steps",
               options: [
-              "kubectl delete node <name>\nand let the cluster autoscaler provision a new Node",
-              "kubectl drain <name> --force\nto move Pods then delete and rejoin the Node",
-              "kubectl cordon <name>\nthen check kubelet status via systemctl on the Node",
-              "kubectl describe node <name>\nto check Conditions and Events, then SSH in and run systemctl status kubelet",
+              "Run `kubectl drain` and move Pods to other Nodes",
+              "Delete the Node from the Cluster and rejoin it",
+              "Check with `kubectl describe node` and `systemctl status kubelet`",
+              "Run `kubectl cordon` and wait for automatic recovery",
 ],
               hint: "Think about what causes a Node to stop accepting workloads.",
-              answer: 3,
+              answer: 2,
               explanation:
-                "describe node shows Conditions and Events. The first place to look.\nSSH in and run systemctl status kubelet to check if it's running.\nCommon causes: kubelet crashed, TLS cert expired, or disk/memory pressure.",
+                "When a Node enters NotReady, the first step is to gather information.\n`kubectl describe node` shows the Conditions and Events of the Node, helping identify the cause (e.g. disk pressure, memory pressure, or a connectivity issue).\nThen, SSH into the Node and run `systemctl status kubelet` to check whether kubelet is running and if there are any startup errors.\nCommon causes for NotReady: kubelet not running, expired certificate, or disk/memory pressure.",
             },
             {
               q: "What is the purpose of `kubectl drain` and when is it used?",
@@ -4538,15 +4538,15 @@ export const TOPICS = [
         theoryEn: "Advanced system diagnostics and kernel-level performance analysis.\n🔹 `strace -c -p PID`\nSummarize system calls by time, identifies bottlenecks (futex = lock contention)\n🔹 `perf top`\nReal-time profiling, shows functions consuming the most CPU\n🔹 `/proc/net/sockstat`\nTCP stack state - orphans, TIME_WAIT, memory usage\n🔹 `/proc/buddyinfo`\nMemory fragmentation - free blocks in the buddy allocator\n🔹 `/proc/PID/fd`\nOpen file descriptors - detecting FD leaks\n🔹 `sar -n DEV`\nNetwork statistics - bandwidth, drops, packets per second\n🔹 `errno.h`\nKernel error codes - ENOMEM=-12, EACCES=-13, EINVAL=-22\nCODE:\nstrace -c -p 1234\nperf top\nperf record -g -a sleep 10 && perf report\ncat /proc/net/sockstat\nls /proc/1234/fd | wc -l\nsar -n DEV 1 5",
         questions: [
           {
-            q: "אתה צריך לאבחן למה תהליך מסוים איטי.\n\nהרצת:\n\n```\nstrace -c -p 1234\n```\n\nפלט:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nמה המסקנה?",
+            q: "תהליך מסוים רץ לאט.\nהפקודה `strace -c` מסכמת כמה זמן התהליך מבלה בכל system call.\n\nהרצת:\n\n```\nstrace -c -p 1234\n```\n\nפלט:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nמה הממצא העיקרי",
             options: [
-              "כמות קריאות read גבוהה מצביעה על חוסר ב-caching",
-              "85% על futex מצביע על lock contention חמור בין threads",
-              "כמות כתיבות write גבוהה מצביעה על buffer קטן מדי",
-              "futex הוא חלק נורמלי מריצת תהליך ואין כאן בעיה"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+              "התהליך מבזבז זמן על קריאות read בגלל חוסר caching",
+              "התהליך ממתין ל-locks רוב הזמן בגלל תחרות בין threads",
+              "התהליך כותב יותר מדי נתונים בגלל buffer קטן",
+              "התהליך פועל כרגיל ואין כאן בעיית ביצועים"],
+            hint: "שימו לב לאיזה system call התהליך מבלה את רוב הזמן.",
             answer: 1,
-            explanation: "strace -c מסכם system calls לפי זמן שנצרך.\n85% מהזמן על futex הוא סימן אדום ל-lock contention חמור.\nfutex הוא ה-system call שעומד מאחורי mutexes ו-semaphores.\nכשתהליך מבלה 85% על futex, הוא ממתין ל-locks במקום לעשות עבודה אמיתית.\nfutex בכמויות קטנות הוא נורמלי, אבל 85% מצביע על בעיה ארכיטקטונית בקוד.",
+            explanation: "הפקודה `strace -c` מסכמת את ה-system calls של תהליך לפי זמן.\nfutex הוא ה-system call שמשמש לנעילות (locks) בין threads.\nכאשר תהליך מבלה 85% מהזמן על futex, המשמעות היא שהוא ממתין לנעילות במקום לעשות עבודה אמיתית.\nזה מצביע על lock contention - מצב שבו threads חוסמים אחד את השני.",
           },
           {
             q: "שרת מדווח על latency גבוה לבקשות רשת.\n\nהרצת:\n\n```\ncat /proc/net/sockstat\n```\n\nפלט:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nמה הבעיה?",
@@ -4633,15 +4633,15 @@ export const TOPICS = [
         ],
         questionsEn: [
           {
-            q: "You need to diagnose why a specific process is slow.\n\nYou ran:\n\n```\nstrace -c -p 1234\n```\n\nOutput:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nWhat is the conclusion?",
+            q: "A process is running slowly.\nThe command `strace -c` summarizes how much time a process spends in each system call.\n\nYou ran:\n\n```\nstrace -c -p 1234\n```\n\nOutput:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nWhat is the main finding",
             options: [
-              "High read call count indicates a need for better caching",
-              "85% on futex indicates severe lock contention between threads",
-              "High write call count indicates the buffer size is too small",
-              "futex is a normal part of process execution and is not an issue"],
-            hint: "Think carefully about what each option describes.",
+              "The process wastes time on read calls due to poor caching",
+              "The process spends most of its time waiting for locks between threads",
+              "The process writes too much data because of a small buffer",
+              "The process is running normally with no performance issue"],
+            hint: "Notice which system call the process spends most of its time on.",
             answer: 1,
-            explanation: "strace -c summarizes system calls by time consumed.\n85% of time on futex is a red flag for severe lock contention.\nfutex is the system call behind mutexes and semaphores.\nWhen a process spends 85% on futex, it is waiting for locks instead of doing real work.\nSome futex usage is normal, but 85% indicates an architectural problem in the code.",
+            explanation: "The command `strace -c` summarizes a process's system calls by time.\nfutex is the system call used for locking (locks) between threads.\nWhen a process spends 85% of its time on futex, it means it is waiting for locks instead of doing real work.\nThis indicates lock contention - a situation where threads are blocking each other.",
           },
           {
             q: "A server reports high latency for network requests.\n\nYou ran:\n\n```\ncat /proc/net/sockstat\n```\n\nOutput:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nWhat is the problem?",
@@ -4980,7 +4980,7 @@ export const TOPICS = [
             ],
             hint: "חשבו על התאמת כמות העותקים לפי עומס.",
             answer: 1,
-            explanation: "ignoreDifferences מאפשר ל-ArgoCD להתעלם מ-fields ספציפיים בהשוואה.\nכש-HPA מנהל את replicas, צריך לומר ל-ArgoCD להתעלם מהשדה הזה:\n\n```yaml\nignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n      - /spec/replicas\n```\n\nauto-sync עם self-heal דווקא היה מחזיר את replicas למספר שב-Git.",
+            explanation: "כאשר משתמשים ב-HPA, הוא משנה את מספר ה-replicas של ה-Deployment באופן דינמי לפי עומס.\nמכיוון שמספר ה-replicas שמוגדר ב-Git נשאר קבוע, ArgoCD מזהה את השינוי כ-drift ומציג את ה-Application במצב OutOfSync.\nכדי למנוע זאת, ניתן להגדיר ל-ArgoCD להתעלם מהשדה `spec.replicas` באמצעות `ignoreDifferences`.\nכך ArgoCD לא ישווה את השדה הזה מול הערך שמוגדר ב-Git.",
           },
           {
             q: "ב-ArgoCD, מה Sync Waves מאפשר לך לעשות?",
@@ -5079,7 +5079,7 @@ export const TOPICS = [
             ],
             hint: "Think about adjusting replica count based on load.",
             answer: 1,
-            explanation: "ignoreDifferences allows ArgoCD to ignore specific fields during comparison.\nWhen HPA manages replicas, you need to tell ArgoCD to ignore that field:\n\n```yaml\nignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n      - /spec/replicas\n```\n\nauto-sync with self-heal would actually revert replicas back to the Git value.",
+            explanation: "When using an HPA, it dynamically adjusts the replicas field of a Deployment based on load.\nSince the value in Git remains fixed, ArgoCD detects the change as drift and marks the Application as OutOfSync.\nTo prevent this, you can configure ArgoCD to ignore the `spec.replicas` field using `ignoreDifferences`.\nThis prevents ArgoCD from comparing that field against the value stored in Git.",
           },
           {
             q: "In ArgoCD, what do Sync Waves allow you to do",
@@ -5187,16 +5187,16 @@ export const TOPICS = [
             explanation: "cascading delete עם finalizer מוחק את כל ה-hierarchy:\n1. Root Application נמחק\n2. Child Application manifests נמחקים מהקלאסטר\n3. כל child Application שגם לו יש finalizer מוחק את המשאבים שלו\n\nזה יכול להיות הרסני.\nלכן חשוב להגן על root Applications עם RBAC ולהבין את ה-cascade behavior.",
           },
           {
-            q: "ArgoCD מראה diff על שדה managedFields בכל sync, למרות שאף אחד לא שינה כלום.\n\nמה הפתרון?",
+            q: "Application ב-ArgoCD מופיע כ-OutOfSync למרות שלא בוצע שינוי ב-Git.\nב-diff מופיע שינוי רק בשדה: metadata.managedFields\n\nמה הדרך הנכונה למנוע מ-ArgoCD להתייחס לשדה הזה כ-diff",
             options: [
-              "להגדיר ignoreDifferences עם managedFieldsManagers",
-              "למחוק את ה-Application וליצור מחדש",
-              "לעדכן את ArgoCD לגרסה אחרונה",
-              "להעביר ל-client-side apply במקום server-side",
+              "למחוק את ה-Application ולבצע sync מחדש",
+              "להגדיר ignoreDifferences עבור השדה",
+              "להפעיל autoSync ב-Application",
+              "להגדיר revisionHistoryLimit",
             ],
             hint: "חשבו על GitOps וסנכרון Git עם ה-Cluster.",
-            answer: 0,
-            explanation: "managedFields הוא metadata ש-Kubernetes מוסיף לצורך server-side apply.\nArgoCD רואה אותו כ-diff כי הוא לא קיים ב-Git.\nהפתרון:\n\n```yaml\nignoreDifferences:\n  - group: \"*\"\n    kind: \"*\"\n    managedFieldsManagers:\n      - \"kube-controller-manager\"\n```\n\nאו ברמה גלובלית ב-argocd-cm ConfigMap.",
+            answer: 1,
+            explanation: "metadata.managedFields הוא metadata שמתווסף אוטומטית על ידי Kubernetes כדי לעקוב אחרי איזה controller מנהל כל שדה במשאב.\nהשדה הזה לא קיים ב-Git ולכן ArgoCD מזהה אותו כ-diff.\nכדי למנוע false drift ניתן להגדיר ignoreDifferences כך ש-ArgoCD יתעלם מהשדה הזה בזמן ההשוואה.\n\n```yaml\nignoreDifferences:\n  managedFieldsManagers:\n    - kube-controller-manager\n```",
           },
           {
             q: "sync של אפליקציה גדולה נכשל עם:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nמה הבעיה ומה הפתרון?",
@@ -5288,16 +5288,16 @@ export const TOPICS = [
             explanation: "Cascading delete with a finalizer removes the entire hierarchy:\n1. Root Application is deleted\n2. Child Application manifests are removed from the cluster\n3. Each child Application that also has a finalizer deletes its own resources\n\nThis can be destructive.\nIt is important to protect root Applications with RBAC and understand the cascade behavior.",
           },
           {
-            q: "ArgoCD shows a diff on the managedFields field on every sync, even though nobody changed anything.\n\nWhat is the solution",
+            q: "An ArgoCD Application appears OutOfSync even though nothing changed in Git.\nThe diff shows a change only in the field: metadata.managedFields\n\nWhat is the correct way to prevent ArgoCD from treating this field as a diff",
             options: [
-              "Configure ignoreDifferences with managedFieldsManagers",
-              "Delete the Application and recreate it",
-              "Update ArgoCD to the latest version",
-              "Switch to client-side apply instead of server-side",
+              "Delete the Application and resync it",
+              "Configure ignoreDifferences for the field",
+              "Enable autoSync on the Application",
+              "Set revisionHistoryLimit",
             ],
             hint: "Think about GitOps and syncing Git state with the Cluster.",
-            answer: 0,
-            explanation: "managedFields is metadata that Kubernetes adds for server-side apply.\nArgoCD sees it as a diff because it does not exist in Git.\nThe solution:\n\n```yaml\nignoreDifferences:\n  - group: \"*\"\n    kind: \"*\"\n    managedFieldsManagers:\n      - \"kube-controller-manager\"\n```\n\nOr globally in the argocd-cm ConfigMap.",
+            answer: 1,
+            explanation: "metadata.managedFields is metadata automatically added by Kubernetes to track which controller manages each field of a resource.\nThis field does not exist in Git, so ArgoCD detects it as a diff.\nTo avoid false drift detection, configure ignoreDifferences so ArgoCD ignores this field during comparison.\n\n```yaml\nignoreDifferences:\n  managedFieldsManagers:\n    - kube-controller-manager\n```",
           },
           {
             q: "A sync of a large application fails with:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nWhat is the problem and the solution",

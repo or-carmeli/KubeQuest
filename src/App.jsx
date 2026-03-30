@@ -3373,7 +3373,7 @@ export default function K8sQuestApp() {
     AVAILABLE_TOPICS.forEach(topic => {
       LEVEL_ORDER.forEach(level => {
         const qs = getLocalizedField(topic.levels[level], "questions", language);
-        qs.forEach(q => all.push({ ...q, level }));
+        qs.forEach(q => all.push({ ...q, level, topic_id: topic.id }));
       });
     });
     for (let i = all.length - 1; i > 0; i--) {
@@ -5790,6 +5790,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                 </div>
               </div>
 
+              {selectedLevel==="mixed"&&currentQuestions[questionIndex]?.topic_id&&(()=>{const _tp=TOPICS.find(t=>t.id===currentQuestions[questionIndex].topic_id);if(!_tp)return null;return<div style={{marginBottom:6,textAlign:dir==="rtl"?"right":"left"}}><span style={{fontSize:10,color:_tp.color||"var(--text-dim)",fontWeight:600,background:`${_tp.color||"#888"}14`,border:`1px solid ${_tp.color||"#888"}30`,padding:"3px 10px",borderRadius:20,letterSpacing:"0.3px"}}>{_tp.name}</span></div>})()}
               <div ref={questionRef} tabIndex={-1} aria-label={`${t("question")} ${questionIndex+1}: ${currentQuestions[questionIndex].q}`}
                 style={{background:"var(--glass-3)",border:"1px solid var(--glass-8)",borderRadius:16,padding:"18px 16px 18px",marginBottom:10,outline:"none",position:"relative"}}>
                 {(() => {
@@ -5978,11 +5979,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               const codeVariant = cliDetect.test(code.split("\n")[0].trim()) ? undefined : "output";
                               return <TerminalBlock key={idx} variant={codeVariant}>{code}</TerminalBlock>;
                             }
-                            return (
-                              <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.75,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
-                                {renderBidiBlock(s,lang)}
-                              </div>
-                            );
+                            {
+                              const pDir = (dir === "rtl" && !hasHebrew(s) && s.trim().split(/\s+/).length > 5) ? "ltr" : dir;
+                              return (
+                                <div key={idx} dir={pDir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.75,direction:pDir,textAlign:pDir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
+                                  {renderBidiBlock(s,lang)}
+                                </div>
+                              );
+                            }
                           })}
                           {getDiagramForQuestion(q.tags)}
                         </div>}
@@ -6041,11 +6045,14 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               const codeVariant = cliDetect.test(code.split("\n")[0].trim()) ? undefined : "output";
                               return <TerminalBlock key={idx} variant={codeVariant}>{code}</TerminalBlock>;
                             }
-                            return (
-                              <div key={idx} dir={dir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.85,direction:dir,textAlign:dir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
-                                {renderBidiBlock(s,lang)}
-                              </div>
-                            );
+                            {
+                              const pDir = (dir === "rtl" && !hasHebrew(s) && s.trim().split(/\s+/).length > 5) ? "ltr" : dir;
+                              return (
+                                <div key={idx} dir={pDir} style={{color:"var(--text-light)",fontSize:14,lineHeight:1.85,direction:pDir,textAlign:pDir==="rtl"?"right":"left",wordBreak:"break-word",overflowWrap:"anywhere",maxWidth:"65ch",unicodeBidi:"isolate"}}>
+                                  {renderBidiBlock(s,lang)}
+                                </div>
+                              );
+                            }
                           })}
                           {getDiagramForQuestion(q.tags)}
                         </div>
