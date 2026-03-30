@@ -5837,7 +5837,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   </div>
                   {hintVisible&&(
                     <div role="note" dir={dir} style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:9,padding:"11px 14px",fontSize:13,color:"#fbbf24",lineHeight:1.6,direction:dir,unicodeBidi:"isolate",wordBreak:"break-word",overflowWrap:"anywhere",animation:"fadeIn 0.2s ease"}}>
-                      {renderBidiBlock(serverHintText||(currentQuestions[questionIndex]?.explanation || "").split(/(?<!\d)\.\s+/)[0], lang)}
+                      {renderBidiBlock((()=>{const raw=serverHintText||(currentQuestions[questionIndex]?.explanation||"").split(/[.\n]/)[0].trim();if(!raw)return"";return raw.length>50?raw.slice(0,47)+"...":raw;})(), lang)}
                     </div>
                   )}
                 </div>
