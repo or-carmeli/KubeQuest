@@ -5815,10 +5815,9 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       onClick={async()=>{
                         const q=currentQuestions[questionIndex];
                         if(typeof q.answer==="number"){
-                          // Local hint: short topical nudge from tags or topic name
-                          const tag=q.tags?.[0];
-                          const concept=tag?tag.replace(/[-_]/g," "):selectedTopic?.name||"";
-                          if(concept){setServerHintText(lang==="he"?`חשבו על ${concept}`:`Think about ${concept}`);}
+                          // Local hint: use dedicated hint field, fall back to topical nudge
+                          if(q.hint){setServerHintText(q.hint);}
+                          else{const tag=q.tags?.[0];const concept=tag?tag.replace(/[-_]/g," "):selectedTopic?.name||"";if(concept){setServerHintText(lang==="he"?`חשבו על ${concept}`:`Think about ${concept}`);}}
                           setHintVisible(true);return;
                         }
                         if(supabase&&q.id&&!hintLoading){
