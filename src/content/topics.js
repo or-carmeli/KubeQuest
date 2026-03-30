@@ -2009,7 +2009,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Secrets מקודדים ב-base64 בלבד. לא מוצפנים!\nbase64 הוא encoding, לא הצפנה. כל אחד יכול לפענח.\nלאבטחה אמיתית: Encryption at Rest, Sealed Secrets, או external manager.",
+                "Secrets ב-Kubernetes אינם מוצפנים כברירת מחדל.\nהערכים שלהם נשמרים רק מקודדים ב-base64 בתוך ה-API וה-etcd.\nחשוב להבין:\nbase64 הוא encoding בלבד, לא encryption (הצפנה).\nכל מי שיש לו גישה ל-Secret יכול לבצע decode ולראות את הערך המקורי.\nלכן בפרודקשן מומלץ להוסיף שכבת אבטחה נוספת, למשל:\n• Encryption at Rest - הצפנה של ה-Secrets בתוך etcd\n• External Secret Manager - כמו AWS Secrets Manager / HashiCorp Vault / 1Password\n• Sealed Secrets - הצפנה לפני שמכניסים את ה-Secret ל-Git",
             },
             {
               q: "כיצד משתמשים ב-ConfigMap ב-Pod?",
@@ -2022,7 +2022,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ConfigMap נצרך כ-env variables (envFrom) או כ-volume files (volumeMounts).\nשתי הדרכים מאפשרות ל-Pod לגשת לנתוני קונפיגורציה.\nשינוי ב-volume מתעדכן אוטומטית; שינוי ב-env מצריך restart.",
+                "ConfigMap ניתן להזרקה ל-Pod בשתי דרכים:\n• Environment Variables (env / envFrom)\n• Mounted Volume Files (volumeMounts)\nאם משתמשים ב-volume, הקבצים יכולים להתעדכן כאשר ה-ConfigMap משתנה.\nלעומת זאת, כאשר משתמשים ב-environment variables, יש צורך לבצע Pod restart כדי לטעון את הערכים החדשים.",
             },
             {
               q: "נניח שנוצר Namespace חדש ב-Kubernetes.\nאיזה ServiceAccount קיים בו כברירת מחדל?",
@@ -2034,7 +2034,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ServiceAccount הוא זהות ל-Pod. כל Namespace מכיל default שמוקצה אוטומטית.\nPods שלא מציינים ServiceAccount מקבלים את default.\nbest practice:\u200E ליצור ServiceAccount ייעודי עם הרשאות מינימליות.",
+                "ServiceAccount הוא זהות (identity) שבה Pods משתמשים כדי לתקשר עם ה-Kubernetes API.\nכאשר נוצר Namespace חדש, Kubernetes יוצר בו אוטומטית ServiceAccount בשם default.\nאם Pod לא מציין במפורש serviceAccountName, הוא ישתמש אוטומטית ב-default ServiceAccount של ה-Namespace.\nבגלל זה, ברוב המקרים Pods חדשים ירוצו עם default אלא אם מוגדר ServiceAccount אחר.\n\u200FBest practice\u200F:\nבפרודקשן מומלץ ליצור ServiceAccounts ייעודיים עם הרשאות מינימליות (RBAC) במקום להשתמש ב-default.",
             },
             {
               q: "מה ראשי התיבות RBAC?",
@@ -2046,7 +2046,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "RBAC = Role Based Access Control:\u200E מנגנון הרשאות ב-Kubernetes.\nשלושה מרכיבים: Roles (מה מותר), Subjects (מי מורשה), Bindings (מחברים ביניהם).\nמאפשר שליטה מדויקת. למשל לצפות ב-Pods אך לא למחוק.",
+                "RBAC (Role Based Access Control) הוא מנגנון ההרשאות של Kubernetes.\nהוא קובע מי יכול לבצע אילו פעולות על אילו משאבים.\nRBAC מורכב משלושה חלקים:\n• Roles / ClusterRoles - מגדירים הרשאות\n• Subjects - המשתמשים או ServiceAccounts\n• Bindings - מחברים בין המשתמשים להרשאות",
             },
             {
               q: "מה LimitRange עושה ב-Namespace?",
@@ -2058,7 +2058,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "LimitRange מגדיר ברירות מחדל ומגבלות CPU/Memory per-container ב-Namespace.\nמזריק default values ואוכף min/max אם container לא מציין requests/limits.\nללא LimitRange, Pod בודד יכול לצרוך את כל משאבי ה-Node.",
+                "LimitRange הוא אובייקט ב-Kubernetes שמגדיר מגבלות על משאבי CPU ו-Memory בתוך Namespace.\nהוא מאפשר להגדיר:\n• ערכי מינימום ומקסימום למשאבים של containers או Pods\n• ערכי ברירת מחדל (default requests / limits) אם container לא הגדיר אותם\nכאשר Pod נוצר, Kubernetes בודק שהמשאבים שהוגדרו עומדים בטווחים של ה-LimitRange.\nאם הם חורגים מהמגבלות, ה-Pod לא ייווצר.\nכך ניתן להבטיח של-containers יהיו הגדרות משאבים סבירות בתוך ה-Namespace.",
             },
             {
               q: "מה עושה ההגדרה `runAsNonRoot: true` ב-securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
@@ -2070,7 +2070,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "ההגדרה `runAsNonRoot: true` מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (`UID 0`).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
+                "ההגדרה \u200Frun\u200BAs\u200BNon\u200BRoot: true\u200F מבטיחה שהקונטיינר לא ירוץ כמשתמש root (UID 0).\nכאשר Kubernetes יוצר את ה-container, הוא בודק את המשתמש שהקונטיינר אמור לרוץ איתו.\nאם ה-container מוגדר לרוץ כ-root, ה-Pod לא יתחיל וייכשל ביצירה.\nזהו מנגנון אבטחה שמטרתו למנוע מהרצת קונטיינרים עם הרשאות גבוהות מדי.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -2083,7 +2083,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "requests = מינימום שה-Scheduler מבטיח. limits = מקסימום שהקונטיינר יכול לצרוך.\nNode נבחר רק אם יש מספיק resources פנויים עבור requests.\nחריגת memory limit = OOMKill. חריגת CPU limit = throttling.",
+                "requests = המשאבים המינימליים שה-Scheduler משתמש בהם לצורך תזמון ה-Pod על Node.\nlimits = הכמות המקסימלית של CPU או Memory שה-container יכול להשתמש בה בזמן ריצה.\nNode ייבחר רק אם יש מספיק משאבים פנויים עבור ה-requests.\nחריגה מ-memory limit יכולה לגרום ל-OOMKill,\nוחריגה מ-CPU limit תגרום ל-CPU throttling.",
             },
         ],
         questionsEn: [
@@ -2110,7 +2110,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Secrets are only base64-encoded by default. Not encrypted!\nbase64 is encoding, not encryption. Anyone can decode it.\nFor real security: Encryption at Rest, Sealed Secrets, or external secrets manager.",
+                "Secrets in Kubernetes are not encrypted by default.\nTheir values are only encoded using Base64 when stored in the API and in etcd.\nIt is important to understand that Base64 is encoding, not encryption.\nAnyone who has access to the Secret can easily decode it and see the original value.\nFor this reason, in production environments it is recommended to add an additional security layer, for example:\n• Encryption at Rest - encrypts Secrets inside etcd\n• External Secret Manager - such as AWS Secrets Manager, HashiCorp Vault, or 1Password\n• Sealed Secrets - encrypts Secrets before committing them to Git",
             },
             {
               q: "How can a ConfigMap be used in a Pod?",
@@ -2123,7 +2123,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ConfigMap is consumed as env variables (envFrom) or volume files (volumeMounts).\nBoth methods let the Pod access configuration data.\nVolume changes auto-update (with delay); env changes need Pod restart.",
+                "A ConfigMap can be injected into a Pod in two main ways:\n• Environment Variables (env / envFrom)\n• Mounted Volume Files (volumeMounts)\nIf a volume is used, the files can be updated automatically when the ConfigMap changes.\nIn contrast, when using environment variables, the values are set when the Pod starts, so a Pod restart is required to load the updated values.",
             },
             {
               q: "A new Namespace is created in Kubernetes.\nWhich ServiceAccount exists in it by default?",
@@ -2135,7 +2135,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ServiceAccount is a Pod identity. Every Namespace has 'default' assigned automatically.\nPods that don't specify a ServiceAccount get the default one.\nBest practice: create dedicated ServiceAccounts with minimal permissions.",
+                "A ServiceAccount provides an identity that Pods use to interact with the Kubernetes API.\nWhen a new Namespace is created, Kubernetes automatically creates a ServiceAccount named default inside it.\nIf a Pod does not explicitly specify serviceAccountName, it will automatically use the default ServiceAccount in that Namespace.\nBest practice:\nIn production, it is recommended to create dedicated ServiceAccounts with minimal RBAC permissions instead of using the default one.",
             },
             {
               q: "What does RBAC stand for?",
@@ -2147,7 +2147,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "RBAC = Role Based Access Control: Kubernetes' permission system.\nThree building blocks: Roles (what's allowed), Subjects (who), Bindings (connect them).\nEnables fine-grained control. For example, view Pods but not delete them.",
+                "RBAC (Role Based Access Control) is Kubernetes' authorization mechanism.\nIt defines who can perform which actions on which resources in the Kubernetes API.\nRBAC consists of three main components:\n• Roles / ClusterRoles - define permissions (e.g., get, list, create on Pods)\n• Subjects - users, groups, or service accounts\n• RoleBindings / ClusterRoleBindings - connect subjects to roles\nThis enables fine-grained access control following the principle of least privilege.",
             },
             {
               q: "What does LimitRange do in a Namespace?",
@@ -2159,7 +2159,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "LimitRange sets default and max CPU/Memory per container in a Namespace.\nAuto-injects defaults and enforces min/max if containers don't specify them.\nWithout LimitRange, a single Pod can consume all Node resources.",
+                "LimitRange is a Kubernetes object that defines constraints on CPU and Memory resources within a Namespace.\nIt allows you to define:\n• Minimum and maximum values for resources of containers or Pods\n• Default values (requests / limits) if a container does not specify them\nWhen a Pod is created, Kubernetes checks that the defined resources fall within the LimitRange boundaries.\nIf they exceed the allowed limits, the Pod will not be created.\nThis helps ensure that containers use reasonable resource configurations within the Namespace.",
             },
             {
               q: "What does the `runAsNonRoot: true` setting do in securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
@@ -2171,7 +2171,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "The `runAsNonRoot: true` setting ensures the process inside the container does not run as root (`UID 0`).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
+                "Setting runAsNonRoot: true ensures that the container does not run as the root user (UID 0).\nWhen Kubernetes creates the container, it checks which user the container is configured to run as.\nIf the container is set to run as root, the Pod will fail to start.\nThis is a security mechanism designed to prevent containers from running with excessively high privileges.",
             },
             {
               q: "What is the difference between resource requests and limits?",
@@ -2184,7 +2184,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "requests = minimum the Scheduler guarantees. limits = maximum the container can use.\nNode is chosen only if it has enough free resources for the requests.\nExceed memory limit = OOMKill. Exceed CPU limit = throttling only.",
+                "requests = the minimum amount of CPU or Memory used by the Scheduler to decide where a Pod can run.\nlimits = the maximum amount of CPU or Memory a container is allowed to use at runtime.\nA Node will be selected only if it has enough available resources to satisfy the requests.\nExceeding the memory limit can cause an OOMKill,\nwhile exceeding the CPU limit results in CPU throttling.",
             },
         ],
       },
@@ -2203,7 +2203,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Role מוגבל ל-Namespace ספציפי. ClusterRole חל על כל ה-Cluster.\nRole ב-prod לא מעניק גישה ב-staging. ClusterRole כולל Nodes, PVs ועוד.\nשניהם חלים על Users, Groups, ו-ServiceAccounts. ההבדל המרכזי הוא ב-scope בלבד.\nניתן לקשור ClusterRole ל-Namespace בודד עם RoleBinding.",
+                "Role - מגדיר הרשאות בתוך Namespace ספציפי.\nClusterRole - מגדיר הרשאות ברמת כל ה-Cluster או עבור משאבים שאינם שייכים ל-Namespace (כמו Nodes).\nניתן להעניק הרשאות ל-Users, Groups או ServiceAccounts באמצעות RoleBinding או ClusterRoleBinding.\nהבדל מרכזי:\nRole = Namespace scope\nClusterRole = Cluster scope",
             },
             {
               q: "מה תפקיד RoleBinding?",
@@ -2306,7 +2306,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Role is Namespace-scoped. ClusterRole applies cluster-wide.\nRole in prod grants no access in staging. ClusterRole covers Nodes, PVs, etc.\nBoth apply to Users, Groups, and ServiceAccounts. The key difference is scope, not verbs.\nClusterRole can be bound to a single Namespace via RoleBinding.",
+                "Role - defines permissions within a specific Namespace.\nClusterRole - defines permissions at the cluster level or for resources that are not namespace-scoped (such as Nodes).\nPermissions are granted to Users, Groups, or ServiceAccounts using RoleBinding or ClusterRoleBinding.\nKey difference:\nRole = Namespace scope\nClusterRole = Cluster scope",
             },
             {
               q: "What is a RoleBinding?",

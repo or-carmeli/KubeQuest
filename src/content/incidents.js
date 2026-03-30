@@ -54,9 +54,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "Pod Stuck in Crash Loop\n\n$ kubectl get pods -n staging\nNAME                              READY   STATUS             RESTARTS        AGE\ngateway-5f8b9c7d4-k2m1x           1/1     Running            0               4d\nnotification-svc-6c9d8e-r4t2q     1/1     Running            0               4d\npayment-service-7d4b9-abc12        0/1     CrashLoopBackOff   9 (42s ago)     12m\npayment-service-7d4b9-def34        0/1     CrashLoopBackOff   9 (38s ago)     12m\npayment-service-7d4b9-ghi56        0/1     CrashLoopBackOff   8 (51s ago)     12m\n\nAll 3 payment-service replicas are crashing. Other pods are healthy.\n\nWhat command reveals the application error?",
+          "Pod Stuck in Crash Loop\n\nkubectl get pods -n staging\nNAME                            READY  STATUS            RESTARTS       AGE\ngateway-5f8b9c7d4-k2m1x         1/1    Running           0              4d\nnotification-svc-6c9d8e-r4t2q   1/1    Running           0              4d\npayment-service-7d4b9-abc12      0/1    CrashLoopBackOff  9 (42s ago)    12m\npayment-service-7d4b9-def34      0/1    CrashLoopBackOff  9 (38s ago)    12m\npayment-service-7d4b9-ghi56      0/1    CrashLoopBackOff  8 (51s ago)    12m\n\nAll 3 payment-service replicas are crashing. Other pods are healthy.\n\nWhat command reveals the application error?",
         promptHe:
-          "Pod תקוע בלולאת קריסה\n\n$ kubectl get pods -n staging\nNAME                              READY   STATUS             RESTARTS        AGE\ngateway-5f8b9c7d4-k2m1x           1/1     Running            0               4d\nnotification-svc-6c9d8e-r4t2q     1/1     Running            0               4d\npayment-service-7d4b9-abc12        0/1     CrashLoopBackOff   9 (42s ago)     12m\npayment-service-7d4b9-def34        0/1     CrashLoopBackOff   9 (38s ago)     12m\npayment-service-7d4b9-ghi56        0/1     CrashLoopBackOff   8 (51s ago)     12m\n\nכל 3 רפליקות payment-service קורסות. Pods אחרים תקינים.\n\nאיזו פקודה חושפת את שגיאת האפליקציה?",
+          "Pod תקוע בלולאת קריסה\n\nkubectl get pods -n staging\nNAME                            READY  STATUS            RESTARTS       AGE\ngateway-5f8b9c7d4-k2m1x         1/1    Running           0              4d\nnotification-svc-6c9d8e-r4t2q   1/1    Running           0              4d\npayment-service-7d4b9-abc12      0/1    CrashLoopBackOff  9 (42s ago)    12m\npayment-service-7d4b9-def34      0/1    CrashLoopBackOff  9 (38s ago)    12m\npayment-service-7d4b9-ghi56      0/1    CrashLoopBackOff  8 (51s ago)    12m\n\nכל 3 רפליקות payment-service קורסות. Pods אחרים תקינים.\n\nאיזו פקודה חושפת את שגיאת האפליקציה?",
         options: [
           "kubectl describe pod payment-service-7d4b9-abc12 -n staging",
           "kubectl logs payment-service-7d4b9-abc12 -n staging --previous",
@@ -101,9 +101,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "ConfigMap Not Found in Namespace\n\n• Pod spec references volume: `configMap: name: payment-config`\n• You run: `kubectl get configmap -n staging`\n\n$ kubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nNo `payment-config` in the list. What is the fastest way to confirm whether it exists elsewhere?",
+          "ConfigMap Not Found in Namespace\n\n• Pod spec references volume: `configMap: name: payment-config`\n• You run: `kubectl get configmap -n staging`\n\nkubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nNo `payment-config` in the list. What is the fastest way to confirm whether it exists elsewhere?",
         promptHe:
-          "ConfigMap לא נמצא ב-Namespace\n\n• ה-pod spec מפנה ל-volume: `configMap: name: payment-config`\n• מריצים: `kubectl get configmap -n staging`\n\n$ kubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nאין `payment-config` ברשימה. מה הדרך המהירה ביותר לוודא אם הוא קיים במקום אחר?",
+          "ConfigMap לא נמצא ב-Namespace\n\n• ה-pod spec מפנה ל-volume: `configMap: name: payment-config`\n• מריצים: `kubectl get configmap -n staging`\n\nkubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nאין `payment-config` ברשימה. מה הדרך המהירה ביותר לוודא אם הוא קיים במקום אחר?",
         options: [
           "kubectl get configmap payment-config --all-namespaces",
           "kubectl get configmap payment-config -n production",
@@ -511,9 +511,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "Service Exists but Traffic Fails\n\n$ kubectl get svc backend-svc -n production\nNAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE\nbackend-svc   ClusterIP   10.96.42.180   <none>        80/TCP    30d\n\nService exists with a ClusterIP. Pods are Running. What is the single most diagnostic command?",
+          "Service Exists but Traffic Fails\n\nkubectl get svc backend-svc -n production\nNAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE\nbackend-svc   ClusterIP   10.96.42.180   <none>        80/TCP    30d\n\nService exists with a ClusterIP. Pods are Running. What is the single most diagnostic command?",
         promptHe:
-          "Service קיים אך התעבורה נכשלת\n\n$ kubectl get svc backend-svc -n production\nNAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE\nbackend-svc   ClusterIP   10.96.42.180   <none>        80/TCP    30d\n\nService קיים עם ClusterIP. Pods רצים. מהי הפקודה האבחונית ביותר?",
+          "Service קיים אך התעבורה נכשלת\n\nkubectl get svc backend-svc -n production\nNAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE\nbackend-svc   ClusterIP   10.96.42.180   <none>        80/TCP    30d\n\nService קיים עם ClusterIP. Pods רצים. מהי הפקודה האבחונית ביותר?",
         options: [
           "kubectl get endpoints backend-svc -n production",
           "kubectl get ingress -n production",
@@ -534,10 +534,10 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "Endpoints Are Empty\n\n$ kubectl get endpoints backend-svc -n production\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      30d\n\nService exists, pods exist, but zero endpoints. What do you do next?",
+          "Endpoints Are Empty\n\nkubectl get endpoints backend-svc -n production\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      30d\n\nService exists, pods exist, but zero endpoints. What do you do next?",
         tags: ["service-discovery"],
         promptHe:
-          "Endpoints ריקים\n\n$ kubectl get endpoints backend-svc -n production\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      30d\n\nService קיים, Pods קיימים, אך אפס endpoints. מה הצעד הבא?",
+          "Endpoints ריקים\n\nkubectl get endpoints backend-svc -n production\nNAME          ENDPOINTS   AGE\nbackend-svc   <none>      30d\n\nService קיים, Pods קיימים, אך אפס endpoints. מה הצעד הבא?",
         options: [
           "kubectl describe svc backend-svc -n production  (see the selector the Service uses)",
           "kubectl get pods -n production --show-labels  (see actual pod labels)",
@@ -704,9 +704,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "CoreDNS Pods Crashing - OOMKilled\n\n$ kubectl get pods -n kube-system -l k8s-app=kube-dns\nNAME                       READY   STATUS      RESTARTS       AGE\ncoredns-5d78c9869d-abc12   0/1     OOMKilled   7 (22s ago)    14d\ncoredns-5d78c9869d-def34   0/1     OOMKilled   7 (18s ago)    14d\n\nBoth CoreDNS replicas are OOMKilled. What should you do before changing anything?",
+          "CoreDNS Pods Crashing - OOMKilled\n\nkubectl get pods -n kube-system -l k8s-app=kube-dns\nNAME                       READY   STATUS      RESTARTS       AGE\ncoredns-5d78c9869d-abc12   0/1     OOMKilled   7 (22s ago)    14d\ncoredns-5d78c9869d-def34   0/1     OOMKilled   7 (18s ago)    14d\n\nBoth CoreDNS replicas are OOMKilled. What should you do before changing anything?",
         promptHe:
-          "Pods של CoreDNS קורסים: OOMKilled\n\n$ kubectl get pods -n kube-system -l k8s-app=kube-dns\nNAME                       READY   STATUS      RESTARTS       AGE\ncoredns-5d78c9869d-abc12   0/1     OOMKilled   7 (22s ago)    14d\ncoredns-5d78c9869d-def34   0/1     OOMKilled   7 (18s ago)    14d\n\nשתי רפליקות CoreDNS ב-OOMKilled. מה יש לעשות לפני שמשנים דבר?",
+          "Pods של CoreDNS קורסים: OOMKilled\n\nkubectl get pods -n kube-system -l k8s-app=kube-dns\nNAME                       READY   STATUS      RESTARTS       AGE\ncoredns-5d78c9869d-abc12   0/1     OOMKilled   7 (22s ago)    14d\ncoredns-5d78c9869d-def34   0/1     OOMKilled   7 (18s ago)    14d\n\nשתי רפליקות CoreDNS ב-OOMKilled. מה יש לעשות לפני שמשנים דבר?",
         options: [
           "kubectl delete pods -n kube-system -l k8s-app=kube-dns  (force restart)",
           "kubectl describe pod coredns-5d78c9869d-abc12 -n kube-system  (check the configured memory limit and exit code)",
@@ -750,9 +750,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "Increasing CoreDNS Memory Safely\n\nYou pull the CoreDNS logs to confirm before acting:\n\n$ kubectl logs coredns-5d78c9869d-abc12 -n kube-system --previous --tail=15\n[INFO] plugin/reload: Running configuration SHA512\n[INFO] 10.244.3.12:41892 - 30  'AAAA IN cart-svc.production.svc.cluster.local. udp 58 false 512' NOERROR 131 0.000284s\n[INFO] 10.244.7.5:55123 - 42   'A IN auth-svc.production.svc.cluster.local. udp 54 false 512' NOERROR 106 0.000191s\n[WARNING] plugin/kubernetes: Kubernetes API connection reset\n[INFO] 10.244.1.8:39201 - 15  'A IN postgres.database.svc.cluster.local. udp 52 false 512' NOERROR 98 0.000312s\n[ERROR] plugin/errors: 2 dns.test. A: read udp 10.96.0.10:53->10.244.0.1:39211: i/o timeout\n[INFO] 10.244.5.3:48922 - 28  'A IN inventory-svc.production.svc.cluster.local. udp 62 false 512' SERVFAIL 62 5.001203s\n[INFO] plugin/health: Health check OK\nOOMKilled\n\nRoot cause confirmed: memory exhaustion. How do you increase CoreDNS memory without causing a DNS blackout?",
+          "Increasing CoreDNS Memory Safely\n\nYou pull the CoreDNS logs to confirm before acting:\n\nkubectl logs coredns-5d78c9869d-abc12 -n kube-system --previous --tail=15\n[INFO] plugin/reload: Running configuration SHA512\n[INFO] 10.244.3.12:41892 - 30  'AAAA IN cart-svc.production.svc.cluster.local. udp 58 false 512' NOERROR 131 0.000284s\n[INFO] 10.244.7.5:55123 - 42   'A IN auth-svc.production.svc.cluster.local. udp 54 false 512' NOERROR 106 0.000191s\n[WARNING] plugin/kubernetes: Kubernetes API connection reset\n[INFO] 10.244.1.8:39201 - 15  'A IN postgres.database.svc.cluster.local. udp 52 false 512' NOERROR 98 0.000312s\n[ERROR] plugin/errors: 2 dns.test. A: read udp 10.96.0.10:53->10.244.0.1:39211: i/o timeout\n[INFO] 10.244.5.3:48922 - 28  'A IN inventory-svc.production.svc.cluster.local. udp 62 false 512' SERVFAIL 62 5.001203s\n[INFO] plugin/health: Health check OK\nOOMKilled\n\nRoot cause confirmed: memory exhaustion. How do you increase CoreDNS memory without causing a DNS blackout?",
         promptHe:
-          "הגדלת זיכרון CoreDNS בבטחה\n\nמושכים לוגים של CoreDNS לאישור לפני פעולה:\n\n$ kubectl logs coredns-5d78c9869d-abc12 -n kube-system --previous --tail=15\n[INFO] plugin/reload: Running configuration SHA512\n[INFO] 10.244.3.12:41892 - 30  'AAAA IN cart-svc.production.svc.cluster.local. udp 58 false 512' NOERROR 131 0.000284s\n[INFO] 10.244.7.5:55123 - 42   'A IN auth-svc.production.svc.cluster.local. udp 54 false 512' NOERROR 106 0.000191s\n[WARNING] plugin/kubernetes: Kubernetes API connection reset\n[INFO] 10.244.1.8:39201 - 15  'A IN postgres.database.svc.cluster.local. udp 52 false 512' NOERROR 98 0.000312s\n[ERROR] plugin/errors: 2 dns.test. A: read udp 10.96.0.10:53->10.244.0.1:39211: i/o timeout\n[INFO] 10.244.5.3:48922 - 28  'A IN inventory-svc.production.svc.cluster.local. udp 62 false 512' SERVFAIL 62 5.001203s\n[INFO] plugin/health: Health check OK\nOOMKilled\n\nסיבה שורשית מאושרת: מיצוי זיכרון. כיצד מגדילים זיכרון CoreDNS ללא השבתת DNS?",
+          "הגדלת זיכרון CoreDNS בבטחה\n\nמושכים לוגים של CoreDNS לאישור לפני פעולה:\n\nkubectl logs coredns-5d78c9869d-abc12 -n kube-system --previous --tail=15\n[INFO] plugin/reload: Running configuration SHA512\n[INFO] 10.244.3.12:41892 - 30  'AAAA IN cart-svc.production.svc.cluster.local. udp 58 false 512' NOERROR 131 0.000284s\n[INFO] 10.244.7.5:55123 - 42   'A IN auth-svc.production.svc.cluster.local. udp 54 false 512' NOERROR 106 0.000191s\n[WARNING] plugin/kubernetes: Kubernetes API connection reset\n[INFO] 10.244.1.8:39201 - 15  'A IN postgres.database.svc.cluster.local. udp 52 false 512' NOERROR 98 0.000312s\n[ERROR] plugin/errors: 2 dns.test. A: read udp 10.96.0.10:53->10.244.0.1:39211: i/o timeout\n[INFO] 10.244.5.3:48922 - 28  'A IN inventory-svc.production.svc.cluster.local. udp 62 false 512' SERVFAIL 62 5.001203s\n[INFO] plugin/health: Health check OK\nOOMKilled\n\nסיבה שורשית מאושרת: מיצוי זיכרון. כיצד מגדילים זיכרון CoreDNS ללא השבתת DNS?",
         options: [
           "kubectl edit deployment coredns -n kube-system  (increase memory limit, triggers rolling update)",
           "kubectl delete deployment coredns -n kube-system  (delete and recreate)",
