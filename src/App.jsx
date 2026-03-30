@@ -5815,9 +5815,10 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                       onClick={async()=>{
                         const q=currentQuestions[questionIndex];
                         if(typeof q.answer==="number"){
-                          // Local hint: eliminate one wrong answer (interview-style)
-                          const wrong=q.options.map((_,i)=>i).filter(i=>i!==q.answer&&(selectedAnswer===null||i!==selectedAnswer));
-                          if(wrong.length>0){const pick=wrong[Math.floor(Math.random()*wrong.length)];const label=t("optionLabels")[pick];setServerHintText(lang==="he"?`תשובה ${label} לא נכונה`:`Option ${label} is incorrect`);}
+                          // Local hint: short topical nudge from tags or topic name
+                          const tag=q.tags?.[0];
+                          const concept=tag?tag.replace(/[-_]/g," "):selectedTopic?.name||"";
+                          if(concept){setServerHintText(lang==="he"?`חשבו על ${concept}`:`Think about ${concept}`);}
                           setHintVisible(true);return;
                         }
                         if(supabase&&q.id&&!hintLoading){
