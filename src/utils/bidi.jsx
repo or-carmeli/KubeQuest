@@ -92,6 +92,13 @@ export function renderBidiInner(text, lang, keyPrefix) {
   // Prevents neutral characters (<, >, brackets) from being fragmented
   // into RTL spans which reorders them visually (e.g. <any-node-IP> breaks).
   if (!hasHebrew(text)) {
+    // Bullet-prefixed lines (from → conversion): keep the bullet in RTL flow
+    // so it appears on the right side, with only the English text in LTR.
+    if (lang === "he" && /^[·•]\s/.test(text)) {
+      const bullet = text.slice(0, 2);
+      const rest = text.slice(2);
+      return <span key={keyPrefix}>{bullet}<span dir="ltr" style={{unicodeBidi:"isolate"}}>{rest}</span></span>;
+    }
     return <span key={keyPrefix} dir="ltr" style={{unicodeBidi:"isolate"}}>{text}</span>;
   }
   // Split on: flag sequences (--flag, -f, +D), slash-paths (/api/v1), Latin word sequences, or left-arrow
