@@ -826,33 +826,23 @@ function SealedSecretsDiagram() {
   return (
     <div style={wrap}>
       <div style={col({ gap: 4, width: "100%", maxWidth: 280 })}>
-        <div style={row({ gap: 6, flexWrap: "nowrap" })}>
+        <div style={row({ gap: 6, flexWrap: "nowrap", justifyContent: "center" })}>
           <div style={smallBox(C.amber, C.amberBg, C.amberText)}>Secret</div>
-          <div style={col({ gap: 1 })}>
-            <span style={{ fontSize: 8, color: C.cyanText, fontFamily: MONO }}>kubeseal</span>
-            <div style={arrow({ fontSize: 13 })}>→</div>
-          </div>
+          <div style={arrow({ fontSize: 13 })}>→</div>
           <div style={smallBox(C.cyan, C.cyanBg, C.cyanText)}>SealedSecret</div>
+          <div style={arrow({ fontSize: 13 })}>→</div>
+          <div style={smallBox(C.purple, C.purpleBg, C.purpleText)}>Git</div>
         </div>
-        <div style={arrow()}>↓</div>
-        <div style={box(C.purple, C.purpleBg, { padding: "6px 10px", width: "100%" })}>
-          <div style={label(C.purpleText, { fontSize: 10 })}>Git repo</div>
-          <div style={subLabel({ marginTop: 3 })}>safe to commit</div>
-        </div>
-        <div style={arrow()}>↓</div>
-        <div style={row({ gap: 6, flexWrap: "nowrap" })}>
-          <div style={box(C.indigo, C.indigoBg, { padding: "6px 10px" })}>
-            <div style={label(C.indigoText, { fontSize: 10 })}>Controller</div>
-            <div style={subLabel({ marginTop: 3 })}>private key</div>
-          </div>
-          <div style={col({ gap: 1 })}>
-            <span style={{ fontSize: 8, color: C.greenText, fontFamily: MONO }}>decrypt</span>
-            <div style={arrow({ fontSize: 13 })}>→</div>
-          </div>
+        <div style={{ ...dashed, width: "100%", marginTop: 6, marginBottom: 6 }} />
+        <div style={row({ gap: 6, flexWrap: "nowrap", justifyContent: "center" })}>
+          <div style={smallBox(C.purple, C.purpleBg, C.purpleText)}>Git</div>
+          <div style={arrow({ fontSize: 13 })}>→</div>
+          <div style={smallBox(C.indigo, C.indigoBg, C.indigoText)}>Controller</div>
+          <div style={arrow({ fontSize: 13 })}>→</div>
           <div style={smallBox(C.green, C.greenBg, C.greenText)}>Secret</div>
         </div>
       </div>
-      <div style={caption()}>encrypt for git, decrypt in cluster</div>
+      <div style={caption()}>encrypt before Git, decrypt in cluster</div>
     </div>
   );
 }

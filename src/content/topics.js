@@ -2142,7 +2142,7 @@ export const TOPICS = [
               hint: "חשבו על ההבדל בין מידע רגיל למידע רגיש.",
               answer: 2,
               explanation:
-                "Secret מיועד לנתונים רגישים (סיסמאות, tokens, TLS keys), מאוחסן כ-base64 ב-etcd.\nConfigMap לקונפיגורציה רגילה. Secret למידע רגיש.\nשניהם ניתנים להזרקה כ-env variables או volume.",
+                "Secret – מידע רגיש (tokens, passwords, TLS keys)\nConfigMap – קונפיגורציה רגילה\nשניהם יכולים להיכנס ל-Pod דרך env vars או volumes.\nSecrets מקודדים ב-base64 אך אינם מוצפנים כברירת מחדל.",
             },
             {
               q: "האם Secrets מוצפנים לחלוטין?",
@@ -2155,7 +2155,7 @@ export const TOPICS = [
               hint: "חשבו על איך הגדרות מגיעות לתוך הקונטיינר.",
               answer: 2,
               explanation:
-                "Secrets ב-Kubernetes אינם מוצפנים כברירת מחדל.\nהערכים שלהם נשמרים רק מקודדים ב-base64 בתוך ה-API וה-etcd.\nחשוב להבין:\nbase64 הוא encoding בלבד, לא encryption (הצפנה).\nכל מי שיש לו גישה ל-Secret יכול לבצע decode ולראות את הערך המקורי.\nלכן בפרודקשן מומלץ להוסיף שכבת אבטחה נוספת, למשל:\n• Encryption at Rest - הצפנה של ה-Secrets בתוך etcd\n• External Secret Manager - כמו AWS Secrets Manager / HashiCorp Vault / 1Password\n• Sealed Secrets - הצפנה לפני שמכניסים את ה-Secret ל-Git",
+                "Secrets ב-Kubernetes אינם מוצפנים כברירת מחדל.\nהערכים שלהם נשמרים רק מקודדים ב-base64 בתוך ה-API וה-etcd.\nbase64 הוא encoding בלבד, לא encryption (הצפנה).\nכל מי שיש לו גישה ל-Secret יכול לבצע decode ולראות את הערך המקורי.\nלכן בפרודקשן מומלץ להוסיף שכבת אבטחה נוספת, למשל:\n• Encryption at Rest - הצפנה של ה-Secrets בתוך etcd\n• External Secret Manager - כמו AWS Secrets Manager / HashiCorp Vault / 1Password\n• Sealed Secrets - הצפנה לפני שמכניסים את ה-Secret ל-Git",
             },
             {
               q: "כיצד משתמשים ב-ConfigMap ב-Pod?",
@@ -2169,7 +2169,7 @@ export const TOPICS = [
               hint: "חשבו על איך הגדרות מגיעות לתוך הקונטיינר.",
               answer: 3,
               explanation:
-                "ConfigMap ניתן להזרקה ל-Pod בשתי דרכים:\n• Environment Variables (env / envFrom)\n• Mounted Volume Files (volumeMounts)\nאם משתמשים ב-volume, הקבצים יכולים להתעדכן כאשר ה-ConfigMap משתנה.\nלעומת זאת, כאשר משתמשים ב-environment variables, יש צורך לבצע Pod restart כדי לטעון את הערכים החדשים.",
+                "ConfigMap ניתן להזרקה ל-Pod בשתי דרכים:\n\u200F• Environment Variables (env / envFrom)\n\u200F• Mounted Volume Files (volumeMounts)\nאם משתמשים ב-volume, הקבצים יכולים להתעדכן כאשר ה-ConfigMap משתנה.\nלעומת זאת, כאשר משתמשים ב-environment variables, יש צורך לבצע Pod restart כדי לטעון את הערכים החדשים.",
             },
             {
               q: "נניח שנוצר Namespace חדש ב-Kubernetes.\nאיזה ServiceAccount קיים בו כברירת מחדל?",
@@ -2182,7 +2182,7 @@ export const TOPICS = [
               hint: "חשבו על איך Pod מוכיח מי הוא כשהוא פונה לשירותים.",
               answer: 3,
               explanation:
-                "ServiceAccount הוא זהות (identity) שבה Pods משתמשים כדי לתקשר עם ה-Kubernetes API.\nכאשר נוצר Namespace חדש, Kubernetes יוצר בו אוטומטית ServiceAccount בשם default.\nאם Pod לא מציין במפורש serviceAccountName, הוא ישתמש אוטומטית ב-default ServiceAccount של ה-Namespace.\nבגלל זה, ברוב המקרים Pods חדשים ירוצו עם default אלא אם מוגדר ServiceAccount אחר.\n\u200FBest practice\u200F:\nבפרודקשן מומלץ ליצור ServiceAccounts ייעודיים עם הרשאות מינימליות (RBAC) במקום להשתמש ב-default.",
+                "Kubernetes יוצר אוטומטית ServiceAccount בשם default בכל Namespace.\nPods שלא מציינים serviceAccountName משתמשים בו כברירת מחדל.\nבפרודקשן נהוג ליצור ServiceAccount ייעודי עם RBAC מתאים.",
             },
             {
               q: "מה ראשי התיבות RBAC?",
@@ -2208,7 +2208,7 @@ export const TOPICS = [
               hint: "חשבו על מה קורה כש-Pod נוצר ללא הגדרות משאבים.",
               answer: 2,
               explanation:
-                "LimitRange הוא אובייקט ב-Kubernetes שמגדיר מגבלות על משאבי CPU ו-Memory בתוך Namespace.\nהוא מאפשר להגדיר:\n• ערכי מינימום ומקסימום למשאבים של containers או Pods\n• ערכי ברירת מחדל (default requests / limits) אם container לא הגדיר אותם\nכאשר Pod נוצר, Kubernetes בודק שהמשאבים שהוגדרו עומדים בטווחים של ה-LimitRange.\nאם הם חורגים מהמגבלות, ה-Pod לא ייווצר.\nכך ניתן להבטיח של-containers יהיו הגדרות משאבים סבירות בתוך ה-Namespace.",
+                "LimitRange הוא אובייקט ב-Kubernetes שמגדיר מגבלות על משאבי CPU ו-Memory בתוך Namespace.\nהוא יכול להגדיר:\n\u200F• ערכי minimum ו-maximum למשאבים של containers או Pods\n\u200F• ערכי default requests ו-limits אם הם לא הוגדרו\nכאשר Pod נוצר, Kubernetes בודק שהוא עומד במגבלות של ה-LimitRange. אם לא, ה-Pod לא ייווצר.",
             },
             {
               q: "מה עושה ההגדרה `runAsNonRoot: true` ב-securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
@@ -2264,7 +2264,7 @@ export const TOPICS = [
               hint: "Think about how configuration gets into the container.",
               answer: 3,
               explanation:
-                "Secrets in Kubernetes are not encrypted by default.\nTheir values are only encoded using Base64 when stored in the API and in etcd.\nIt is important to understand that Base64 is encoding, not encryption.\nAnyone who has access to the Secret can easily decode it and see the original value.\nFor this reason, in production environments it is recommended to add an additional security layer, for example:\n• Encryption at Rest - encrypts Secrets inside etcd\n• External Secret Manager - such as AWS Secrets Manager, HashiCorp Vault, or 1Password\n• Sealed Secrets - encrypts Secrets before committing them to Git",
+                "Secrets in Kubernetes are not encrypted by default.\nTheir values are only encoded using Base64 when stored in the API and in etcd.\nBase64 is encoding, not encryption.\nAnyone who has access to the Secret can easily decode it and see the original value.\nFor this reason, in production environments it is recommended to add an additional security layer, for example:\n• Encryption at Rest - encrypts Secrets inside etcd\n• External Secret Manager - such as AWS Secrets Manager, HashiCorp Vault, or 1Password\n• Sealed Secrets - encrypts Secrets before committing them to Git",
             },
             {
               q: "How can a ConfigMap be used in a Pod?",
@@ -2291,7 +2291,7 @@ export const TOPICS = [
               hint: "Think about how a Pod proves who it is when making requests.",
               answer: 3,
               explanation:
-                "A ServiceAccount provides an identity that Pods use to interact with the Kubernetes API.\nWhen a new Namespace is created, Kubernetes automatically creates a ServiceAccount named default inside it.\nIf a Pod does not explicitly specify serviceAccountName, it will automatically use the default ServiceAccount in that Namespace.\nBest practice:\nIn production, it is recommended to create dedicated ServiceAccounts with minimal RBAC permissions instead of using the default one.",
+                "Kubernetes automatically creates a ServiceAccount named default in every Namespace.\nPods that do not specify serviceAccountName use it by default.\nIn production, it is recommended to create a dedicated ServiceAccount with appropriate RBAC permissions.",
             },
             {
               q: "What does RBAC stand for?",
@@ -2317,7 +2317,7 @@ export const TOPICS = [
               hint: "Think about defaults and constraints for new Pods.",
               answer: 3,
               explanation:
-                "LimitRange is a Kubernetes object that defines constraints on CPU and Memory resources within a Namespace.\nIt allows you to define:\n• Minimum and maximum values for resources of containers or Pods\n• Default values (requests / limits) if a container does not specify them\nWhen a Pod is created, Kubernetes checks that the defined resources fall within the LimitRange boundaries.\nIf they exceed the allowed limits, the Pod will not be created.\nThis helps ensure that containers use reasonable resource configurations within the Namespace.",
+                "LimitRange is a Kubernetes object that defines limits on CPU and Memory resources within a Namespace.\nIt can define:\n• minimum and maximum resource values for containers or Pods\n• default requests and limits if they are not specified\nWhen a Pod is created, Kubernetes checks whether it complies with the LimitRange constraints. If it does not, the Pod will not be created.",
             },
             {
               q: "What does the `runAsNonRoot: true` setting do in securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
@@ -2378,7 +2378,7 @@ export const TOPICS = [
               hint: "חשבו על חיבור בין הרשאות לזהויות.",
               answer: 1,
               explanation:
-                "RoleBinding קושר Role ל-subject (User, Group, או ServiceAccount) ב-Namespace.\nללא RoleBinding, ה-Role לא נאכף על אף ישות.\nלגישה ברמת Cluster: ClusterRoleBinding.",
+                "RoleBinding מחבר Role ל־subject (User, Group או ServiceAccount) בתוך Namespace.\nכך המשתמש או ה-ServiceAccount מקבלים את ההרשאות שמוגדרות ב-Role.\nבלי RoleBinding, ההרשאות שמוגדרות ב-Role אינן נאכפות על אף משתמש.\nכדי לתת הרשאות ברמת ה-cluster משתמשים ב-ClusterRoleBinding.",
             },
             {
               q: "מה תפקיד ServiceAccount ב-Kubernetes?",
@@ -2394,7 +2394,7 @@ export const TOPICS = [
                 "ServiceAccount הוא זהות עבור Pods שרצים ב-Kubernetes.\nהוא מאפשר ל-Pod להזדהות מול Kubernetes API server ולבצע פעולות בהתאם להרשאות שהוגדרו לו ב-RBAC.\nכאשר Pod נוצר, Kubernetes מצרף אליו token של ServiceAccount, שמאפשר ל-Pod לגשת ל-API של Kubernetes.\nלכל Namespace קיים ServiceAccount בשם default, שמשמש Pods אם לא מוגדר ServiceAccount אחר.",
             },
             {
-              q: "נניח שיש לך Namespace עם ה-label הבא:\n`pod-security.kubernetes.io/enforce=restricted`\nב-Kubernetes, מה עושה Pod Security Admission?",
+              q: "Namespace מוגדר עם ה-label:\n`pod-security.kubernetes.io/enforce=restricted`\nמה המשמעות עבור Pods חדשים",
               options: [
               "Admission webhook שמאמת image signatures לפני deploy של Pod",
               "מנגנון מובנה שאוכף Pod Security Standards לפי labels ב-Namespace",
@@ -2404,7 +2404,7 @@ export const TOPICS = [
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
               answer: 1,
               explanation:
-                "PSA הוא controller מובנה שאוכף Pod Security Standards לפני ש-Pods מורשים לרוץ.\nמפעילים ע\"י label על Namespace. Kubernetes דוחה Pods שלא עומדים ברמה.\nמחליף את PodSecurityPolicy שהוסר ב-v1.25.",
+                "Pod Security Admission אוכף Pod Security Standards על Pods חדשים.\nה-label\npod-security.kubernetes.io/enforce=restricted\nגורם ל-Kubernetes לדחות Pods שלא עומדים במדיניות restricted.\nPSA החליף את PodSecurityPolicy שהוסר ב-v1.25.",
             },
             {
               q: "מה תפקיד admission webhook ב-Kubernetes?",
@@ -2418,21 +2418,21 @@ export const TOPICS = [
               hint: "חשבו על הגבלות ברמת ה-namespace.",
               answer: 0,
               explanation:
-                "Admission webhook מיירט בקשות ל-API server לפני שמירה ב-etcd.\nValidating:\u200E דוחה resources לא תקינים. Mutating:\u200E משנה resources לפני שמירה.\nכלים כמו OPA Gatekeeper ו-Kyverno עובדים כ-admission webhooks.",
+                "Admission webhook הוא HTTP callback שה-API Server מפעיל\nכאשר resource נוצר או מתעדכן.\nMutating webhook – משנה את ה-resource.\nValidating webhook – מאשר או דוחה אותו.\nהקריאה מתבצעת לפני שה-resource נשמר ב-etcd.",
             },
             {
               q: "מה ההבדל בין LimitRange ל-ResourceQuota?",
               tags: ["limitrange-vs-quota"],
               options: [
               "LimitRange: CPU quota ל-Node. ResourceQuota: memory quota ל-Cluster",
+              "LimitRange:\u200E מגבלות per-container. ResourceQuota:\u200E מגבלות כוללות ל-Namespace",
               "LimitRange:\u200E מגביל מספר Pods. ResourceQuota:\u200E מגביל מספר Nodes",
-              "LimitRange:\u200E ברירות מחדל per-container. ResourceQuota:\u200E מגבלות לכל ה-Namespace",
               "LimitRange:\u200E חל רק על Pods חדשים. ResourceQuota:\u200E חל רק על קיימים",
 ],
               hint: "חשבו על הגבלות ברמת ה-namespace.",
-              answer: 2,
+              answer: 1,
               explanation:
-                "LimitRange = per-container defaults ומגבלות. ResourceQuota = מגבלות aggregate ל-Namespace.\nLimitRange מגן מ-container בודד. ResourceQuota מגן מצריכה כוללת.\nLimitRange = מיקרו. ResourceQuota = מאקרו.",
+                "LimitRange מגדיר מגבלות ברמת Pod או container, כמו מינימום, מקסימום או ערכי default ל-CPU ו-Memory.\nResourceQuota מגדיר מגבלות כוללות עבור Namespace, למשל:\n\u200F• סך ה-CPU\n\u200F• סך ה-Memory\n\u200F• מספר Pods או PVCs\nכך ניתן לשלוט גם על משאבים של container בודד וגם על הצריכה הכוללת של Namespace.",
             },
             {
               q: "ב-Kubernetes ניתן להגדיר seccomp profile ב-securityContext של Pod.\n\nמה התפקיד של seccomp profile?",
@@ -2451,15 +2451,15 @@ export const TOPICS = [
               q: "איך מושכים Secrets מ-AWS Secrets Manager לתוך Kubernetes?",
               tags: ["external-secrets"],
               options: [
-              "External Secrets Operator - מגדיר SecretStore ומשאב ExternalSecret",
-              "Vault Agent Injector - sidecar שמזריק secrets ישירות לתוך ה-Pod",
               "SOPS operator - מפענח קבצי YAML מוצפנים ויוצר K8s Secrets",
+              "External Secrets Operator - מסנכרן secrets מ-provider חיצוני",
               "Sealed Secrets - מצפין Secrets ושומר אותם ב-Git בצורה בטוחה",
+              "Vault Agent Injector - sidecar שמזריק secrets ישירות לתוך ה-Pod",
 ],
               hint: "חשבו על אחסון והזרקה של מידע רגיש.",
-              answer: 0,
+              answer: 1,
               explanation:
-                "External Secrets Operator (ESO) מסנכרן secrets מ-provider חיצוני (כמו AWS Secrets Manager) לתוך Kubernetes Secrets באופן אוטומטי.\nהערכים עצמם נשארים ב-provider - רק ההגדרות נשמרות ב-Git.\n\nשלושת המשאבים המרכזיים:\n• SecretStore - מגדיר את החיבור ל-provider החיצוני (AWS, GCP, Vault וכו׳)\n• ExternalSecret - מגדיר איזה secret למשוך ואיך למפות אותו\n• Kubernetes Secret - נוצר אוטומטית בתוך ה-Cluster על ידי ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n    - secretKey: password\n      remoteRef:\n        key: prod/db/password\n```",
+                "External Secrets Operator (ESO) מאפשר למשוך secrets מ-external provider כמו AWS Secrets Manager, Vault או GCP Secret Manager.\nה-operator מסנכרן את הסוד מה-provider החיצוני אל Kubernetes Secret בתוך ה-cluster.\nכך ניתן לשמור את הסודות במערכת חיצונית, ולא ב-Git או בקובצי YAML.\nהרכיבים המרכזיים:\n\u200F• SecretStore – מגדיר את ה-provider החיצוני\n\u200F• ExternalSecret – מגדיר איזה secret למשוך\n\u200F• Kubernetes Secret – נוצר אוטומטית ב-cluster\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n    - secretKey: password\n      remoteRef:\n        key: prod/db/password\n```",
             },
         ],
         questionsEn: [
@@ -2489,7 +2489,7 @@ export const TOPICS = [
               hint: "Think about connecting permissions to identities.",
               answer: 0,
               explanation:
-                "RoleBinding connects a Role to a subject (User, Group, or ServiceAccount) in a Namespace.\nWithout RoleBinding, a Role has no effect on any identity.\nFor cluster-wide access, use ClusterRoleBinding.",
+                "RoleBinding connects a Role to a subject (User, Group, or ServiceAccount) within a Namespace.\nThis allows the user or ServiceAccount to receive the permissions defined in the Role.\nWithout a RoleBinding, the permissions defined in the Role are not applied to any user.\nTo grant permissions at the cluster level, ClusterRoleBinding is used.",
             },
             {
               q: "What is a ServiceAccount?",
@@ -2515,7 +2515,7 @@ export const TOPICS = [
               hint: "Think carefully about what each option describes.",
               answer: 1,
               explanation:
-                "PSA is a built-in controller enforcing Pod Security Standards before Pods can run.\nActivated via Namespace label. Kubernetes rejects non-compliant Pods.\nReplaced PodSecurityPolicy (removed v1.25). Levels: privileged/baseline/restricted.",
+                "Pod Security Admission enforces Pod Security Standards on new Pods.\nThe label\npod-security.kubernetes.io/enforce=restricted\ncauses Kubernetes to reject Pods that do not comply with the restricted policy.\nPSA replaced PodSecurityPolicy, which was removed in Kubernetes v1.25.",
             },
             {
               q: "What is an admission webhook?",
@@ -2529,21 +2529,21 @@ export const TOPICS = [
               hint: "Think about namespace-level resource restrictions.",
               answer: 2,
               explanation:
-                "Admission webhook intercepts API requests before changes are saved to etcd.\nValidating: rejects invalid resources. Mutating: modifies resources before saving.\nTools like OPA Gatekeeper and Kyverno work as admission webhooks.",
+                "Admission webhook is an HTTP callback that the API Server invokes when a resource is created or updated.\nMutating webhook – modifies the resource.\nValidating webhook – approves or rejects it.\nThe call happens before the resource is stored in etcd.",
             },
             {
               q: "What is the difference between LimitRange and ResourceQuota?",
               tags: ["limitrange-vs-quota"],
               options: [
-              "LimitRange applies only to new Pods; ResourceQuota applies only to existing Pods",
-              "LimitRange sets per-container defaults and limits; ResourceQuota sets aggregate limits for the whole Namespace",
               "LimitRange sets CPU quotas per Node; ResourceQuota sets memory quotas per Cluster",
-              "LimitRange limits the number of Pods in a Namespace; ResourceQuota limits the number of Nodes in a Cluster",
+              "LimitRange sets per-container limits; ResourceQuota sets overall Namespace limits",
+              "LimitRange limits the number of Pods; ResourceQuota limits the number of Nodes",
+              "LimitRange applies only to new Pods; ResourceQuota applies only to existing Pods",
 ],
               hint: "Think about namespace-level resource restrictions.",
               answer: 1,
               explanation:
-                "LimitRange = per-container defaults and limits. ResourceQuota = aggregate limits for the Namespace.\nLimitRange protects from one container. ResourceQuota protects from total consumption.\nLimitRange = micro level. ResourceQuota = macro level.",
+                "LimitRange defines limits at the Pod or container level, such as minimum, maximum, or default values for CPU and Memory.\nResourceQuota defines overall limits for a Namespace, for example:\n• Total CPU\n• Total Memory\n• Number of Pods or PVCs\nThis allows you to control both the resources of an individual container and the overall Namespace consumption.",
             },
             {
               q: "In Kubernetes you can set a seccomp profile in a Pod's securityContext.\n\nWhat does a seccomp profile do?",
@@ -2562,15 +2562,15 @@ export const TOPICS = [
               q: "How do you sync a Secret from AWS Secrets Manager?",
               tags: ["external-secrets"],
               options: [
-              "Sealed Secrets controller: encrypts Secrets and stores them in Git",
-              "External Secrets Operator: SecretStore + ExternalSecret resources",
-              "Vault Agent Injector: a sidecar that injects secrets directly into Pods",
               "SOPS operator: decrypts encrypted YAML files and creates K8s Secrets",
+              "External Secrets Operator: syncs secrets from an external provider",
+              "Sealed Secrets controller: encrypts Secrets and stores them in Git",
+              "Vault Agent Injector: a sidecar that injects secrets directly into Pods",
 ],
               hint: "Think about storing and injecting sensitive data.",
               answer: 1,
               explanation:
-                "External Secrets Operator (ESO) syncs secrets from an external provider (like AWS Secrets Manager) into Kubernetes Secrets automatically.\nThe actual secret values stay in the provider - only the configuration resources are stored in Git.\n\nThree key resources:\n• SecretStore - defines the connection to the external provider (AWS, GCP, Vault, etc.)\n• ExternalSecret - defines which secret to pull and how to map it\n• Kubernetes Secret - created automatically inside the cluster by ESO\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n    - secretKey: password\n      remoteRef:\n        key: prod/db/password\n```",
+                "External Secrets Operator (ESO) allows you to pull secrets from an external provider such as AWS Secrets Manager, Vault, or GCP Secret Manager.\nThe operator synchronizes the secret from the external provider to a Kubernetes Secret within the cluster.\nThis allows you to store the secrets in an external system, rather than in Git or YAML files.\nKey components:\n• SecretStore – defines the external provider\n• ExternalSecret – defines which secret to pull\n• Kubernetes Secret – automatically created in the cluster\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: db-secret\nspec:\n  refreshInterval: 1h\n  secretStoreRef:\n    name: aws-secretstore\n    kind: SecretStore\n  target:\n    name: db-secret\n  data:\n    - secretKey: password\n      remoteRef:\n        key: prod/db/password\n```",
             },
         ],
       },
@@ -2592,17 +2592,17 @@ export const TOPICS = [
                 "כל ישות מקבלת רק את ההרשאות שהיא צריכה. לא יותר.\nלא לתת cluster-admin כשמספיק Role ב-Namespace אחד.\nאם ישות נפרצת, הרשאות מינימליות מגבילות את הנזק.",
             },
             {
-              q: "מה Encryption at Rest?",
+              q: "מה המשמעות של Encryption at Rest בקוברנטיס",
               options: [
-              "הצפנת נתוני etcd ששומר secrets ו-resources על הדיסק",
               "הצפנת תעבורת רשת בין Pods דרך mTLS אוטומטי",
+              "הצפנת נתוני etcd ששומר secrets ו-resources על הדיסק",
               "הצפנת קבצי log שנשמרים ב-Persistent Volumes",
               "הצפנת container images ב-Registry לפני deployment",
 ],
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
-              answer: 0,
+              answer: 1,
               explanation:
-                "Secrets מאוחסנים ב-etcd כ-base64. לא מוצפנים כברירת מחדל.\nEncryption at Rest מפעיל AES-GCM לפני שמירה ב-etcd.\nגם מי שגונב את מסד ה-etcd לא יוכל לקרוא את ה-Secrets.",
+                "Encryption at Rest מצפין נתונים שנשמרים ב-etcd.\nכך מידע רגיש כמו Secrets מוגן גם אם יש גישה לקבצי ה-database.\nBase64 הוא רק קידוד, לא הצפנה.\nEncryption at Rest מוסיף הצפנה אמיתית לפני השמירה.",
             },
             {
               q: "מה Sealed Secrets מאפשר?",
@@ -2616,7 +2616,7 @@ export const TOPICS = [
               hint: "חשבו על אחסון והזרקה של מידע רגיש.",
               answer: 3,
               explanation:
-                "Sealed Secrets הוא controller שמגדיר Custom Resource בשם SealedSecret.\nהוא מצפין Secret רגיל ל-SealedSecret באמצעות המפתח הציבורי של ה-Cluster.\nה-SealedSecret המוצפן בטוח לשמירה ב-git. רק ה-controller עם המפתח הפרטי מפענח ויוצר Secret רגיל בתוך ה-Cluster.\nכל Cluster מחזיק מפתח פרטי ייחודי, כך ש-SealedSecret מ-Cluster אחד לא ניתן לפענוח ב-Cluster אחר.\nההצפנה חלה רק על Secrets בתוך git, לא על תעבורת רשת או יצירת secrets מ-env vars.",
+                "Sealed Secrets מאפשר לשמור Secrets מוצפנים ב-Git.\nה-Secret מוצפן לקובץ SealedSecret באמצעות המפתח הציבורי של ה-cluster.\nבתוך ה-cluster, ה-controller מפענח את ה-SealedSecret\nויוצר ממנו Kubernetes Secret רגיל.\nכך ניתן לשמור סודות ב-Git בצורה בטוחה.",
             },
             {
               q: "מה שלוש רמות Pod Security Standards?",
@@ -2629,7 +2629,7 @@ export const TOPICS = [
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
               answer: 2,
               explanation:
-                "privileged:\u200E ללא הגבלות. baseline:\u200E חוסם שימושים מסוכנים (hostPID, privileged). restricted:\u200E הכי מחמירה.\nשלוש הרמות מסודרות מהכי פתוחה לסגורה ביותר.\nrestricted דורשת `runAsNonRoot`, drop ALL capabilities, ו-seccomp. best practice ל-production.",
+                "Pod Security Standards מגדירים שלוש רמות אבטחה ל-Pods:\nprivileged – ללא כמעט מגבלות. מאפשר יכולות מסוכנות כמו privileged containers או host access.\nbaseline – חוסם הגדרות מסוכנות מסוימות (למשל privileged containers או hostPID).\nrestricted – הרמה המחמירה ביותר עם דרישות אבטחה נוספות\nכמו runAsNonRoot, הסרת capabilities והגבלות seccomp.\nבדרך כלל restricted היא ה־best practice בסביבות production.",
             },
             {
               q: "מה תפקיד OPA/Gatekeeper ב-Kubernetes?",
@@ -2668,7 +2668,7 @@ export const TOPICS = [
               hint: "חשבו על מי מאשר או דוחה Pods לפני יצירה.",
               answer: 1,
               explanation:
-                "השגיאה מגיעה מ-Kyverno admission webhook.\nKyverno הוא מנגנון policy-as-code שמאכף חוקים על משאבי Kubernetes בזמן יצירה או עדכון.\nבמקרה הזה קיימת מדיניות שמאפשרת להשתמש רק ב-container images שמגיעים מ-`gcr.io`.\nכאשר ה-Deployment מנסה להשתמש ב-image מ-registry אחר, ה-admission webhook חוסם את הבקשה ולכן ה-API server מחזיר שגיאה.\nכדי לפתור: להשתמש ב-image מ-`gcr.io` או לעדכן את ה-Kyverno policy.\n• `webhook denied` = admission webhook חסם • `forbidden` = RBAC • API crash = לא הייתה הודעת שגיאה מובנית.",
+                "השגיאה מגיעה מ-Kyverno admission webhook.\nKyverno אוכף policies על resources בזמן יצירה או עדכון.\nבמקרה הזה קיימת policy שמאפשרת להשתמש רק ב-images מ-gcr.io.\nכאשר ה-Deployment משתמש ב-image מ-registry אחר, ה-webhook דוחה את הבקשה וה-API Server מחזיר שגיאה.",
             },
             {
               q: "ה-Deployment נדחה על ידי PSA עם policy מסוג restricted.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nאיזה securityContext צריך להגדיר ל-container כדי לעמוד במדיניות?",
@@ -2682,7 +2682,7 @@ export const TOPICS = [
               hint: "חשבו על מי מאשר או דוחה Pods לפני יצירה.",
               answer: 1,
               explanation:
-                "PSA (Pod Security Admission) הוא מנגנון built-in ב-Kubernetes שאוכף מדיניות אבטחה על Pods ברמת ה-Namespace.\n\nרמת restricted דורשת שלוש הגדרות חובה:\n• allowPrivilegeEscalation: false - חוסם הסלמת הרשאות דרך setuid/setgid\n• runAsNonRoot: true - מונע הרצה כ-root (UID 0)\n• seccompProfile: RuntimeDefault - אוכף סינון syscall בסיסי\n\n```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```\n\nאפשרות א מגדירה \u200Eprivileged: true - ההפך מ-restricted.\nאפשרות ג חסרה allowPrivilegeEscalation ו-seccompProfile.\nאפשרות ד חסרה runAsNonRoot ו-seccompProfile.",
+                "PSA (Pod Security Admission) הוא מנגנון built-in ב-Kubernetes שאוכף מדיניות אבטחה על Pods ברמת ה-Namespace.\n\nרמת restricted דורשת שלוש הגדרות חובה:\n\u200F• allowPrivilegeEscalation: false - חוסם הסלמת הרשאות דרך setuid/setgid\n\u200F• runAsNonRoot: true - מונע הרצה כ-root (UID 0)\n\u200F• seccompProfile: RuntimeDefault - אוכף סינון syscall בסיסי",
             },
         ],
         questionsEn: [
@@ -2710,7 +2710,7 @@ export const TOPICS = [
               hint: "Think carefully about what each option describes.",
               answer: 1,
               explanation:
-                "Secrets are stored in etcd as base64. Not encrypted by default.\nEncryption at Rest adds AES-GCM encryption before writing to etcd disk.\nEven if an attacker exfiltrates etcd data, Secrets remain unreadable without the encryption key.",
+                "Encryption at Rest encrypts data stored in etcd.\nThis protects sensitive data such as Secrets even if someone gains access to the database files.\nBase64 is only encoding, not encryption.\nEncryption at Rest adds real encryption before data is written to etcd.",
             },
             {
               q: "What does Sealed Secrets allow?",
@@ -2724,7 +2724,7 @@ export const TOPICS = [
               hint: "Think about storing and injecting sensitive data.",
               answer: 1,
               explanation:
-                "Sealed Secrets is a controller that defines a Custom Resource called SealedSecret.\nIt encrypts a regular Secret into a SealedSecret using the cluster's public key.\nThe SealedSecret is safe to commit to git. Only the controller with the private key can decrypt it and create a regular Secret inside the cluster.\nEach cluster holds a unique private key, so a SealedSecret from one cluster cannot be decrypted by another.\nThe encryption applies only to Secrets stored in git, not to network traffic or auto-creation from env vars.",
+                "Sealed Secrets allows you to store encrypted Secrets in Git.\nThe Secret is encrypted into a SealedSecret file using the cluster's public key.\nInside the cluster, the controller decrypts the SealedSecret\nand creates a regular Kubernetes Secret from it.\nThis allows you to store secrets in Git securely.",
             },
             {
               q: "What are the three Pod Security Standard levels?",
@@ -2737,7 +2737,7 @@ export const TOPICS = [
               hint: "Think carefully about what each option describes.",
               answer: 2,
               explanation:
-                "privileged: no restrictions. baseline: blocks dangerous practices (hostPID, privileged). restricted: strictest.\nThe three levels go from most permissive to most secure.\nrestricted requires `runAsNonRoot`, drop ALL capabilities, and seccomp. Production best practice.",
+                "Pod Security Standards define three levels of security for Pods:\nprivileged – almost no restrictions. Allows dangerous capabilities such as privileged containers or host access.\nbaseline – blocks certain dangerous settings (such as privileged containers or hostPID).\nrestricted – the most stringent level with additional security requirements\nsuch as runAsNonRoot, removing capabilities, and seccomp restrictions.\nrestricted is generally the best practice in production environments.",
             },
             {
               q: "What is OPA/Gatekeeper?",
@@ -2776,7 +2776,7 @@ export const TOPICS = [
               hint: "Think about what approves or rejects Pods before creation.",
               answer: 3,
               explanation:
-                "The error comes from a Kyverno admission webhook.\nKyverno is a policy-as-code engine that enforces rules on Kubernetes resources during creation or update.\nIn this case, a policy only allows container images from `gcr.io`.\nWhen the Deployment tries to use an image from another registry, the admission webhook blocks the request and the API server returns an error.\nTo fix: use an image from `gcr.io` or update the Kyverno policy.\n• `webhook denied` = admission webhook blocked • `forbidden` = RBAC • API crash = no structured error message.",
+                "The error comes from the Kyverno admission webhook.\nKyverno enforces policies on resources during creation or update.\nIn this case, there is a policy that allows only images from gcr.io to be used.\nWhen the Deployment uses an image from another registry, the webhook rejects the request and the API Server returns an error.",
             },
             {
               q: "A Deployment is rejected by PSA with a restricted policy.\n\n```\nError from server (Forbidden):\nPod violates PodSecurity \"restricted:latest\":\n  allowPrivilegeEscalation != false\n```\n\nWhich securityContext must you set on the container to comply?",
@@ -2790,7 +2790,7 @@ export const TOPICS = [
               hint: "Think about what approves or rejects Pods before creation.",
               answer: 1,
               explanation:
-                "PSA (Pod Security Admission) is a built-in Kubernetes mechanism that enforces security policies on Pods at the Namespace level.\n\nThe restricted level requires all three:\n• allowPrivilegeEscalation: false - blocks privilege escalation via setuid/setgid\n• runAsNonRoot: true - prevents running as root (UID 0)\n• seccompProfile: RuntimeDefault - enforces basic syscall filtering\n\n```yaml\nsecurityContext:\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n  seccompProfile:\n    type: RuntimeDefault\n```\n\nOption A sets privileged: true - the opposite of restricted.\nOption C is missing allowPrivilegeEscalation and seccompProfile.\nOption D is missing runAsNonRoot and seccompProfile.",
+                "PSA (Pod Security Admission) is a built-in Kubernetes mechanism that enforces security policies on Pods at the Namespace level.\n\nThe restricted level requires all three:\n• allowPrivilegeEscalation: false - blocks privilege escalation via setuid/setgid\n• runAsNonRoot: true - prevents running as root (UID 0)\n• seccompProfile: RuntimeDefault - enforces basic syscall filtering",
             },
         ],
       },
@@ -2805,8 +2805,8 @@ export const TOPICS = [
     descriptionEn: "PV · StorageClass · Helm · Operators",
     levels: {
       easy: {
-        theory: "PersistentVolumes ו-Helm בסיסי.\n🔹 \u200FPV\u200F: יחידת אחסון ב-Cluster (admin מגדיר)\n🔹 \u200FPVC\u200F: בקשה לאחסון מ-Pod\n🔹 \u200FHelm Chart\u200F: חבילה של Kubernetes manifests עם templates\n🔹 \u200Fhelm install\u200F מתקין Chart ויוצר Release\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
-        theoryEn: "PersistentVolumes and Helm Basics\n🔹 PersistentVolume (PV) - a storage resource in the cluster, provisioned by an administrator.\n🔹 PersistentVolumeClaim (PVC) - a request by a Pod for a specific amount of storage.\n🔹 Helm Chart - a package of Kubernetes manifests with configurable templates.\n🔹 `helm install` - deploys a Chart to the cluster and creates a named Release.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi",
+        theory: "Persistent Volumes ו-Helm\n🔹 \u200FPersistentVolume (PV)\u200F - משאב אחסון ברמת ה-cluster שמספק נפח אחסון בפועל.\n🔹 \u200FPersistentVolumeClaim (PVC)\u200F - בקשה לאחסון מתוך Pod או workload.\n🔹 \u200FKubernetes\u200F מחבר אוטומטית PVC ל-PV מתאים לפי storage class, access modes וגודל האחסון.\n\n🔹 \u200FHelm Chart\u200F - חבילה של manifests של Kubernetes עם templates.\nכאשר מריצים:\nCODE:\nhelm install my-app chart-name\n\n\u200FHelm יוצר Release ומיישם את כל המשאבים שמוגדרים ב-Chart.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: app-storage\nspec:\n  accessModes:\n    - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n\n\u200FPVC מבקש אחסון, ו-Kubernetes מחבר אותו ל-PV מתאים.",
+        theoryEn: "Persistent Volumes and Helm\n🔹 PersistentVolume (PV) - a cluster-level storage resource that provides actual storage volume.\n🔹 PersistentVolumeClaim (PVC) - a request for storage from a Pod or workload.\n🔹 Kubernetes automatically associates a PVC with an appropriate PV based on storage class, access modes, and storage size.\n\n🔹 Helm Chart - a package of Kubernetes manifests with templates.\nWhen running:\nCODE:\nhelm install my-app chart-name\n\nHelm creates a Release and applies all resources defined in the Chart.\nCODE:\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: app-storage\nspec:\n  accessModes:\n    - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n\nA PVC requests storage, and Kubernetes binds it to an appropriate PV.",
         questions: [
             {
               q: "מה ההבדל בין PV ל-PVC?",
@@ -2819,7 +2819,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "PV הוא יחידת אחסון שה-admin מגדיר: גודל, access modes, ו-storage backend.\nPVC היא הבקשה של ה-Pod לאחסון.\nKubernetes מחבר אוטומטית PVC ל-PV שמתאים לדרישות.",
+                "PersistentVolume (PV) הוא משאב אחסון ברמת ה-cluster שמספק נפח אחסון בפועל.\nPersistentVolumeClaim (PVC) הוא בקשה לאחסון מתוך Pod או workload.\nKubernetes מחבר אוטומטית PVC ל-PV מתאים לפי\nstorageClass, access modes וגודל האחסון.",
             },
             {
               q: "PVC מוגדר עם accessMode: ReadWriteOnce. מה המשמעות",
@@ -2859,7 +2859,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "`helm install` מתקין Chart ויוצר Release שנשמר כ-Secret ב-Cluster.\n`helm upgrade` משנה Release קיים. `helm template` מרנדר YAML בלי להתקין. `helm create` יוצר scaffold של Chart חדש.\nאפשר לעקוף ערכים עם `--set key=value` או `\u200E-f myvalues.yaml`.",
+                "`helm install` מתקין Helm Chart ויוצר Release ב-cluster.\nהפקודה מרנדרת את ה-templates ומיישמת את ה-Kubernetes manifests.\nפקודות קשורות:\n\u200F• `helm upgrade` – מעדכן Release\n\u200F• `helm template` – מייצר YAML בלבד\n\u200F• `helm create` – יוצר Chart חדש",
             },
             {
               q: "מה Volume מסוג emptyDir?",
@@ -2872,7 +2872,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "emptyDir נוצר ריק כש-Pod מתזמן ל-Node ונמחק לחלוטין עם ה-Pod.\nשימוש נפוץ: שיתוף קבצים זמניים בין קונטיינרים באותו Pod.\nאפשר להגדיר medium: Memory ליצירת tmpfs ב-RAM.",
+                "emptyDir הוא Volume זמני שנוצר כאשר ה-Pod מתחיל לפעול.\nה-volume קיים כל עוד ה-Pod רץ, ונמחק כאשר ה-Pod נמחק.\nכל הקונטיינרים בתוך אותו Pod יכולים לשתף את ה-emptyDir.\nניתן להגדיר medium: Memory כדי שהנתונים יישמרו ב-RAM (tmpfs) במקום בדיסק.",
             },
             {
               q: "מה תפקיד StorageClass ב-Kubernetes?",
@@ -2885,7 +2885,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "StorageClass מגדיר ל-Kubernetes כיצד ליצור דיסקים באופן דינמי.\nכולל provisioner (כמו aws-ebs), reclaim policy, וסוג דיסק.\nכש-PVC מציין storageClassName, נוצר PV ודיסק אמיתי אוטומטית.",
+                "StorageClass מגדיר כיצד Kubernetes יוצר volumes באופן דינמי.\nהוא כולל את סוג ה-provisioner (למשל aws-ebs, gce-pd) ואת פרמטרי האחסון.\nכאשר PVC מציין storageClassName, קוברנטיס יוצר אוטומטית PersistentVolume מתאים.",
             },
             {
               q: "מה קורה לנתונים ב-emptyDir כש-Pod נמחק?",
@@ -2898,7 +2898,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "emptyDir הוא volume זמני שנוצר כאשר ה-Pod מתחיל לרוץ על ה-Node.\nהנתונים נשמרים כל עוד ה-Pod רץ על אותו Node, ולכן הם שורדים restart של containers בתוך ה-Pod.\nכאשר ה-Pod נמחק או מתוזמן מחדש על Node אחר, ה-emptyDir נמחק וכל הנתונים שבו הולכים לאיבוד.",
+                "emptyDir הוא Volume זמני שנוצר כאשר ה-Pod מוקצה ל-Node.\nהנתונים נשמרים כל עוד ה-Pod רץ על אותו Node, וגם אם containers בתוך ה-Pod עושים restart.\nכאשר ה-Pod נמחק או מתוזמן מחדש ל-Node אחר, ה-emptyDir נמחק וכל הנתונים בו אובדים.",
             },
             {
               q: "מה תפקיד values.yaml ב-Helm Chart\u200F?",
@@ -2926,7 +2926,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "PV is a piece of real storage provisioned in the cluster (EBS, NFS, local drive).\nPVC is a request from a Pod asking for storage with specific access requirements.\nKubernetes automatically matches a PVC to a suitable PV.",
+                "A PersistentVolume (PV) is a cluster-level storage resource that provides actual storage volume.\nA PersistentVolumeClaim (PVC) is a request for storage from a Pod or workload.\nKubernetes automatically associates a PVC with an appropriate PV based on\nstorageClass, access modes, and storage size.",
             },
             {
               q: "A PVC is configured with accessMode: ReadWriteOnce. What does this mean",
@@ -2966,7 +2966,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "`helm install` creates a Release stored as a Secret in the cluster.\n`helm upgrade` modifies an existing Release. `helm template` renders YAML without installing. `helm create` scaffolds a new Chart.\nOverride values with --set key=value or -f myvalues.yaml.",
+                "`helm install` installs a Helm Chart and creates a Release in the cluster.\nThe command renders the templates and applies the Kubernetes manifests.\nRelated commands:\n• `helm upgrade` – updates an existing Release\n• `helm template` – generates YAML only\n• `helm create` – creates a new Chart",
             },
             {
               q: "What is emptyDir?",
@@ -2979,7 +2979,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "emptyDir is created empty when a Pod is scheduled and deleted entirely with the Pod.\nCommon use: sharing temporary files between containers in the same Pod.\nSet medium: Memory to create a RAM-backed tmpfs for higher performance.",
+                "emptyDir is a temporary volume created when the Pod starts running.\nThe volume exists as long as the Pod is running, and is deleted when the Pod is deleted.\nAll containers within the same Pod can share the emptyDir.\nYou can set medium: Memory to store data in RAM (tmpfs) instead of on disk.",
             },
             {
               q: "What is a StorageClass?",
@@ -2992,7 +2992,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "StorageClass tells Kubernetes how to create storage on demand.\nIt names a provisioner (e.g., AWS EBS, GCP PD) that creates real disks automatically.\nWhen a PVC references a StorageClass, a PV and disk are created without manual admin work.",
+                "StorageClass defines how Kubernetes creates volumes dynamically.\nIt includes the provisioner type (e.g., aws-ebs, gce-pd) and storage parameters.\nWhen a PVC specifies a storageClassName, Kubernetes automatically creates an appropriate PersistentVolume.",
             },
             {
               q: "What happens to emptyDir data when a Pod is deleted?",
@@ -3005,7 +3005,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "emptyDir is a temporary volume created when a Pod is scheduled on a Node.\nThe data persists as long as the Pod runs on that Node, so it survives container restarts inside the Pod.\nIf the Pod is deleted or scheduled on another Node, the emptyDir is removed and all data stored in it is lost.",
+                "emptyDir is a temporary volume that is created when a Pod is scheduled to a node.\nThe data persists as long as the Pod is running on that node, even if containers inside the Pod restart.\nWhen the Pod is deleted or rescheduled to another node, the emptyDir is removed and all data stored in it is lost.",
             },
             {
               q: "What is helm values.yaml?",
@@ -3051,7 +3051,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "כשה-PVC נמחק, גם ה-PV והדיסק הפיזי (EBS, GCP PD) נמחקים אוטומטית.\nRetain לעומת זאת משמר את ה-PV והנתונים גם אחרי מחיקת ה-PVC.\nאין backup אוטומטי לפני מחיקה, לכן חשוב לגבות מראש בסביבות production.",
+                "ReclaimPolicy: Delete אומר שכאשר ה-PVC נמחק, גם ה-PersistentVolume נמחק.\nבמערכות עם dynamic provisioning (כמו AWS EBS או GCP PD), גם הדיסק בפועל נמחק אוטומטית.\nלעומת זאת, Retain משאיר את ה-PV ואת הנתונים גם אחרי מחיקת ה-PVC.",
             },
             {
               q: "איך עוקפים ערך מ-values.yaml בזמן התקנת Helm Chart\u200F?",
@@ -3064,7 +3064,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "--set key=value עוקף ערכים מ-values.yaml בזמן install/upgrade.\n`helm template` רק מרנדר YAML בלי להתקין. `helm rollback` לא מקבל --set. `helm show values` מציג ערכים בלבד.\nלשינויים מרובים עדיף --values (-f) עם קובץ YAML מותאם.",
+                "\u200F`--set` עוקף ערכים מ־values.yaml בזמן install או upgrade.\nמשמש לשינוי ערכים מהיר מה־CLI.\nלשינויים גדולים משתמשים בקובץ values נוסף (`-f`).",
             },
             {
               q: "כיצד מגדילים את נפח האחסון של PVC קיים ב-Kubernetes",
@@ -3159,7 +3159,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "When the PVC is deleted, both the PV and the physical disk (EBS, GCP PD) are deleted automatically.\nRetain policy, by contrast, preserves the PV and data even after PVC deletion.\nThere is no automatic backup before deletion, so always back up production data beforehand.",
+                "ReclaimPolicy: Delete means that when a PVC is deleted, the corresponding PersistentVolume is also deleted.\nWith dynamic provisioning (for example AWS EBS or GCP PD), the underlying disk is deleted as well.\nIn contrast, Retain keeps the PV and its data even after the PVC is removed.",
             },
             {
               q: "How do you change a Helm value from the CLI?",
@@ -3172,7 +3172,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "--set key=value overrides values from values.yaml at install/upgrade time.\n`helm template` only renders YAML without installing. `helm rollback` does not accept --set. `helm show values` only displays values.\nFor multiple overrides, use --values (-f) with a custom YAML file.",
+                "The `--set` flag overrides values from values.yaml during `helm install` or `helm upgrade`.\nIt allows you to modify chart variables directly from the CLI.\nFor larger changes, a separate values file can be provided using `-f`.",
             },
             {
               q: "How do you increase the storage size of an existing PVC in Kubernetes",
