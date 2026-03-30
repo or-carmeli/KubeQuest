@@ -1983,7 +1983,7 @@ export const TOPICS = [
     descriptionEn: "ConfigMaps · Secrets · RBAC · SA",
     levels: {
       easy: {
-        theory: "Config, Secrets, הרשאות ומגבלות.\n🔹 ConfigMap:\u200E הגדרות רגילות (DB_URL, timeout), env או volume\n🔹 Secret:\u200E נתונים רגישים (passwords, tokens), מקודד base64 (לא מוצפן!)\n🔹 ServiceAccount:\u200E זהות Pod בקלאסטר. default נוצר אוטומטית בכל Namespace\n🔹 RBAC:\u200E Role-Based Access Control. Role מגדיר הרשאות, RoleBinding מקשר ל-Subject\n🔹 LimitRange:\u200E מגדיר ברירות מחדל ומקסימום CPU/Memory לכל Container ב-Namespace\n🔹 securityContext:\u200E runAsNonRoot: true מונע הרצת Container כ-root\n🔹 Requests vs Limits:\u200E requests = מינימום מובטח (Scheduler), limits = תקרה (OOMKill)\nCODE:\napiVersion: v1\nkind: ConfigMap\ndata:\n  DB_URL: postgres://db:5432\n  MAX_CONN: \"100\"",
+        theory: "Config, Secrets, הרשאות ומגבלות.\n🔹 ConfigMap:\u200E הגדרות רגילות (DB_URL, timeout), env או volume\n🔹 Secret:\u200E נתונים רגישים (passwords, tokens), מקודד base64 (לא מוצפן!)\n🔹 ServiceAccount:\u200E זהות Pod בקלאסטר. default נוצר אוטומטית בכל Namespace\n🔹 RBAC:\u200E Role-Based Access Control. Role מגדיר הרשאות, RoleBinding מקשר ל-Subject\n🔹 LimitRange:\u200E מגדיר ברירות מחדל ומקסימום CPU/Memory לכל Container ב-Namespace\n🔹 securityContext:\u200E הגדרת runAsNonRoot מונעת הרצת Container כ-root\n🔹 Requests vs Limits:\u200E requests = מינימום מובטח (Scheduler), limits = תקרה (OOMKill)\nCODE:\napiVersion: v1\nkind: ConfigMap\ndata:\n  DB_URL: postgres://db:5432\n  MAX_CONN: \"100\"",
         theoryEn: "Config, Secrets, Access Control, and Resource Limits\n🔹 ConfigMap - stores non-sensitive config (DB URLs, timeouts), injected as env vars or volumes.\n🔹 Secret - stores sensitive data (passwords, tokens), base64-encoded but not encrypted by default.\n🔹 ServiceAccount - Pod identity in the cluster. A default SA is auto-created in every Namespace.\n🔹 RBAC - Role-Based Access Control. Role defines permissions, RoleBinding binds a Role to a Subject.\n🔹 LimitRange - sets default and max CPU/Memory per container in a Namespace.\n🔹 securityContext - runAsNonRoot: true prevents containers from running as root.\n🔹 Requests vs Limits - requests = guaranteed minimum (used by Scheduler), limits = hard ceiling (OOMKill).\nCODE:\napiVersion: v1\nkind: ConfigMap\ndata:\n  DB_URL: postgres://db:5432\n  MAX_CONN: \"100\"",
         questions: [
             {
@@ -2449,7 +2449,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "privileged:\u200E ללא הגבלות. baseline:\u200E חוסם שימושים מסוכנים (hostPID, privileged). restricted:\u200E הכי מחמירה.\nשלוש הרמות מסודרות מהכי פתוחה לסגורה ביותר.\nrestricted דורשת runAsNonRoot, drop ALL capabilities, ו-seccomp. best practice ל-production.",
+                "privileged:\u200E ללא הגבלות. baseline:\u200E חוסם שימושים מסוכנים (hostPID, privileged). restricted:\u200E הכי מחמירה.\nשלוש הרמות מסודרות מהכי פתוחה לסגורה ביותר.\nrestricted דורשת `runAsNonRoot`, drop ALL capabilities, ו-seccomp. best practice ל-production.",
             },
             {
               q: "מה תפקיד OPA/Gatekeeper ב-Kubernetes?",
@@ -2549,7 +2549,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "privileged: no restrictions. baseline: blocks dangerous practices (hostPID, privileged). restricted: strictest.\nThe three levels go from most permissive to most secure.\nrestricted requires runAsNonRoot, drop ALL capabilities, and seccomp. Production best practice.",
+                "privileged: no restrictions. baseline: blocks dangerous practices (hostPID, privileged). restricted: strictest.\nThe three levels go from most permissive to most secure.\nrestricted requires `runAsNonRoot`, drop ALL capabilities, and seccomp. Production best practice.",
             },
             {
               q: "What is OPA/Gatekeeper?",

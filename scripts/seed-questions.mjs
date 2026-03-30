@@ -11,6 +11,7 @@
 //   node scripts/seed-questions.mjs            # first-time seed (inserts only)
 //   node scripts/seed-questions.mjs --reseed   # clear all tables then re-insert
 
+import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
