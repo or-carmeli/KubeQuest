@@ -18,6 +18,8 @@ import { DAILY_QUESTIONS } from "./content/dailyQuestions";
 import { INCIDENTS } from "./content/incidents";
 import { CHEATSHEET } from "./content/cheatsheet";
 import { saveQuizState, loadQuizState, clearQuizState, isRecentQuizState } from "./utils/quizPersistence";
+import { normalizeAndShuffle } from "./utils/normalizeQuestion";
+import { broadcastScored, onScoredFromOtherTab, closeScoringChannel } from "./utils/scoringSync";
 import { safeGetItem, safeGetJSON, checkDataVersion } from "./utils/storage";
 import { captureError, setUserContext, setScreen as setTelemetryScreen } from "./utils/telemetry";
 import { recordRouteChange } from "./utils/realTelemetry";
@@ -1997,6 +1999,21 @@ export default function K8sQuestApp() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // Cross-tab scoring sync: when another tab scores a question, merge the key
+  // into our local scoredFreeKeys set so we skip the scoring RPC for it.
+  useEffect(() => {
+    const unsub = onScoredFromOtherTab((key) => {
+      try {
+        const scored = new Set(safeGetJSON("scoredFreeKeys_v1", []));
+        if (!scored.has(key)) {
+          scored.add(key);
+          localStorage.setItem("scoredFreeKeys_v1", JSON.stringify([...scored]));
+        }
+      } catch {}
+    });
+    return () => { unsub(); closeScoringChannel(); };
+  }, []);
+
   useEffect(() => {
     if (!achievementsLoaded.current) return;
     const newOnes = ACHIEVEMENTS.filter(
@@ -3107,6 +3124,7 @@ export default function K8sQuestApp() {
         if (!alreadyScored) {
           scored.add(freeKey);
           localStorage.setItem("scoredFreeKeys_v1", JSON.stringify([...scored]));
+          broadcastScored(freeKey);
         }
       } catch {}
     }
@@ -3158,6 +3176,7 @@ export default function K8sQuestApp() {
           const scored = new Set(safeGetJSON("scoredFreeKeys_v1", []));
           scored.add(freeKey);
           localStorage.setItem("scoredFreeKeys_v1", JSON.stringify([...scored]));
+          broadcastScored(freeKey);
         } catch {}
       }
     }
@@ -3312,7 +3331,8 @@ export default function K8sQuestApp() {
       rawQs = getLocalizedField(topic.levels[level], "questions", lang);
       theory = getLocalizedField(topic.levels[level], "theory", lang);
     }
-    setTopicQuestions(shuffleOptions(rawQs || []));
+    const source = (supabase && !isGuest && rawQs?.[0]?.id) ? "server" : "local";
+    setTopicQuestions(normalizeAndShuffle(rawQs, shuffleOptions, source));
     setTheoryContent(theory);
     // Clear incremental wrong answers from any previous abandoned attempt
     const tKey = `${topic.id}_${level}`;
@@ -3341,7 +3361,7 @@ export default function K8sQuestApp() {
     AVAILABLE_TOPICS.forEach(topic => {
       LEVEL_ORDER.forEach(level => {
         const qs = getLocalizedField(topic.levels[level], "questions", language);
-        qs.forEach(q => all.push(q));
+        qs.forEach(q => all.push({ ...q, level }));
       });
     });
     for (let i = all.length - 1; i > 0; i--) {
@@ -3387,7 +3407,8 @@ export default function K8sQuestApp() {
     } else {
       rawQs = buildTopicsPool(lang).slice(0, 10);
     }
-    setMixedQuestions(shuffleOptions(rawQs));
+    const mixedSource = (supabase && !isGuest && rawQs?.[0]?.id) ? "server" : "local";
+    setMixedQuestions(normalizeAndShuffle(rawQs, shuffleOptions, mixedSource));
     isRetryRef.current = false;
     setSelectedTopic(MIXED_TOPIC); setSelectedLevel("mixed"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
@@ -3454,7 +3475,8 @@ export default function K8sQuestApp() {
       const startIdx = (dayOfYear % numWindows) * 5;
       dailyQs = shuffled.slice(startIdx, startIdx + 5);
     }
-    setMixedQuestions(shuffleOptions(dailyQs));
+    const dailySource = (supabase && !isGuest && dailyQs?.[0]?.id) ? "server" : "local";
+    setMixedQuestions(normalizeAndShuffle(dailyQs, shuffleOptions, dailySource));
     isRetryRef.current = false;
     setSelectedTopic(DAILY_TOPIC); setSelectedLevel("daily"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
@@ -3530,7 +3552,7 @@ export default function K8sQuestApp() {
             question_id: qid, topic_id: selectedTopic.id, topic_name: selectedTopic.name,
             topic_color: selectedTopic.color, level: selectedLevel, question_index: questionIndex,
             question_text: q.q, options: q.options, answer: answerResult?.correctIndex ?? q.answer, explanation: answerResult?.explanation ?? q.explanation,
-            lang,
+            tags: q.tags, lang,
           }];
       try { localStorage.setItem("bookmarks_v1", JSON.stringify(next)); } catch {}
       return next;
@@ -3543,8 +3565,8 @@ export default function K8sQuestApp() {
     liveIndexRef.current = 0;
     submittingRef.current = false;
     clearQuizState();
-    const qs = bookmarks.map(b => ({ q: b.question_text, options: b.options, answer: b.answer, explanation: b.explanation }));
-    setMixedQuestions(shuffleOptions([...qs]));
+    const qs = bookmarks.map(b => ({ q: b.question_text, options: b.options, answer: b.answer, explanation: b.explanation, tags: b.tags }));
+    setMixedQuestions(normalizeAndShuffle(qs, shuffleOptions, "local"));
     isRetryRef.current = false;
     setSelectedTopic(BOOKMARKS_TOPIC); setSelectedLevel("mixed"); setTopicScreen("quiz");
     setQuestionIndex(0); setSelectedAnswer(null); setSubmitted(false);
@@ -3575,7 +3597,7 @@ export default function K8sQuestApp() {
     clearIncidentProgress();
     setIncidentAnswerResult(null);
     let steps = null;
-    if (supabase) {
+    if (supabase && !isGuest) {
       try {
         steps = await fetchIncidentSteps(supabase, incident.id);
         if (!steps?.length) steps = null; // fall back to local data

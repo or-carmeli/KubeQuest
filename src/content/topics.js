@@ -2009,7 +2009,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Secrets מקודדים ב-base64 בלבד. לא מוצפנים!\nbase64 הוא encoding, לא הצפנה. כל אחד יכול לפענח.\nלאבטחה אמיתית: Encryption at Rest, Sealed Secrets, או external manager.",
+                "Secrets ב-Kubernetes אינם מוצפנים כברירת מחדל.\nהערכים שלהם נשמרים רק מקודדים ב-base64 בתוך ה-API וה-etcd.\nחשוב להבין:\nbase64 הוא encoding בלבד, לא encryption (הצפנה).\nכל מי שיש לו גישה ל-Secret יכול לבצע decode ולראות את הערך המקורי.\nלכן בפרודקשן מומלץ להוסיף שכבת אבטחה נוספת, למשל:\n• Encryption at Rest - הצפנה של ה-Secrets בתוך etcd\n• External Secret Manager - כמו AWS Secrets Manager / HashiCorp Vault / 1Password\n• Sealed Secrets - הצפנה לפני שמכניסים את ה-Secret ל-Git",
             },
             {
               q: "כיצד משתמשים ב-ConfigMap ב-Pod?",
@@ -2022,7 +2022,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ConfigMap נצרך כ-env variables (envFrom) או כ-volume files (volumeMounts).\nשתי הדרכים מאפשרות ל-Pod לגשת לנתוני קונפיגורציה.\nשינוי ב-volume מתעדכן אוטומטית; שינוי ב-env מצריך restart.",
+                "ConfigMap ניתן להזרקה ל-Pod בשתי דרכים:\n• Environment Variables (env / envFrom)\n• Mounted Volume Files (volumeMounts)\nאם משתמשים ב-volume, הקבצים יכולים להתעדכן כאשר ה-ConfigMap משתנה.\nלעומת זאת, כאשר משתמשים ב-environment variables, יש צורך לבצע Pod restart כדי לטעון את הערכים החדשים.",
             },
             {
               q: "נניח שנוצר Namespace חדש ב-Kubernetes.\nאיזה ServiceAccount קיים בו כברירת מחדל?",
@@ -2034,7 +2034,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ServiceAccount הוא זהות ל-Pod. כל Namespace מכיל default שמוקצה אוטומטית.\nPods שלא מציינים ServiceAccount מקבלים את default.\nbest practice:\u200E ליצור ServiceAccount ייעודי עם הרשאות מינימליות.",
+                "ServiceAccount הוא זהות (identity) שבה Pods משתמשים כדי לתקשר עם ה-Kubernetes API.\nכאשר נוצר Namespace חדש, Kubernetes יוצר בו אוטומטית ServiceAccount בשם default.\nאם Pod לא מציין במפורש serviceAccountName, הוא ישתמש אוטומטית ב-default ServiceAccount של ה-Namespace.\nבגלל זה, ברוב המקרים Pods חדשים ירוצו עם default אלא אם מוגדר ServiceAccount אחר.\n\u200FBest practice\u200F:\nבפרודקשן מומלץ ליצור ServiceAccounts ייעודיים עם הרשאות מינימליות (RBAC) במקום להשתמש ב-default.",
             },
             {
               q: "מה ראשי התיבות RBAC?",
@@ -2046,7 +2046,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "RBAC = Role Based Access Control:\u200E מנגנון הרשאות ב-Kubernetes.\nשלושה מרכיבים: Roles (מה מותר), Subjects (מי מורשה), Bindings (מחברים ביניהם).\nמאפשר שליטה מדויקת. למשל לצפות ב-Pods אך לא למחוק.",
+                "RBAC (Role Based Access Control) הוא מנגנון ההרשאות של Kubernetes.\nהוא קובע מי יכול לבצע אילו פעולות על אילו משאבים.\nRBAC מורכב משלושה חלקים:\n• Roles / ClusterRoles - מגדירים הרשאות\n• Subjects - המשתמשים או ServiceAccounts\n• Bindings - מחברים בין המשתמשים להרשאות",
             },
             {
               q: "מה LimitRange עושה ב-Namespace?",
@@ -2058,7 +2058,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "LimitRange מגדיר ברירות מחדל ומגבלות CPU/Memory per-container ב-Namespace.\nמזריק default values ואוכף min/max אם container לא מציין requests/limits.\nללא LimitRange, Pod בודד יכול לצרוך את כל משאבי ה-Node.",
+                "LimitRange הוא אובייקט ב-Kubernetes שמגדיר מגבלות על משאבי CPU ו-Memory בתוך Namespace.\nהוא מאפשר להגדיר:\n• ערכי מינימום ומקסימום למשאבים של containers או Pods\n• ערכי ברירת מחדל (default requests / limits) אם container לא הגדיר אותם\nכאשר Pod נוצר, Kubernetes בודק שהמשאבים שהוגדרו עומדים בטווחים של ה-LimitRange.\nאם הם חורגים מהמגבלות, ה-Pod לא ייווצר.\nכך ניתן להבטיח של-containers יהיו הגדרות משאבים סבירות בתוך ה-Namespace.",
             },
             {
               q: "מה עושה ההגדרה `runAsNonRoot: true` ב-securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
@@ -2070,7 +2070,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "ההגדרה `runAsNonRoot: true` מבטיחה שהתהליך בתוך הקונטיינר לא ירוץ כמשתמש root (`UID 0`).\n\nאם הקונטיינר מוגדר לרוץ כ-root, Kubernetes ימנע את ההרצה.\n\nזהו מנגנון אבטחה שמקטין את הסיכון להרצת קוד עם הרשאות גבוהות בתוך הקונטיינר.",
+                "ההגדרה \u200Frun\u200BAs\u200BNon\u200BRoot: true\u200F מבטיחה שהקונטיינר לא ירוץ כמשתמש root (UID 0).\nכאשר Kubernetes יוצר את ה-container, הוא בודק את המשתמש שהקונטיינר אמור לרוץ איתו.\nאם ה-container מוגדר לרוץ כ-root, ה-Pod לא יתחיל וייכשל ביצירה.\nזהו מנגנון אבטחה שמטרתו למנוע מהרצת קונטיינרים עם הרשאות גבוהות מדי.",
             },
             {
               q: "מה ההבדל בין resource requests ל-limits?",
@@ -2083,7 +2083,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "requests = מינימום שה-Scheduler מבטיח. limits = מקסימום שהקונטיינר יכול לצרוך.\nNode נבחר רק אם יש מספיק resources פנויים עבור requests.\nחריגת memory limit = OOMKill. חריגת CPU limit = throttling.",
+                "requests = המשאבים המינימליים שה-Scheduler משתמש בהם לצורך תזמון ה-Pod על Node.\nlimits = הכמות המקסימלית של CPU או Memory שה-container יכול להשתמש בה בזמן ריצה.\nNode ייבחר רק אם יש מספיק משאבים פנויים עבור ה-requests.\nחריגה מ-memory limit יכולה לגרום ל-OOMKill,\nוחריגה מ-CPU limit תגרום ל-CPU throttling.",
             },
         ],
         questionsEn: [
@@ -2110,7 +2110,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Secrets are only base64-encoded by default. Not encrypted!\nbase64 is encoding, not encryption. Anyone can decode it.\nFor real security: Encryption at Rest, Sealed Secrets, or external secrets manager.",
+                "Secrets in Kubernetes are not encrypted by default.\nTheir values are only encoded using Base64 when stored in the API and in etcd.\nIt is important to understand that Base64 is encoding, not encryption.\nAnyone who has access to the Secret can easily decode it and see the original value.\nFor this reason, in production environments it is recommended to add an additional security layer, for example:\n• Encryption at Rest - encrypts Secrets inside etcd\n• External Secret Manager - such as AWS Secrets Manager, HashiCorp Vault, or 1Password\n• Sealed Secrets - encrypts Secrets before committing them to Git",
             },
             {
               q: "How can a ConfigMap be used in a Pod?",
@@ -2123,7 +2123,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ConfigMap is consumed as env variables (envFrom) or volume files (volumeMounts).\nBoth methods let the Pod access configuration data.\nVolume changes auto-update (with delay); env changes need Pod restart.",
+                "A ConfigMap can be injected into a Pod in two main ways:\n• Environment Variables (env / envFrom)\n• Mounted Volume Files (volumeMounts)\nIf a volume is used, the files can be updated automatically when the ConfigMap changes.\nIn contrast, when using environment variables, the values are set when the Pod starts, so a Pod restart is required to load the updated values.",
             },
             {
               q: "A new Namespace is created in Kubernetes.\nWhich ServiceAccount exists in it by default?",
@@ -2135,7 +2135,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "ServiceAccount is a Pod identity. Every Namespace has 'default' assigned automatically.\nPods that don't specify a ServiceAccount get the default one.\nBest practice: create dedicated ServiceAccounts with minimal permissions.",
+                "A ServiceAccount provides an identity that Pods use to interact with the Kubernetes API.\nWhen a new Namespace is created, Kubernetes automatically creates a ServiceAccount named default inside it.\nIf a Pod does not explicitly specify serviceAccountName, it will automatically use the default ServiceAccount in that Namespace.\nBest practice:\nIn production, it is recommended to create dedicated ServiceAccounts with minimal RBAC permissions instead of using the default one.",
             },
             {
               q: "What does RBAC stand for?",
@@ -2147,7 +2147,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "RBAC = Role Based Access Control: Kubernetes' permission system.\nThree building blocks: Roles (what's allowed), Subjects (who), Bindings (connect them).\nEnables fine-grained control. For example, view Pods but not delete them.",
+                "RBAC (Role Based Access Control) is Kubernetes' authorization mechanism.\nIt defines who can perform which actions on which resources in the Kubernetes API.\nRBAC consists of three main components:\n• Roles / ClusterRoles - define permissions (e.g., get, list, create on Pods)\n• Subjects - users, groups, or service accounts\n• RoleBindings / ClusterRoleBindings - connect subjects to roles\nThis enables fine-grained access control following the principle of least privilege.",
             },
             {
               q: "What does LimitRange do in a Namespace?",
@@ -2159,7 +2159,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "LimitRange sets default and max CPU/Memory per container in a Namespace.\nAuto-injects defaults and enforces min/max if containers don't specify them.\nWithout LimitRange, a single Pod can consume all Node resources.",
+                "LimitRange is a Kubernetes object that defines constraints on CPU and Memory resources within a Namespace.\nIt allows you to define:\n• Minimum and maximum values for resources of containers or Pods\n• Default values (requests / limits) if a container does not specify them\nWhen a Pod is created, Kubernetes checks that the defined resources fall within the LimitRange boundaries.\nIf they exceed the allowed limits, the Pod will not be created.\nThis helps ensure that containers use reasonable resource configurations within the Namespace.",
             },
             {
               q: "What does the `runAsNonRoot: true` setting do in securityContext\n\n```yaml\nspec:\n  containers:\n    - name: app\n      securityContext:\n        runAsNonRoot: true\n```",
@@ -2171,7 +2171,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "The `runAsNonRoot: true` setting ensures the process inside the container does not run as root (`UID 0`).\n\nIf the container is configured to run as root, Kubernetes will prevent it from starting.\n\nThis is a security mechanism that reduces the risk of running code with elevated privileges inside the container.",
+                "Setting runAsNonRoot: true ensures that the container does not run as the root user (UID 0).\nWhen Kubernetes creates the container, it checks which user the container is configured to run as.\nIf the container is set to run as root, the Pod will fail to start.\nThis is a security mechanism designed to prevent containers from running with excessively high privileges.",
             },
             {
               q: "What is the difference between resource requests and limits?",
@@ -2184,7 +2184,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "requests = minimum the Scheduler guarantees. limits = maximum the container can use.\nNode is chosen only if it has enough free resources for the requests.\nExceed memory limit = OOMKill. Exceed CPU limit = throttling only.",
+                "requests = the minimum amount of CPU or Memory used by the Scheduler to decide where a Pod can run.\nlimits = the maximum amount of CPU or Memory a container is allowed to use at runtime.\nA Node will be selected only if it has enough available resources to satisfy the requests.\nExceeding the memory limit can cause an OOMKill,\nwhile exceeding the CPU limit results in CPU throttling.",
             },
         ],
       },
@@ -2203,7 +2203,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "Role מוגבל ל-Namespace ספציפי. ClusterRole חל על כל ה-Cluster.\nRole ב-prod לא מעניק גישה ב-staging. ClusterRole כולל Nodes, PVs ועוד.\nשניהם חלים על Users, Groups, ו-ServiceAccounts. ההבדל המרכזי הוא ב-scope בלבד.\nניתן לקשור ClusterRole ל-Namespace בודד עם RoleBinding.",
+                "Role - מגדיר הרשאות בתוך Namespace ספציפי.\nClusterRole - מגדיר הרשאות ברמת כל ה-Cluster או עבור משאבים שאינם שייכים ל-Namespace (כמו Nodes).\nניתן להעניק הרשאות ל-Users, Groups או ServiceAccounts באמצעות RoleBinding או ClusterRoleBinding.\nהבדל מרכזי:\nRole = Namespace scope\nClusterRole = Cluster scope",
             },
             {
               q: "מה תפקיד RoleBinding?",
@@ -2306,7 +2306,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "Role is Namespace-scoped. ClusterRole applies cluster-wide.\nRole in prod grants no access in staging. ClusterRole covers Nodes, PVs, etc.\nBoth apply to Users, Groups, and ServiceAccounts. The key difference is scope, not verbs.\nClusterRole can be bound to a single Namespace via RoleBinding.",
+                "Role - defines permissions within a specific Namespace.\nClusterRole - defines permissions at the cluster level or for resources that are not namespace-scoped (such as Nodes).\nPermissions are granted to Users, Groups, or ServiceAccounts using RoleBinding or ClusterRoleBinding.\nKey difference:\nRole = Namespace scope\nClusterRole = Cluster scope",
             },
             {
               q: "What is a RoleBinding?",
@@ -4497,6 +4497,98 @@ export const TOPICS = [
             explanation: "self-heal אומר ש-ArgoCD לא רק מסנכרן כשיש שינוי ב-Git, אלא גם מתקן drift בקלאסטר.\nאם מישהו שינה משהו ידנית, ArgoCD יזהה את ההבדל ויחזיר את המצב למה שמוגדר ב-Git.\nזה מבטיח שה-Git repo נשאר ה-source of truth האמיתי.",
           },
         ],
+        questionsEn: [
+          {
+            q: "An application payments-service shows as OutOfSync in ArgoCD after a deploy.\n\nWhat is the most appropriate first step",
+            options: [
+              "kubectl delete pod\non all Pods in the namespace",
+              "kubectl apply\nmanually from the repo",
+              "Check the diff between Git and the cluster state",
+              "Delete the namespace and recreate it",
+            ],
+            answer: 2,
+            explanation: "OutOfSync means the cluster state differs from Git.\nThe first step is always to check the diff to understand exactly what changed.\nDeleting Pods or the namespace is destructive and does not solve the problem.\n`kubectl apply` manually bypasses the GitOps process.",
+          },
+          {
+            q: "In GitOps, what is the source of truth for the desired state of the cluster",
+            options: [
+              "The current cluster state as reported by kubectl",
+              "A Git repository containing the manifests",
+              "The ArgoCD dashboard showing the health status",
+              "Helm release history stored in the cluster",
+            ],
+            answer: 1,
+            explanation: "The core principle of GitOps is that Git is the single source of truth.\nEvery change goes through Git, and ArgoCD syncs the cluster accordingly.\nThe cluster itself, the ArgoCD UI, and Helm history are just reflections of the state.",
+          },
+          {
+            q: "An engineer ran `kubectl edit deployment` directly on the cluster.\nAfter a few minutes ArgoCD shows the application as OutOfSync.\n\nWhy",
+            options: [
+              "ArgoCD detected that the cluster state no longer matches Git",
+              "kubectl edit caused ArgoCD to restart",
+              "The deployment failed because ArgoCD blocks direct changes",
+              "ArgoCD automatically deletes changes that did not go through Git",
+            ],
+            answer: 0,
+            explanation: "ArgoCD continuously compares the cluster state to Git.\nA direct change in the cluster creates drift - the state no longer matches Git.\nArgoCD does not block direct changes and does not delete them automatically (unless self-heal is enabled).\nIt only reports that there is a gap.",
+          },
+          {
+            q: "What is the difference between Synced and Healthy in ArgoCD",
+            tags: ["gitops-sync"],
+            options: [
+              "Synced means the state matches Git, Healthy means the resources are running correctly",
+              "Synced and Healthy both describe the relationship between Git and the cluster",
+              "Healthy means the state matches Git, Synced means the Pods are running correctly",
+              "Synced refers to the connection between ArgoCD and the repo, Healthy to the controller state",
+            ],
+            answer: 0,
+            explanation: "These are two separate indicators:\nSync Status - whether the cluster state matches Git (Synced / OutOfSync).\nHealth Status - whether the resources themselves are healthy (Healthy / Degraded / Progressing).\nYou can be Synced but Degraded, for example when the manifests were applied but the Pod is in CrashLoopBackOff.",
+          },
+          {
+            q: "A team wants to roll back to a previous version of an application.\nThey are using GitOps with ArgoCD.\n\nWhat is the correct approach",
+            options: [
+              "Click Rollback in the ArgoCD UI",
+              "kubectl rollout undo",
+              "Run git revert on the last commit and let ArgoCD sync",
+              "Delete the Application in ArgoCD and recreate it with the old version",
+            ],
+            answer: 2,
+            explanation: "In GitOps, every change should go through Git.\ngit revert creates a new commit that undoes the change, and ArgoCD will sync automatically.\n`kubectl rollout undo` and ArgoCD Rollback work, but they create drift from Git.\nThe goal is to keep Git as the source of truth.",
+          },
+          {
+            q: "An ArgoCD Application is configured with:\n\n```\nsource:\n  repoURL: https://github.com/org/app\n  targetRevision: main\n  path: deploy/production\n```\n\nWhere will ArgoCD read the manifests from",
+            options: [
+              "From the deploy/production directory on the main branch of the repo",
+              "From the root of the repo on the production branch",
+              "From all directories in the repo on the main branch",
+              "From deploy/production at the latest tag of the repo",
+            ],
+            answer: 0,
+            explanation: "repoURL - the Git repository address.\ntargetRevision: main - the branch to read from.\npath: deploy/production - the specific directory containing the manifests.\nArgoCD will only read manifests from this path on the main branch.",
+          },
+          {
+            q: "An engineer sees that an application in ArgoCD is marked Synced but Degraded.\n\nWhat is the likely cause",
+            options: [
+              "The manifests in Git contain syntax errors that failed validation",
+              "The manifests were applied successfully but the Pods are failing at runtime",
+              "ArgoCD cannot connect to the Git repo and therefore cannot sync",
+              "The namespace defined in the destination does not exist in the cluster yet",
+            ],
+            answer: 1,
+            explanation: "Synced = the manifests were applied successfully, the cluster matches Git.\nDegraded = there is a runtime issue, such as a Pod in CrashLoopBackOff or ImagePullBackOff.\nThe problem is not with the manifests themselves but with the application or the image.\nIf Git were unreachable, the sync status would be Unknown, not Synced.",
+          },
+          {
+            q: "A developer pushes a change to Git.\nArgoCD is configured with auto-sync and self-heal.\n\nAnother engineer runs `kubectl edit` and makes a manual change in the cluster.\n\nWhat will happen",
+            tags: ["gitops-sync"],
+            options: [
+              "The manual change will persist because ArgoCD does not track cluster changes",
+              "ArgoCD will detect the drift and revert the state to what is defined in Git",
+              "ArgoCD will display a warning in the UI and wait for manual approval before fixing",
+              "ArgoCD will merge the manual change into the Git repo automatically",
+            ],
+            answer: 1,
+            explanation: "Self-heal means ArgoCD not only syncs when there is a change in Git, but also corrects drift in the cluster.\nIf someone made a manual change, ArgoCD will detect the difference and revert the state to what is defined in Git.\nThis ensures that the Git repo remains the true source of truth.",
+          },
+        ],
       },
       medium: {
         theory: "ArgoCD - הגדרות מתקדמות, Helm ו-sync strategies.\n🔹 Sync Waves:\u200E שליטה בסדר שבו ArgoCD מחיל משאבים (annotations עם sync wave number)\n🔹 Sync Hooks:\u200E Pre/Post sync jobs שרצים לפני או אחרי sync (migrations, tests)\n🔹 Helm עם ArgoCD:\u200E ArgoCD יכול לרנדר Helm charts ישירות ולנהל את ה-values מ-Git\n🔹 Prune:\u200E מחיקת משאבים מהקלאסטר שכבר לא קיימים ב-Git\n🔹 Retry:\u200E הגדרת מספר ניסיונות חוזרים כש-sync נכשל\n🔹 Ignore Differences:\u200E התעלמות מ-fields ספציפיים בהשוואה (למשל replicas שמנוהלים ע\"י HPA)\n🔹 Finalizers:\u200E cascading delete כשמוחקים Application\nCODE:\napiVersion: argoproj.io/v1alpha1\nkind: Application\nspec:\n  syncPolicy:\n    automated:\n      prune: true\n      selfHeal: true\n    retry:\n      limit: 5\n      backoff:\n        duration: 5s\n        factor: 2\n        maxDuration: 3m\n  ignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n    - /spec/replicas",
@@ -4590,6 +4682,97 @@ export const TOPICS = [
             ],
             answer: 1,
             explanation: "הפתרון הנכון ב-GitOps הוא אחד משניים:\n1. להוסיף Namespace manifest ב-Git עם sync wave 0- כדי שייווצר ראשון.\n2. להפעיל CreateNamespace=true ב-syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n  - CreateNamespace=true\n\nיצירה ידנית עובדת אבל עוקפת GitOps.",
+          },
+        ],
+        questionsEn: [
+          {
+            q: "An ArgoCD Application is configured with auto-sync and prune: true.\nA developer deletes a ConfigMap manifest file from the repo.\n\nWhat will happen",
+            options: [
+              "ArgoCD will ignore the change because the ConfigMap already exists in the cluster",
+              "ArgoCD will delete the ConfigMap from the cluster because it no longer exists in Git",
+              "ArgoCD will show a warning in the UI and wait for approval before deleting",
+              "ArgoCD will fail the sync because it expects all resources to exist",
+            ],
+            answer: 1,
+            explanation: "prune: true tells ArgoCD to delete resources from the cluster that no longer exist in Git.\nWithout prune, ArgoCD would ignore resources removed from Git.\nThis is important to understand because prune can delete resources without warning.",
+          },
+          {
+            q: "An ArgoCD Application is configured with a Helm source:\n\n```yaml\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nThe developer wants to change the image tag to v1.6.\n\nWhat is the correct GitOps approach",
+            options: [
+              "Change the parameter directly in the ArgoCD UI",
+              "helm upgrade --set image.tag=v1.6",
+              "Update the values in Git and commit",
+              "kubectl set image\non the deployment",
+            ],
+            answer: 2,
+            explanation: "In GitOps, every change must go through Git.\nThe correct approach is to update the values in the Git-stored file and commit.\nArgoCD will re-render the Helm chart with the new values and sync.\nChanging via the UI, `helm upgrade`, or `kubectl` bypasses the GitOps flow.",
+          },
+          {
+            q: "A team uses HPA that automatically adjusts the number of replicas.\nArgoCD constantly shows OutOfSync because replicas in the cluster differs from Git.\n\nWhat is the solution",
+            options: [
+              "Disable HPA and manage replica count only through Git",
+              "Configure ignoreDifferences on /spec/replicas in the Application",
+              "Enable selfHeal so replicas always revert to the Git value",
+              "Remove the replicas field from manifests and set minReplicas in HPA",
+            ],
+            answer: 1,
+            explanation: "ignoreDifferences allows ArgoCD to ignore specific fields during comparison.\nWhen HPA manages replicas, you need to tell ArgoCD to ignore that field:\n\n```yaml\nignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n      - /spec/replicas\n```\n\nauto-sync with self-heal would actually revert replicas back to the Git value.",
+          },
+          {
+            q: "In ArgoCD, what do Sync Waves allow you to do",
+            options: [
+              "Send notifications after each sync",
+              "Control the order in which resources are created during a sync",
+              "Limit how many syncs can run in parallel",
+              "Schedule syncs at specific times of the day",
+            ],
+            answer: 1,
+            explanation: "Sync Waves let you control the order in which resources are created.\nFor example, Namespace in wave 0, ConfigMap in wave 1, Deployment in wave 2.\nConfigured via annotation:\n\nargocd.argoproj.io/sync-wave: \"2\"\n\nResources with a lower wave number are created first.",
+          },
+          {
+            q: "A team wants to run a database migration before every deploy.\n\nWhich ArgoCD mechanism is appropriate",
+            options: [
+              "Sync Hook of type PreSync",
+              "Init Container in the application Pod",
+              "Sync Wave with a high number",
+              "Post-deploy Health Check",
+            ],
+            answer: 0,
+            explanation: "A PreSync Hook runs a Job before the sync begins applying changes.\nThis is exactly suited for database migrations.\nConfigured via annotation:\n\nargocd.argoproj.io/hook: PreSync\n\nAn Init Container runs on every Pod restart, not just on deploy.\nSync Wave controls order but not pre/post execution.",
+          },
+          {
+            q: "An ArgoCD Application was deleted from the cluster.\nThe resources it managed (Deployment, Service) are still running.\n\nWhy",
+            options: [
+              "The Application was configured without a cascading delete finalizer",
+              "The resources were configured as immutable",
+              "ArgoCD cannot delete resources that have active traffic",
+              "The Application must be deleted via CLI, not via UI",
+            ],
+            answer: 0,
+            explanation: "By default in ArgoCD, deleting an Application does not delete the managed resources in the cluster.\nTo enable cascading delete, you need to add a finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n    - resources-finalizer.argocd.argoproj.io\n```\n\nWithout it, the resources remain even after the Application is deleted.",
+          },
+          {
+            q: "What is the difference between prune and selfHeal in ArgoCD auto-sync",
+            tags: ["gitops-reconcile"],
+            options: [
+              "prune deletes resources removed from Git, selfHeal corrects drift in the cluster",
+              "prune corrects manually created drift, selfHeal deletes resources removed from Git",
+              "prune works only with Helm charts, selfHeal works only with plain manifests",
+              "prune handles cluster-scoped resources, selfHeal handles namespace-scoped resources",
+            ],
+            answer: 0,
+            explanation: "`prune: true` - when a resource is removed from Git, ArgoCD will also delete it from the cluster.\n`selfHeal: true` - when someone manually changes something in the cluster, ArgoCD will revert it to match Git.\nBoth operate in real time as part of auto-sync.\nBoth work with all types of manifests.",
+          },
+          {
+            q: "A sync failed with the error:\n\n```\none or more objects failed to apply:\nnamespace \"payments\" not found\n```\n\nWhat is the solution",
+            options: [
+              "Manually create the namespace in the cluster and re-run sync from the UI",
+              "Add a Namespace manifest in Git with a low sync wave, or enable CreateNamespace",
+              "Delete the ArgoCD Application and recreate it with a new destination",
+              "Move all manifests in Git to the default namespace to work around the issue",
+            ],
+            answer: 1,
+            explanation: "The correct GitOps solution is one of two options:\n1. Add a Namespace manifest in Git with sync wave -0 so it is created first.\n2. Enable CreateNamespace=true in syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n  - CreateNamespace=true\n\nManually creating it works but bypasses GitOps.",
           },
         ],
       },
@@ -4687,6 +4870,99 @@ export const TOPICS = [
             ],
             answer: 2,
             explanation: "ה-Matrix generator ב-ApplicationSet יוצר Cartesian product (כל הצירופים האפשריים) בין הרשימות שמוגדרות ב-generators.\nבמקרה הזה יש 3 clusters שנבחרו לפי env: production, ויש 2 אפליקציות ברשימת elements (payments ו-orders).\nApplicationSet יוצר Application עבור כל שילוב של cluster ואפליקציה.\nלכן מספר ה-Applications שייווצרו הוא:\n3 clusters × 2 apps = 6 Applications.",
+          },
+        ],
+        questionsEn: [
+          {
+            q: "An organization manages 50 microservices across 3 environments.\nEach service needs a separate ArgoCD Application.\n\nWhat is the best approach",
+            options: [
+              "Manually create 150 Application manifests in Git with Kustomize overlays per env",
+              "Use an ApplicationSet with a Matrix generator combining clusters and Git directories",
+              "Create a CI script that runs argocd app create in a loop for each service and env",
+              "Use a Helm umbrella chart with a separate subchart for each microservice",
+            ],
+            answer: 1,
+            explanation: "ApplicationSet with a Matrix generator combines two generators:\n- clusters: all environments (dev, staging, prod)\n- git directories: all microservices\n\nMatrix produces a combination: 50 services x 3 environments = 150 Applications automatically.\nAdding a new service or environment generates Applications automatically.",
+          },
+          {
+            q: "A Platform team wants each team to manage only its own Applications.\n\nHow do you implement multi-tenancy in ArgoCD",
+            tags: ["gitops-multitenancy"],
+            options: [
+              "A separate ArgoCD instance per team with its own Ingress and SSO",
+              "An AppProject per team with restrictions on repos, namespaces, and RBAC roles",
+              "A namespace per team inside the argocd namespace with ResourceQuotas",
+              "A Git branch per team with branch protection and a webhook per branch",
+            ],
+            answer: 1,
+            explanation: "AppProject enables granular permission definitions:\n- sourceRepos: which repos each team can use\n- destinations: which namespaces/clusters are allowed\n- clusterResourceWhitelist: which cluster-level resources are allowed\n\nCombined with RBAC in ArgoCD:\np, role:team-a, applications, *, team-a-project/*, allow\n\nA separate instance per team is unnecessary overhead.",
+          },
+          {
+            q: "In the App of Apps pattern, the root Application manages other Applications.\nWhat happens if you delete the root Application with cascading delete",
+            tags: ["gitops-app-of-apps"],
+            options: [
+              "Only the root Application is deleted, child Applications remain",
+              "The root and all child Applications are deleted, but their resources remain in the cluster",
+              "The root, all child Applications, and all their resources are deleted",
+              "ArgoCD blocks the deletion because of dependencies",
+            ],
+            answer: 2,
+            explanation: "Cascading delete with a finalizer removes the entire hierarchy:\n1. Root Application is deleted\n2. Child Application manifests are removed from the cluster\n3. Each child Application that also has a finalizer deletes its own resources\n\nThis can be destructive.\nIt is important to protect root Applications with RBAC and understand the cascade behavior.",
+          },
+          {
+            q: "ArgoCD shows a diff on the managedFields field on every sync, even though nobody changed anything.\n\nWhat is the solution",
+            options: [
+              "Configure ignoreDifferences with managedFieldsManagers",
+              "Delete the Application and recreate it",
+              "Update ArgoCD to the latest version",
+              "Switch to client-side apply instead of server-side",
+            ],
+            answer: 0,
+            explanation: "managedFields is metadata that Kubernetes adds for server-side apply.\nArgoCD sees it as a diff because it does not exist in Git.\nThe solution:\n\n```yaml\nignoreDifferences:\n  - group: \"*\"\n    kind: \"*\"\n    managedFieldsManagers:\n      - \"kube-controller-manager\"\n```\n\nOr globally in the argocd-cm ConfigMap.",
+          },
+          {
+            q: "A sync of a large application fails with:\n\n```\nrpc error: code = ResourceExhausted\nmessage size larger than max (4194304 vs 4194304)\n```\n\nWhat is the problem and the solution",
+            options: [
+              "The Application manifests exceed the ArgoCD gRPC message size limit",
+              "The cluster exceeds memory limits and OOMKill prevents the sync",
+              "The Git repo exceeds the maximum clone size for argocd-repo-server",
+              "The argocd-server exceeds CPU limits and cannot render manifests",
+            ],
+            answer: 0,
+            explanation: "ArgoCD uses gRPC for internal communication.\nThe default gRPC message size is 4MB.\nLarge applications (many manifests, heavy CRDs) exceed this limit.\n\nSolution - increase the limit on argocd-server and argocd-repo-server:\n\n--max-recv-msg-size=8388608\n\nOr split the application into smaller Applications.",
+          },
+          {
+            q: "A team discovers that an application completed a successful sync, but the deployment did not actually change.\nThe image tag was not updated.\n\nWhat is the likely cause",
+            options: [
+              "The image tag in Git and in the cluster is latest, and only the image content changed",
+              "The ArgoCD cache was not refreshed",
+              "The deployment is configured as immutable",
+              "The namespace blocks image updates",
+            ],
+            answer: 0,
+            explanation: "If the image tag in Git is latest and in the cluster it is also latest, ArgoCD sees them as identical.\nIt does not check the image digest, only the manifest.\nThe Pod will not pull again if imagePullPolicy is IfNotPresent.\n\nSolution: use immutable tags like v1.2.3 or a git SHA instead of latest.\nOr set imagePullPolicy: Always.",
+          },
+          {
+            q: "An organization wants to enable fast rollback in production without waiting for the CI pipeline.\n\nWhat is the correct approach in GitOps",
+            options: [
+              "Allow ArgoCD to sync to a specific previous Git commit via the UI",
+              "Run git revert and push directly to main without CI",
+              "Prepare a branch with the previous version and merge it quickly",
+              "Use ArgoCD Rollback to restore the cluster to a previous state",
+            ],
+            answer: 3,
+            explanation: "ArgoCD Rollback restores the cluster to a previous sync state from its history.\nThis is fast because it does not require a change in Git.\nHowever, after rollback the application will be OutOfSync until Git is updated.\n\ngit revert is the pure GitOps solution, but it requires a pipeline.\nIn a production emergency, ArgoCD rollback followed by git revert is the practical approach.",
+          },
+          {
+            q: "ApplicationSet with a Matrix generator:\n\n```yaml\ngenerators:\n  - matrix:\n      generators:\n        - clusters:\n            selector:\n              matchLabels:\n                env: production\n        - list:\n            elements:\n              - app: payments\n                team: billing\n              - app: orders\n                team: commerce\n```\n\nHow many Applications will be created if there are 3 production clusters",
+            tags: ["gitops-appset-matrix"],
+            options: [
+              "3 - one Application per cluster matching the selector",
+              "2 - one Application per app defined in the elements list",
+              "6 - cartesian product of 3 clusters times 2 apps",
+              "5 - sum of 3 clusters plus 2 apps from the list generator",
+            ],
+            answer: 2,
+            explanation: "The Matrix generator in ApplicationSet creates a Cartesian product (all possible combinations) between the lists defined in the generators.\nIn this case there are 3 clusters selected by env: production, and 2 apps in the elements list (payments and orders).\nApplicationSet creates an Application for each combination of cluster and app.\nThe number of Applications created is:\n3 clusters x 2 apps = 6 Applications.",
           },
         ],
       },
