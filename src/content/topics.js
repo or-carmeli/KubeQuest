@@ -1134,7 +1134,7 @@ export const TOPICS = [
               "Routing by the source IP address of the request to a specific Service",
               "Routing based on the Namespace the request originates from",
 ],
-              hint: "Think about routing external requests to internal services.",
+              hint: "Think about how URL structure determines which backend handles a request.",
               answer: 0,
               explanation:
                 "Path-based routing: /api → service-api, /web → service-web in one Ingress.\nEach URL path maps to a different backend Service.\nMultiple Services share a single domain.",
@@ -2179,7 +2179,7 @@ export const TOPICS = [
               "admin",
               "default",
 ],
-              hint: "חשבו על זהות ה-Pod מול ה-API server.",
+              hint: "חשבו על איך Pod מוכיח מי הוא כשהוא פונה לשירותים.",
               answer: 3,
               explanation:
                 "ServiceAccount הוא זהות (identity) שבה Pods משתמשים כדי לתקשר עם ה-Kubernetes API.\nכאשר נוצר Namespace חדש, Kubernetes יוצר בו אוטומטית ServiceAccount בשם default.\nאם Pod לא מציין במפורש serviceAccountName, הוא ישתמש אוטומטית ב-default ServiceAccount של ה-Namespace.\nבגלל זה, ברוב המקרים Pods חדשים ירוצו עם default אלא אם מוגדר ServiceAccount אחר.\n\u200FBest practice\u200F:\nבפרודקשן מומלץ ליצור ServiceAccounts ייעודיים עם הרשאות מינימליות (RBAC) במקום להשתמש ב-default.",
@@ -2205,7 +2205,7 @@ export const TOPICS = [
               "מגדיר ברירות מחדל ומגבלות ל-CPU/Memory ל-Pods ו-containers ב-Namespace",
               "מנטר logs ושולח alerts כשצריכת CPU עולה על threshold",
 ],
-              hint: "חשבו על ברירות מחדל ומגבלות לכל Pod חדש.",
+              hint: "חשבו על מה קורה כש-Pod נוצר ללא הגדרות משאבים.",
               answer: 2,
               explanation:
                 "LimitRange הוא אובייקט ב-Kubernetes שמגדיר מגבלות על משאבי CPU ו-Memory בתוך Namespace.\nהוא מאפשר להגדיר:\n• ערכי מינימום ומקסימום למשאבים של containers או Pods\n• ערכי ברירת מחדל (default requests / limits) אם container לא הגדיר אותם\nכאשר Pod נוצר, Kubernetes בודק שהמשאבים שהוגדרו עומדים בטווחים של ה-LimitRange.\nאם הם חורגים מהמגבלות, ה-Pod לא ייווצר.\nכך ניתן להבטיח של-containers יהיו הגדרות משאבים סבירות בתוך ה-Namespace.",
@@ -2288,7 +2288,7 @@ export const TOPICS = [
               "admin",
               "default",
 ],
-              hint: "Think about the Pod's identity when talking to the API server.",
+              hint: "Think about how a Pod proves who it is when making requests.",
               answer: 3,
               explanation:
                 "A ServiceAccount provides an identity that Pods use to interact with the Kubernetes API.\nWhen a new Namespace is created, Kubernetes automatically creates a ServiceAccount named default inside it.\nIf a Pod does not explicitly specify serviceAccountName, it will automatically use the default ServiceAccount in that Namespace.\nBest practice:\nIn production, it is recommended to create dedicated ServiceAccounts with minimal RBAC permissions instead of using the default one.",
@@ -2388,7 +2388,7 @@ export const TOPICS = [
               "token חד-פעמי שנוצר בעת Deployment חדש",
               "זהות למשתמש אנושי שמתחבר דרך kubectl",
 ],
-              hint: "חשבו על זהות ה-Pod מול ה-API server.",
+              hint: "חשבו על איך Pod מוכיח מי הוא כשהוא פונה לשירותים.",
               answer: 0,
               explanation:
                 "ServiceAccount הוא זהות מכונה עבור Pods. לא למשתמשים אנושיים.\nKubernetes מזריק token אוטומטית ל-Pod לאימות מול API server.\nלכל Namespace יש ServiceAccount בשם default.",
@@ -2499,7 +2499,7 @@ export const TOPICS = [
               "An identity for a human user connecting via kubectl",
               "An identity for a Pod/process within the Cluster to authenticate with the API server",
 ],
-              hint: "Think about the Pod's identity when talking to the API server.",
+              hint: "Think about how a Pod proves who it is when making requests.",
               answer: 3,
               explanation:
                 "ServiceAccount is a machine identity for Pods. Not for human users.\nKubernetes auto-mounts a token for Pod-to-API authentication.\nRBAC controls what actions the ServiceAccount can perform.",
@@ -2652,7 +2652,7 @@ export const TOPICS = [
               "ליצור Role עם הרשאת list pods ולקשור אותו ל-my-sa",
               "למחוק את ה-ServiceAccount וליצור חדש במקומו",
 ],
-              hint: "חשבו על זהות ה-Pod מול ה-API server.",
+              hint: "חשבו על איך Pod מוכיח מי הוא כשהוא פונה לשירותים.",
               answer: 2,
               explanation:
                 "ל־my-sa אין הרשאה לבצע list על משאב pods ב־namespace prod, ולכן מתקבלת שגיאת RBAC.\nהפתרון הנכון הוא ליצור Role שמעניק הרשאת list על pods בתוך prod, ואז לקשור אותו ל־ServiceAccount בשם my-sa באמצעות RoleBinding.",
@@ -2760,7 +2760,7 @@ export const TOPICS = [
               "Add a ClusterRoleBinding with cluster-admin permissions",
               "Delete the ServiceAccount and create a new one",
 ],
-              hint: "Think about the Pod's identity when talking to the API server.",
+              hint: "Think about how a Pod proves who it is when making requests.",
               answer: 1,
               explanation:
                 "my-sa lacks list pods permission in namespace prod. RBAC blocks the request.\nCreate a Role with list pods permission and a RoleBinding to my-sa.\n• Deleting SA doesn't fix missing permissions • cluster-admin is a security risk • default SA also has no permissions.\nIn RBAC, every API access requires explicit Role + RoleBinding.",
@@ -4850,7 +4850,7 @@ export const TOPICS = [
               "Check the diff between Git and the cluster state",
               "Delete the namespace and recreate it",
             ],
-            hint: "Think about GitOps and syncing Git state with the Cluster.",
+            hint: "Think about what OutOfSync means and how to investigate the gap.",
             answer: 2,
             explanation: "OutOfSync means the cluster state differs from Git.\nThe first step is always to check the diff to understand exactly what changed.\nDeleting Pods or the namespace is destructive and does not solve the problem.\n`kubectl apply` manually bypasses the GitOps process.",
           },
