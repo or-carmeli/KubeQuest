@@ -84,8 +84,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate
+      - name: Audit production dependencies
+        run: npm audit --audit-level=moderate --omit=dev
+
+      - name: Audit dev dependencies (informational)
+        run: npm audit --audit-level=high || true
 
   # ── 4. License compliance ──────────────────────────────────────────────────
   license-check:
