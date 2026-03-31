@@ -143,8 +143,8 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
       const key = d.toISOString().slice(0,10);
       const pct = uptimeByService[svcName]?.[key];
       if (pct === undefined || pct === null) days.push("nodata");
-      else if (pct >= 98) days.push("ok");
-      else if (pct >= 90) days.push("incident");
+      else if (pct >= 95) days.push("ok");
+      else if (pct >= 85) days.push("incident");
       else days.push("error");
     }
     return days;
@@ -284,7 +284,7 @@ export default function StatusView({ supabase, lang, isStatusDomain, setScreen, 
 
         {/* Back + Title (hidden on standalone status subdomain) */}
         {!isStatusDomain && (
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,direction:lang==="he"?"rtl":"ltr"}}>
             <button className="back-btn" onClick={()=>setScreen("home")} style={{background:"var(--glass-3)",border:"1px solid var(--glass-6)",color:"var(--text-secondary)",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>
               {lang==="en"?"\u2190":"\u2192"}
             </button>

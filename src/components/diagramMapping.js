@@ -28,7 +28,7 @@ export function domainOf(tag) {
   const map = {
     pod: "workloads", controller: "workloads", rolling: "workloads",
     daemonset: "workloads", statefulset: "workloads", hpa: "workloads",
-    probe: "workloads",
+    probe: "workloads", readiness: "workloads",
     service: "networking", ingress: "networking", network: "networking",
     headless: "networking",
     storage: "storage", dynamic: "storage", wait: "storage",
@@ -38,6 +38,7 @@ export function domainOf(tag) {
     gitops: "gitops",
     helm: "storage", cronjob: "workloads", namespace: "security", oom: "workloads", restart: "workloads",
     kubelet: "cluster-ops", requests: "security", configmap: "security", limitrange: "security",
+    ipvs: "networking",
     dns: "networking", crashloop: "workloads", imagepull: "workloads", connection: "networking", lsof: "cluster-ops",
     process: "linux", memory: "linux", linux: "linux", tcp: "networking", fd: "linux",
   };
@@ -62,11 +63,13 @@ export const TAG_DIAGRAM_CONFIG = {
   "controller-hierarchy": { component: "DeploymentHierarchyDiagram", score: 5 },
   "rolling-update":       { component: "RollingUpdateDiagram",       score: 5 },
   "statefulset-storage":  { component: "StatefulSetDiagram",         score: 5 },
+  "statefulset-ordered":  { component: "StatefulSetOrderedDiagram", score: 5 },
 
   // ── workloads (score 4 = clear relationship / feedback loop) ────────────
   "daemonset-topology":   { component: "DaemonSetDiagram",           score: 4 },
   "hpa-scaling":          { component: "HpaDiagram",                 score: 4 },
   "probe-comparison":     { component: "ProbesDiagram",              score: 4 },
+  "readiness-traffic":    { component: "ReadinessTrafficDiagram",    score: 5 },
 
   // ── networking (score 5 = branching / layered flow) ─────────────────────
   "service-types":        { component: "ServiceTypesDiagram",        score: 5 },
@@ -147,9 +150,11 @@ export const TAG_DIAGRAM_CONFIG = {
   "static-pod":              { component: "StaticPodDiagram",              score: 4 },
   "etcd-ha":                 { component: "EtcdQuorumDiagram",             score: 4 },
   "etcd-topology":           { component: "StackedVsExternalEtcdDiagram",  score: 4 },
+  "kubeadm-init":            { component: "KubeadmInitDiagram",             score: 5 },
   "kubeadm-upgrade":         { component: "KubeadmUpgradeDiagram",         score: 4 },
   "kubelet-role":            { component: "KubeletDiagram",                score: 4 },
   "kube-proxy-role":         { component: "KubeProxyDiagram",              score: 4 },
+  "ipvs-vs-iptables":        { component: "IpvsVsIptablesDiagram",        score: 5 },
   "etcd-restore":            { component: "EtcdRestoreDiagram",            score: 4 },
   "cni-notready":            { component: "CniNotReadyDiagram",           score: 4 },
   "etcd-data":               { component: "EtcdDataDiagram",              score: 4 },

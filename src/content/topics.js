@@ -95,10 +95,11 @@ export const TOPICS = [
               hint: "חשבו על מה קורה כשקונטיינר מפסיק להגיב.",
               answer: 1,
               explanation:
-                "Liveness probe הוא בדיקת בריאות תקופתית על הקונטיינר.\nכשלון חוזר גורם ל-Kubernetes להניח שהקונטיינר תקוע ולהפעיל אותו מחדש.\nסוגי בדיקות: HTTP GET, TCP socket, או פקודת shell (exit code 0).\n\n```yaml\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: 8080\n  initialDelaySeconds: 5\n  periodSeconds: 10\n```",
+                "Liveness probe הוא בדיקת בריאות תקופתית על הקונטיינר.\nכשלון חוזר גורם ל-Kubernetes להניח שהקונטיינר תקוע ולהפעיל אותו מחדש.\nסוגי בדיקות: HTTP GET, TCP socket, או פקודת shell (exit code 0).\n\nדוגמה להגדרת liveness probe בתוך Pod spec:\n```yaml\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: 8080\n  initialDelaySeconds: 5\n  periodSeconds: 10\n```",
             },
             {
               q: "מה readiness probe עושה?",
+              tags: ["readiness-traffic"],
               options: [
               "מאתחל מחדש את ה-Pod לאחר שינוי ב-ConfigMap",
               "מוחק Pods ישנים כשגרסה חדשה עוברת rolling update",
@@ -108,7 +109,7 @@ export const TOPICS = [
               hint: "חשבו על מה קובע אם Pod מוכן לקבל בקשות.",
               answer: 2,
               explanation:
-                "Readiness probe בודק שהקונטיינר מוכן לקבל בקשות.\nPod שנכשל ב-readiness מוסר מ-Service endpoints ולא מקבל traffic.\nבשונה מ-liveness (ממית את הקונטיינר), readiness רק מפסיק לנתב traffic.",
+                "Readiness probe בודק האם הקונטיינר מוכן לקבל תעבורה.\nאם הבדיקה נכשלת, ה-Pod מוסר מרשימת ה-endpoints של ה-Service ולא מקבל traffic.\nכאשר הבדיקה מצליחה שוב, ה-Pod נוסף חזרה לרשימה ומתחיל לקבל traffic.\nבניגוד ל-liveness probe, שמאתחל קונטיינר תקוע,\nreadiness probe רק קובע אם להפנות אליו traffic או לא.",
             },
             {
               q: "מה ברירת המחדל של restartPolicy ב-Pod?",
@@ -136,20 +137,20 @@ export const TOPICS = [
               hint: "חשבו על ההבדל בין משימה חד-פעמית למשימה חוזרת.",
               answer: 0,
               explanation:
-                "Job מריץ משימה חד-פעמית עד הצלחה; CronJob מתזמן Jobs לפי cron schedule.\nJob = run-to-completion.\nCronJob = תזמון חוזר (גיבוי, ניקוי, דוחות).\nשניהם יוצרים Pods שרצים עד להשלמה, לא Pods שרצים לצמיתות.\nבכישלון, Job יוצר Pod חדש ומנסה שוב (עד backoffLimit).",
+                "Job מריץ משימה חד-פעמית עד להשלמתה (run-to-completion).\nCronJob יוצר Jobs באופן אוטומטי לפי לוח זמנים (cron schedule).\nJob יוצר Pod אחד או יותר שמריצים משימה ומסתיימים כשהמשימה הושלמה.\n\u200FCronJob\u200F פועל כמו \u200Fscheduler\u200F שמפעיל \u200FJob\u200F חדש בכל זמן שהוגדר.\nבמקרה של כשל, Job יכול ליצור Pod חדש ולנסות שוב לפי backoffLimit.",
             },
             {
               q: "מה resource requests ב-Pod?",
               options: [
-              "כמות ה-CPU וה-Memory שה-Pod מבקש כדי שה-Scheduler יוכל לבחור Node מתאים",
-              "רשימת הפורטים שה-Pod חושף לתעבורת רשת",
-              "מגבלת קצב הרשת שה-Pod מקבל מה-CNI plugin",
-              "גודל ה-container image שמוריד מה-registry לפני הפעלה",
+              "כמות ה-CPU וה-Memory שה-Pod מבקש כדי שה-Scheduler ימצא Node מתאים",
+              "רשימת הפורטים שה-Pod חושף כדי שה-Service יוכל לנתב אליו",
+              "מגבלת קצב הרשת שה-CNI plugin מקצה לכל Pod בזמן יצירה",
+              "גודל ה-container image שה-kubelet מוריד מה-registry לפני הפעלה",
 ],
               hint: "חשבו על איך מפרידים בין סביבות וצוותים.",
               answer: 0,
               explanation:
-                "`requests` מגדיר את כמות ה-CPU/Memory המינימלית שה-Pod צריך כדי לרוץ.\nה-Scheduler בודק את הערכים האלה כדי לבחור Node עם מספיק משאבים פנויים.\nהקונטיינר יכול לצרוך יותר מה-`requests`, אבל לא מעבר ל-`limits`.\n\n```yaml\nresources:\n  requests:\n    cpu: 250m\n    memory: 128Mi\n  limits:\n    cpu: 500m\n    memory: 256Mi\n```",
+                "`requests` מגדיר את כמות ה-CPU/Memory המינימלית שה-Pod צריך כדי לרוץ.\nה-Scheduler בודק את הערכים האלה כדי לבחור Node עם מספיק משאבים פנויים.\nהקונטיינר יכול לצרוך יותר מה-`requests`, אבל לא מעבר ל-`limits`.\n\n```yaml\nresources:\n  requests:\n    cpu: 250m\n    memory: 128Mi\n  limits:\n    cpu: 500m\n    memory: 256Mi\n```\n\nבדוגמת YAML הזו ה-Pod מבקש לפחות \u200F250m CPU\u200F ו-\u200F128Mi\u200F זיכרון, ומוגבל לכל היותר ל-\u200F500m CPU\u200F ו-\u200F256Mi\u200F זיכרון.",
             },
             {
               q: "מה מטרת Namespace ב-Kubernetes?",
@@ -163,7 +164,7 @@ export const TOPICS = [
               hint: "חשבו על איך מפרידים בין סביבות וצוותים.",
               answer: 3,
               explanation:
-                "Namespace מספק הפרדה לוגית של משאבים בתוך Cluster.\nשימושי להפרדת סביבות (dev/staging/prod), צוותים, או לקוחות.\nניתן להגביל צריכת משאבים לכל Namespace עם ResourceQuota ו-LimitRange.",
+                "Namespace הוא מנגנון ב-Kubernetes שמאפשר חלוקה לוגית של משאבים בתוך אותו Cluster.\nהוא משמש להפרדה בין סביבות שונות (כמו dev, staging, prod), בין צוותים או בין אפליקציות.\nמשאבים כמו Pods, Services ו-ConfigMaps שייכים ל-Namespace מסוים.\nניתן גם להגדיר ResourceQuota ו-LimitRange כדי להגביל שימוש במשאבים בתוך Namespace.",
             },
         ],
         questionsEn: [
@@ -206,10 +207,11 @@ export const TOPICS = [
               hint: "Think about what happens when a container becomes unresponsive.",
               answer: 1,
               explanation:
-                "A liveness probe is a periodic health check Kubernetes runs on each container.\nRepeated failures → Kubernetes kills and restarts the stuck container.\nProbe types: HTTP GET, TCP socket, or shell command (exit code 0).\n\n```yaml\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: 8080\n  initialDelaySeconds: 5\n  periodSeconds: 10\n```",
+                "A liveness probe is a periodic health check Kubernetes runs on each container.\nRepeated failures → Kubernetes kills and restarts the stuck container.\nProbe types: HTTP GET, TCP socket, or shell command (exit code 0).\n\nExample liveness probe definition inside a Pod spec:\n```yaml\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: 8080\n  initialDelaySeconds: 5\n  periodSeconds: 10\n```",
             },
             {
               q: "What does a readiness probe do?",
+              tags: ["readiness-traffic"],
               options: [
               "Reinitialises the Pod after a ConfigMap change",
               "Sets the minimum memory the container needs before it can start",
@@ -219,7 +221,7 @@ export const TOPICS = [
               hint: "Think about what happens after a container stops.",
               answer: 2,
               explanation:
-                "Readiness probe checks if the container is ready to serve requests.\nFailing Pods are removed from Service endpoints. No traffic routed to them.\nUnlike liveness (kills container), readiness only pauses traffic routing.",
+                "Readiness probe checks whether the container is ready to receive traffic.\nIf the probe fails, the Pod is removed from the Service endpoints and stops receiving traffic.\nWhen the probe succeeds again, the Pod is added back and resumes receiving traffic.\nUnlike a liveness probe, which restarts a stuck container,\na readiness probe only controls whether traffic is routed to the Pod.",
             },
             {
               q: "What is the default restartPolicy for a Pod?",
@@ -247,20 +249,20 @@ export const TOPICS = [
               hint: "Think about one-time tasks vs. recurring schedules.",
               answer: 1,
               explanation:
-                "Job runs a task once to completion; CronJob schedules Jobs on a recurring cron schedule.\nJob = run-to-completion. CronJob = recurring (backups, cleanup, reports).\nBoth create Pods that run to completion, not long-running Pods.\nOn failure, Job retries by creating new Pods (up to backoffLimit).",
+                "Job runs a one-time task until it completes (run-to-completion).\nCronJob automatically creates Jobs based on a schedule (cron schedule).\nA Job creates one or more Pods that run a task and exit when the task is completed.\nA CronJob acts as a scheduler that triggers a new Job at each scheduled time.\nIf a failure occurs, a Job can create a new Pod and retry the task according to the backoffLimit.",
             },
             {
               q: "What are resource requests in a Pod?",
               options: [
-              "The amount of CPU and Memory the Pod asks for so the Scheduler can find a suitable Node",
-              "The list of ports the Pod exposes for network traffic",
-              "Network rate limit assigned to the Pod by the CNI plugin",
-              "Size of the container image downloaded from the registry before startup",
+              "The amount of CPU and Memory the Pod requests so the Scheduler can find a suitable Node",
+              "The list of ports the Pod exposes so the Service can route traffic to it",
+              "The network rate limit the CNI plugin assigns to each Pod during creation",
+              "The size of the container image the kubelet downloads from the registry before startup",
 ],
               hint: "Think about how environments and teams are separated.",
               answer: 0,
               explanation:
-                "`requests` defines how much CPU and Memory the Pod asks for.\nThe Scheduler uses these values to find a Node with enough resources.\n`requests` is a scheduling hint. Containers can burst above it, up to `limits`.\n\n```yaml\nresources:\n  requests:\n    cpu: 250m\n    memory: 128Mi\n  limits:\n    cpu: 500m\n    memory: 256Mi\n```",
+                "`requests` defines how much CPU and Memory the Pod asks for.\nThe Scheduler uses these values to find a Node with enough resources.\n`requests` is a scheduling hint. Containers can burst above it, up to `limits`.\n\n```yaml\nresources:\n  requests:\n    cpu: 250m\n    memory: 128Mi\n  limits:\n    cpu: 500m\n    memory: 256Mi\n```\n\nThe Pod requests at least 250m CPU and 128Mi memory, and is capped at 500m CPU and 256Mi.",
             },
             {
               q: "What is the purpose of a Namespace in Kubernetes?",
@@ -274,7 +276,7 @@ export const TOPICS = [
               hint: "Think about how environments and teams are separated.",
               answer: 3,
               explanation:
-                "Namespaces provide logical isolation of resources within a cluster.\nCommonly used for separating environments (dev/staging/prod), teams, or tenants.\nEnforce resource limits per Namespace with ResourceQuota and LimitRange.",
+                "A Namespace in Kubernetes provides a logical separation of resources within the same cluster.\nIt is commonly used to separate environments (such as dev, staging, prod), teams, or applications.\nResources like Pods, Services, and ConfigMaps belong to a specific Namespace.\nYou can also define ResourceQuota and LimitRange to control resource usage within a Namespace.",
             },
         ],
       },
@@ -286,13 +288,13 @@ export const TOPICS = [
               q: "מה היתרון של Rolling Update?",
               tags: ["rolling-update"],
               options: [
-              "מאפשר לחזור לגרסה קודמת ללא שמירת revisions",
-              "מגביל את מספר ה-Pods המחוברים ל-Service בזמן עדכון",
-              "מעדכן את כל ה-Pods בבת אחת לחיסכון בזמן הפריסה",
-              "מחליף Pods בהדרגה כך שתמיד יש Pods זמינים, ללא downtime",
+              "מגדיל את מספר ה-Pods שמחוברים ל-Service בזמן עדכון",
+              "מאפשר חזרה לגרסה קודמת מבלי לשמור revision history",
+              "מחליף Pods בהדרגה כדי לשמור על זמינות השירות",
+              "מעדכן את כל ה-Pods לגרסה החדשה באותו רגע",
 ],
               hint: "חשבו על איך מעדכנים בלי להפיל את השירות.",
-              answer: 3,
+              answer: 2,
               explanation:
                 "Rolling Update מחליף Pods בהדרגה: חדש עולה, רק אז ישן יורד.\nתמיד יש Pods זמינים, כך שאין downtime.\nבשונה מ-Recreate שמוחק הכל ויוצר downtime.",
             },
@@ -307,7 +309,7 @@ export const TOPICS = [
               hint: "חשבו על עומסים שצריכים זהות קבועה לכל עותק.",
               answer: 1,
               explanation:
-                "הפקודה:\nkubectl rollout undo deployment/my-app\n\nמחזירה את ה-Deployment ל-revision הקודם.\nK8s שומר היסטוריה של כל ReplicaSet, כך שהוא יודע לאיזו גרסה לחזור.\n\nלחזרה ל-revision ספציפי:\nkubectl rollout undo deployment/my-app --to-revision=3",
+                "הפקודה:\nkubectl rollout undo deployment/my-app\n\nמחזירה את ה-Deployment ל-revision הקודם.\nקוברנטיס שומר היסטוריה של כל ReplicaSet, כך שהוא יודע לאיזו גרסה לחזור.\n\nלחזרה ל-revision ספציפי:\nkubectl rollout undo deployment/my-app --to-revision=3",
             },
             {
               q: "מה ההבדל בין StatefulSet ל-Deployment?",
@@ -335,7 +337,7 @@ export const TOPICS = [
               hint: "חשבו על הגנה על זמינות בזמן תחזוקה.",
               answer: 0,
               explanation:
-                "PodDisruptionBudget (PDB) מגדיר את מספר ה-Pods המינימלי שחייב להישאר זמין בזמן disruptions מתוכננות, כמו `kubectl drain`\nדוגמה: עם replicas: 3 ו-minAvailable: 2, Kubernetes יאשר פינוי רק אם לפחות 2 Pods נשארים זמינים.\nמגן על זמינות אפליקציות קריטיות בזמן maintenance.",
+                "\u200FPodDisruptionBudget (PDB)\u200F מגדיר את מספר ה-Pods המינימלי שחייב להישאר זמין בזמן \u200Fdisruptions\u200F מתוכננות, כמו \u200F`kubectl drain`\u200F.\nדוגמה: עם \u2066replicas: 3\u2069 ו-\u2066minAvailable: 2\u2069, קוברנטיס יאשר פינוי רק אם לפחות 2 Pods נשארים זמינים.\nמגן על זמינות אפליקציות קריטיות בזמן \u200Fmaintenance\u200F.",
             },
             {
               q: "מה מגדירים resource limits ב-Kubernetes?",
@@ -348,19 +350,19 @@ export const TOPICS = [
               hint: "חשבו על איך Node דוחה או מקבל Pods.",
               answer: 0,
               explanation:
-                "limits מגדיר את כמות המשאבים המקסימלית שקונטיינר יכול להשתמש בהם.\nחריגת memory גורמת להריגת הקונטיינר (OOMKill, exit code 137).\nחריגת CPU גורמת ל-throttling בלבד, ללא הריגה.\nההבדל בין requests ל-limits:\n• requests = משאבים מינימליים שה-Scheduler משתמש בהם כדי לתזמן Pod ל-Node.\n• limits = תקרת השימוש במשאבים בזמן ריצה.\nדוגמה:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nה-Scheduler מתזמן את ה-Pod לפי requests, אבל הקונטיינר לא יכול לחרוג מה-limits בזמן\u00A0ריצה.",
+                "\u200FResource limits\u200F מגדירים את כמות המשאבים המקסימלית שקונטיינר יכול להשתמש בה.\nחריגה מ-\u200Fmemory limit\u200F תגרום ל-\u200FOOMKill (exit code 137)\u200F, בעוד חריגה מ-\u200FCPU limit\u200F גורמת ל-\u200FCPU throttling\u200F בלבד.\n\u2066Requests vs Limits\u2069:\n• \u200Frequests\u200F \u2013 המשאבים המינימליים שה-\u200FScheduler\u200F משתמש בהם כדי לתזמן Pod על Node.\n• \u200Flimits\u200F \u2013 התקרה המקסימלית לשימוש במשאבים בזמן ריצה.\nדוגמה:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nבמקרה זה ה-\u200FScheduler\u200F מתזמן את ה-Pod לפי \u200Frequests\u200F,\nאך הקונטיינר לא יוכל להשתמש ביותר מה-\u200Flimits\u200F בזמן ריצה.",
             },
             {
               q: "מה עושים taints ו-tolerations ב-Kubernetes?",
               tags: ["taints-tolerations"],
               options: [
-              "מאפשרים scheduling של Pods על Nodes מסוימים רק אם ל-Pod יש toleration תואם",
-              "מגבילים תעבורת רשת נכנסת ויוצאת בין Pods ב-Cluster",
-              "מגדירים כללי RBAC שמגבילים גישה של ServiceAccounts ל-Nodes",
-              "קובעים סדר עדיפויות scheduling בין Pods שמתחרים על משאבים",
+              "מגדירים כללי RBAC שמגבילים גישה של ServiceAccounts ל-Nodes מסוימים",
+              "קובעים סדר עדיפויות scheduling בין Pods שמתחרים על משאבים זהים",
+              "שולטים אילו Pods יכולים לרוץ על Nodes מסוימים לפי taint ו-toleration",
+              "מגבילים תעבורת רשת נכנסת ויוצאת בין Pods שונים בתוך ה-Cluster",
 ],
               hint: "חשבו על סדר העדיפויות כשמשאבים אוזלים.",
-              answer: 0,
+              answer: 2,
               explanation:
                 "`taint` = הגבלה שמוצבת על Node. רק Pods עם toleration תואם יתוזמנו עליו.\n`toleration` = הרשאה שמוגדרת ב-spec של ה-Pod ומאפשרת לו לרוץ על Node עם אותו taint.\nPods ללא toleration תואם לא יתוזמנו על Node עם אותו taint.",
             },
@@ -376,7 +378,7 @@ export const TOPICS = [
               hint: "חשבו על סדר העדיפויות כשמשאבים אוזלים.",
               answer: 0,
               explanation:
-                "QoS (Quality of Service) קובע את סדר העדיפויות של Pods כש-Node חווה לחץ משאבים.\nה-QoS class נקבעת לפי ההגדרות של requests ו-limits לכל קונטיינר ב-Pod.\n\nGuaranteed: כאשר לכל הקונטיינרים מוגדרים requests ו-limits, ובכל אחד מהם requests=limits.\n\nBurstable: כאשר מוגדרים requests או limits, אבל אין התאמה מלאה של requests=limits לכל הקונטיינרים.\n\nBestEffort: כאשר לא מוגדרים כלל requests או limits.\n\nמבחינת eviction: BestEffort יפונה ראשון, אחריו Burstable, ו-Guaranteed הוא המוגן ביותר.",
+                "\u2066QoS (Quality of Service)\u2069 קובע את סדר ה-\u2066eviction\u2069 של Pods כאשר ה-Node חווה לחץ משאבים.\nה-\u2066QoS\u2069 נקבע לפי \u2066requests\u2069 ו-\u2066limits\u2069 של הקונטיינרים:\n• \u2066Guaranteed\u2069 \u2013 מוגדרים \u2066requests\u2069 ו-\u2066limits\u2069 ולכולם \u2066requests = limits\u2069\n• \u2066Burstable\u2069 \u2013 מוגדרים \u2066requests\u2069 או \u2066limits\u2069 אבל לא לכולם \u2066requests = limits\u2069\n• \u2066BestEffort\u2069 \u2013 לא מוגדרים \u2066requests\u2069 או \u2066limits\u2069\nסדר \u2066eviction\u2069 בזמן לחץ זיכרון:\n\u2066BestEffort → Burstable → Guaranteed\u2069\nכלומר \u2066BestEffort\u2069 יפונה ראשון ו-\u2066Guaranteed\u2069 אחרון.",
             },
             {
               q: "מה ephemeral container ב-Kubernetes?",
@@ -389,7 +391,7 @@ export const TOPICS = [
               hint: "חשבו על איך עושים debug ל-Pod שכבר רץ.",
               answer: 0,
               explanation:
-                "ephemeral container הוא קונטיינר זמני שניתן להוסיף ל-Pod רץ לצורך debugging או troubleshooting.\nבדרך כלל מוזרק באמצעות kubectl debug\nהוא לא חלק מה-spec המקורי של ה-Pod.\nהוא מתווסף באופן דינמי לצורך חקירה.\nהוא לא מאותחל מחדש עם ה-Pod.",
+                "\u200FEphemeral container\u200F הוא קונטיינר זמני שמוסיפים ל-Pod קיים לצורכי \u200Fdebugging\u200F או \u200Ftroubleshooting\u200F.\nבניגוד לקונטיינרים רגילים:\n• הוא לא מוגדר ב-\u200FPod spec\u200F המקורי\n• הוא מתווסף ל-Pod שכבר רץ\n• הוא מיועד ל-\u200Fdebugging\u200F בלבד, לא להרצת האפליקציה\n• הוא משתף את סביבת ה-Pod (כמו \u200Fnetwork\u200F ו-\u200Fnamespaces\u200F)\nכך ניתן לבדוק בעיות בתוך ה-Pod מבלי לשנות או להפעיל מחדש את הקונטיינרים הקיימים.",
             },
         ],
         questionsEn: [
@@ -459,7 +461,7 @@ export const TOPICS = [
               hint: "Think about how a Node repels or accepts Pods.",
               answer: 0,
               explanation:
-                "limits define the maximum amount of resources a container can use.\nExceeding a memory limit causes the container to be killed (OOMKill, exit code 137).\nExceeding a CPU limit causes throttling, not termination.\nThe difference between requests and limits:\n• requests = minimum resources the Scheduler uses to place a Pod on a Node.\n• limits = the hard ceiling on resource usage at runtime.\nExample:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nThe Scheduler schedules the Pod based on requests, but the container cannot exceed the limits during runtime.",
+                "Resource limits define the maximum amount of resources a container can use.\nExceeding the memory limit results in an OOMKill (exit code 137), while exceeding the CPU limit only causes CPU throttling.\n\nRequests vs Limits:\n• requests \u2013 the minimum resources the Scheduler uses to place a Pod on a Node.\n• limits \u2013 the maximum resources the container can use at runtime.\n\nExample:\n```yaml\nresources:\n  requests:\n    cpu: \"200m\"\n    memory: \"256Mi\"\n  limits:\n    cpu: \"1\"\n    memory: \"512Mi\"\n```\nIn this case, the Scheduler schedules the Pod based on the requests,\nbut the container cannot use more than the defined limits at runtime.",
             },
             {
               q: "What do taints and tolerations do in Kubernetes?",
@@ -487,7 +489,7 @@ export const TOPICS = [
               hint: "Think about the priority order when resources run low.",
               answer: 1,
               explanation:
-                "QoS (Quality of Service) determines the priority of Pods when a Node experiences resource pressure, especially memory pressure.\nKubernetes determines the QoS class automatically based on the requests and limits defined for containers.\n\nGuaranteed: requests and limits are defined and equal for all containers. Highest protection from eviction.\nBurstable: requests are defined but limits are higher. Partial protection.\nBestEffort: no requests and no limits defined. These Pods are the first to be evicted when the Node experiences memory pressure.",
+                "QoS (Quality of Service) determines the eviction order of Pods when a Node experiences resource pressure.\nThe QoS class is determined by the container requests and limits:\n• Guaranteed \u2013 requests and limits are set and requests = limits\n• Burstable \u2013 requests or limits are defined but not equal for all containers\n• BestEffort \u2013 no requests or limits defined\nEviction order during resource pressure:\nBestEffort \u2192 Burstable \u2192 Guaranteed\nMeaning BestEffort Pods are evicted first and Guaranteed last.",
             },
             {
               q: "What is an ephemeral container in Kubernetes?",
@@ -500,7 +502,7 @@ export const TOPICS = [
               hint: "Think about how to debug a running Pod without restarting it.",
               answer: 1,
               explanation:
-                "An ephemeral container is a temporary container that can be added to a running Pod for debugging or troubleshooting.\nIt is usually injected using kubectl debug\nIt is not part of the original Pod spec.\nIt is added dynamically for troubleshooting.\nIt is not restarted with the Pod.",
+                "An ephemeral container is a temporary container that is added to an existing Pod for debugging or troubleshooting purposes.\nUnlike regular containers:\n• It is not defined in the original Pod spec\n• It is added to an already running Pod\n• It is intended for debugging only, not for running the application\n• It shares the Pod environment (such as network and namespaces)\nThis allows you to test problems within the Pod without changing or restarting the existing containers.",
             },
         ],
       },
@@ -534,7 +536,7 @@ export const TOPICS = [
               hint: "חשבו על מה קורה כשקונטיינר צורך יותר מדי זיכרון.",
               answer: 0,
               explanation:
-                "HPA (Horizontal Pod Autoscaler) משנה מספר replicas אוטומטית לפי עומס.\nכשהעומס עולה, HPA מוסיף Pods. כשהעומס יורד, HPA מסיר Pods.\nדורש metrics-server מותקן ב-Cluster.",
+                "HPA (Horizontal Pod Autoscaler) משנה מספר replicas אוטומטית לפי עומס.\nכשהעומס עולה, HPA מוסיף Pods. כשהעומס יורד, HPA מסיר Pods.\nההחלטה מתבססת על מטריקות כמו צריכת CPU, זיכרון, או מטריקות מותאמות אישית (custom metrics).\nדורש metrics-server מותקן ב-Cluster.",
             },
             {
               q: "מה המשמעות של OOMKilled ב-Kubernetes?",
@@ -548,7 +550,7 @@ export const TOPICS = [
               hint: "חשבו על פיזור עומסים למניעת נקודת כשל.",
               answer: 1,
               explanation:
-                "OOMKilled (exit code 137): הקונטיינר חרג ממגבלת הזיכרון שהוגדרה ב-`limits.memory`.\nפתרון: הגדל `limits.memory`, או חפש memory leak בקוד.",
+                "\u200FOOMKilled (exit code 137)\u200F מתרחש כאשר קונטיינר צורך יותר זיכרון מהזמין לו.\nבדרך כלל זה קורה כאשר הוא חורג מ-\u200Flimits.memory\u200F, וה-\u200FLinux OOM Killer\u200F הורג את התהליך.",
             },
             {
               q: "מה התפקיד של topologySpreadConstraints בתזמון Pods ב-Kubernetes?",
@@ -562,7 +564,7 @@ export const TOPICS = [
               hint: "חשבו על פיזור עומסים למניעת נקודת כשל.",
               answer: 2,
               explanation:
-                "topologySpreadConstraints מפזר Pods באופן אחיד בין failure domains (Nodes, Zones).\nללא פיזור, כל ה-Pods עלולים לרוץ על Node אחד. אם קורס, השירות נופל.\nפיזור מבטיח שחלק מה-Pods ממשיכים לרוץ גם בכשל של Node או Zone.",
+                "\u200FtopologySpreadConstraints\u200F מבטיחים פיזור אחיד של Pods בין \u200Ffailure domains\u200F\nכמו Nodes או Zones, כדי לשפר זמינות ועמידות לתקלות.\nללא \u200Fconstraint\u200F כזה, ה-\u200Fscheduler\u200F עלול למקם Pods רבים באותו אזור.\nאם Node או Zone נופלים,\nפיזור נכון מבטיח שחלק מה-Pods עדיין זמינים.",
             },
             {
               q: "Pod נשאר במצב Pending.\n\nהרצת:\n\n```\nkubectl describe pod\n```\n\nפלט:\n\n```\nFailedScheduling\n0/3 nodes available\nuntolerated taint: dedicated=gpu\n```\n\nמה הפתרון הנכון?",
@@ -575,10 +577,11 @@ export const TOPICS = [
               hint: "חשבו על מה מונע מה-Scheduler לשבץ את ה-Pod.",
               answer: 2,
               explanation:
-                "השגיאה אומרת שלכל ה-Nodes יש taint בשם dedicated=gpu.\nל-Pod אין toleration שמתאים ל-taint הזה, ולכן ה-scheduler לא יכול להציב אותו על אף Node.\nכדי לפתור את הבעיה צריך להוסיף ל-Pod toleration מתאים ל-taint dedicated=gpu.",
+                "השגיאה מראה שלכל ה-Nodes יש taint בשם \u200Fdedicated=gpu\u200F.\nל-Pod אין toleration שמתאים ל-taint הזה, ולכן ה-\u200Fscheduler\u200F לא יכול לתזמן אותו על אף Node.\nכדי לפתור את הבעיה צריך להוסיף ל-Pod toleration שמתאים ל-taint \u200Fdedicated=gpu\u200F, כך שה-Pod יורשה לרוץ על ה-Nodes האלה.",
             },
             {
               q: "StatefulSet עם 3 replicas רץ ב-Cluster.\nPod-0 לא במצב Ready, ו-Pod-1 נשאר במצב Pending.\n\nמה הסיבה הסבירה ביותר?",
+              tags: ["statefulset-ordered"],
               options: [
               "Pod-0 לא Ready. לכן StatefulSet לא ממשיך ליצור את Pod-1",
               "ה-PVC של Pod-1 מלא ואין אפשרות להקצות לו אחסון חדש",
@@ -588,12 +591,12 @@ export const TOPICS = [
               hint: "חשבו על מה מונע מה-Scheduler לשבץ את ה-Pod.",
               answer: 0,
               explanation:
-                "StatefulSet יוצר Pods בסדר (OrderedReady):\u200E Pod-0 חייב להיות Ready לפני ש-Pod-1 נוצר.\nלתקן את Pod-0 כדי שיגיע למצב Ready, או להגדיר `podManagementPolicy: Parallel`.\n• PVC: Pod-1 לא נוצר בכלל. • Quota:\u200E גם Pod-0 לא היה עולה. • imagePullSecret:\u200E היה גורם ל-ImagePullBackOff.\nבברירת מחדל, StatefulSet יוצר Pods בסדר עוקב ותקיעה ב-Pod מוקדם חוסמת את כל השאר.",
+                "\u200FStatefulSet\u200F יוצר Pods בסדר עוקב (\u200FOrderedReady\u200F).\nPod חדש נוצר רק לאחר שה-Pod הקודם הגיע למצב \u200FReady\u200F.\nבמקרה הזה \u200FPod-0\u200F לא \u200FReady\u200F, ולכן ה-\u200FStatefulSet\u200F לא ייצור את \u200FPod-1\u200F,\nמה שמסביר למה \u200FPod-1\u200F נשאר במצב \u200FPending\u200F.",
             },
             {
-              q: "עדכון Rolling update נתקע.\n\nהרצת:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nפלט:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nבנוסף, מוגדר maxUnavailable: 0\n\nמה הסיבה?",
+              q: "עדכון Rolling update נתקע.\n\nהרצת:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nפלט:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nבנוסף, מוגדר \u2066maxUnavailable: 0\u2069\n\nמה הסיבה?",
               options: [
-              "Pods החדשים לא עוברים readiness probe, ו-maxUnavailable:0 מונע הורדת ישנים",
+              "Pods החדשים לא עוברים readiness probe, ו-\u2066maxUnavailable: 0\u2069 מונע הורדת ישנים",
               "ה-TLS certificate שגוי ב-admission webhook שבודק את ה-Pod spec",
               "ה-image שגוי ו-kubelet לא מצליח להוריד אותו מה-registry",
               "ה-Namespace quota מלא ולא ניתן ליצור Pods נוספים",
@@ -601,7 +604,7 @@ export const TOPICS = [
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
               answer: 0,
               explanation:
-                "maxUnavailable:0 מונע הורדת Pod ישן עד שהחדש עובר readiness.\nאם Pods חדשים נכשלים ב-readiness, ה-rollout נתקע.\n\nיש לבדוק:\n\n`kubectl logs`\n\nmaxUnavailable:0 = בטיחות מלאה, אבל readiness כושל = rollout תקוע.",
+                "\u2066maxUnavailable: 0\u2069 אומר שלא מותר אף Pod לא זמין בזמן ה-\u2066rolling update\u2069.\nאם ה-Pods החדשים לא עוברים \u2066readiness probe\u2069,\nהם נחשבים \u2066Not Ready\u2069, ולכן קוברנטיס לא יכול להוריד את ה-Pods הישנים.\nכתוצאה מכך ה-\u2066rollout\u2069 נתקע עד שה-Pods החדשים יהפכו ל-\u2066Ready\u2069.",
             },
             {
               q: "ה-Deployment לא מנהל Pods.\n\nהרצת:\n\n```\nkubectl get pods --show-labels\n```\n\nפלט:\n\n```\napp=backend-v2\n```\n\nהגדרת Deployment:\n\n```yaml\nselector:\n  matchLabels:\n    app: backend\n```\n\nמה הבעיה?",
@@ -644,7 +647,7 @@ export const TOPICS = [
               hint: "Think about what happens when a container uses too much memory.",
               answer: 2,
               explanation:
-                "HPA (Horizontal Pod Autoscaler) auto-scales replicas based on CPU/Memory metrics.\nLoad increases → adds Pods. Load drops → removes Pods.\nRequires metrics-server installed in the cluster.",
+                "HPA (Horizontal Pod Autoscaler) auto-scales replicas based on CPU/Memory metrics.\nLoad increases → adds Pods. Load drops → removes Pods.\nScaling decisions are based on metrics such as CPU usage, memory usage, or custom metrics.\nRequires metrics-server installed in the cluster.",
             },
             {
               q: "What is OOMKilled?",
@@ -658,7 +661,7 @@ export const TOPICS = [
               hint: "Think about spreading workloads to avoid a single point of failure.",
               answer: 2,
               explanation:
-                "OOMKilled (exit code 137): container exceeded the memory limit defined in `limits.memory`.\nFix: increase `limits.memory`, or investigate a memory leak in the app.",
+                "OOMKilled (exit code 137) occurs when a container consumes more memory than is available to it.\nThis usually happens when it exceeds limits.memory, and the Linux OOM Killer kills the process.",
             },
             {
               q: "What is the role of topologySpreadConstraints in Kubernetes scheduling?",
@@ -672,7 +675,7 @@ export const TOPICS = [
               hint: "Think about spreading workloads to avoid a single point of failure.",
               answer: 1,
               explanation:
-                "topologySpreadConstraints distributes Pods evenly across failure domains (Nodes, Zones).\nWithout spreading, all Pods may land on one Node. If it fails, the service is down.\nEven distribution ensures partial availability even when a Node or Zone fails.",
+                "topologySpreadConstraints ensure an even distribution of Pods across failure domains\nsuch as Nodes or Zones, improving availability and fault tolerance.\nWithout this constraint, the scheduler may place many Pods in the same area.\nIf a Node or Zone fails,\nproper distribution ensures that some Pods remain available.",
             },
             {
               q: "A Pod remains in Pending state.\n\nCommand:\n\n```\nkubectl describe pod\n```\n\nOutput:\n\n```\nFailedScheduling\n0/3 nodes available\nuntolerated taint: dedicated=gpu\n```\n\nWhat should you add to the Pod\nso it gets scheduled?",
@@ -685,10 +688,11 @@ export const TOPICS = [
               hint: "Think about what prevents the Scheduler from placing the Pod.",
               answer: 1,
               explanation:
-                "The error indicates that all nodes have the taint dedicated=gpu.\nThe Pod does not have a matching toleration, so the scheduler cannot place it on any node.\nTo resolve this, add a toleration to the Pod that matches the dedicated=gpu taint.",
+                "The error indicates that all Nodes have a taint dedicated=gpu.\nThe Pod does not have a matching toleration, so the scheduler cannot place it on any Node.\nTo fix the issue, add a toleration to the Pod that matches the dedicated=gpu taint, allowing the Pod to be scheduled on those Nodes.",
             },
             {
               q: "A StatefulSet with 3 replicas is running in the cluster.\nPod-0 is not Ready, and Pod-1 remains in Pending state.\n\nWhat is the most likely reason?",
+              tags: ["statefulset-ordered"],
               options: [
               "The PVC for Pod-1 is full and no additional storage can be allocated",
               "The Namespace quota has been reached and no new Pods can be created",
@@ -698,7 +702,7 @@ export const TOPICS = [
               hint: "Think about what prevents the Scheduler from placing the Pod.",
               answer: 3,
               explanation:
-                "StatefulSet uses OrderedReady: Pod-0 must be Ready before Pod-1 is created.\nFix Pod-0 to become Ready, or set podManagementPolicy: Parallel.\n• PVC: Pod-1 was never created. • Quota: Pod-0 wouldn't exist either. • imagePullSecret: would cause ImagePullBackOff.\nDefault StatefulSet creates Pods sequentially. A stuck Pod blocks all subsequent ones.",
+                "StatefulSet creates Pods sequentially using the OrderedReady policy.\nA new Pod is created only after the previous Pod becomes Ready.\nIn this case Pod-0 is not Ready, so the StatefulSet does not create Pod-1,\nwhich explains why Pod-1 remains Pending.",
             },
             {
               q: "A rolling update is stuck.\n\nCommand:\n\n```\nkubectl rollout status deployment/my-app\n```\n\nOutput:\n\n```\nWaiting for rollout to finish:\n3 out of 5 new replicas have been updated\n```\n\nConfig: maxUnavailable: 0\n\nWhat is the cause?",
@@ -711,7 +715,7 @@ export const TOPICS = [
               hint: "Think about what the command does behind the scenes.",
               answer: 1,
               explanation:
-                "maxUnavailable:0 prevents removing old Pods until new ones pass readiness.\nNew Pods fail readiness → rollout stalls. Check `kubectl logs` on new Pods.\nmaxUnavailable:0 = safe but readiness failure = permanent stall.",
+                "maxUnavailable: 0 means no Pods are allowed to be unavailable during the rolling update.\nIf the new Pods fail the readiness probe,\nthey remain Not Ready, so Kubernetes cannot terminate the old Pods.\nAs a result, the rollout becomes stuck until the new Pods become Ready.",
             },
             {
               q: "A Deployment does not manage its Pods.\n\nCommand:\n\n```\nkubectl get pods --show-labels\n```\n\nOutput:\n\n```\napp=backend-v2\n```\n\nDeployment spec:\n\n```yaml\nselector:\n  matchLabels:\n    app: backend\n```\n\nWhat is wrong?",
@@ -739,8 +743,8 @@ export const TOPICS = [
     descriptionEn: "Services · Ingress · DNS · NetworkPolicy",
     levels: {
       easy: {
-        theory: "Services מספקים כתובת IP יציבה לגישה ל-Pods.\n🔹 ClusterIP:\u200E גישה פנימית בלבד (ברירת מחדל)\n🔹 NodePort:\u200E חשיפה על port בכל Node\n🔹 LoadBalancer:\u200E IP חיצוני ב-cloud\n🔹 Service מוצא Pods לפי labels ו-selector\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n - port: 80\n    targetPort: 8080",
-        theoryEn: "Services\n🔹 Service - provides a stable IP for accessing Pods, selected by label matching.\n🔹 ClusterIP - internal-only access within the cluster (default type).\n🔹 NodePort - exposes the Service on a static port on every Node.\n🔹 LoadBalancer - provisions an external IP through the cloud provider.\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n - port: 80\n    targetPort: 8080",
+        theory: "Services מספקים כתובת IP יציבה לגישה ל-Pods.\n🔹 ClusterIP:\u200E גישה פנימית בלבד (ברירת מחדל)\n🔹 NodePort:\u200E חשיפה על port בכל Node\n🔹 LoadBalancer:\u200E IP חיצוני ב-cloud\n🔹 Service מוצא Pods לפי labels ו-selector\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n    - port: 80\n      targetPort: 8080",
+        theoryEn: "Services\n🔹 Service - provides a stable IP for accessing Pods, selected by label matching.\n🔹 ClusterIP - internal-only access within the cluster (default type).\n🔹 NodePort - exposes the Service on a static port on every Node.\n🔹 LoadBalancer - provisions an external IP through the cloud provider.\nCODE:\napiVersion: v1\nkind: Service\nspec:\n  selector:\n    app: my-app\n  ports:\n    - port: 80\n      targetPort: 8080",
         questions: [
             {
               q: "למה צריך Service?",
@@ -985,7 +989,7 @@ export const TOPICS = [
               hint: "חשבו על תרגום שמות לכתובות בתוך ה-Cluster.",
               answer: 2,
               explanation:
-                "FQDN מלא: service.namespace.svc.cluster.local.\nCoreDNS מפנה שמות אלו ל-ClusterIP. באותו Namespace. שם קצר מספיק.\napi.prod עובד מ-Namespace אחר, אבל api.prod.svc.cluster.local הוא ה-FQDN.",
+                "ה-FQDN של Service ב-\u2066prod\u2069 namespace הוא:\n\u2066api.prod.svc.cluster.local\u2069.\nל-\u2066CoreDNS\u2069 יש רשומות אוטומטיות ל-\u2066ClusterIP\u2069 של כל Service, בתוך כל Namespace.\nה-\u2066DNS name\u2069 הוא הכתובת שיכולה להתעדכן בתוך כל namespace.",
             },
             {
               q: "מה היתרון של Ingress על פני LoadBalancer?",
@@ -999,7 +1003,7 @@ export const TOPICS = [
               hint: "חשבו על ניתוב בקשות מבחוץ לשירותים פנימיים.",
               answer: 2,
               explanation:
-                "Ingress מנהל ניתוב HTTP/S חכם (לפי host/path) דרך כניסה אחת.\nבמקום LoadBalancer נפרד לכל Service, Ingress מנתב מ-IP אחד.\nתומך ב-TLS termination במקום אחד. חוסך עלויות cloud.",
+                "\u2066Ingress\u2069 מספק נקודת כניסה אחת ליישומים עם \u2066load balancing\u2069 בין Services.\nהוא מחבר \u2066host/path\u2069 ל-Service שמפנה ל-Pod.\nבמקום שכל Service ידרוש \u2066Load Balancer\u2069 נפרד, \u2066Ingress\u2069 מפחית את הצורך ב-LBs נפרדים.\nהוא גם תומך ב-\u2066TLS termination\u2069 וב-routing לפי \u2066host/path\u2069 למספר Services.",
             },
             {
               q: "כיצד מגדירים TLS ב-Ingress?",
@@ -1096,7 +1100,7 @@ export const TOPICS = [
               hint: "Think about name-to-address translation inside the Cluster.",
               answer: 2,
               explanation:
-                "Full FQDN: service.namespace.svc.cluster.local.\nCoreDNS resolves this to ClusterIP. Same Namespace → short name works.\nCross-Namespace → use api.prod or full FQDN api.prod.svc.cluster.local.",
+                "The FQDN of the Service in the prod namespace is:\napi.prod.svc.cluster.local.\nCoreDNS automatically creates records for the ClusterIP of each Service within each Namespace.\nThe DNS name resolves per Namespace, so the address can vary depending on the Namespace.",
             },
             {
               q: "What is the advantage of Ingress over LoadBalancer?",
@@ -1110,7 +1114,7 @@ export const TOPICS = [
               hint: "Think about routing external requests to internal services.",
               answer: 0,
               explanation:
-                "Ingress provides one entry point for multiple Services instead of a LoadBalancer per Service.\nRoutes HTTP/S by path (/api) or hostname (api.example.com) from a single IP.\nSaves cloud LB costs and simplifies DNS management.",
+                "Ingress provides a single entry point with load balancing between Services.\nIt maps host/path to a Service that forwards traffic to a Pod.\nInstead of requiring a Load Balancer for each Service, Ingress reduces the need for separate LBs.\nIt also supports TLS termination and routing by host/path to multiple Services.",
             },
             {
               q: "How do you configure TLS in an Ingress?",
@@ -1197,8 +1201,8 @@ export const TOPICS = [
         ],
       },
       hard: {
-        theory: "NetworkPolicy, kube-proxy ו-debug.\n🔹 ברירת מחדל: allow-all בין כל ה-Pods\n🔹 NetworkPolicy:\u200E דורש CNI תומך (Calico, Cilium). חוסם DNS? פתח port 53 ב-egress\n🔹 ipBlock:\u200E מגביל egress ל-CIDR ספציפי (לדוגמה 0.0.0.0/0 לאינטרנט)\n🔹 `IPVS` vs `iptables` - IPVS משתמש ב-hash tables עם O(1), iptables ב-chains עם O(n)\n🔹 Labels:\u200E case-sensitive. app: App ≠ app: app = endpoints ריקים\n🔹 Service FQDN:\u200E service.namespace.svc.cluster.local (חסר .svc = כשל DNS)\n🔹 `Ingress 503` - הודעת `endpoints not found` מסמנת שה-selector של ה-Service לא תואם Pods\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
-        theoryEn: "NetworkPolicy, kube-proxy, and Debugging\n🔹 Default - all Pods can reach all Pods (allow-all) without NetworkPolicy.\n🔹 NetworkPolicy - requires a CNI plugin (Calico, Cilium). Blocking DNS? Open port 53 in egress.\n🔹 ipBlock - restricts egress to specific CIDRs (e.g. 0.0.0.0/0 for internet access).\n🔹 IPVS vs iptables - IPVS uses hash tables (O(1) lookup), iptables uses chains (O(n)).\n🔹 Labels are case-sensitive - app: App ≠ app: app, causing empty Endpoints.\n🔹 Service FQDN - service.namespace.svc.cluster.local (missing .svc = DNS failure).\n🔹 Ingress 503 - \"endpoints not found\" means the backend Service selector doesn't match any Pods.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n  - ports:\n    - port: 53\n      protocol: UDP",
+        theory: "NetworkPolicy, kube-proxy ו-debug.\n🔹 ברירת מחדל: allow-all בין כל ה-Pods\n🔹 NetworkPolicy:\u200E דורש CNI תומך (Calico, Cilium). חוסם DNS? פתח port 53 ב-egress\n🔹 ipBlock:\u200E מגביל egress ל-CIDR ספציפי (לדוגמה 0.0.0.0/0 לאינטרנט)\n🔹 `IPVS` vs `iptables` - IPVS משתמש ב-hash tables עם O(1), iptables ב-chains עם O(n)\n🔹 Labels:\u200E case-sensitive. app: App ≠ app: app = endpoints ריקים\n🔹 Service FQDN:\u200E service.namespace.svc.cluster.local (חסר .svc = כשל DNS)\n🔹 `Ingress 503` - הודעת `endpoints not found` מסמנת שה-selector של ה-Service לא תואם Pods\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n    - ports:\n        - port: 53\n          protocol: UDP",
+        theoryEn: "NetworkPolicy, kube-proxy, and Debugging\n🔹 Default - all Pods can reach all Pods (allow-all) without NetworkPolicy.\n🔹 NetworkPolicy - requires a CNI plugin (Calico, Cilium). Blocking DNS? Open port 53 in egress.\n🔹 ipBlock - restricts egress to specific CIDRs (e.g. 0.0.0.0/0 for internet access).\n🔹 IPVS vs iptables - IPVS uses hash tables (O(1) lookup), iptables uses chains (O(n)).\n🔹 Labels are case-sensitive - app: App ≠ app: app, causing empty Endpoints.\n🔹 Service FQDN - service.namespace.svc.cluster.local (missing .svc = DNS failure).\n🔹 Ingress 503 - \"endpoints not found\" means the backend Service selector doesn't match any Pods.\nCODE:\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nspec:\n  egress:\n    - ports:\n        - port: 53\n          protocol: UDP",
         questions: [
             {
               q: "מה קורה ללא \u2066NetworkPolicy\u2069?",
@@ -1225,10 +1229,11 @@ export const TOPICS = [
               hint: "חשבו על כללי תעבורה ברמת הרשת בתוך Cluster.",
               answer: 2,
               explanation:
-                "\u2066NetworkPolicy\u2069 הוא משאב שמגדיר חוקים לתעבורה בין Pods.\nאבל Kubernetes עצמו רק מספק את ה-API וה-spec להגדרה של החוקים.\nהאכיפה בפועל מתבצעת על ידי \u2066CNI plugin\u2069 (\u2066Container Network Interface\u2069, רכיב רשת שמחבר את ה-Pods לרשת).\nPlugins כמו Calico, Cilium או \u2066Weave Net\u2069 יודעים ליישם את חוקי ה-\u2066NetworkPolicy\u2069 ברמת הרשת.\nלעומת זאת, plugins כמו Flannel או kubenet לא תומכים באכיפה של \u2066NetworkPolicy\u2069.\nבמקרים כאלה אפשר להגדיר \u2066NetworkPolicy\u2069, אבל בפועל היא לא תשפיע על התעבורה בין ה-Pods.\nלכן כדי ש-\u2066NetworkPolicy\u2069 יעבוד בפועל, חייבים להשתמש ב-\u2066CNI plugin\u2069 שתומך בכך.",
+                "\u2066NetworkPolicy\u2069 הוא מנגנון לניהול גישה בין Pods בקוברנטיס.\nכדי להפעיל אותו, יש להשתמש ב-\u2066CNI plugin\u2069 כמו \u2066Calico\u2069 או \u2066Cilium\u2069.\nה-\u2066CNI plugin\u2069 אחראי ליישם את החוקים של ה-\u2066NetworkPolicy\u2069 ולשלוט על הגישה בין Pods.\nאם אין \u2066CNI plugin\u2069 מותקן, לא ניתן להשתמש ב-\u2066NetworkPolicy\u2069.",
             },
             {
               q: "מה היתרון של IPVS על iptables ב-kube-proxy?",
+              tags: ["ipvs-vs-iptables"],
               options: [
               "יותר מאובטח כי הוא מצפין את כל התנועה ברמת kernel",
               "זול יותר כי הוא דורש פחות משאבי CPU מ-Node",
@@ -1238,7 +1243,7 @@ export const TOPICS = [
               hint: "חשבו על הקצאת אחסון שנשמר מעבר לחיי Pod.",
               answer: 2,
               explanation:
-                "kube-proxy מנתב תעבורה ל-Services בתוך הקלסטר באמצעות מנגנוני הרשת של לינוקס.\nב-iptables כל Service מיושם כשרשרת חוקים, ולכן החיפוש אחרי יעד נעשה בצורה סדרתית ככל שמספר החוקים גדל.\nלעומת זאת IPVS (\u2066IP Virtual Server\u2069, מנגנון \u2066load balancing\u2069 בתוך הקרנל של לינוקס) משתמש ב-\u2066hash tables\u2069 כדי למצוא את היעד במהירות.\nלכן בקלסטרים גדולים IPVS בדרך כלל מספק ביצועים וסקיילביליות טובים יותר.",
+                "\u2066kube-proxy\u2069 מבצע \u2066load balancing\u2069 בין Pods באמצעות \u2066iptables\u2069 או \u2066IPVS\u2069.\n\u2066iptables\u2069 פשוט יותר, בעוד \u2066IPVS\u2069 מציע \u2066load balancing\u2069 מתקדם יותר עם ביצועים טובים יותר.\n\u2066Hashing\u2069 ב-\u2066IPVS\u2069 מאזן את העומס בין Pods ומפחית את העומס על כל Pod.",
             },
             {
               q: "נניח שיש Service בשם `app-svc`.\n\nהפקודה `kubectl get endpoints` מחזירה:\n\n```\nNAME      ENDPOINTS\napp-svc   <none>\n```\n\nקיים Pod עם label:\n\n```yaml\napp: App\n```\n\nוב-Service מוגדר selector:\n\n```yaml\nspec:\n  selector:\n    app: app\n```\n\nמדוע ה-Service לא מנתב תעבורה ל-Pods?",
@@ -1285,12 +1290,12 @@ export const TOPICS = [
               "api-svc.backend.svc.cluster.local",
               "api-svc.svc.cluster.local",
               "api-svc.backend.cluster.local",
-              "api-svc.backend הוא ה-FQDN המלא",
+              "api-svc.backend הוא ה-FQDN של ה-Service",
 ],
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
               answer: 0,
               explanation:
-                "FQDN מלא: service.namespace.svc.cluster.local.\napi-svc.backend.cluster.local חסר .svc ולא יפעל.\napi-svc.backend עובד בזכות search domains אבל אינו FQDN.",
+                "ה-FQDN של ה-Service ב-namespace \u2066backend\u2069 הוא:\n\u2066api-svc.backend.svc.cluster.local\u2069\nהבעיה בשגיאה כאן היא שה-FQDN לא כולל את ה-\u2066svc\u2069 בתוך ה-namespace.\nה-FQDN המלא צריך לכלול את \u2066svc\u2069 בין שם ה-Service לבין ה-\u2066cluster.local\u2069.\nה-FQDN הנכון הוא:\n\u2066api-svc.backend.svc.cluster.local\u2069.",
             },
             {
               q: "ה-Pod לא מצליח להגיע לאינטרנט.\n\nהרצת:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nתוצאה: timeout\n\nהגדרת NetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nמה חסר?",
@@ -1332,10 +1337,11 @@ export const TOPICS = [
               hint: "Think about network-level traffic rules inside the Cluster.",
               answer: 1,
               explanation:
-                "NetworkPolicy is a Kubernetes resource that defines traffic rules between Pods.\nHowever, Kubernetes itself only provides the API and specification for defining these rules.\nThe actual enforcement is performed by the CNI plugin (Container Network Interface, the networking component that connects Pods to the cluster network).\nPlugins such as Calico, Cilium, or Weave Net implement and enforce NetworkPolicy rules at the network level.\nIn contrast, plugins like Flannel or kubenet do not enforce NetworkPolicy.\nIn those cases, a NetworkPolicy object can exist in the cluster but it will have no effect on Pod traffic.\nTherefore, for NetworkPolicy to actually work, the cluster must use a CNI plugin that supports NetworkPolicy enforcement.",
+                "NetworkPolicy is a mechanism for controlling access between Pods in Kubernetes.\nTo enable it, you need a CNI plugin like Calico or Cilium.\nThe CNI plugin is responsible for enforcing the NetworkPolicy rules and controlling access between Pods.\nWithout a CNI plugin, NetworkPolicy cannot be used.",
             },
             {
               q: "What is the advantage of IPVS over iptables in kube-proxy?",
+              tags: ["ipvs-vs-iptables"],
               options: [
               "Cheaper because it requires less CPU from Nodes to maintain rules",
               "Simpler to configure and requires no extra kube-proxy configuration",
@@ -1345,7 +1351,7 @@ export const TOPICS = [
               hint: "Think about storage that persists beyond a Pod's lifetime.",
               answer: 3,
               explanation:
-                "kube-proxy routes traffic to Services inside the cluster using Linux networking mechanisms.\nWith iptables, each Service becomes a chain of rules, so packets are matched sequentially as the rule set grows.\nIn contrast, IPVS (IP Virtual Server, a load balancing subsystem in the Linux kernel) uses hash tables to quickly locate the correct backend.\nBecause of this, IPVS usually provides better performance and scalability in large clusters.",
+                "kube-proxy performs load balancing between Pods using iptables or IPVS.\niptables is simpler, while IPVS offers more advanced load balancing with better performance.\nHashing in IPVS balances traffic across Pods, reducing load on each Pod.",
             },
             {
               q: "Given a Service named `app-svc`.\n\nRunning `kubectl get endpoints` returns:\n\n```\nNAME      ENDPOINTS\napp-svc   <none>\n```\n\nThe Pod has this label:\n\n```yaml\napp: App\n```\n\nThe Service selector is:\n\n```yaml\nspec:\n  selector:\n    app: app\n```\n\nWhy is the Service not routing traffic to the Pods?",
@@ -1392,12 +1398,12 @@ export const TOPICS = [
               "api-svc.backend.svc.cluster.local",
               "api-svc.svc.cluster.local",
               "api-svc.backend.cluster.local",
-              "api-svc.backend is the full FQDN",
+              "api-svc.backend is the FQDN of the Service",
 ],
               hint: "Think carefully about what each option describes.",
               answer: 0,
               explanation:
-                "Full FQDN: service.namespace.svc.cluster.local.\napi-svc.backend.cluster.local is missing .svc and won't resolve.\napi-svc.backend works via search domains but is not a FQDN.",
+                "The FQDN of the Service in the backend namespace is:\napi-svc.backend.svc.cluster.local\nThe issue here is that the FQDN is missing the svc between the Service name and the cluster.local.\nThe correct FQDN should be:\napi-svc.backend.svc.cluster.local.",
             },
             {
               q: "A Pod cannot reach the internet.\n\nCommand:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nResult: timeout\n\nNetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nWhat is missing?",
@@ -1510,7 +1516,7 @@ export const TOPICS = [
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
               answer: 2,
               explanation:
-                "Static Pod הוא Pod שמנוהל ישירות ע\"י kubelet, ולא נוצר דרך ה-\u2066API Server\u2069 או ה-Scheduler.\nה-manifest של ה-Pod נשמר כקובץ על ה-Node (בדרך כלל בתיקייה /etc/kubernetes/manifests/), וה-kubelet טוען אותו ומריץ את ה-Pod באופן אוטומטי.\nלאחר שה-Pod נוצר, kubelet עדיין מדווח עליו ל-\u2066API Server\u2069, ולכן ניתן לראות אותו עם `kubectl get pods`.\nרכיבי \u2066Control Plane\u2069 רבים בקלסטר שהוקם עם kubeadm (כמו etcd, \u2066API Server\u2069 ו-Scheduler) רצים כ-\u2066Static Pods\u2069.",
+                "\u2066Static Pod\u2069 מנוהל ישירות על ידי ה-\u2066kubelet\u2069, ולא דרך ה-\u2066API Server\u2069 או ה-\u2066Scheduler\u2069.\nה-\u2066Static Pod\u2069 יוגדר בקובץ manifest שנמצא ב-Node.\nה-\u2066kubelet\u2069 קורא את הקובץ מתוך \u2066/etc/kubernetes/manifests\u2069 ומנהל את ה-Pod ישירות.",
             },
             {
               q: "קלסטר חדש הותקן עם kubeadm.\n\nהרצת:\n\n```\nkubectl get nodes\n```\n\nפלט:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nמה הסיבה הסבירה ביותר?",
@@ -1624,7 +1630,7 @@ export const TOPICS = [
               hint: "Think carefully about what each option describes.",
               answer: 3,
               explanation:
-                "A Static Pod is managed directly by the kubelet, not through the API Server.\nIts manifest lives on the Node (usually /etc/kubernetes/manifests/).\nControl Plane components (API Server, etcd, Scheduler) are Static Pods in a kubeadm קלסטר.",
+                "A Static Pod is managed directly by the kubelet, not via the API Server or Scheduler.\nThe Static Pod is defined in a manifest file on the Node.\nThe kubelet reads the file from /etc/kubernetes/manifests and manages the Pod directly.",
             },
             {
               q: "A new cluster was just bootstrapped with kubeadm.\n\nCommand:\n\n```\nkubectl get nodes\n```\n\nOutput:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nWhat is the most likely cause?",
@@ -1758,7 +1764,6 @@ export const TOPICS = [
             },
             {
               q: "מה הפקודה לשחזור etcd מ-snapshot?",
-              tags: ["etcd-restore"],
               options: [
               "kubeadm etcd restore --from /tmp/etcd-backup.db",
               "etcdctl snapshot restore /tmp/etcd-backup.db",
@@ -1870,7 +1875,6 @@ export const TOPICS = [
             },
             {
               q: "What is the command to restore etcd from a snapshot?",
-              tags: ["etcd-restore"],
               options: [
               "kubeadm etcd restore --from /tmp/etcd-backup.db",
               "kubectl apply -f /tmp/etcd-backup.db",
@@ -1900,35 +1904,35 @@ export const TOPICS = [
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
               answer: 2,
               explanation:
-                "שדרוג Worker Node:\n1. `kubectl drain <node> --ignore-daemonsets` - פינוי Pods\n2. שדרוג kubeadm package\n3. `kubeadm upgrade node` - עדכון node config\n4. שדרוג חבילות kubelet ו-kubectl\n5. `systemctl restart kubelet`\n6. `kubectl uncordon <node>` - החזרת ה-Node לשירות",
+                "שדרוג Worker Node:\n1. **kubectl drain <node> --ignore-daemonsets** - פינוי Pods\n2. שדרוג kubeadm package\n3. **kubeadm upgrade node** - עדכון node config\n4. שדרוג חבילות kubelet ו-kubectl\n5. **systemctl restart kubelet**\n6. **kubectl uncordon <node>** - החזרת ה-Node לשירות",
             },
             {
-              q: "הפקודה `kubectl get nodes` מציגה Node בסטטוס NotReady.\n\nSSH ל-Node הצליח.\n\nמה שתי הפעולות הראשונות?",
+              q: "הפקודה kubectl get nodes מציגה Node בסטטוס NotReady.\n\nSSH ל-Node הצליח.\n\nמה שתי הפעולות הראשונות לבדיקה?",
               tags: ["kubelet-troubleshooting"],
               options: [
-              "`docker ps` לבדיקת containers ו-`kubectl describe node` לבדיקת conditions",
-              "`systemctl status kubelet` ו-`journalctl -u kubelet`",
-              "`kubectl logs kubelet` ו-`kubectl get events` ב-namespace kube-system",
-              "`reboot` של ה-Node ואז `kubectl uncordon` להחזרה לשירות",
+              "לבדוק את סטטוס ה-kubelet ואת הלוגים שלו על ה-Node",
+              "להריץ reboot ל-Node ואז kubectl uncordon להחזרתו לשירות",
+              "להריץ docker ps לבדיקת containers ו-kubectl describe node לבדיקת conditions",
+              "לבדוק את ה-ConfigMap של kubelet ב-kube-system ולהחיל מחדש",
 ],
               hint: "חשבו על מה גורם ל-Node להפסיק לקבל עומסים.",
-              answer: 1,
-              explanation:
-                "בדיקת Node NotReady:\n1. `systemctl status kubelet` - האם kubelet רץ?\n2. `journalctl -u kubelet` - בדיקת לוגים לשגיאות\nסיבות נפוצות: certificate expired, container runtime לא פעיל, חוסר disk space.",
-            },
-            {
-              q: "`kubectl get pods -n kube-system` מציג ש-kube-scheduler לא רץ.\n\nPods חדשים נשארים ב-Pending ללא events.\n\nמה בודקים?",
-              tags: ["controlplane-troubleshooting"],
-              options: [
-              "בודקים את ה-manifest file של kube-scheduler ב-/etc/kubernetes/manifests/",
-              "בודקים את ה-Deployment של kube-scheduler ב-namespace kube-system ומריצים rollout",
-              "בודקים לוגים של kubelet עם `journalctl -u kubelet` לחיפוש שגיאות scheduler",
-              "בודקים את ה-ConfigMap של kube-scheduler ב-kube-system ומחילים מחדש",
-],
-              hint: "חשבו על מה מונע מה-Scheduler לשבץ את ה-Pod.",
               answer: 0,
               explanation:
-                "kube-scheduler הוא \u2066Static Pod\u2069 בקלסטר kubeadm.\nה-manifest נמצא ב-\u2066/etc/kubernetes/manifests/kube-scheduler.yaml\u2069.\nאם הקובץ פגום או חסר, kubelet לא יפעיל את ה-scheduler.\nלאבחון, בודקים את תוכן ה-manifest ואת סטטוס ה-containers עם `crictl ps`.",
+                "אם ה-Node במצב \u2066NotReady\u2069, בצע את הצעדים הבאים:\nבדוק את הסטטוס של ה-\u2066kubelet\u2069:\n\u2066systemctl status kubelet\u2069\nבדוק את הלוגים של ה-\u2066kubelet\u2069:\n\u2066journalctl -u kubelet\u2069\nאם יש בעיית \u2066disk space\u2069 או \u2066container runtime\u2069, ודא שה-disk לא מלא ושה-runtime פועל כראוי.\nאם הבעיה ב-\u2066certificate expired\u2069, תקן אותה.",
+            },
+            {
+              q: "ה-kube-scheduler לא רץ בקלסטר.\nPods חדשים נשארים במצב Pending ואין scheduling events.\n\nמה הדבר הראשון שצריך לבדוק?",
+              tags: ["controlplane-troubleshooting"],
+              options: [
+              "לבדוק את קובץ ה-manifest של kube-scheduler בתיקיית /etc/kubernetes/manifests/",
+              "לבדוק את ה-Deployment של kube-scheduler ב-kube-system ולהריץ rollout restart",
+              "לבדוק את הלוגים של kubelet עם journalctl -u kubelet לחיפוש שגיאות",
+              "לבדוק את ה-ConfigMap של kube-scheduler ב-kube-system ולהחיל מחדש",
+],
+              hint: "חשבו על איך kube-scheduler רץ בקלסטר שהותקן עם kubeadm.",
+              answer: 0,
+              explanation:
+                "בקלסטר שהותקן עם \u2066kubeadm\u2069, ה-\u2066kube-scheduler\u2069 רץ כ-\u2066Static Pod\u2069.\nה-\u2066kubelet\u2069 קורא את קובץ ה-manifest מ-\u2066/etc/kubernetes/manifests/kube-scheduler.yaml\u2069 ומפעיל אותו.\nאם הקובץ חסר, פגום, או מכיל שגיאת תחביר, ה-\u2066kubelet\u2069 לא יצליח להפעיל את ה-\u2066scheduler\u2069.\nלכן הצעד הראשון הוא לבדוק שהקובץ קיים ותקין.",
             },
             {
               q: "ה-join token פג תוקף.\n\nWorker Node חדש צריך להצטרף לקלסטר.\n\nמה הפקודה ליצירת token חדש?",
@@ -1984,7 +1988,7 @@ export const TOPICS = [
               hint: "חשבו על מאגר המידע של ה-Cluster.",
               answer: 1,
               explanation:
-                "\u2066Stacked etcd\u2069 - etcd רץ על אותם Nodes כמו ה-\u2066Control Plane\u2069. פשוט להקמה, אבל כשל של Node פוגע גם ב-etcd.\n\u2066External etcd\u2069 - etcd רץ על Nodes ייעודיים ונפרדים מה-\u2066Control Plane\u2069. עמיד יותר כי כשל של \u2066Control Plane Node\u2069 לא משפיע על etcd.\n\u2066Stacked\u2069 = הקמה פשוטה | \u2066External\u2069 = עמידות גבוהה",
+                "ההבדל בין \u2066Stacked\u2069 ל-\u2066External etcd\u2069 בקוברנטיס:\nב-\u2066Stacked etcd\u2069, ה-etcd רץ יחד עם ה-\u2066Control Plane\u2069 (Node).\nב-\u2066External etcd\u2069, ה-etcd רץ בנפרד מ-\u2066Control Plane\u2069.\n\u2066External etcd\u2069 מציע שרידות גבוהה יותר כי etcd מופרד מ-\u2066Control Plane\u2069.\nב-\u2066Stacked etcd\u2069, אם ה-Node נופל, גם ה-\u2066Control Plane\u2069 יפגע.",
             },
             {
               q: "הרצת:\n\n```\nkubeadm certs check-expiration\n```\n\nפלט:\n\n```\nCERTIFICATE                EXPIRES                  RESIDUAL TIME\napiserver                  Jan 15, 2025 10:00 UTC   <invalid>\napiserver-kubelet-client   Jan 15, 2025 10:00 UTC   <invalid>\nfront-proxy-client         Jan 15, 2025 10:00 UTC   <invalid>\n```\n\nמה הפתרון?",
@@ -2014,35 +2018,35 @@ export const TOPICS = [
               hint: "Think carefully about what each option describes.",
               answer: 3,
               explanation:
-                "Worker Node upgrade:\n1. `kubectl drain <node> --ignore-daemonsets` - evict Pods\n2. upgrade kubeadm package\n3. `kubeadm upgrade node` - update node config\n4. upgrade kubelet and kubectl packages\n5. `systemctl restart kubelet`\n6. `kubectl uncordon <node>` - return Node to service",
+                "Worker Node upgrade:\n1. **kubectl drain <node> --ignore-daemonsets** - evict Pods\n2. upgrade kubeadm package\n3. **kubeadm upgrade node** - update node config\n4. upgrade kubelet and kubectl packages\n5. **systemctl restart kubelet**\n6. **kubectl uncordon <node>** - return Node to service",
             },
             {
-              q: "`kubectl get nodes` shows a Node in NotReady status.\n\nSSH to the Node succeeded.\n\nWhat are your first two actions?",
+              q: "kubectl get nodes shows a Node in NotReady status.\n\nSSH to the Node succeeded.\n\nWhat are the first two things to check?",
               tags: ["kubelet-troubleshooting"],
               options: [
-              "`systemctl status kubelet` and `journalctl -u kubelet`",
-              "`kubectl logs kubelet` and `kubectl get events --all`",
-              "`docker ps` and `kubectl describe node <node-name>`",
-              "`reboot` the Node and then `kubectl uncordon <node>`",
+              "Check the kubelet status and its logs on the Node",
+              "Reboot the Node and then run kubectl uncordon to return it to service",
+              "Run docker ps to check containers and kubectl describe node to check conditions",
+              "Check the kubelet ConfigMap in kube-system and reapply it",
 ],
               hint: "Think about what causes a Node to stop accepting workloads.",
               answer: 0,
               explanation:
-                "Investigating a NotReady Node:\n1. `systemctl status kubelet` - is the kubelet running?\n2. `journalctl -u kubelet` - check logs for errors\nCommon causes: expired certificates, container runtime not running, disk pressure.",
+                "If the Node is in NotReady, follow these steps:\nCheck the kubelet status:\nsystemctl status kubelet\nCheck the kubelet logs:\njournalctl -u kubelet\nIf there is an issue with disk space or container runtime, ensure the disk is not full and the runtime is working.\nIf the issue is an expired certificate, fix it.",
             },
             {
-              q: "`kubectl get pods -n kube-system` shows kube-scheduler is not running.\n\nNew Pods remain Pending with no scheduling events.\n\nWhat do you check?",
+              q: "The kube-scheduler is not running in the cluster.\nNew Pods remain Pending with no scheduling events.\n\nWhat is the first thing to check?",
               tags: ["controlplane-troubleshooting"],
               options: [
-              "Check the Deployment of kube-scheduler in kube-system",
-              "Check kubelet logs with `journalctl -u kubelet` for scheduler errors",
-              "Check the manifest file at /etc/kubernetes/manifests/",
-              "Check the ConfigMap for kube-scheduler in kube-system",
+              "Check the kube-scheduler manifest file in /etc/kubernetes/manifests/",
+              "Check the Deployment of kube-scheduler in kube-system and run rollout restart",
+              "Check kubelet logs with journalctl -u kubelet for scheduler errors",
+              "Check the ConfigMap for kube-scheduler in kube-system and reapply",
 ],
-              hint: "Think about what prevents the Scheduler from placing the Pod.",
-              answer: 2,
+              hint: "Think about how kube-scheduler runs in a kubeadm cluster.",
+              answer: 0,
               explanation:
-                "kube-scheduler is a Static Pod in a kubeadm קלסטר.\nIts manifest lives at /etc/kubernetes/manifests/kube-scheduler.yaml.\nIf the file is corrupted or missing, the kubelet will not start the scheduler.\nCheck: `cat /etc/kubernetes/manifests/kube-scheduler.yaml` and `crictl ps`.",
+                "In a kubeadm cluster, kube-scheduler runs as a Static Pod.\nThe kubelet reads the manifest file from /etc/kubernetes/manifests/kube-scheduler.yaml and starts it.\nIf the file is missing, corrupted, or contains a syntax error, the kubelet cannot start the scheduler.\nThe first step is to verify that the file exists and is valid.",
             },
             {
               q: "The join token has expired.\n\nA new Worker Node needs to join the cluster.\n\nWhat command creates a new token?",
@@ -2098,7 +2102,7 @@ export const TOPICS = [
               hint: "Think about the Cluster's data store.",
               answer: 1,
               explanation:
-                "Stacked etcd - etcd runs on the same Nodes as the Control Plane. Simpler to set up, but a Node failure takes down both Control Plane and etcd.\nExternal etcd - etcd runs on separate, dedicated Nodes. More resilient because a Control Plane failure does not affect etcd.\nStacked = simpler setup | External = higher resilience",
+                "Difference between Stacked and External etcd in Kubernetes:\nIn Stacked etcd, etcd runs on the Control Plane Node.\nIn External etcd, etcd runs separately from the Control Plane.\nExternal etcd offers higher fault tolerance as etcd is separate from the Control Plane.\nIn Stacked etcd, if the Node fails, the entire Control Plane is impacted.",
             },
             {
               q: "Command:\n\n```\nkubeadm certs check-expiration\n```\n\nOutput:\n\n```\nCERTIFICATE                EXPIRES                  RESIDUAL TIME\napiserver                  Jan 15, 2025 10:00 UTC   <invalid>\napiserver-kubelet-client   Jan 15, 2025 10:00 UTC   <invalid>\nfront-proxy-client         Jan 15, 2025 10:00 UTC   <invalid>\n```\n\nWhat is the fix?",
@@ -2451,7 +2455,7 @@ export const TOPICS = [
               q: "איך מושכים Secrets מ-AWS Secrets Manager לתוך Kubernetes?",
               tags: ["external-secrets"],
               options: [
-              "SOPS operator - מפענח קבצי YAML מוצפנים ויוצר K8s Secrets",
+              "SOPS operator - מפענח קבצי YAML מוצפנים ויוצר קוברנטיס Secrets",
               "External Secrets Operator - מסנכרן secrets מ-provider חיצוני",
               "Sealed Secrets - מצפין Secrets ושומר אותם ב-Git בצורה בטוחה",
               "Vault Agent Injector - sidecar שמזריק secrets ישירות לתוך ה-Pod",
@@ -2637,7 +2641,7 @@ export const TOPICS = [
               "controller שמנהל Pod autoscaling לפי custom metrics",
               "operator שמנהל certificate lifecycle עבור Ingress resources",
               "admission controller מובנה שמאמת resource quotas לפני יצירה",
-              "Open Policy Agent:\u200E מנגנון policy-as-code לאכיפת כללים ב-K8s",
+              "Open Policy Agent:\u200E מנגנון policy-as-code לאכיפת כללים בקוברנטיס",
 ],
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
               answer: 3,
@@ -3109,10 +3113,10 @@ export const TOPICS = [
               q: "מה אומר PVC בסטטוס Pending?",
               hint: "חשבו למה Kubernetes לא מצליח לספק את בקשת האחסון.",
               options: [
-              "ה-StorageClass מבצע replication ל-Zone משני לפני binding",
-              "ה-PVC ממתין לסיום backup של Volume קיים לפני mount",
-              "PV תואם לא נמצא. בגלל AccessMode שגוי, storage לא מספיק, או StorageClass שגוי",
-              "ה-PVC נמצא בתהליך הצפנה לפני שהוא זמין ל-Pod",
+              "ה-StorageClass מבצע replication ל-Zone משני לפני binding, ולכן ה-PVC ממתין",
+              "ה-PVC ממתין לסיום backup של Volume קיים לפני שניתן לבצע mount חדש",
+              "PV תואם לא נמצא, בגלל AccessMode שגוי, storage לא מספיק, או StorageClass שגוי",
+              "ה-PVC נמצא בתהליך הצפנה ואימות תעודות לפני שהוא זמין ל-Pod",
 ],
               answer: 2,
               explanation:
@@ -3130,7 +3134,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "Kubernetes מחבר בין PVC ל-PV כאשר המאפיינים שלהם תואמים.\nההתאמה מתבצעת לפי:\n\u200F• `storageClassName`\n\u200F• `accessModes`\n\u200F• storage capacity\nבנוסף, גודל ה-PV חייב להיות גדול או שווה לבקשה של ה-PVC.\nכאשר נמצא PV מתאים, Kubernetes יוצר binding בין ה-PVC ל-PV.\nלאחר ה-binding הם נשארים מקושרים עד שאחד מהם נמחק.",
+                "Kubernetes מחבר בין PVC ל-PV כאשר המאפיינים שלהם תואמים.\nההתאמה מתבצעת לפי:\n\u200F• `storageClassName`\n\u200F• `accessModes`\n\u200F• `storage capacity`\nבנוסף, גודל ה-PV חייב להיות גדול או שווה לבקשה של ה-PVC.\nכאשר נמצא PV מתאים, Kubernetes יוצר binding בין ה-PVC ל-PV.\nלאחר ה-binding הם נשארים מקושרים עד שאחד מהם נמחק.",
             },
         ],
         questionsEn: [
@@ -3217,10 +3221,10 @@ export const TOPICS = [
               q: "What does a PVC in Pending status mean?",
               hint: "Think about why Kubernetes cannot fulfill the storage request.",
               options: [
-              "The PVC is being encrypted before it becomes available to a Pod",
-              "The PVC is waiting for an existing Volume backup to complete before mounting",
-              "The StorageClass is replicating to a secondary Zone before binding",
-              "No matching PV found. Due to wrong AccessMode, insufficient storage, or wrong StorageClass",
+              "The PVC is undergoing encryption and certificate validation before it becomes available to a Pod",
+              "The PVC is waiting for an existing Volume backup to complete before a new mount is allowed",
+              "The StorageClass is replicating data to a secondary Zone before binding, so the PVC waits",
+              "No matching PV found, due to wrong AccessMode, insufficient storage, or wrong StorageClass",
 ],
               answer: 3,
               explanation:
@@ -3252,7 +3256,7 @@ export const TOPICS = [
               hint: "חשבו איך ספקי אחסון חיצוניים מתממשקים עם Kubernetes.",
               options: [
               "Cluster Sync Interface:\u200E סטנדרט לסנכרון נתונים בין Clusters",
-              "Container Storage Interface:\u200E סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers ל-K8s",
+              "Container Storage Interface:\u200E סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers לקוברנטיס",
               "Cloud Storage Integration:\u200E שכבת חיבור ל-cloud object storage כמו S3",
               "Container Security Interface:\u200E סטנדרט לסריקת images ואכיפת מדיניות אבטחה",
 ],
@@ -3759,7 +3763,7 @@ export const TOPICS = [
               "Pod מוגדר NotReady",
               "Pod נמחק לצמיתות",
               "Event נרשם בלבד",
-              "K8s ממית ומפעיל מחדש את הקונטיינר",
+              "קוברנטיס ממית ומפעיל מחדש את הקונטיינר",
 ],
               hint: "חשבו על סוגי בדיקות בריאות ומה כל אחת גורמת.",
               answer: 3,
@@ -4418,11 +4422,11 @@ export const TOPICS = [
             options: [
               "הבעיה היא רק בכמות הכתיבות הגבוהה לדיסק",
               "כמות הקריאות נמוכה (\u20665/s\u2069) ומעידה על בעיית ביצועים",
-              "הדיסק תקין - ערכי \u2066%util\u2069 גבוהים רגילים בשרת עמוס",
-              "הדיסק רווי (\u2066%util 99.8%\u2069) עם \u2066await\u2069 גבוה של \u2066250ms\u2069"],
+              "הדיסק תקין - ערכי \u2066%util\u2069 גבוהים זה רגיל בשרת עמוס",
+              "הדיסק רווי \u2066(%util = 99.8%)\u2069 עם \u2066await\u2069 גבוה של \u2066250ms\u2069"],
             hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
             answer: 3,
-            explanation: "\u2066%util\u2069 של \u206699.8%\u2069 אומר שהדיסק עסוק כמעט כל הזמן, כלומר הוא רווי.\n\u2066await\u2069 של \u2066250ms\u2069 אומר שכל פעולת \u2066I/O\u2069 לוקחת רבע שנייה. ל-SSD תקין הערך הוא מתחת ל-\u20661ms\u2069.\nהשילוב של \u2066%util\u2069 גבוה ו-\u2066await\u2069 גבוה מצביע על דיסק שלא מספיק לעמוס.\nהכתיבות (\u2066450/s\u2069, כ-\u206650MB/s\u2069) הן הגורם העיקרי, לא הקריאות (\u20665/s\u2069).\nכל תהליך שניגש לדיסק יואט עד שהעומס יפחת.",
+            explanation: "\u2066%util = 99.8%\u2069 אומר שהדיסק עסוק כמעט כל הזמן, כלומר הוא רווי.\n\u2066await = 250ms\u2069 אומר שכל פעולת \u2066I/O\u2069 לוקחת רבע שנייה. ל-SSD תקין הערך הוא מתחת ל-\u20661ms\u2069.\nהשילוב של \u2066%util\u2069 גבוה ו-\u2066await\u2069 גבוה מצביע על דיסק שלא מספיק לעמוס.\nהכתיבות \u2066(450/s, ~50MB/s)\u2069 הן הגורם העיקרי, לא הקריאות \u2066(5/s)\u2069.\nכל תהליך שניגש לדיסק יואט עד שהעומס יפחת.",
           },
           {
             q: "קונטיינר נהרג באופן בלתי צפוי.\n\nהרצת:\n\n```\ndmesg | tail -20\n```\n\nפלט:\n\n```\n[  512.123] Out of memory: Killed process 4521 (java)\n            total-vm:4048576kB, anon-rss:3145728kB\n```\n\nמה קרה ומה הפתרון?",
@@ -4764,7 +4768,7 @@ export const TOPICS = [
             ],
             hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
             answer: 1,
-            explanation: "העיקרון המרכזי של GitOps הוא ש-Git הוא ה-source of truth היחיד.\nכל שינוי עובר דרך Git, ו-ArgoCD מסנכרן את הקלאסטר בהתאם.\nהקלאסטר עצמו, ArgoCD UI, ו-Helm history הם רק השתקפות של המצב.",
+            explanation: "ה-source of truth של GitOps הוא Git.\nכל שינוי בקלאסטר מתועד ב-Git.\nGit מנהל את הקונפיגורציה ומפקח על הכלים כמו ArgoCD ו־Helm.\nהשינויים תמיד נשמרים ב-Git, מה שמבטיח שקיפות ושחזור קל.",
           },
           {
             q: "מהנדס עשה `kubectl edit deployment` ישירות על הקלאסטר.\nאחרי כמה דקות ArgoCD מציג את האפליקציה כ-OutOfSync.\n\nלמה?",
@@ -4864,7 +4868,7 @@ export const TOPICS = [
             ],
             hint: "Think carefully about what each option describes.",
             answer: 1,
-            explanation: "The core principle of GitOps is that Git is the single source of truth.\nEvery change goes through Git, and ArgoCD syncs the cluster accordingly.\nThe cluster itself, the ArgoCD UI, and Helm history are just reflections of the state.",
+            explanation: "The source of truth in GitOps is Git.\nEvery change in the cluster is documented in Git.\nGit manages the configuration and oversees tools like ArgoCD and Helm.\nChanges are always stored in Git, ensuring transparency and easy recovery.",
           },
           {
             q: "An engineer ran `kubectl edit deployment` directly on the cluster.\nAfter a few minutes ArgoCD shows the application as OutOfSync.\n\nWhy",
@@ -4943,20 +4947,20 @@ export const TOPICS = [
         ],
       },
       medium: {
-        theory: "ArgoCD - הגדרות מתקדמות, Helm ו-sync strategies.\n🔹 Sync Waves:\u200E שליטה בסדר שבו ArgoCD מחיל משאבים (annotations עם sync wave number)\n🔹 Sync Hooks:\u200E Pre/Post sync jobs שרצים לפני או אחרי sync (migrations, tests)\n🔹 Helm עם ArgoCD:\u200E ArgoCD יכול לרנדר Helm charts ישירות ולנהל את ה-values מ-Git\n🔹 Prune:\u200E מחיקת משאבים מהקלאסטר שכבר לא קיימים ב-Git\n🔹 Retry:\u200E הגדרת מספר ניסיונות חוזרים כש-sync נכשל\n🔹 Ignore Differences:\u200E התעלמות מ-fields ספציפיים בהשוואה (למשל replicas שמנוהלים ע\"י HPA)\n🔹 Finalizers:\u200E cascading delete כשמוחקים Application\nCODE:\napiVersion: argoproj.io/v1alpha1\nkind: Application\nspec:\n  syncPolicy:\n    automated:\n      prune: true\n      selfHeal: true\n    retry:\n      limit: 5\n      backoff:\n        duration: 5s\n        factor: 2\n        maxDuration: 3m\n  ignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n    - /spec/replicas",
-        theoryEn: "ArgoCD advanced configuration, Helm, and sync strategies.\n🔹 Sync Waves - control the order in which ArgoCD applies resources (annotations with sync wave number)\n🔹 Sync Hooks - Pre/Post sync jobs that run before or after sync (migrations, tests)\n🔹 Helm with ArgoCD - ArgoCD can render Helm charts directly and manage values from Git\n🔹 Prune - delete resources from the cluster that no longer exist in Git\n🔹 Retry - configure retry attempts when sync fails\n🔹 Ignore Differences - ignore specific fields in comparison (e.g. replicas managed by HPA)\n🔹 Finalizers - cascading delete when removing an Application\nCODE:\napiVersion: argoproj.io/v1alpha1\nkind: Application\nspec:\n  syncPolicy:\n    automated:\n      prune: true\n      selfHeal: true\n    retry:\n      limit: 5\n      backoff:\n        duration: 5s\n        factor: 2\n        maxDuration: 3m\n  ignoreDifferences:\n  - group: apps\n    kind: Deployment\n    jsonPointers:\n    - /spec/replicas",
+        theory: "ArgoCD - הגדרות מתקדמות, Helm ו-sync strategies.\n🔹 Sync Waves:\u200E שליטה בסדר שבו ArgoCD מחיל משאבים (annotations עם sync wave number)\n🔹 Sync Hooks:\u200E Pre/Post sync jobs שרצים לפני או אחרי sync (migrations, tests)\n🔹 Helm עם ArgoCD:\u200E ArgoCD יכול לרנדר Helm charts ישירות ולנהל את ה-values מ-Git\n🔹 Prune:\u200E מחיקת משאבים מהקלאסטר שכבר לא קיימים ב-Git\n🔹 Retry:\u200E הגדרת מספר ניסיונות חוזרים כש-sync נכשל\n🔹 Ignore Differences:\u200E התעלמות מ-fields ספציפיים בהשוואה (למשל replicas שמנוהלים ע\"י HPA)\n🔹 Finalizers:\u200E cascading delete כשמוחקים Application\nCODE:\napiVersion: argoproj.io/v1alpha1\nkind: Application\nspec:\n  syncPolicy:\n    automated:\n      prune: true\n      selfHeal: true\n    retry:\n      limit: 5\n      backoff:\n        duration: 5s\n        factor: 2\n        maxDuration: 3m\n  ignoreDifferences:\n    - group: apps\n      kind: Deployment\n      jsonPointers:\n        - /spec/replicas",
+        theoryEn: "ArgoCD advanced configuration, Helm, and sync strategies.\n🔹 Sync Waves - control the order in which ArgoCD applies resources (annotations with sync wave number)\n🔹 Sync Hooks - Pre/Post sync jobs that run before or after sync (migrations, tests)\n🔹 Helm with ArgoCD - ArgoCD can render Helm charts directly and manage values from Git\n🔹 Prune - delete resources from the cluster that no longer exist in Git\n🔹 Retry - configure retry attempts when sync fails\n🔹 Ignore Differences - ignore specific fields in comparison (e.g. replicas managed by HPA)\n🔹 Finalizers - cascading delete when removing an Application\nCODE:\napiVersion: argoproj.io/v1alpha1\nkind: Application\nspec:\n  syncPolicy:\n    automated:\n      prune: true\n      selfHeal: true\n    retry:\n      limit: 5\n      backoff:\n        duration: 5s\n        factor: 2\n        maxDuration: 3m\n  ignoreDifferences:\n    - group: apps\n      kind: Deployment\n      jsonPointers:\n        - /spec/replicas",
         questions: [
           {
-            q: "אפליקציה ב-ArgoCD מוגדרת עם auto-sync ו-prune: true.\nמפתח מחק קובץ manifest של ConfigMap מה-repo.\n\nמה יקרה?",
+            q: "אפליקציה ב-\u2066ArgoCD\u2069 מוגדרת עם \u2066auto-sync\u2069 ו-\u2066prune: true\u2069.\nמפתח מחק קובץ \u2066manifest\u2069 של \u2066ConfigMap\u2069 מה-\u2066Git repo\u2069.\n\nמה יקרה ל-\u2066ConfigMap\u2069 בקלאסטר?",
             options: [
-              "ArgoCD יתעלם מהשינוי כי ConfigMap כבר קיים בקלאסטר",
-              "ArgoCD ימחק את ה-ConfigMap מהקלאסטר כי הוא כבר לא ב-Git",
-              "ArgoCD יציג אזהרה ב-UI וימתין לאישור לפני מחיקה",
-              "ArgoCD ייכשל ב-sync כי הוא מצפה שכל המשאבים קיימים",
+              "\u2066ArgoCD\u2069 ימחק את ה-\u2066ConfigMap\u2069 מהקלאסטר כי הוא כבר לא קיים ב-\u2066Git\u2069",
+              "\u2066ArgoCD\u2069 יתעלם מהשינוי כי ה-\u2066ConfigMap\u2069 כבר רץ בקלאסטר",
+              "\u2066ArgoCD\u2069 יציג אזהרה ב-\u2066UI\u2069 וימתין לאישור ידני לפני מחיקה",
+              "\u2066ArgoCD\u2069 ייכשל ב-\u2066sync\u2069 כי הוא מצפה שכל הקבצים קיימים ב-\u2066Git\u2069",
             ],
-            hint: "חשבו על איך הגדרות חיצוניות מגיעות ל-Pod.",
-            answer: 1,
-            explanation: "prune: true אומר ל-ArgoCD למחוק מהקלאסטר משאבים שכבר לא קיימים ב-Git.\nבלי prune, ArgoCD היה מתעלם ממשאבים שנמחקו מ-Git.\nזה חשוב להבין כי prune יכול למחוק משאבים בלי אזהרה.",
+            hint: "חשבו על מה קורה כשמשאב נמחק מ-Git אבל עדיין קיים בקלאסטר.",
+            answer: 0,
+            explanation: "כש-\u2066prune: true\u2069 מוגדר, \u2066ArgoCD\u2069 משווה את מה שקיים בקלאסטר למה שמוגדר ב-\u2066Git\u2069.\nאם משאב קיים בקלאסטר אבל כבר לא קיים ב-\u2066Git\u2069, \u2066ArgoCD\u2069 ימחק אותו אוטומטית.\nבלי \u2066prune\u2069, \u2066ArgoCD\u2069 היה משאיר את המשאב בקלאסטר גם אחרי שנמחק מ-\u2066Git\u2069.\nחשוב להבין ש-\u2066prune\u2069 מוחק משאבים ללא אישור ידני, ולכן צריך להשתמש בו בזהירות.",
           },
           {
             q: "ArgoCD Application מוגדר עם Helm source:\n\n```yaml\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nהמפתח רוצה לשנות את ה-image tag ל-v1.6.\n\nמה הדרך הנכונה ב-GitOps?",
@@ -5041,21 +5045,21 @@ export const TOPICS = [
             ],
             hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
             answer: 1,
-            explanation: "הפתרון הנכון ב-GitOps הוא אחד משניים:\n1. להוסיף Namespace manifest ב-Git עם sync wave 0- כדי שייווצר ראשון.\n2. להפעיל CreateNamespace=true ב-syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n  - CreateNamespace=true\n\nיצירה ידנית עובדת אבל עוקפת GitOps.",
+            explanation: "הפתרון הנכון ב-GitOps הוא אחד משניים:\n1. להוסיף Namespace manifest ב-Git עם sync wave 0- כדי שייווצר ראשון.\n2. להפעיל CreateNamespace=true ב-syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n    - CreateNamespace=true\n\nיצירה ידנית עובדת אבל עוקפת GitOps.",
           },
         ],
         questionsEn: [
           {
-            q: "An ArgoCD Application is configured with auto-sync and prune: true.\nA developer deletes a ConfigMap manifest file from the repo.\n\nWhat will happen",
+            q: "An ArgoCD Application is configured with auto-sync and prune: true.\nA developer deletes a ConfigMap manifest file from the Git repo.\n\nWhat will happen to the ConfigMap in the cluster?",
             options: [
-              "ArgoCD will ignore the change because the ConfigMap already exists in the cluster",
               "ArgoCD will delete the ConfigMap from the cluster because it no longer exists in Git",
-              "ArgoCD will show a warning in the UI and wait for approval before deleting",
-              "ArgoCD will fail the sync because it expects all resources to exist",
+              "ArgoCD will ignore the change because the ConfigMap is already running in the cluster",
+              "ArgoCD will show a warning in the UI and wait for manual approval before deleting",
+              "ArgoCD will fail the sync because it expects all files to exist in Git",
             ],
-            hint: "Think about how external configuration reaches a Pod.",
-            answer: 1,
-            explanation: "prune: true tells ArgoCD to delete resources from the cluster that no longer exist in Git.\nWithout prune, ArgoCD would ignore resources removed from Git.\nThis is important to understand because prune can delete resources without warning.",
+            hint: "Think about what happens when a resource is removed from Git but still exists in the cluster.",
+            answer: 0,
+            explanation: "When prune: true is configured, ArgoCD compares what exists in the cluster to what is defined in Git.\nIf a resource exists in the cluster but is no longer in Git, ArgoCD will automatically delete it.\nWithout prune, ArgoCD would leave the resource in the cluster even after it was removed from Git.\nIt is important to understand that prune deletes resources without manual approval, so it should be used carefully.",
           },
           {
             q: "An ArgoCD Application is configured with a Helm source:\n\n```yaml\nsource:\n  repoURL: https://charts.example.com\n  chart: my-app\n  targetRevision: 2.1.0\n  helm:\n    values: |\n      replicas: 3\n      image:\n        tag: v1.5\n```\n\nThe developer wants to change the image tag to v1.6.\n\nWhat is the correct GitOps approach",
@@ -5140,13 +5144,13 @@ export const TOPICS = [
             ],
             hint: "Think carefully about what each option describes.",
             answer: 1,
-            explanation: "The correct GitOps solution is one of two options:\n1. Add a Namespace manifest in Git with sync wave -0 so it is created first.\n2. Enable CreateNamespace=true in syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n  - CreateNamespace=true\n\nManually creating it works but bypasses GitOps.",
+            explanation: "The correct GitOps solution is one of two options:\n1. Add a Namespace manifest in Git with sync wave -0 so it is created first.\n2. Enable CreateNamespace=true in syncPolicy:\n\nsyncPolicy:\n  syncOptions:\n    - CreateNamespace=true\n\nManually creating it works but bypasses GitOps.",
           },
         ],
       },
       hard: {
-        theory: "ArgoCD - ארכיטקטורה מתקדמת, אבטחה ותפעול.\n🔹 App of Apps:\u200E דפוס שבו Application root מנהל Applications אחרים, מאפשר ניהול מרכזי\n🔹 ApplicationSet Generators:\u200E Git, Clusters, Matrix, Merge - יצירת Applications דינמית\n🔹 RBAC ב-ArgoCD:\u200E policy.csv עם roles שמגדירים הרשאות per-project\n🔹 SSO Integration:\u200E חיבור ל-OIDC providers (Dex, Okta, Azure AD)\n🔹 Resource Hooks:\u200E fine-grained control על lifecycle של משאבים\n🔹 Multi-tenancy:\u200E הפרדה בין צוותים עם AppProject, RBAC, ו-namespace isolation\n🔹 Notification Engine:\u200E triggers ו-templates לשליחת alerts על sync events\n🔹 Diffing Customization:\u200E managedFieldsManagers, server-side diff\nCODE:\n# App of Apps pattern\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: root-app\nspec:\n  source:\n    path: apps/     # directory with Application manifests\n  destination:\n    namespace: argocd\n---\n# ApplicationSet with Matrix generator\napiVersion: argoproj.io/v1alpha1\nkind: ApplicationSet\nspec:\n  generators:\n  - matrix:\n      generators:\n      - clusters:\n          selector:\n            matchLabels:\n              env: production\n      - git:\n          repoURL: https://github.com/org/repo\n          directories:\n          - path: apps/*",
-        theoryEn: "ArgoCD advanced architecture, security, and operations.\n🔹 App of Apps - a pattern where a root Application manages other Applications for centralized control\n🔹 ApplicationSet Generators - Git, Clusters, Matrix, Merge for dynamic Application creation\n🔹 ArgoCD RBAC - policy.csv with roles defining per-project permissions\n🔹 SSO Integration - connecting to OIDC providers (Dex, Okta, Azure AD)\n🔹 Resource Hooks - fine-grained control over resource lifecycle\n🔹 Multi-tenancy - team isolation with AppProject, RBAC, and namespace isolation\n🔹 Notification Engine - triggers and templates for alerts on sync events\n🔹 Diffing Customization - managedFieldsManagers, server-side diff\nCODE:\n# App of Apps pattern\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: root-app\nspec:\n  source:\n    path: apps/     # directory with Application manifests\n  destination:\n    namespace: argocd\n---\n# ApplicationSet with Matrix generator\napiVersion: argoproj.io/v1alpha1\nkind: ApplicationSet\nspec:\n  generators:\n  - matrix:\n      generators:\n      - clusters:\n          selector:\n            matchLabels:\n              env: production\n      - git:\n          repoURL: https://github.com/org/repo\n          directories:\n          - path: apps/*",
+        theory: "ArgoCD - ארכיטקטורה מתקדמת, אבטחה ותפעול.\n🔹 App of Apps:\u200E דפוס שבו Application root מנהל Applications אחרים, מאפשר ניהול מרכזי\n🔹 ApplicationSet Generators:\u200E Git, Clusters, Matrix, Merge - יצירת Applications דינמית\n🔹 RBAC ב-ArgoCD:\u200E policy.csv עם roles שמגדירים הרשאות per-project\n🔹 SSO Integration:\u200E חיבור ל-OIDC providers (Dex, Okta, Azure AD)\n🔹 Resource Hooks:\u200E fine-grained control על lifecycle של משאבים\n🔹 Multi-tenancy:\u200E הפרדה בין צוותים עם AppProject, RBAC, ו-namespace isolation\n🔹 Notification Engine:\u200E triggers ו-templates לשליחת alerts על sync events\n🔹 Diffing Customization:\u200E managedFieldsManagers, server-side diff\nCODE:\n# App of Apps pattern\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: root-app\nspec:\n  source:\n    path: apps/     # directory with Application manifests\n  destination:\n    namespace: argocd\n---\n# ApplicationSet with Matrix generator\napiVersion: argoproj.io/v1alpha1\nkind: ApplicationSet\nspec:\n  generators:\n    - matrix:\n        generators:\n          - clusters:\n              selector:\n                matchLabels:\n                  env: production\n          - git:\n              repoURL: https://github.com/org/repo\n              directories:\n                - path: apps/*",
+        theoryEn: "ArgoCD advanced architecture, security, and operations.\n🔹 App of Apps - a pattern where a root Application manages other Applications for centralized control\n🔹 ApplicationSet Generators - Git, Clusters, Matrix, Merge for dynamic Application creation\n🔹 ArgoCD RBAC - policy.csv with roles defining per-project permissions\n🔹 SSO Integration - connecting to OIDC providers (Dex, Okta, Azure AD)\n🔹 Resource Hooks - fine-grained control over resource lifecycle\n🔹 Multi-tenancy - team isolation with AppProject, RBAC, and namespace isolation\n🔹 Notification Engine - triggers and templates for alerts on sync events\n🔹 Diffing Customization - managedFieldsManagers, server-side diff\nCODE:\n# App of Apps pattern\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: root-app\nspec:\n  source:\n    path: apps/     # directory with Application manifests\n  destination:\n    namespace: argocd\n---\n# ApplicationSet with Matrix generator\napiVersion: argoproj.io/v1alpha1\nkind: ApplicationSet\nspec:\n  generators:\n    - matrix:\n        generators:\n          - clusters:\n              selector:\n                matchLabels:\n                  env: production\n          - git:\n              repoURL: https://github.com/org/repo\n              directories:\n                - path: apps/*",
         questions: [
           {
             q: "ארגון מנהל 50 microservices ב-3 environments.\nכל שירות צריך Application נפרד ב-ArgoCD.\n\nמה הגישה הטובה ביותר?",
