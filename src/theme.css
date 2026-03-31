@@ -134,6 +134,14 @@ body {
 }
 
 /* Dashboard font boost - scales dev dashboard text up on desktop only */
+.quiz-diagram--enlarged {
+  zoom: 1.3;
+}
+.quiz-diagram--enlarged > div {
+  max-width: 380px !important;
+  padding: 18px 16px 12px !important;
+}
+
 @media (min-width: 768px) {
   .page-pad {
     font-size: 16px;
@@ -144,12 +152,11 @@ body {
   .topic-page {
     min-height: auto !important;
   }
-  .quiz-diagram {
-    font-size: 120%;
-    /* Widen the inner diagram wrapper on desktop */
+  .quiz-diagram--enlarged {
+    zoom: 1.6;
   }
-  .quiz-diagram > div {
-    max-width: 360px !important;
-    padding: 18px 16px 14px !important;
+  .quiz-diagram--enlarged > div {
+    max-width: 420px !important;
+    padding: 20px 18px 14px !important;
   }
 }

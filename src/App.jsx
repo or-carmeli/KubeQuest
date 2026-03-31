@@ -5859,7 +5859,12 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                   const isChosen  = i===dispSelectedAnswer;
                   // Runtime consistency: verify green highlight matches expected correct text
                   if (dispSubmitted && dispAnswerResult && isCorrect && q_cur?._correctText && opt !== q_cur._correctText) {
-                    console.error("[QUIZ] highlight mismatch detected");
+                    console.error("[QUIZ] highlight mismatch detected", {
+                      highlightedIndex: i, correctIndex: dispAnswerResult.correctIndex,
+                      highlightedText: opt?.slice(0, 60), expectedText: q_cur._correctText?.slice(0, 60),
+                      source: q_cur._source, tryAgain: tryAgainActive, history: isInHistoryMode,
+                      optionMap: q_cur._optionMap,
+                    });
                   }
                   const isEliminated = !dispSubmitted && eliminatedOption === i;
                   let borderColor = "var(--glass-9)", bg = "var(--glass-2)", color = "var(--text-light)", labelBg = "var(--glass-7)", labelColor = "var(--text-secondary)";
@@ -5988,7 +5993,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               );
                             }
                           })}
-                          {getDiagramForQuestion(q.tags)}
+                          {getDiagramForQuestion(q.tags, lang)}
                         </div>}
                       </div>
                     );
@@ -6054,7 +6059,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                               );
                             }
                           })}
-                          {getDiagramForQuestion(q.tags)}
+                          {getDiagramForQuestion(q.tags, lang)}
                         </div>
                       </div>
                     );
@@ -6616,7 +6621,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         </div>
                         {!incCorrect&&<p style={{fontSize:12,color:"var(--text-muted)",margin:"0 0 10px",lineHeight:1.5}}>{t("incidentWrongSub")}</p>}
                         {renderIncidentExplanation(incExplanation)}
-                        {getDiagramForQuestion(step.tags)}
+                        {getDiagramForQuestion(step.tags, lang)}
                       </div>
                       <button onClick={nextIncidentStep}
                         style={{width:"100%",padding:14,background:"rgba(0,212,255,0.10)",border:"1px solid rgba(0,212,255,0.25)",borderRadius:10,color:"#67e8f9",fontSize:14,fontWeight:700,cursor:"pointer",transition:"all 0.15s"}}

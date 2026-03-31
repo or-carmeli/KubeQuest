@@ -242,17 +242,17 @@ const FIXES = {
     1],
   // storage/medium — PVC Pending (HE)
   'מה אומר PVC בסטטוס Pending': [
-    ["ה-PVC ממתין לסיום backup של Volume קיים לפני mount",
-     "PV תואם לא נמצא – בגלל AccessMode שגוי, storage לא מספיק, או StorageClass שגוי",
-     "ה-PVC נמצא בתהליך הצפנה לפני שהוא זמין לPod",
-     "ה-StorageClass מבצע replication ל-Zone משני לפני binding"],
+    ["ה-PVC ממתין לסיום backup של Volume קיים לפני שניתן לבצע mount חדש",
+     "PV תואם לא נמצא, בגלל AccessMode שגוי, storage לא מספיק, או StorageClass שגוי",
+     "ה-PVC נמצא בתהליך הצפנה ואימות תעודות לפני שהוא זמין ל-Pod",
+     "ה-StorageClass מבצע replication ל-Zone משני לפני binding, ולכן ה-PVC ממתין"],
     1],
   // storage/medium — PVC Pending (EN)
   'What does a PVC in Pending status mean': [
-    ["The PVC is waiting for an existing Volume backup to complete before mounting",
+    ["The PVC is waiting for an existing Volume backup to complete before a new mount is allowed",
      "No matching PV found - due to wrong AccessMode, insufficient storage, or wrong StorageClass",
-     "The PVC is being encrypted before it becomes available to a Pod",
-     "The StorageClass is replicating to a secondary Zone before binding"],
+     "The PVC is undergoing encryption and certificate validation before it becomes available to a Pod",
+     "The StorageClass is replicating data to a secondary Zone before binding, so the PVC waits"],
     1],
   // storage/hard — WaitForFirstConsumer (HE)
   'מה volume binding mode WaitForFirstConsumer': [
