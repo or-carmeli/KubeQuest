@@ -112,7 +112,7 @@ export default function WarRoomPreviewModal({
   const handleEmailSubmit = (e) => {
     e.preventDefault();
     const val = warRoomEmail.trim();
-    if (!val || !val.includes("@") || !val.includes(".")) return;
+    if (!val || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) return;
     if (!supabase) return;
     setWarRoomEmailSending(true);
     supabase.rpc("register_war_room_interest", { user_email: val }).then(({ error }) => {

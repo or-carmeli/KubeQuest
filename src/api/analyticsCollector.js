@@ -79,21 +79,12 @@ function parseUTM() {
   }
 }
 
-// ── Geolocation (free, no API key) ──────────────────────────────────────────
-
-let _cachedCountry = undefined; // undefined = not fetched yet, null = failed
+// ── Geolocation ─────────────────────────────────────────────────────────────
+// Disabled: IP-based geolocation requires explicit user consent under GDPR.
+// Country field will be null until a consent-gated implementation is added.
 
 async function fetchCountry() {
-  if (_cachedCountry !== undefined) return _cachedCountry;
-  try {
-    const res = await fetch("https://ipapi.co/country_name/", { cache: "force-cache" });
-    if (!res.ok) throw new Error(res.status);
-    const name = (await res.text()).trim();
-    _cachedCountry = name || null;
-  } catch {
-    _cachedCountry = null;
-  }
-  return _cachedCountry;
+  return null;
 }
 
 function getReferrer() {

@@ -8,7 +8,6 @@ useDefault = true
 description = "Project-level allowlist"
 paths = [
   '''package-lock\.json''',
-  '''\.github/workflows/.*\.yml''',
 ]
 
 # Hebrew quiz content containing "NAT/masquerade" triggers generic-api-key false positive

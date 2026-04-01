@@ -41,7 +41,7 @@ const release = `kubequest@${buildHash || 'unknown'}`;
 
 export default defineConfig({
   build: {
-    sourcemap: true, // required for Sentry stack traces
+    sourcemap: 'hidden', // generates maps for Sentry upload but omits sourceMappingURL from JS bundles
   },
   plugins: [
     react(),

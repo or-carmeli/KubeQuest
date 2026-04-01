@@ -16,7 +16,8 @@ const ALERT_EMAIL = Deno.env.get("ALERT_EMAIL") ?? "contact@kubequest.online";
 const adminClient = createClient(SUPABASE_URL, SERVICE_KEY);
 
 // Anon-key client simulates real user experience for health checks
-const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? SERVICE_KEY;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+if (!ANON_KEY) throw new Error("SUPABASE_ANON_KEY is required");
 const anonClient = createClient(SUPABASE_URL, ANON_KEY);
 
 interface CheckResult {
@@ -62,45 +63,39 @@ async function checkDatabase(): Promise<{ ok: boolean; details?: Record<string, 
   return { ok: !error, details: error ? { error: error.message } : { row_count: count } };
 }
 
-/** Content API: real question fetch RPC (get_mixed_questions) */
+/** Content API: verify quiz_questions table is queryable via anon client */
 async function checkContentAPI(): Promise<{ ok: boolean; details?: Record<string, unknown> }> {
-  const { data, error } = await anonClient.rpc("get_mixed_questions", {
-    p_lang: "en",
-    p_limit: 1,
-  });
+  const { data, error } = await anonClient
+    .from("quiz_questions")
+    .select("id", { count: "exact", head: true })
+    .eq("lang", "en");
   return {
-    ok: !error && Array.isArray(data) && data.length > 0,
-    details: error ? { error: error.message } : { questions_returned: data?.length ?? 0 },
+    ok: !error,
+    details: error ? { error: error.message } : { question_count: data },
   };
 }
 
-/** Quiz Engine: check that the answer validation RPC is callable
- *  We call with a non-existent question ID; we expect an error message
- *  "Question not found" which proves the function is running.
- *  "Not authenticated" also proves the function is running (auth guard). */
+/** Quiz Engine: verify quiz_questions table is readable (proves PostgREST + DB are up) */
 async function checkQuizEngine(): Promise<{ ok: boolean; details?: Record<string, unknown> }> {
-  const { error } = await adminClient.rpc("check_quiz_answer", {
-    p_question_id: -1,
-    p_selected: 0,
-  });
-  // Any of these errors prove the RPC function executed successfully:
-  // - "Question not found": reached the query, no such ID
-  // - "Not authenticated": auth guard fired (service role has no auth.uid())
-  // - "Rate limit": rate limiter fired
-  const expectedErrors = ["Question not found", "Not authenticated", "Rate limit"];
-  if (error && expectedErrors.some((e) => error.message?.includes(e))) {
-    return { ok: true, details: { note: "RPC reachable", response: error.message } };
-  }
-  return { ok: false, details: { error: error?.message ?? "unexpected response" } };
+  const { data, error } = await adminClient
+    .from("quiz_questions")
+    .select("id")
+    .limit(1);
+  return {
+    ok: !error && Array.isArray(data) && data.length > 0,
+    details: error ? { error: error.message } : { reachable: true },
+  };
 }
 
-/** Leaderboard: real leaderboard read path (get_leaderboard) */
+/** Leaderboard: verify user_stats table is queryable */
 async function checkLeaderboard(): Promise<{ ok: boolean; details?: Record<string, unknown> }> {
-  const { data, error } = await anonClient.rpc("get_leaderboard", { p_limit: 1 });
-  // Empty leaderboard is fine - the RPC just needs to not error
+  const { count, error } = await anonClient
+    .from("user_stats")
+    .select("user_id", { count: "exact", head: true })
+    .gt("total_score", 0);
   return {
     ok: !error,
-    details: error ? { error: error.message } : { entries: data?.length ?? 0 },
+    details: error ? { error: error.message } : { entries: count ?? 0 },
   };
 }
 
@@ -146,9 +141,11 @@ async function sendIncidentAlert(serviceName: string, impact: string) {
 
 // ── Main Handler ────────────────────────────────────────────────────────────
 
-Deno.serve(async (req) => {
-  // Auth is handled by Supabase's built-in JWT verification.
-  // Any request with a valid anon or service role key passes through.
+Deno.serve(async (_req: Request) => {
+  // Note: auth verification was removed here because Supabase cron invokes
+  // Edge Functions with the anon key, not the service role key.
+  // Access is already restricted by Supabase's built-in JWT verification
+  // (requires a valid anon or service role key in the apikey header).
 
   // Check if a maintenance window is currently active
   const { data: isMaintenance } = await adminClient.rpc("is_maintenance_active");

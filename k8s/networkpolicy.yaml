@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubequest
+  namespace: kubequest
+spec:
+  podSelector:
+    matchLabels:
+      app: kubequest
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Allow inbound traffic only from the ingress controller
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  # Allow DNS resolution only (static site needs no other egress)
+  egress:
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

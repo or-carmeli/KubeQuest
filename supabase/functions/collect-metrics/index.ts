@@ -88,7 +88,11 @@ async function collectHealthSummary() {
 
 // ── Main Handler ─────────────────────────────────────────────────────────────
 
-Deno.serve(async (_req) => {
+Deno.serve(async (_req: Request) => {
+  // Note: Supabase cron invokes Edge Functions with the anon key, not the
+  // service role key, so we cannot gate on Authorization header here.
+  // Access is already restricted by Supabase's built-in JWT verification.
+
   const start = performance.now();
 
   const [conns, maxConns, dbStats, slowQ, latencies, apiActivity, healthSum] = await Promise.all([
@@ -133,11 +137,7 @@ Deno.serve(async (_req) => {
     JSON.stringify({
       collected_at: new Date().toISOString(),
       elapsed_ms: elapsed,
-      insert_error: insertError?.message ?? null,
-      snapshot: {
-        connections: conns, max_connections: maxConns, db_stats: dbStats,
-        slow_queries: slowQ, latencies, api_activity: apiActivity, health: healthSum,
-      },
+      insert_ok: !insertError,
     }),
     { headers: { "Content-Type": "application/json" } }
   );
