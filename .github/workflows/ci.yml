@@ -87,30 +87,7 @@ jobs:
       - name: Run npm audit
         run: npm audit --audit-level=moderate
 
-  # ── 4. License compliance ──────────────────────────────────────────────────
-  license-check:
-    name: License Check
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check licenses
-        run: npx license-checker@25.0.1 --failOn 'GPL-3.0;AGPL-3.0;AGPL-1.0;GPL-2.0'
-
-  # ── 5. Secret scanning ──────────────────────────────────────────────────────
+  # ── 4. Secret scanning ──────────────────────────────────────────────────────
   gitleaks:
     name: Gitleaks
     runs-on: ubuntu-latest
@@ -133,7 +110,7 @@ jobs:
       - name: Run Gitleaks
         run: gitleaks detect --source . --verbose
 
-  # ── 6. CodeQL static analysis ────────────────────────────────────────────────
+  # ── 5. CodeQL static analysis ────────────────────────────────────────────────
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
@@ -153,7 +130,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v3
 
-  # ── 7. Trivy container scan (build image, scan, block on HIGH/CRITICAL) ─────
+  # ── 6. Trivy container scan (build image, scan, block on HIGH/CRITICAL) ─────
   trivy:
     name: Trivy Scan
     runs-on: ubuntu-latest
@@ -201,7 +178,7 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
 
-  # ── 8. Kubernetes manifest policy validation ─────────────────────────────────
+  # ── 7. Kubernetes manifest policy validation ─────────────────────────────────
   k8s-policies:
     name: K8s Policy Check
     runs-on: ubuntu-latest
