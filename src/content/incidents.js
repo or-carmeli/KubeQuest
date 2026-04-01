@@ -103,7 +103,7 @@ export const INCIDENTS = [
         prompt:
           "ConfigMap Not Found in Namespace\n\n• Pod spec references volume: `configMap: name: payment-config`\n• You run: `kubectl get configmap -n staging`\n\nkubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nNo `payment-config` in the list. What is the fastest way to confirm whether it exists elsewhere?",
         promptHe:
-          "ConfigMap לא נמצא ב-Namespace\n\n• ה-pod spec מפנה ל-volume: `configMap: name: payment-config`\n• מריצים: `kubectl get configmap -n staging`\n\nkubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nאין `payment-config` ברשימה. מה הדרך המהירה ביותר לוודא אם הוא קיים במקום אחר?",
+          "ConfigMap לא נמצא ב-Namespace\n\n• ה-pod spec מפנה ל-volume: \u200F`configMap: name: payment-config`\n• מריצים: \u200F`kubectl get configmap -n staging`\n\nkubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nאין `payment-config` ברשימה. מה הדרך המהירה ביותר לוודא אם הוא קיים במקום אחר?",
         options: [
           "kubectl get configmap payment-config --all-namespaces",
           "kubectl get configmap payment-config -n production",
@@ -201,7 +201,7 @@ export const INCIDENTS = [
         prompt:
           "Unauthorized Error from Registry\n\n• Image: `registry.company.com/myapp:v2.1`\n• Error: `unauthorized: authentication required`\n• Pod cannot pull the image\n\nWhat does this error indicate?",
         promptHe:
-          "שגיאת Unauthorized מה-Registry\n\n• Image: `registry.company.com/myapp:v2.1`\n• שגיאה: `unauthorized: authentication required`\n• ה-Pod לא מצליח למשוך את ה-image\n\nמה מציינת שגיאה זו?",
+          "שגיאת Unauthorized מה-Registry\n\n• Image: \u200F`registry.company.com/myapp:v2.1`\n• שגיאה: \u200F`unauthorized: authentication required`\n• ה-Pod לא מצליח למשוך את ה-image\n\nמה מציינת שגיאה זו?",
         options: [
           "The image tag `v2.1` does not exist in the registry",
           "The registry requires credentials but the pod has none configured",
@@ -224,7 +224,7 @@ export const INCIDENTS = [
         prompt:
           "Private Registry Requires Authentication\n\n• Registry: `registry.company.com`\n• Needs username/password to pull images\n• No credentials configured on the cluster\n\nWhat Kubernetes resource holds registry credentials?",
         promptHe:
-          "Registry פרטי דורש אימות\n\n• Registry: `registry.company.com`\n• דורש username/password למשיכת images\n• אין אישורים מוגדרים על הקלאסטר\n\nאיזה משאב Kubernetes מיועד לאישורי registry?",
+          "Registry פרטי דורש אימות\n\n• כתובת ה-Registry: \u200F`registry.company.com`\n• דורש username/password למשיכת images\n• אין אישורים מוגדרים על הקלאסטר\n\nאיזה משאב Kubernetes מיועד לאישורי registry?",
         options: [
           "A ConfigMap with base64-encoded credentials",
           "A Secret of type `kubernetes.io/dockerconfigjson`",
@@ -363,13 +363,13 @@ export const INCIDENTS = [
         explanation:
           "✓ OOMKilled = Out Of Memory Killed. Kubernetes sets a memory cgroup limit for each container. When the process exceeds it, the Linux kernel's OOM killer sends SIGKILL (exit code 137 = 128+9). The app gets no warning and no chance to clean up.\n→ Next step: check how much memory the pod actually uses vs the 256Mi limit to determine the right new value.\n✗ Not a probe failure (probes return specific exit codes, not 137). Not a network issue or bad image.",
         explanationHe:
-          "✓ OOMKilled = Out Of Memory Killed. Kubernetes מגדיר מגבלת cgroup זיכרון לכל קונטיינר. כשהתהליך חורג, OOM killer של ליבת Linux שולח SIGKILL (קוד יציאה 137 = 128+9). האפליקציה לא מקבלת אזהרה ואין לה הזדמנות לנקות.\n→ הצעד הבא: לבדוק כמה זיכרון ה-Pod צורך בפועל מול מגבלת 256Mi כדי לקבוע את הערך הנכון החדש.\n✗ לא כשל probe (probes מחזירים קודי יציאה ספציפיים, לא 137). לא בעיית רשת או image פגום.",
+          "✓ OOMKilled = Out Of Memory Killed. Kubernetes מגדיר מגבלת cgroup זיכרון לכל קונטיינר. כשהתהליך חורג, OOM killer של ליבת Linux שולח SIGKILL (קוד יציאה 137 = 128+9). האפליקציה לא מקבלת אזהרה ואין לה הזדמנות לנקות.\n→ הצעד הבא: לבדוק כמה זיכרון ה-Pod צורך בפועל מול מגבלת `256Mi` כדי לקבוע את הערך הנכון החדש.\n✗ לא כשל probe (probes מחזירים קודי יציאה ספציפיים, לא 137). לא בעיית רשת או image פגום.",
       },
       {
         prompt:
           "Memory Limit Too Low\n\n• Container memory limit: 256Mi\n• Exit code: 137 (OOMKilled)\n• Pod keeps crashing under load\n\nHow do you determine the right memory limit?",
         promptHe:
-          "מגבלת זיכרון נמוכה מדי\n\n• מגבלת זיכרון קונטיינר: 256Mi\n• קוד יציאה: 137 (OOMKilled)\n• ה-Pod ממשיך לקרוס תחת עומס\n\nכיצד קובעים את מגבלת הזיכרון הנכונה?",
+          "מגבלת זיכרון נמוכה מדי\n\n• מגבלת זיכרון קונטיינר: \u200F`256Mi`\n• קוד יציאה: 137 (OOMKilled)\n• ה-Pod ממשיך לקרוס תחת עומס\n\nכיצד קובעים את מגבלת הזיכרון הנכונה?",
         options: [
           "kubectl top pod api-server-xyz -n production  (see actual memory usage)",
           "kubectl logs api-server-xyz -n production --previous  (scan logs for errors)",
@@ -386,13 +386,13 @@ export const INCIDENTS = [
         explanation:
           "✓ `kubectl top pod` shows current memory consumption from the Metrics Server. Run it shortly after a restart to watch memory climb toward the limit. Note: `top` shows a point-in-time snapshot, not peak usage. For historical peak data, use Prometheus metrics like `container_memory_working_set_bytes`.\n→ Compare the climbing value against the 256Mi limit to determine how much headroom the pod needs.\n✗ Logs help diagnose memory leaks, not measure current usage. Node memory is not per-pod usage. HPA controls replica count, not per-pod memory limits.",
         explanationHe:
-          "✓ `kubectl top pod` מציג צריכת זיכרון נוכחית מ-Metrics Server. הרץ אותו זמן קצר אחרי אתחול כדי לצפות בזיכרון מטפס לעבר המגבלה. שים לב: `top` מציג תמונת מצב נקודתית, לא שיא שימוש. לנתוני שיא היסטוריים, השתמש במטריקות Prometheus כמו `container_memory_working_set_bytes`.\n→ השווה את הערך העולה מול מגבלת 256Mi כדי לקבוע כמה מרווח ה-Pod צריך.\n✗ לוגים עוזרים לאבחן דליפות זיכרון, לא למדוד שימוש נוכחי. זיכרון Node אינו שימוש per-pod. HPA שולט ברפליקות, לא במגבלות זיכרון per-pod.",
+          "✓ `kubectl top pod` מציג צריכת זיכרון נוכחית מ-Metrics Server. הרץ אותו זמן קצר אחרי אתחול כדי לצפות בזיכרון מטפס לעבר המגבלה. שים לב: `top` מציג תמונת מצב נקודתית, לא שיא שימוש. לנתוני שיא היסטוריים, השתמש במטריקות Prometheus כמו `container_memory_working_set_bytes`.\n→ השווה את הערך העולה מול מגבלת `256Mi` כדי לקבוע כמה מרווח ה-Pod צריך.\n✗ לוגים עוזרים לאבחן דליפות זיכרון, לא למדוד שימוש נוכחי. זיכרון Node אינו שימוש per-pod. HPA שולט ברפליקות, לא במגבלות זיכרון per-pod.",
       },
       {
         prompt:
           "Choosing the Right Memory Limit\n\n• Idle memory usage: ~240Mi\n• Under load: spikes to 320Mi\n• Current limit: 256Mi. Too low for spikes\n\nWhat is the correct fix?",
         promptHe:
-          "בחירת מגבלת הזיכרון הנכונה\n\n• שימוש זיכרון במנוחה: ~240Mi\n• תחת עומס: עולה ל-320Mi\n• מגבלה נוכחית: 256Mi. נמוכה מדי לקפיצות\n\nמה התיקון הנכון?",
+          "בחירת מגבלת הזיכרון הנכונה\n\n• שימוש זיכרון במנוחה: \u200F`~240Mi`\n• תחת עומס: עולה ל-\u200F`320Mi`\n• מגבלה נוכחית: \u200F`256Mi`. נמוכה מדי לקפיצות\n\nמה התיקון הנכון?",
         options: [
           "Add an HPA with memory-based autoscaling to handle the spikes automatically",
           "Increase the memory limit to 512Mi and set request to 256Mi in the Deployment spec",
@@ -401,21 +401,21 @@ export const INCIDENTS = [
         ],
         optionsHe: [
           "להוסיף HPA עם autoscaling מבוסס זיכרון לטיפול אוטומטי בקפיצות",
-          "להגדיל את מגבלת הזיכרון ל-512Mi ולהגדיר request ל-256Mi ב-spec של ה-Deployment",
+          "להגדיל את מגבלת הזיכרון ל-\u200F`512Mi` ולהגדיר request ל-\u200F`256Mi` ב-spec של ה-Deployment",
           "להוסיף NetworkPolicy לצמצום בקשות נכנסות",
-          "להגדיר request ו-limit ל-320Mi בדיוק כמו שיא השימוש",
+          "להגדיר request ו-limit ל-\u200F`320Mi` בדיוק כמו שיא השימוש",
         ],
         answer: 1,
         explanation:
           "✓ Set limit=512Mi (~1.5x peak), request=256Mi (steady-state baseline). The `request` is what the scheduler guarantees on the node; the `limit` is the hard ceiling enforced by the cgroup. This gives the Burstable QoS class: the pod can burst above its request during spikes but is killed if it exceeds the limit.\n→ Rule of thumb: set limit to 1.5-2x observed peak. For critical APIs, some teams prefer Guaranteed QoS (request=limit) to avoid noisy-neighbor eviction.\n✗ HPA scales replicas, not per-pod memory. Setting limit=320Mi (exactly peak) leaves zero headroom. NetworkPolicy controls network traffic, not memory.",
         explanationHe:
-          "✓ הגדר limit=512Mi (~1.5 מהשיא), request=256Mi (בסיס שימוש רגיל). ה-`request` הוא מה שה-scheduler מבטיח על ה-Node; ה-`limit` הוא התקרה הקשיחה שנאכפת על ידי ה-cgroup. זה נותן QoS class Burstable: ה-Pod יכול לחרוג מעל ה-request בזמן קפיצות אך נהרג אם חורג מה-limit.\n→ כלל אצבע: הגדר limit ל-1.5-2x מהשיא הנצפה. ל-APIs קריטיים, חלק מהצוותים מעדיפים Guaranteed QoS (request=limit) כדי להימנע מפינוי בגלל שכנים רועשים.\n✗ HPA משנה רפליקות, לא זיכרון per-pod. הגדרת limit=320Mi (בדיוק שיא) לא משאירה מרווח. NetworkPolicy שולטת בתעבורת רשת, לא בזיכרון.",
+          "✓ הגדר limit=\u200F`512Mi` (~1.5 מהשיא), request=\u200F`256Mi` (בסיס שימוש רגיל). ה-`request` הוא מה שה-scheduler מבטיח על ה-Node; ה-`limit` הוא התקרה הקשיחה שנאכפת על ידי ה-cgroup. זה נותן QoS class Burstable: ה-Pod יכול לחרוג מעל ה-request בזמן קפיצות אך נהרג אם חורג מה-limit.\n→ כלל אצבע: הגדר limit ל-1.5-2x מהשיא הנצפה. ל-APIs קריטיים, חלק מהצוותים מעדיפים Guaranteed QoS (request=limit) כדי להימנע מפינוי בגלל שכנים רועשים.\n✗ HPA משנה רפליקות, לא זיכרון per-pod. הגדרת limit=\u200F`320Mi` (בדיוק שיא) לא משאירה מרווח. NetworkPolicy שולטת בתעבורת רשת, לא בזיכרון.",
       },
       {
         prompt:
           "Verifying the Rolling Update\n\n• Deployment patched with new memory limits\n• New limit: 512Mi, request: 256Mi\n• Rolling update in progress\n\nHow do you verify the update succeeded and the fix holds?",
         promptHe:
-          "אימות ה-Rolling Update\n\n• ה-Deployment עודכן עם מגבלות זיכרון חדשות\n• מגבלה חדשה: 512Mi, request: 256Mi\n• Rolling update בתהליך\n\nכיצד מוודאים שהעדכון הצליח והתיקון מחזיק?",
+          "אימות ה-Rolling Update\n\n• ה-Deployment עודכן עם מגבלות זיכרון חדשות\n• מגבלה חדשה: \u200F`512Mi`, request: \u200F`256Mi`\n• Rolling update בתהליך\n\nכיצד מוודאים שהעדכון הצליח והתיקון מחזיק?",
         options: [
           "kubectl rollout status deployment/api-server -n production  (wait for rollout completion)",
           "kubectl get pods -n production -w  (watch for new OOMKills)",
@@ -438,7 +438,7 @@ export const INCIDENTS = [
         prompt:
           "Post-Incident: Preventing Recurrence\n\n• Fix applied: memory limit increased to 512Mi\n• Pod stable for 15 minutes, no more OOMKills\n• Incident resolved\n\nWhat should you do before closing the incident?",
         promptHe:
-          "לאחר האירוע: מניעת הישנות\n\n• תיקון הוחל: מגבלת זיכרון הוגדלה ל-512Mi\n• Pod יציב 15 דקות, אין עוד OOMKills\n• האירוע נפתר\n\nמה עליך לעשות לפני סגירת האירוע?",
+          "לאחר האירוע: מניעת הישנות\n\n• תיקון הוחל: מגבלת זיכרון הוגדלה ל-\u200F`512Mi`\n• Pod יציב 15 דקות, אין עוד OOMKills\n• האירוע נפתר\n\nמה עליך לעשות לפני סגירת האירוע?",
         options: [
           "Increase all node sizes immediately as a precaution",
           "Add a Prometheus alert on memory usage > 80% of limit, and audit resource limits on all other Deployments",
@@ -561,7 +561,7 @@ export const INCIDENTS = [
           "Selector Mismatch Found\n\n• Service selector: `app=backend`\n• Actual pod labels: `app=backend-v2`\n• Label was changed in last deployment, Service not updated\n\nWhat is the fix?",
         tags: ["service-discovery"],
         promptHe:
-          "נמצאה אי-התאמת Selector\n\n• Selector של Service: `app=backend`\n• Labels בפועל על Pods: `app=backend-v2`\n• ה-label שונה בדיפלוימנט האחרון, ה-Service לא עודכן\n\nמה התיקון?",
+          "נמצאה אי-התאמת Selector\n\n• Selector של Service: \u200F`app=backend`\n• Labels בפועל על Pods: \u200F`app=backend-v2`\n• ה-label שונה בדיפלוימנט האחרון, ה-Service לא עודכן\n\nמה התיקון?",
         options: [
           "Manually add label `app=backend` to every running pod with kubectl label",
           "kubectl patch svc backend-svc -n production -p '{\"spec\":{\"selector\":{\"app\":\"backend-v2\"}}}'",
@@ -729,7 +729,7 @@ export const INCIDENTS = [
         prompt:
           "CoreDNS Memory at 99% of Limit\n\n• Memory limit: 170Mi\n• Current usage: 168Mi (99% of limit)\n• Cluster recently scaled from 20 to 80 nodes\n\nWhat is the likely root cause?",
         promptHe:
-          "זיכרון CoreDNS ב-99% מהמגבלה\n\n• מגבלת זיכרון: 170Mi\n• שימוש נוכחי: 168Mi (99% מהמגבלה)\n• הקלאסטר גדל לאחרונה מ-20 ל-80 Nodes\n\nמה הסיבה השורשית הסבירה?",
+          "זיכרון CoreDNS ב-99% מהמגבלה\n\n• מגבלת זיכרון: \u200F`170Mi`\n• שימוש נוכחי: \u200F`168Mi` (99% מהמגבלה)\n• הקלאסטר גדל לאחרונה מ-20 ל-80 Nodes\n\nמה הסיבה השורשית הסבירה?",
         options: [
           "A memory leak in the CoreDNS binary - upgrade CoreDNS immediately",
           "The cluster grew significantly; CoreDNS caches DNS records for many more Services and Pods now, requiring more memory",
@@ -746,7 +746,7 @@ export const INCIDENTS = [
         explanation:
           "✓ CoreDNS memory scales with cluster size - more Services/Pods = larger DNS cache.\n→ At 4× cluster size, 170Mi is no longer enough.\n✗ Corrupt config → errors, not gradual memory growth. Node swap affects all pods equally, not just CoreDNS.",
         explanationHe:
-          "✓ זיכרון CoreDNS גדל עם גודל הקלאסטר, יותר Services/Pods = cache DNS גדול יותר.\nבגודל קלאסטר פי 4, 170Mi כבר לא מספיק.\n✗ קונפיגורציה פגומה גורמת לשגיאות, לא גדילת זיכרון הדרגתית. swap ב-Node משפיע על כל ה-Pods בשווה.",
+          "✓ זיכרון CoreDNS גדל עם גודל הקלאסטר, יותר Services/Pods = cache DNS גדול יותר.\nבגודל קלאסטר פי 4, `170Mi` כבר לא מספיק.\n✗ קונפיגורציה פגומה גורמת לשגיאות, לא גדילת זיכרון הדרגתית. swap ב-Node משפיע על כל ה-Pods בשווה.",
       },
       {
         prompt:
@@ -775,7 +775,7 @@ export const INCIDENTS = [
         prompt:
           "Verifying DNS Restoration\n\n• CoreDNS memory limit increased to 512Mi\n• Pods show Running status\n• Need to confirm DNS is fully functional\n\nWhat is the strongest verification?",
         promptHe:
-          "אימות שחזור DNS\n\n• מגבלת זיכרון CoreDNS הוגדלה ל-512Mi\n• Pods מציגים סטטוס Running\n• צריך לאשר ש-DNS פעיל לחלוטין\n\nמהי הבדיקה החזקה ביותר?",
+          "אימות שחזור DNS\n\n• מגבלת זיכרון CoreDNS הוגדלה ל-\u200F`512Mi`\n• Pods מציגים סטטוס Running\n• צריך לאשר ש-DNS פעיל לחלוטין\n\nמהי הבדיקה החזקה ביותר?",
         options: [
           "kubectl run dns-verify --image=busybox:1.28 --rm -it --restart=Never -- nslookup kubernetes.default.svc.cluster.local",
           "kubectl get pods -n kube-system  (confirm Running status)",
@@ -873,7 +873,7 @@ export const INCIDENTS = [
         prompt:
           "Inspecting NetworkPolicy Rules\n\n• Policies found: `deny-all-ingress`, `allow-frontend`\n• Need to understand what each policy permits\n\nHow do you inspect the rules?",
         promptHe:
-          "בדיקת כללי NetworkPolicy\n\n• Policies שנמצאו: `deny-all-ingress`, `allow-frontend`\n• צריך להבין מה כל policy מתירה\n\nכיצד בודקים את הכללים?",
+          "בדיקת כללי NetworkPolicy\n\n• Policies שנמצאו: \u200F`deny-all-ingress`, `allow-frontend`\n• צריך להבין מה כל policy מתירה\n\nכיצד בודקים את הכללים?",
         options: [
           "kubectl describe networkpolicy -n production  (shows selectors and rules for all policies)",
           "kubectl logs networkpolicy-controller -n kube-system",
@@ -919,7 +919,7 @@ export const INCIDENTS = [
         prompt:
           "Label Mismatch Confirmed\n\n• Policy `allow-frontend` expects from: `role=frontend`\n• Actual frontend pod labels: `app=frontend`\n• Frontend traffic blocked by deny-all (no exception matches)\n• Checkout is fully down. Users cannot complete orders.\n\nWhat is the fastest way to restore traffic right now?",
         promptHe:
-          "אי-התאמת Labels אושרה\n\n• Policy `allow-frontend` מצפה ל-from: `role=frontend`\n• Labels בפועל של Pods frontend: `app=frontend`\n• תעבורת frontend חסומה (אין חריגה מתאימה)\n• Checkout מושבת לחלוטין. משתמשים לא יכולים להשלים הזמנות.\n\nמה הדרך המהירה ביותר לשחזר תעבורה עכשיו?",
+          "אי-התאמת Labels אושרה\n\n• Policy `allow-frontend` מצפה ל-from: \u200F`role=frontend`\n• Labels בפועל של Pods frontend: \u200F`app=frontend`\n• תעבורת frontend חסומה (אין חריגה מתאימה)\n• Checkout מושבת לחלוטין. משתמשים לא יכולים להשלים הזמנות.\n\nמה הדרך המהירה ביותר לשחזר תעבורה עכשיו?",
         options: [
           "kubectl label pod <each-frontend-pod> role=frontend  (relabel individual pods)",
           "kubectl patch networkpolicy allow-frontend -n production -p '{\"spec\":{\"ingress\":[{\"from\":[{\"podSelector\":{\"matchLabels\":{\"app\":\"frontend\"}}}]}]}}'",
