@@ -3587,7 +3587,7 @@ export const TOPICS = [
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
               answer: 0,
               explanation:
-                "מציג את כל ה-contexts ב-kubeconfig. כל context מכיל cluster, user, ו-namespace.\nהנוכחי מסומן בכוכבית (*). use-context מחליף context, set-context משנה namespace.",
+                "ה-context ב-Kubernetes מגדיר את סביבת העבודה שלך, הכוללת 3 מרכיבים:\n* Cluster \u2013 הקישור ל-API server של ה-cluster.\n* User \u2013 המשתמש או המפתח שמבצע את החיבור.\n* Namespace \u2013 תחום העבודה בתוך ה-cluster (למשל: default).\nה-context מאפשר לך לעבוד עם ה-cluster וה-namespace המתאימים, ולבצע פקודות בקלות. ניתן לעבור בין contexts עם הפקודה kubectl config use-context.",
             },
         ],
         questionsEn: [
@@ -3694,7 +3694,7 @@ export const TOPICS = [
               hint: "Think about what the command does behind the scenes.",
               answer: 3,
               explanation:
-                "Lists all contexts in kubeconfig. Each bundles a cluster, user, and default namespace.\nCurrent context is marked with *. use-context switches context, set-context changes namespace.",
+                "A context in Kubernetes defines your working environment, consisting of three components:\n* Cluster \u2013 The connection to the API server of the cluster.\n* User \u2013 The user or credentials used for the connection.\n* Namespace \u2013 The scope within the cluster (e.g., default).\nThe context allows you to work with the appropriate cluster and namespace, making it easier to execute commands. You can switch between contexts using the kubectl config use-context command.",
             },
         ],
       },
@@ -3807,7 +3807,7 @@ export const TOPICS = [
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
               answer: 2,
               explanation:
-                "kubelet מזהה שה-disk מגיע לסף מלאות.\nסיבות נפוצות: logs שהצטברו, images ישנים, ו-emptyDir volumes גדולים.\nנקו עם docker image prune ו-journalctl --vacuum-time=2d, או הרחיבו את ה-disk.",
+                "kubelet מזהה שה-disk מגיע לסף מלאות.\nסיבות נפוצות: logs שהצטברו, images ישנים, ו-emptyDir volumes גדולים.\nנקו עם docker image prune ו-journalctl --vacuum-time=2d או הרחיבו את ה-disk.",
             },
         ],
         questionsEn: [
@@ -3927,15 +3927,15 @@ export const TOPICS = [
             {
               q: "לאחר Deployment, ה-Pods החדשים ב-CrashLoopBackOff.\nהגרסה הקודמת עבדה מצוין.\n\nמה שתי פעולות ה-debug הראשונות שלך?",
               options: [
+              "kubectl rollout undo מיד לגרסה הקודמת",
+              "logs --previous ואז describe pod",
               "Scale down ל-0 ו-redeploy מחדש",
-              "מחק את כל ה-Pods ותן ל-Kubernetes ליצור אותם מחדש",
-              "kubectl logs <new-pod> --previous\nו-kubectl describe pod <new-pod>",
-              "kubectl rollout undo\nמיד לגרסה הקודמת",
+              "מחק את כל ה-Pods ותן ל-Kubernetes ליצור מחדש",
 ],
               hint: "חשבו על איך לחקור Pod שקורס שוב ושוב.",
-              answer: 2,
+              answer: 1,
               explanation:
-                "לפני rollback חשוב להבין מה השתנה.\nlogs --previous מציג output מה-crash, ו-describe pod מציג Events.\nרק אחרי שמבינים את הסיבה, מחליטים לתקן code או לעשות rollout undo.",
+                "לפני שעושים rollback, חשוב להבין למה ה-Pod קורס.\nהצעד הראשון הוא להריץ:\nkubectl logs <new-pod> --previous\nפקודה זו מציגה את הלוגים מה-container שקרס, כך שאפשר לראות את השגיאה שגרמה לקריסה.\nלאחר מכן מריצים:\nkubectl describe pod <new-pod>\nפקודה זו מציגה את ה-Events של ה-Pod, כולל סיבות כמו image pull failure, OOMKilled, או שגיאת קונפיגורציה.\nרק אחרי שמבינים את הסיבה, מחליטים אם לתקן את הקוד או לעשות rollout undo.",
             },
             {
               q: "Node במצב NotReady ו-Pods מתחילים להתפנות ממנו. מה הפעולות הראשונות לבדיקה",
@@ -3974,7 +3974,7 @@ export const TOPICS = [
               hint: "חשבו על תרגום שמות לכתובות בתוך ה-Cluster.",
               answer: 3,
               explanation:
-                "התשובה הנכונה: הרצת `nslookup` מתוך Pod מוודאת ש-CoreDNS מגיב לבקשות.\n\nאם הבדיקה נכשלת:\n1. ודאו שה-CoreDNS Pods רצים: `kubectl get pods -n kube-system -l k8s-app=kube-dns`\n2. בדקו לוגים: `kubectl logs <coredns-pod> -n kube-system`\n3. ודאו שה-Service קיים: `kubectl get svc kube-dns -n kube-system`",
+                "התשובה הנכונה: הרצת `nslookup` מתוך Pod מוודאת ש-CoreDNS מגיב לבקשות.\n\nאם הבדיקה נכשלת:\n1. ודאו שה-CoreDNS Pods רצים:\nkubectl get pods -n kube-system -l k8s-app=kube-dns\n2. בדקו לוגים:\nkubectl logs <coredns-pod> -n kube-system\n3. ודאו שה-Service קיים:\nkubectl get svc kube-dns -n kube-system",
             },
             {
               q: "מה הפקודה לגיבוי etcd?",
@@ -4013,7 +4013,7 @@ export const TOPICS = [
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
               answer: 2,
               explanation:
-                "Kubernetes לא יכול לקרוא logs מ-container שלא רץ.\nבדקו סטטוס עם `kubectl get pod`. אם CrashLoopBackOff השתמשו ב---previous.\nאם Init:Error. בדקו logs של ה-init container עם -c <init-name>.",
+                "אם ה\u2011Pod לא רץ, בדוק את הסטטוס:\nkubectl get pod <pod-name>\nל\u2011CrashLoopBackOff, השתמש ב\u2011--previous:\nkubectl logs <pod-name> --previous\nל\u2011init container:\nkubectl logs <pod-name> -c <init-name>\nאם ה\u2011Pod לא פועל, מחק אותו:\nkubectl delete pod <pod-name>",
             },
             {
               q: "Cluster חדש הותקן זה עתה.\n\nהרצת:\n\n```\nkubectl get nodes\n```\n\nפלט:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nמה הצעד הראשון?",
@@ -4026,22 +4026,22 @@ export const TOPICS = [
               hint: "חשבו על מה גורם ל-Node להפסיק לקבל עומסים.",
               answer: 3,
               explanation:
-                "ב-Cluster חדש, NotReady כמעט תמיד אומר ש-CNI plugin לא הותקן.\nKubernetes דורש CNI כדי להגדיר networking ל-Pods. בלעדיו Node לא יהיה Ready.\nהתקינו CNI (Calico/Flannel/Cilium) וה-Node יעבור ל-Ready.",
+                "ה\u2011Node במצב NotReady מכיוון ש\u2011CNI plugin (כגון Flannel או Calico) לא מותקן. יש להתקין את ה\u2011CNI plugin על ה\u2011Node, ולוודא שה\u2011Pods יוכלו לתקשר ביניהם.\nבנוסף, יש לוודא שה\u2011etcd database פועל ושה\u2011API server פעיל.\nבצע את הצעדים הבאים:\nהתקן את ה\u2011CNI plugin (Flannel או Calico).\nודא שה\u2011Node במצב Ready על ידי הרצת הפקודה:\nkubectl get nodes\nאם יש בעיה ב\u2011etcd או ב\u2011API server, בדוק את מצבם עם הפקודות המתאימות:\nkubectl get pod -n kube-system\nאחר כך, ה\u2011Node אמור לחזור למצב Ready ו\u2011Pods יתחילו לתפקד.",
             },
         ],
         questionsEn: [
             {
               q: "After a Deployment, the new Pods are in CrashLoopBackOff.\nThe previous version worked fine.\n\nWhat are your first two debugging steps?",
               options: [
-              "kubectl logs <new-pod> --previous\nand kubectl describe pod <new-pod>",
-              "Delete all pods and wait for recreation",
-              "kubectl rollout undo\nimmediately",
-              "Scale down to 0 and redeploy",
+              "kubectl rollout undo immediately to previous version",
+              "Delete all Pods and wait for Kubernetes to recreate",
+              "logs --previous then describe pod on the new Pod",
+              "Scale down to 0 and redeploy from scratch",
 ],
               hint: "Think about how to investigate a Pod that keeps crashing.",
-              answer: 0,
+              answer: 2,
               explanation:
-                "Before rollback, understand what changed.\nlogs --previous shows the crash output, describe pod shows the Events timeline.\nOnly after understanding the cause. Decide to fix code or run rollout undo.",
+                "Before performing a rollback, it is important to understand why the Pod is crashing.\nThe first step is to run:\nkubectl logs <new-pod> --previous\nThis command shows the logs from the crashed container, so you can see the error that caused the crash.\nThen run:\nkubectl describe pod <new-pod>\nThis command shows the Pod Events, including reasons such as image pull failure, OOMKilled, or a configuration error.\nOnly after understanding the root cause should you decide whether to fix the code or run rollout undo.",
             },
             {
               q: "A Node is in NotReady state and Pods are being evicted from it. What are the first troubleshooting steps",
@@ -4119,7 +4119,7 @@ export const TOPICS = [
               hint: "Think about what the command does behind the scenes.",
               answer: 0,
               explanation:
-                "Kubernetes can't stream logs from a container that isn't running.\nCheck status with `kubectl get pod`. If CrashLoopBackOff, use --previous.\nIf Init:Error, check init container logs with -c <init-name>.",
+                "If the Pod is not running, check the status:\nkubectl get pod <pod-name>\nFor CrashLoopBackOff, use --previous:\nkubectl logs <pod-name> --previous\nFor init container:\nkubectl logs <pod-name> -c <init-name>\nIf the Pod is stuck, delete it:\nkubectl delete pod <pod-name>",
             },
             {
               q: "A new cluster was just initialized.\n\nCommand:\n\n```\nkubectl get nodes\n```\n\nOutput:\n\n```\nNAME    STATUS     ROLES           AGE\nmaster  NotReady   control-plane   5m\n```\n\nWhat is the first step?",
@@ -4132,7 +4132,7 @@ export const TOPICS = [
               hint: "Think about what causes a Node to stop accepting workloads.",
               answer: 0,
               explanation:
-                "On a fresh cluster, NotReady almost always means the CNI plugin hasn't been installed.\nKubernetes requires CNI for Pod networking. Without it, the Node can't become Ready.\nInstall a CNI plugin (Calico/Flannel/Cilium) and the Node will transition to Ready.",
+                "The Node is in NotReady state because the CNI plugin (such as Flannel or Calico) is not installed. You need to install the CNI plugin on the Node to ensure the Pods can communicate with each other.\nAdditionally, make sure that the etcd database is running and the API server is active.\nFollow these steps:\nInstall the CNI plugin (Flannel or Calico).\nCheck the Node status with:\nkubectl get nodes\nIf there are issues with etcd or the API server, check their status with the following command:\nkubectl get pod -n kube-system\nOnce done, the Node should return to the Ready state and Pods will begin functioning.",
             },
         ],
       },
