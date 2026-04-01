@@ -6,7 +6,8 @@ metadata:
     policies.kyverno.io/title: Disallow Latest Tag
     policies.kyverno.io/description: >-
       Require explicit image tags or digests. The :latest tag is mutable
-      and makes rollbacks unreliable.
+      and makes rollbacks unreliable. Tagless images are also rejected
+      since they implicitly resolve to :latest.
     policies.kyverno.io/severity: medium
 spec:
   validationFailureAction: Enforce
@@ -24,3 +25,23 @@ spec:
           spec:
             containers:
               - image: "!*:latest"
+            =(initContainers):
+              - image: "!*:latest"
+            =(ephemeralContainers):
+              - image: "!*:latest"
+    - name: require-tag-or-digest
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Images must include an explicit tag (:version) or digest (@sha256:...)."
+        pattern:
+          spec:
+            containers:
+              - image: "*:*"
+            =(initContainers):
+              - image: "*:*"
+            =(ephemeralContainers):
+              - image: "*:*"

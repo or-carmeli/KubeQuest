@@ -1,0 +1,13 @@
+# Require review for CI/CD pipeline changes
+/.github/ @or-carmeli
+
+# Require review for Kubernetes manifests and policies
+/k8s/ @or-carmeli
+
+# Require review for Supabase migrations and edge functions
+/supabase/ @or-carmeli
+
+# Require review for security-sensitive configs
+/Dockerfile @or-carmeli
+/nginx.conf @or-carmeli
+/.gitleaks.toml @or-carmeli

@@ -277,7 +277,7 @@ const TRANSLATIONS = {
     resetPasswordTitle: "איפוס סיסמה",
     newPasswordLabel: "סיסמה חדשה", confirmPasswordLabel: "אימות סיסמה",
     saveNewPassword: "שמרי סיסמה חדשה", passwordUpdatedSuccess: "הסיסמה עודכנה בהצלחה",
-    passwordMismatch: "הסיסמאות אינן תואמות", passwordTooShort: "הסיסמה חייבת להכיל לפחות 6 תווים",
+    passwordMismatch: "הסיסמאות אינן תואמות", passwordTooShort: "הסיסמה חייבת להכיל לפחות 8 תווים",
     emailAlreadyExists: "כבר קיים חשבון עם אימייל זה. נסי להתחבר.",
     setNewPasswordTitle: "הגדרת סיסמה חדשה",
     greeting: "שלום", playingAsGuest: "· משחקת כאורחת",
@@ -551,7 +551,7 @@ const TRANSLATIONS = {
     resetPasswordTitle: "Reset Password",
     newPasswordLabel: "New Password", confirmPasswordLabel: "Confirm Password",
     saveNewPassword: "Save New Password", passwordUpdatedSuccess: "Password updated successfully",
-    passwordMismatch: "Passwords do not match", passwordTooShort: "Password must be at least 6 characters",
+    passwordMismatch: "Passwords do not match", passwordTooShort: "Password must be at least 8 characters",
     emailAlreadyExists: "An account with this email already exists. Try logging in.",
     setNewPasswordTitle: "Set New Password",
     greeting: "Hello", playingAsGuest: "· Playing as guest",
@@ -2677,7 +2677,7 @@ export default function K8sQuestApp() {
 
   const handlePasswordUpdate = async () => {
     setPasswordResetError("");
-    if (newPassword.length < 6) { setPasswordResetError(t("passwordTooShort")); return; }
+    if (newPassword.length < 8) { setPasswordResetError(t("passwordTooShort")); return; }
     if (newPassword !== confirmPassword) { setPasswordResetError(t("passwordMismatch")); return; }
     setPasswordResetLoading(true);
     try {
@@ -4620,7 +4620,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                         report_type: reportType,
                         note: reportNote||null,
                         user_id: user?.id||null,
-                        user_email: user?.email||null,
                         topic: selectedTopic?.id||null,
                         level: selectedLevel||null,
                       });
@@ -4635,7 +4634,6 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                           note: reportNote || "-",
                           topic: selectedTopic?.id || "-",
                           level: selectedLevel || "-",
-                          user: user?.email || "guest",
                         }),
                       });
                     } catch {}
@@ -6766,7 +6764,7 @@ const displayName = isGuest ? t("guestName") : (user?.user_metadata?.username ||
                     style={{flex:1,padding:"10px",background:incidentShareCopied?"rgba(16,185,129,0.15)":"var(--glass-6)",border:`1px solid ${incidentShareCopied?"#10B98150":"var(--glass-10)"}`,borderRadius:8,color:incidentShareCopied?"#10B981":"var(--text-secondary)",fontSize:13,fontWeight:700,cursor:"pointer",transition:"all 0.2s"}}>
                     {incidentShareCopied ? "✓ "+( lang==="en"?"Copied!":"הועתק!") : "📋 "+(lang==="en"?"Copy":"העתק")}
                   </button>
-                  <a href="https://www.linkedin.com/post/new" target="_blank" rel="noopener noreferrer"
+                  <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fkubequest.online" target="_blank" rel="noopener noreferrer"
                     style={{flex:1,padding:"10px",background:"rgba(10,102,194,0.12)",border:"1px solid rgba(10,102,194,0.35)",borderRadius:8,color:"#4a9ede",fontSize:13,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                     in {lang==="en"?"Open LinkedIn":"פתח LinkedIn"}
                   </a>

@@ -27,3 +27,13 @@ spec:
                   limits:
                     cpu: "?*"
                     memory: "?*"
+            =(initContainers):
+              - resources:
+                  limits:
+                    cpu: "?*"
+                    memory: "?*"
+            =(ephemeralContainers):
+              - resources:
+                  limits:
+                    cpu: "?*"
+                    memory: "?*"

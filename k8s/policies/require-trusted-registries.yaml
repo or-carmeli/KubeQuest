@@ -24,3 +24,7 @@ spec:
           spec:
             containers:
               - image: "ghcr.io/or-carmeli/*"
+            =(initContainers):
+              - image: "ghcr.io/or-carmeli/*"
+            =(ephemeralContainers):
+              - image: "ghcr.io/or-carmeli/*"

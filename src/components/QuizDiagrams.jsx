@@ -2387,7 +2387,11 @@ function ZoomableDiagram({ children, overlay }) {
     const el = containerRef.current;
     if (!el) return;
     el.addEventListener("wheel", handleWheel, { passive: false });
-    return () => el.removeEventListener("wheel", handleWheel);
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+      el.removeEventListener("touchmove", handleTouchMove);
+    };
   });
 
   const isZoomed = scale > 1.05;
@@ -2396,7 +2400,6 @@ function ZoomableDiagram({ children, overlay }) {
     <div
       ref={containerRef}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -2415,6 +2418,7 @@ function ZoomableDiagram({ children, overlay }) {
           transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
           transformOrigin: "center center",
           transition: dragRef.current.dragging || pinchRef.current.active ? "none" : "transform 0.15s ease-out",
+          willChange: scale > 1.05 ? "transform" : "auto",
         }}
       >
         {children}
@@ -2440,7 +2444,7 @@ function ZoomableDiagram({ children, overlay }) {
 function LazyDiagram({ children, diagramId, lang = "he" }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
-  const [enlarged, setEnlarged] = useState(false);
+  const [enlarged, setEnlarged] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
 
   useEffect(() => {
     const el = ref.current;

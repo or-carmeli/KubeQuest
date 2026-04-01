@@ -15,6 +15,13 @@ spec:
       labels:
         app: kubequest
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: kubequest
           image: ghcr.io/or-carmeli/kubequest:2.4.0  # pin to release tag; use @sha256:<digest> for immutable deploys
@@ -46,11 +53,26 @@ spec:
             initialDelaySeconds: 3
             periodSeconds: 10
 
-          # Security: run as non-root, read-only root filesystem
+          # Security: drop all capabilities, read-only root with writable tmpfs
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false   # nginx needs to write tmp files
-            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
 
       # Graceful shutdown: wait for in-flight requests before terminating
       terminationGracePeriodSeconds: 30
