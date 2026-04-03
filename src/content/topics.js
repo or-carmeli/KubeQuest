@@ -2836,7 +2836,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה מ-Node אחד בלבד.\nמספר Pods על אותו Node יכולים להשתמש ב-Volume.\nלהשוואה:\nReadWriteMany (RWX) - קריאה וכתיבה ממספר Nodes (דורש NFS/EFS).\nReadOnlyMany (ROX) - קריאה בלבד ממספר Nodes.",
+                "ReadWriteOnce (RWO) מאפשר ל-Volume להיות מחובר לקריאה וכתיבה מ-Node אחד בלבד.\nעם זאת, מספר Pods על אותו Node יכולים להשתמש באותו Volume.\nלהשוואה:\nReadWriteMany (RWX) - קריאה וכתיבה ממספר Nodes.\nReadOnlyMany (ROX) - קריאה בלבד ממספר Nodes.",
             },
             {
               q: "מה תפקיד Helm Chart\u200F?",
@@ -2889,7 +2889,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "StorageClass מגדיר כיצד Kubernetes יוצר volumes באופן דינמי.\nהוא כולל את סוג ה-provisioner (למשל aws-ebs, gce-pd) ואת פרמטרי האחסון.\nכאשר PVC מציין storageClassName, קוברנטיס יוצר אוטומטית PersistentVolume מתאים.",
+                "StorageClass מגדיר כיצד Kubernetes יוצר PersistentVolumes באופן דינמי כאשר נוצר PVC.\nהוא כולל את סוג ה-provisioner (למשל aws-ebs או gce-pd) ואת פרמטרי האחסון.\nכאשר PVC מציין storageClassName, Kubernetes יוצר עבורו PersistentVolume אוטומטית.",
             },
             {
               q: "מה קורה לנתונים ב-emptyDir כש-Pod נמחק?",
@@ -2943,7 +2943,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "ReadWriteOnce (RWO) allows read/write mount from a single Node at a time.\nMultiple Pods on the same Node can use the volume.\nFor comparison:\nReadWriteMany (RWX) - read/write from multiple Nodes (requires NFS/EFS).\nReadOnlyMany (ROX) - read-only from multiple Nodes.",
+                "ReadWriteOnce (RWO) allows a Volume to be mounted for read and write by a single Node only.\nHowever, multiple Pods on that same Node can use the same Volume.\nFor comparison:\nReadWriteMany (RWX) - read and write from multiple Nodes.\nReadOnlyMany (ROX) - read-only access from multiple Nodes.",
             },
             {
               q: "What is a Helm Chart?",
@@ -2996,7 +2996,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "StorageClass defines how Kubernetes creates volumes dynamically.\nIt includes the provisioner type (e.g., aws-ebs, gce-pd) and storage parameters.\nWhen a PVC specifies a storageClassName, Kubernetes automatically creates an appropriate PersistentVolume.",
+                "StorageClass defines how Kubernetes dynamically creates PersistentVolumes when a PVC is created.\nIt includes the type of provisioner (for example aws-ebs or gce-pd) and the storage parameters.\nWhen a PVC specifies storageClassName, Kubernetes automatically creates a PersistentVolume for it.",
             },
             {
               q: "What happens to emptyDir data when a Pod is deleted?",
@@ -3513,13 +3513,13 @@ export const TOPICS = [
             {
               q: "מה מציגה הפקודה\n\n```\n$ kubectl get events\n```",
               options: [
-              "אירועים מה-Namespace הנוכחי: Pod scheduling, image pull, probe failures",
-              "רק Pod logs",
-              "רק שגיאות",
-              "רק Node events",
+              "לוגים של כל הקונטיינרים שרצים ב-Namespace הנוכחי",
+              "אירועי Namespace כמו scheduling, image pull ו-probe failures",
+              "אירועים ברמת Node כמו disk pressure, OOM ו-kubelet errors",
+              "שגיאות שגרמו ל-restart או crash של Pods ב-Namespace",
 ],
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
-              answer: 0,
+              answer: 1,
               explanation:
                 "מציג את כל האירועים ב-Namespace הנוכחי: scheduling, image pull, probe failures.\nEvents מגיעים מ-Kubernetes עצמו, בניגוד ל-logs שמגיעים מהאפליקציה.\nהוסף --sort-by=.metadata.creationTimestamp לסדר לפי זמן.",
             },
@@ -3620,10 +3620,10 @@ export const TOPICS = [
             {
               q: "What does this command show?\n\n```\n$ kubectl get events\n```",
               options: [
-              "Only Pod logs",
-              "Only Node events",
-              "Namespace events: Pod scheduling, image pulls, probe failures",
-              "Only errors",
+              "Logs from all containers running in the current Namespace",
+              "Node-level events like disk pressure, OOM, and kubelet errors",
+              "Namespace events like scheduling, image pulls, and probe failures",
+              "Errors that caused a Pod restart or crash in the Namespace",
 ],
               hint: "Think about what the command does behind the scenes.",
               answer: 2,
