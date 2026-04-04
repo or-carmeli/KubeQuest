@@ -78,7 +78,6 @@ export const INCIDENTS = [
       {
         prompt:
           "Missing Config File on Startup\n\n• Logs show: `FATAL config file '/etc/app/config.yaml' not found`\n• App expects a mounted config file at `/etc/app/config.yaml`\n\nWhat is your next step?",
-        tags: ["config-mount"],
         promptHe:
           "קובץ Config חסר בהפעלה\n\n• לוגים מציגים: `FATAL config file '/etc/app/config.yaml' not found`\n• האפליקציה מצפה לקובץ config ב-`/etc/app/config.yaml`\n\nמה הצעד הבא?",
         options: [
