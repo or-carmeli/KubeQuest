@@ -33,7 +33,7 @@ export const INCIDENTS = [
         prompt:
           "#staging-alerts | PagerDuty\npayment-service v2.4.1 deployed to staging-west 10 min ago.\nAll 3 replicas now in CrashLoopBackOff. Deploy pipeline was green.\nNamespace: staging\n\nYou are on-call. Where do you start?",
         promptHe:
-          "#staging-alerts | PagerDuty\npayment-service v2.4.1 הוצב ל-staging-west לפני 10 דקות.\nכל 3 הרפליקות כעת ב-CrashLoopBackOff. ה-pipeline עבר בהצלחה.\nNamespace: staging\n\nאת/ה בתורנות. מאיפה מתחילים?",
+          "#staging-alerts | PagerDuty\npayment-service v2.4.1 הוצב ל-staging-west לפני 10 דקות.\nכל 3 הרפליקות כעת ב-CrashLoopBackOff. ה-pipeline עבר בהצלחה.\nNamespace: staging\n\nאת/ה בתורנות ומקבל/ת את ההתראה הזו. מהו צעד הבדיקה הראשון שלך",
         options: [
           "kubectl get pods -n staging",
           "kubectl rollout undo deployment/payment-service -n staging  (roll back immediately)",
