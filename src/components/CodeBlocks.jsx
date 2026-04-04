@@ -88,7 +88,7 @@ export function TerminalBlock({ children, variant, label, animate }) {
 
   // Split content into command lines and output lines
   const allLines = rawText.split("\n");
-  const cmdRegex = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)(?:\s|$)/;
+  const cmdRegex = /^(\$\s*)?(?:kubectl|helm|docker|kubeadm|crictl|etcdctl|curl|wget|apt|yum|pip|npm|go|make|df|du|free|top|ps|ss|systemctl|journalctl|dmesg|strace|perf|sar|iostat|lsof|uptime|tail|grep|awk|sed|cat|ls|find|sysctl|iptables|netstat|tcpdump|mount|umount)(?:\s|$)/;
 
   // For default variant, find command lines at the start
   let commandText = "";

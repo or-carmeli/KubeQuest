@@ -1298,39 +1298,40 @@ function ImagePullDiagram() {
 function ConnectionRefusedDiagram() {
   return (
     <div style={wrap}>
-      <div style={row({ gap: 24, width: "100%", maxWidth: 300, alignItems: "flex-start" })}>
+      <div style={row({ gap: 40, width: "100%", maxWidth: 320, alignItems: "flex-start" })}>
         <div style={col({ gap: 0, flex: 1, alignItems: "center" })}>
-          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "7px 14px", fontSize: 10 })}>
+          <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { padding: "8px 18px", fontSize: 11 })}>
             Client
           </div>
         </div>
         <div style={col({ gap: 0, flex: 1, alignItems: "center" })}>
-          <div style={smallBox(C.red, C.redBg, C.redText, { padding: "7px 14px", fontSize: 10 })}>
+          <div style={smallBox(C.red, C.redBg, C.redText, { padding: "8px 18px", fontSize: 11, position: "relative" })}>
             Server:8080
+            <div style={{ position: "absolute", bottom: -16, fontSize: 9, color: C.redText, opacity: 0.7, whiteSpace: "nowrap" }}>no listener</div>
           </div>
         </div>
       </div>
-      <div style={col({ gap: 0, width: "100%", maxWidth: 260, marginTop: 6 })}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
-          <span style={{ fontSize: 10, color: C.cyanText, fontFamily: MONO, whiteSpace: "nowrap" }}>SYN</span>
-          <div style={{ flex: 1, borderTop: "1px solid rgba(6,182,212,0.4)", position: "relative" }}>
-            <span style={{ position: "absolute", right: -2, top: -5, color: "rgba(6,182,212,0.6)", fontSize: 10 }}>{"\u25B6"}</span>
+      <div style={col({ gap: 0, width: "100%", maxWidth: 280, marginTop: 22 })}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
+          <span style={{ fontSize: 11, color: C.cyanText, fontFamily: MONO, whiteSpace: "nowrap", minWidth: 28 }}>SYN</span>
+          <div style={{ flex: 1, borderTop: "2px solid rgba(6,182,212,0.5)", position: "relative" }}>
+            <span style={{ position: "absolute", right: -3, top: -6, color: "rgba(6,182,212,0.7)", fontSize: 11 }}>{"\u25B6"}</span>
           </div>
         </div>
-        <div style={{ height: 6 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 4, width: "100%" }}>
-          <div style={{ flex: 1, borderTop: "1px solid rgba(239,68,68,0.4)", position: "relative" }}>
-            <span style={{ position: "absolute", left: -2, top: -5, color: "rgba(239,68,68,0.6)", fontSize: 10 }}>{"\u25C0"}</span>
+        <div style={{ height: 10 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
+          <div style={{ flex: 1, borderTop: "2px dashed rgba(239,68,68,0.5)", position: "relative" }}>
+            <span style={{ position: "absolute", left: -3, top: -6, color: "rgba(239,68,68,0.7)", fontSize: 11 }}>{"\u25C0"}</span>
           </div>
-          <span style={{ fontSize: 10, color: C.redText, fontFamily: MONO, whiteSpace: "nowrap" }}>RST</span>
+          <span style={{ fontSize: 11, color: C.redText, fontFamily: MONO, whiteSpace: "nowrap", minWidth: 28, textAlign: "right" }}>RST</span>
         </div>
       </div>
-      <div style={{ marginTop: 8 }}>
-        <div style={smallBox(C.red, C.redBg, C.redText, { padding: "5px 16px", fontSize: 10 })}>
+      <div style={{ marginTop: 14 }}>
+        <div style={smallBox(C.red, C.redBg, C.redText, { padding: "6px 20px", fontSize: 11 })}>
           Connection refused
         </div>
       </div>
-      <div style={caption()}>no process listening on port = kernel sends RST</div>
+      <div style={caption()}>no process on port {"\u2192"} kernel sends RST instead of SYN-ACK</div>
     </div>
   );
 }
@@ -1339,30 +1340,36 @@ function ConnectionRefusedDiagram() {
 function LsofDeletedFilesDiagram() {
   return (
     <div style={wrap}>
-      <div style={col({ gap: 0, width: "100%", maxWidth: 280 })}>
-        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
-          nginx writes to /var/log/app.log
+      <div style={col({ gap: 0, width: "100%", maxWidth: 300 })}>
+        <div style={smallBox(C.green, C.greenBg, C.greenText, { width: "100%", padding: "7px 14px", fontSize: 11 })}>
+          nginx {"\u2192"} writes /var/log/app.log
         </div>
-        <div style={{ textAlign: "center", padding: "2px 0" }}>
-          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        <div style={{ textAlign: "center", padding: "3px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
         </div>
-        <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+        <div style={smallBox(C.amber, C.amberBg, C.amberText, { width: "100%", padding: "7px 14px", fontSize: 11 })}>
           rm /var/log/app.log
         </div>
-        <div style={{ textAlign: "center", padding: "2px 0" }}>
-          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        <div style={{ textAlign: "center", padding: "3px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
         </div>
-        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
-          file gone from ls, disk still full
+        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "7px 14px", fontSize: 11 })}>
+          file deleted but nginx still holds FD
         </div>
-        <div style={{ textAlign: "center", padding: "2px 0" }}>
-          <span style={arrow({ fontSize: 10 })}>&#8595;</span>
+        <div style={{ textAlign: "center", padding: "3px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
         </div>
-        <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
-          lsof +D /var/log → nginx holds FD
+        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "7px 14px", fontSize: 11, borderColor: C.amber })}>
+          disk space not freed
+        </div>
+        <div style={{ textAlign: "center", padding: "3px 0" }}>
+          <span style={arrow({ fontSize: 11 })}>&#8595;</span>
+        </div>
+        <div style={smallBox(C.cyan, C.cyanBg, C.cyanText, { width: "100%", padding: "7px 14px", fontSize: 11 })}>
+          lsof +D /var/log
         </div>
       </div>
-      <div style={caption()}>deleted file + open FD = disk space not freed</div>
+      <div style={caption()}>deleted file + open FD = disk space not freed until process closes it</div>
     </div>
   );
 }
@@ -1373,7 +1380,7 @@ function DStateDiagram() {
     { text: "Process requests I/O",    color: C.green,  bg: C.greenBg,  textColor: C.greenText },
     { text: "Kernel handles I/O op",   color: C.indigo, bg: C.indigoBg, textColor: C.indigoText },
     { text: "I/O stalls (disk / NFS)", color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
-    { text: "D state — no signals",    color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "D state - no signals",    color: C.red,    bg: C.redBg,    textColor: C.redText },
   ];
 
   return (
@@ -1392,7 +1399,7 @@ function DStateDiagram() {
           </React.Fragment>
         ))}
       </div>
-      <div style={caption()}>kernel I/O wait — even SIGKILL blocked until I/O completes</div>
+      <div style={caption()}>kernel I/O wait - even SIGKILL blocked until I/O completes</div>
     </div>
   );
 }
@@ -1418,7 +1425,7 @@ function MemoryAvailableDiagram() {
           </div>
         </div>
         <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "5px 14px", fontSize: 9 })}>
-          ~3% left — swap or OOM Killer imminent
+          ~3% left - swap or OOM Killer imminent
         </div>
       </div>
       <div style={caption()}>available (not free) is the real metric</div>
@@ -1460,10 +1467,10 @@ function ZombieProcessDiagram() {
 // ── Linux OOM Killer flow ───────────────────────────────────────────
 function LinuxOomKillerDiagram() {
   const steps = [
-    { text: "RAM nearly exhausted",     color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
-    { text: "Kernel OOM Killer fires",  color: C.red,    bg: C.redBg,    textColor: C.redText },
-    { text: "Picks highest-memory PID", color: C.red,    bg: C.redBg,    textColor: C.redText },
-    { text: "Process killed (SIGKILL)", color: C.purple, bg: C.purpleBg, textColor: C.purpleText },
+    { text: "RAM exhausted",                color: C.amber,  bg: C.amberBg,  textColor: C.amberText },
+    { text: "Kernel triggers OOM Killer",  color: C.red,    bg: C.redBg,    textColor: C.redText },
+    { text: "Process killed",              color: C.purple, bg: C.purpleBg, textColor: C.purpleText },
+    { text: "Message appears in dmesg",    color: C.cyan,   bg: C.cyanBg,   textColor: C.cyanText },
   ];
 
   return (
@@ -1482,7 +1489,7 @@ function LinuxOomKillerDiagram() {
           </React.Fragment>
         ))}
       </div>
-      <div style={caption()}>dmesg: "Out of memory: Killed process"</div>
+      <div style={caption()}>Out of memory: Killed process</div>
     </div>
   );
 }
@@ -1536,7 +1543,30 @@ function FdLeakDiagram() {
           At limit → EMFILE on open/socket/accept
         </div>
       </div>
-      <div style={caption()}>FD leak — raising limit only delays the crash</div>
+      <div style={caption()}>FD leak - raising limit only delays the crash</div>
+    </div>
+  );
+}
+
+// ── Ephemeral port exhaustion ────────────────────────────────────────
+function EphemeralPortDiagram() {
+  return (
+    <div style={wrap}>
+      <div style={col({ gap: 6, width: "100%", maxWidth: 280 })}>
+        <div style={label(C.dim, { fontSize: 10, marginBottom: 0 })}>Port range: 32768-60999 (28,232 ports)</div>
+        <div style={{ width: "100%", position: "relative", height: 32, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: 0, left: 0, width: "99.9%", height: "100%", background: C.redBg, borderRight: `2px solid ${C.redText}` }} />
+        </div>
+        <div style={row({ gap: 4, justifyContent: "space-between", width: "100%" })}>
+          <span style={{ fontSize: 9, color: C.redText, fontFamily: MONO }}>28,231 in use</span>
+          <span style={{ fontSize: 9, color: C.redText, fontFamily: MONO }}>1 free</span>
+        </div>
+        <div style={{ ...dashed, width: "100%", margin: "2px 0" }} />
+        <div style={smallBox(C.red, C.redBg, C.redText, { width: "100%", padding: "6px 14px", fontSize: 10 })}>
+          Cannot assign requested address
+        </div>
+      </div>
+      <div style={caption()}>ephemeral port exhaustion - no ports left for new connections</div>
     </div>
   );
 }
@@ -2623,6 +2653,7 @@ const COMPONENT_MAP = {
   LinuxOomKillerDiagram,
   TcpSocketLeakDiagram,
   FdLeakDiagram,
+  EphemeralPortDiagram,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
