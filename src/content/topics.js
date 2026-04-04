@@ -4359,7 +4359,7 @@ export const TOPICS = [
             explanation: "פלט של `top` מציג כיצד זמן ה-CPU מתחלק בין סוגי פעילות שונים.\nבשורה הזו `id = 5%`, כלומר רק 5% מה-CPU פנוי.\nרוב זמן ה-CPU מנוצל לעבודה (`us + sy ≈ 90%`), ולכן ניתן להסיק שיש עומס CPU גבוה.\nכלל אצבע:\n· `id` גבוה - CPU פנוי\n· `id` נמוך - CPU עמוס\nפירוש המדדים העיקריים:\n· `us` - זמן CPU של תוכנות (\u200Euser space)\n· `sy` - זמן CPU של הקרנל\n· `id` - זמן CPU פנוי\n· `wa` - זמן המתנה ל-I/O (דיסק/רשת)",
           },
           {
-            q: "שרת production מגיב לאט. בודקים את מצב הזיכרון:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n       total  used  free  shared  buff/cache  available\nMem:    16G   15G   200M   100M       800M       500M\n```\n\nמה הפרשנות הנכונה למצב הזיכרון",
+            q: "שרת production מגיב לאט. בודקים את מצב הזיכרון:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n         total  used  free  shared  buff/cache  available\nMem:       16G   15G  200M    100M        800M       500M\n```\n\nמה הפרשנות הנכונה למצב הזיכרון",
             tags: ["memory-available"],
             options: [
               "הזיכרון כמעט אזל - `available` רק `500M` מתוך `16G`",
@@ -4454,7 +4454,7 @@ export const TOPICS = [
             explanation: "The output of `top` shows how CPU time is divided between different types of activity.\nIn this line, id = 5%, which means only 5% of the CPU is idle.\nMost of the CPU time is used for work (us + sy ≈ 90%), indicating high CPU load.\nRule of thumb:\n· High id - CPU is mostly idle\n· Low id - CPU is under heavy load\nMeaning of the main metrics:\n· us - CPU time used by user processes (user space)\n· sy - CPU time used by the kernel\n· id - CPU idle time\n· wa - time spent waiting for I/O (disk/network)",
           },
           {
-            q: "A production server is responding slowly. You check memory usage:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n       total  used  free  shared  buff/cache  available\nMem:    16G   15G   200M   100M       800M       500M\n```\n\nWhat is the correct interpretation of the memory state",
+            q: "A production server is responding slowly. You check memory usage:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n         total  used  free  shared  buff/cache  available\nMem:       16G   15G  200M    100M        800M       500M\n```\n\nWhat is the correct interpretation of the memory state",
             tags: ["memory-available"],
             options: [
               "Memory is nearly exhausted - only 500M available out of 16G",
