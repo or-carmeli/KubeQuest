@@ -42,7 +42,7 @@
   "devDependencies": {
     "@sentry/vite-plugin": "^5.1.1",
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.4.1",
+    "vite": "^8.0.3",
     "vitest": "^4.1.2"
   }
 }
