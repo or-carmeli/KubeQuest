@@ -184,4 +184,5 @@ export const TAG_DIAGRAM_CONFIG = {
   "linux-oom-killer":        { component: "LinuxOomKillerDiagram",       score: 4 },
   "tcp-socket-leak":         { component: "TcpSocketLeakDiagram",        score: 4 },
   "fd-leak":                 { component: "FdLeakDiagram",               score: 4 },
+  "ephemeral-port-exhaustion": { component: "EphemeralPortDiagram",     score: 4 },
 };
