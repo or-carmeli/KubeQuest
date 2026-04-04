@@ -4403,7 +4403,7 @@ export const TOPICS = [
               "`tail -f log.txt | grep ERROR`"],
             hint: "הקובץ גדול (2GB). צריך גם סינון לפי תוכן וגם סינון לפי זמן.",
             answer: 1,
-            explanation: "הקובץ גדול (`2GB`), ולכן חשוב לעבוד בצורה יעילה.\ngrep יכול לחפש ישירות בתוך הקובץ בלי להשתמש ב-`cat`.\ngrep ERROR log.txt\nלאחר מכן ניתן לסנן רק שורות מהשעה האחרונה לפי ה-timestamp באמצעות `date`.\ngrep ERROR log.txt |\n  grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"\nפקודות אחרות אינן מתאימות:\n· `cat log.txt | grep ERROR` - קורא את כל הקובץ ומייצר pipe מיותר.\n· `tail -f` - מיועד למעקב אחרי לוגים בזמן אמת.\n· `head` - מציג רק את תחילת הקובץ.",
+            explanation: "הקובץ גדול (`2GB`), ולכן חשוב לעבוד בצורה יעילה.\n`grep` יכול לחפש ישירות בתוך הקובץ בלי להשתמש ב-`cat`.\nלאחר מכן ניתן לסנן רק שורות מהשעה האחרונה לפי ה-timestamp באמצעות `date`.\nפקודות אחרות אינן מתאימות:\n· `cat log.txt | grep ERROR` - קורא את כל הקובץ ומייצר pipe מיותר.\n· `tail -f` - מיועד למעקב אחרי לוגים בזמן אמת.\n· `head` - מציג רק את תחילת הקובץ.",
           },
           {
             q: "הרצת:\n\n```\nps aux\n```\n\nאתה רואה תהליך במצב Z (zombie).\n\nמה הדרך הנכונה לטפל בו?",
@@ -4498,7 +4498,7 @@ export const TOPICS = [
               "`tail -f log.txt | grep ERROR`"],
             hint: "Think carefully about what each option describes.",
             answer: 1,
-            explanation: "The file is large (2GB), so it is important to work efficiently.\ngrep can search directly inside the file without using cat.\ngrep ERROR log.txt\nThen you can filter only lines from the last hour by timestamp using date.\ngrep ERROR log.txt |\n  grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"\nOther commands are not suitable:\n· cat log.txt | grep ERROR - reads the entire file and creates an unnecessary pipe.\n· tail -f - designed for following logs in real time.\n· head - shows only the beginning of the file.",
+            explanation: "The file is large (2GB), so it is important to work efficiently.\n`grep` can search directly inside the file without using `cat`.\nThen you can filter only lines from the last hour by timestamp using `date`.\nOther commands are not suitable:\n· `cat log.txt | grep ERROR` - reads the entire file and creates an unnecessary pipe.\n· `tail -f` - designed for following logs in real time.\n· `head` - shows only the beginning of the file.",
           },
           {
             q: "You ran:\n\n```\nps aux\n```\n\nYou see a process in Z state (zombie).\n\nWhat is the correct way to handle it?",
