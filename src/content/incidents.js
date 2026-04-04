@@ -198,9 +198,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "Unauthorized Error from Registry\n\n• Image: `registry.company.com/myapp:v2.1`\n• Error: `unauthorized: authentication required`\n• Pod cannot pull the image\n\nWhat does this error indicate?",
+          "Unauthorized Error from Registry\n\nkubectl describe pod myapp-7d4b9-abc12 -n default\n\nEvents:\n  Warning  Failed  kubelet  Error: ImagePullBackOff\n  Warning  Failed  kubelet  Failed to pull image\n    \"registry.company.com/myapp:v2.1\":\n    unauthorized: authentication required\n\nWhat does this error indicate?",
         promptHe:
-          "שגיאת Unauthorized מה-Registry\n\n• Image: \u200F`registry.company.com/myapp:v2.1`\n• שגיאה: \u200F`unauthorized: authentication required`\n• ה-Pod לא מצליח למשוך את ה-image\n\nמה מציינת שגיאה זו?",
+          "שגיאת \u200EUnauthorized מה-Registry\n\nkubectl describe pod myapp-7d4b9-abc12 -n default\n\nEvents:\n  Warning  Failed  kubelet  Error: ImagePullBackOff\n  Warning  Failed  kubelet  Failed to pull image\n    \"registry.company.com/myapp:v2.1\":\n    unauthorized: authentication required\n\nמה מציינת שגיאה זו",
         options: [
           "The image tag `v2.1` does not exist in the registry",
           "The registry requires credentials but the pod has none configured",
