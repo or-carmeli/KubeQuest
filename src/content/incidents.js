@@ -263,7 +263,7 @@ export const INCIDENTS = [
         explanation:
           "✓ `kubectl create secret docker-registry` creates a Secret with the correct type and `.dockerconfigjson` format.\n→ This is the official command for registry auth secrets.\n✗ Never store credentials in ConfigMaps or env vars. Secrets are namespace-scoped - can't reference kube-system from default.",
         explanationHe:
-          "✓ הפקודה `kubectl create secret docker-registry` יוצרת Secret מסוג `dockerconfigjson`, שהוא הפורמט הנכון לאימות מול registry.\nזו הדרך הרשמית ליצור secret שמכיל פרטי גישה ל-registry.\nלמה האחרות לא מתאימות:\n· לעולם אל תאחסנו אישורים ב-ConfigMaps או ב-env vars.\n· Secrets מוגדרים לפי namespace, לא ניתן להשתמש ב-Secret מ-kube-system ב-default.",
+          "✓ הפקודה `kubectl create secret docker-registry` יוצרת Secret מסוג `kubernetes.io/dockerconfigjson`, שהוא הפורמט הנכון לאימות מול registry.\nזו הדרך הרשמית ליצור secret שמכיל פרטי גישה ל-registry.\nלמה האחרות לא מתאימות:\n· לעולם אל תאחסנו אישורים ב-ConfigMaps או ב-env vars.\n· Secrets מוגדרים לפי namespace, לא ניתן להשתמש ב-Secret מ-kube-system ב-default.",
       },
       {
         prompt:
