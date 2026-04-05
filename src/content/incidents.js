@@ -105,18 +105,18 @@ export const INCIDENTS = [
         promptHe:
           "ConfigMap לא נמצא ב-Namespace\n\n• ה-pod spec מפנה ל-volume: \u200F`configMap: name: payment-config`\n• מריצים: \u200F`kubectl get configmap -n staging`\n\nkubectl get configmap -n staging\nNAME               DATA   AGE\napp-settings       3      12d\nkube-root-ca.crt   1      45d\n\nאין `payment-config` ברשימה. מה הדרך המהירה ביותר לוודא אם הוא קיים במקום אחר?",
         options: [
-          "kubectl get configmap payment-config --all-namespaces",
+          "kubectl get events -n staging --field-selector reason=FailedMount",
           "kubectl get configmap payment-config -n production",
           "kubectl describe namespace staging  (check if the ConfigMap was recently deleted)",
-          "kubectl get events -n staging --field-selector reason=FailedMount",
+          "kubectl get configmap payment-config --all-namespaces",
         ],
         optionsHe: [
-          "kubectl get configmap payment-config --all-namespaces",
+          "kubectl get events -n staging --field-selector reason=FailedMount",
           "kubectl get configmap payment-config -n production",
           "kubectl describe namespace staging  (בדוק אם ה-ConfigMap נמחק לאחרונה)",
-          "kubectl get events -n staging --field-selector reason=FailedMount",
+          "kubectl get configmap payment-config --all-namespaces",
         ],
-        answer: 0,
+        answer: 3,
         explanation:
           "✓ `--all-namespaces` searches every namespace at once. If `payment-config` exists in production but not staging, you'll see it immediately and know the ConfigMap was never created for this namespace.\n→ ConfigMaps are namespace-scoped: a ConfigMap in `production` is invisible to pods in `staging`.\n✗ Guessing `production` works only if you guess right. `describe namespace` doesn't show deleted resources. Events show the mount failure you already know about.",
         explanationHe:
@@ -180,18 +180,18 @@ export const INCIDENTS = [
         promptHe:
           "#deploy-notifications | Slack\nmyapp דיפלוי ראשון ל-staging-east יצא הרגע.\n2 רפליקות תקועות ב-ImagePullBackOff כבר 6 דקות.\nשירותים אחרים באותו cluster תקינים.\nNamespace: default\n\nמה הצעד האבחוני הראשון?",
         options: [
-          "kubectl describe pod <pod-name> -n default",
-          "kubectl delete deployment myapp  (tear it down and redeploy)",
           "kubectl get nodes  (check if a node is down)",
+          "kubectl delete deployment myapp  (tear it down and redeploy)",
+          "kubectl describe pod <pod-name> -n default",
           "kubectl logs <pod-name> -n default  (check startup errors)",
         ],
         optionsHe: [
-          "kubectl describe pod <pod-name> -n default",
-          "kubectl delete deployment myapp  (פירוק ופריסה מחדש)",
           "kubectl get nodes  (בדוק אם Node כלשהו ירד)",
+          "kubectl delete deployment myapp  (פירוק ופריסה מחדש)",
+          "kubectl describe pod <pod-name> -n default",
           "kubectl logs <pod-name> -n default  (בדוק שגיאות הפעלה)",
         ],
-        answer: 0,
+        answer: 2,
         explanation:
           "✓ `kubectl describe pod` shows the Events section with the exact pull failure reason. The kubelet on the node emits an event each time it tries and fails to pull the image, including the registry's HTTP response.\n→ The event tells you exactly which of the three common failures it is: `not found` (wrong tag), `unauthorized` (auth required), or `connection timeout` (unreachable registry).\n✗ Only one deployment affected, so nodes are fine. `kubectl logs` shows nothing because ImagePullBackOff happens in the image pull phase, before the container process ever starts. There are no logs to collect.",
         explanationHe:
@@ -249,18 +249,18 @@ export const INCIDENTS = [
         promptHe:
           "אין Secret של Registry ב-Namespace\n\n• `kubectl get secret -n default` לא מציג Secret קשור ל-registry\n• צריך אישורים ל-`registry.company.com`\n\nכיצד יוצרים אחד נכון?",
         options: [
-          "kubectl create secret docker-registry regcred --docker-server=registry.company.com --docker-username=user --docker-password=pass -n default",
+          "kubectl get secret regcred -n kube-system -o yaml | sed 's/namespace: kube-system/namespace: default/' | kubectl apply -f -",
           "kubectl create configmap registry-auth --from-file=credentials.json=/tmp/registry-credentials.json --namespace=default",
           "kubectl patch deployment api-server -n default --type=json -p='[{\"op\":\"add\",\"path\":\"/spec/template/spec/env\",\"value\":\"pass\"}]'",
-          "kubectl get secret regcred -n kube-system -o yaml | sed 's/namespace: kube-system/namespace: default/' | kubectl apply -f -",
+          "kubectl create secret docker-registry regcred --docker-server=registry.company.com --docker-username=user --docker-password=pass -n default",
         ],
         optionsHe: [
-          "kubectl create secret docker-registry regcred --docker-server=registry.company.com --docker-username=user --docker-password=pass -n default",
+          "kubectl get secret regcred -n kube-system -o yaml | sed 's/namespace: kube-system/namespace: default/' | kubectl apply -f -",
           "kubectl create configmap registry-auth --from-file=credentials.json=/tmp/registry-credentials.json --namespace=default",
           "kubectl patch deployment api-server -n default --type=json -p='[{\"op\":\"add\",\"path\":\"/spec/template/spec/env\",\"value\":\"pass\"}]'",
-          "kubectl get secret regcred -n kube-system -o yaml | sed 's/namespace: kube-system/namespace: default/' | kubectl apply -f -",
+          "kubectl create secret docker-registry regcred --docker-server=registry.company.com --docker-username=user --docker-password=pass -n default",
         ],
-        answer: 0,
+        answer: 3,
         explanation:
           "✓ `kubectl create secret docker-registry` creates a Secret with the correct type and `.dockerconfigjson` format.\n→ This is the official command for registry auth secrets.\n✗ Never store credentials in ConfigMaps or env vars. Secrets are namespace-scoped - can't reference kube-system from default.",
         explanationHe:
@@ -371,18 +371,18 @@ export const INCIDENTS = [
         promptHe:
           "מגבלת זיכרון נמוכה מדי\n\n• מגבלת זיכרון קונטיינר: \u200F`256Mi`\n• קוד יציאה: 137 (OOMKilled)\n• ה-Pod ממשיך לקרוס תחת עומס\n\nכיצד קובעים את מגבלת הזיכרון הנכונה?",
         options: [
-          "kubectl top pod api-server-xyz -n production  (see actual memory usage)",
-          "kubectl logs api-server-xyz -n production --previous  (scan logs for errors)",
           "kubectl get node  (check node total memory)",
+          "kubectl logs api-server-xyz -n production --previous  (scan logs for errors)",
+          "kubectl top pod api-server-xyz -n production  (see actual memory usage)",
           "kubectl get hpa -n production  (check autoscaler settings)",
         ],
         optionsHe: [
-          "kubectl top pod api-server-xyz -n production  (צפה בשימוש זיכרון בפועל)",
-          "kubectl logs api-server-xyz -n production --previous  (סרוק לוגים לשגיאות)",
           "kubectl get node  (בדוק כמות זיכרון כוללת ב-Node)",
+          "kubectl logs api-server-xyz -n production --previous  (סרוק לוגים לשגיאות)",
+          "kubectl top pod api-server-xyz -n production  (צפה בשימוש זיכרון בפועל)",
           "kubectl get hpa -n production  (בדוק הגדרות auto-scaler)",
         ],
-        answer: 0,
+        answer: 2,
         explanation:
           "✓ `kubectl top pod` shows current memory consumption from the Metrics Server. Run it shortly after a restart to watch memory climb toward the limit. Note: `top` shows a point-in-time snapshot, not peak usage. For historical peak data, use Prometheus metrics like `container_memory_working_set_bytes`.\n→ Compare the climbing value against the 256Mi limit to determine how much headroom the pod needs.\n✗ Logs help diagnose memory leaks, not measure current usage. Node memory is not per-pod usage. HPA controls replica count, not per-pod memory limits.",
         explanationHe:
@@ -515,18 +515,18 @@ export const INCIDENTS = [
         promptHe:
           "Service קיים אך התעבורה נכשלת\n\nkubectl get svc backend-svc -n production\nNAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE\nbackend-svc   ClusterIP   10.96.42.180   <none>        80/TCP    30d\n\nService קיים עם ClusterIP. Pods רצים. מהי הפקודה האבחונית ביותר?",
         options: [
-          "kubectl get endpoints backend-svc -n production",
+          "kubectl get pvc -n production  (check storage claims)",
           "kubectl get ingress -n production  (check ingress rules)",
           "kubectl describe node  (check node-level conditions)",
-          "kubectl get pvc -n production  (check storage claims)",
+          "kubectl get endpoints backend-svc -n production",
         ],
         optionsHe: [
-          "kubectl get endpoints backend-svc -n production",
+          "kubectl get pvc -n production  (בדוק תביעות אחסון)",
           "kubectl get ingress -n production  (בדוק כללי ingress)",
           "kubectl describe node  (בדוק מצב ה-node עצמו)",
-          "kubectl get pvc -n production  (בדוק תביעות אחסון)",
+          "kubectl get endpoints backend-svc -n production",
         ],
-        answer: 0,
+        answer: 3,
         explanation:
           "✓ `kubectl get endpoints` shows the pod IPs that the Service is routing to. A Service with a ClusterIP but zero endpoints means kube-proxy has nowhere to send traffic, resulting in 'connection refused'. This is the #1 cause when pods are healthy but the Service doesn't work.\n→ The Endpoints controller watches for pods matching the Service's selector and populates this list automatically.\n✗ Ingress, nodes, and PVCs are unrelated to in-cluster Service-to-Pod routing.",
         explanationHe:
@@ -564,17 +564,17 @@ export const INCIDENTS = [
           "נמצאה אי-התאמת Selector\n\n• Selector של Service: \u200F`app=backend`\n• Labels בפועל על Pods: \u200F`app=backend-v2`\n• ה-label שונה בדיפלוימנט האחרון, ה-Service לא עודכן\n\nמה התיקון?",
         options: [
           "Manually add label `app=backend` to every running pod with kubectl label (fragile, new pods lose it)",
-          "kubectl patch svc backend-svc -n production -p '{\"spec\":{\"selector\":{\"app\":\"backend-v2\"}}}'",
           "Delete the Service and recreate it with the correct selector (causes brief downtime)",
+          "kubectl patch svc backend-svc -n production -p '{\"spec\":{\"selector\":{\"app\":\"backend-v2\"}}}'",
           "Add an annotation to the Service to bypass label matching (not a real feature)",
         ],
         optionsHe: [
           "להוסיף ידנית label `app=backend` לכל Pod פעיל עם kubectl label (שביר, Pods חדשים מאבדים אותו)",
-          "kubectl patch svc backend-svc -n production -p '{\"spec\":{\"selector\":{\"app\":\"backend-v2\"}}}'",
           "למחוק את ה-Service וליצור אותו מחדש עם ה-selector הנכון (גורם להשבתה קצרה)",
+          "kubectl patch svc backend-svc -n production -p '{\"spec\":{\"selector\":{\"app\":\"backend-v2\"}}}'",
           "להוסיף annotation ל-Service כדי לעקוף התאמת labels (לא פיצ'ר אמיתי ב-K8s)",
         ],
-        answer: 1,
+        answer: 2,
         explanation:
           "✓ `kubectl patch svc` atomically updates the selector - zero downtime.\n→ Immediately connects the Service to the correct pods.\n✗ Manual pod labels are fragile (new pods won't have them). Delete+recreate causes downtime. Annotations don't affect routing.",
         explanationHe:
@@ -686,17 +686,17 @@ export const INCIDENTS = [
           "DNS מאושר כשבור - שלילת בעיית רשת\n\n• `nslookup kubernetes.default` מחזיר NXDOMAIN\n• עמית בשיחה אומר: 'זה נראה כמו בעיית CNI, אולי Calico קרס'\n\nאבל שמת לב קודם שתעבורת pod-to-pod לפי IP עדיין עובדת. מה זה אומר?",
         options: [
           "CNI is likely the root cause since IP routing itself may be broken. Check Calico/Flannel pods first",
-          "The CNI is healthy (IP routing works). The failure is isolated to DNS. Check CoreDNS in kube-system",
-          "Both CNI and DNS are failing simultaneously. Restart all kube-system pods to recover both layers",
           "The issue is in the application code, not the infrastructure. Check application DNS resolver config",
+          "Both CNI and DNS are failing simultaneously. Restart all kube-system pods to recover both layers",
+          "The CNI is healthy (IP routing works). The failure is isolated to DNS. Check CoreDNS in kube-system",
         ],
         optionsHe: [
           "CNI כנראה הסיבה השורשית כי ניתוב IP עצמו עשוי להיות שבור. בדוק Calico/Flannel Pods קודם",
-          "ה-CNI תקין (ניתוב IP עובד). הכשל מבודד לפתרון DNS. בדוק CoreDNS ב-kube-system",
-          "גם CNI וגם DNS כושלים במקביל. אתחל את כל ה-Pods ב-kube-system לשחזור שתי השכבות",
           "הבעיה בקוד האפליקציה ולא בתשתית. בדוק הגדרות DNS resolver באפליקציה",
+          "גם CNI וגם DNS כושלים במקביל. אתחל את כל ה-Pods ב-kube-system לשחזור שתי השכבות",
+          "ה-CNI תקין (ניתוב IP עובד). הכשל מבודד לפתרון DNS. בדוק CoreDNS ב-kube-system",
         ],
-        answer: 1,
+        answer: 3,
         explanation:
           "✓ If pod-to-pod communication by IP works, the CNI overlay network (Calico/Flannel/Cilium) is functioning. The failure is specifically in DNS name resolution. In Kubernetes, CoreDNS pods in `kube-system` handle all `*.svc.cluster.local` lookups.\n→ This is a critical debugging skill: narrow the blast radius by testing what works vs what doesn't. IP works + hostnames don't = DNS problem, not network problem.\n✗ CNI handles IP routing, not DNS. Restarting all kube-system pods is destructive and unnecessary. App code across many services didn't all break simultaneously.",
         explanationHe:
@@ -875,18 +875,18 @@ export const INCIDENTS = [
         promptHe:
           "בדיקת כללי NetworkPolicy\n\n• Policies שנמצאו: \u200F`deny-all-ingress`, `allow-frontend`\n• צריך להבין מה כל policy מתירה\n\nכיצד בודקים את הכללים?",
         options: [
-          "kubectl describe networkpolicy -n production  (shows selectors and rules for all policies)",
-          "kubectl logs networkpolicy-controller -n kube-system  (check controller logs for policy errors)",
           "kubectl get events -n production --sort-by=.metadata.creationTimestamp  (look for policy events)",
+          "kubectl logs networkpolicy-controller -n kube-system  (check controller logs for policy errors)",
+          "kubectl describe networkpolicy -n production  (shows selectors and rules for all policies)",
           "kubectl exec into a pod and inspect iptables rules  (check if kernel-level rules are applied)",
         ],
         optionsHe: [
-          "kubectl describe networkpolicy -n production  (מציג selectors וכללים לכל המדיניות)",
-          "kubectl logs networkpolicy-controller -n kube-system  (בדוק לוגי controller לשגיאות policy)",
           "kubectl get events -n production --sort-by=.metadata.creationTimestamp  (חפש אירועי policy)",
+          "kubectl logs networkpolicy-controller -n kube-system  (בדוק לוגי controller לשגיאות policy)",
+          "kubectl describe networkpolicy -n production  (מציג selectors וכללים לכל המדיניות)",
           "kubectl exec לתוך Pod ובדוק כללי iptables  (בדוק אם כללים ברמת kernel הוחלו)",
         ],
-        answer: 0,
+        answer: 2,
         explanation:
           "✓ `kubectl describe networkpolicy` shows three critical sections per policy: (1) PodSelector -- which pods this policy applies to, (2) Allowing ingress from -- the source pods/namespaces/IPs allowed, (3) Allowing egress to -- the destinations allowed. This readable format is much faster than parsing raw YAML.\n→ Key to read: the `deny-all-ingress` policy blocks everything; `allow-frontend` is supposed to create an exception. The question is whether the exception's selector matches reality.\n✗ There's no standalone 'networkpolicy-controller' with user-visible logs. Events don't contain policy rule details. iptables inspection requires root access and CNI-specific knowledge.",
         explanationHe:
@@ -927,10 +927,10 @@ export const INCIDENTS = [
           "Add `role=frontend` to the frontend Deployment pod template labels and wait for a full rollout to complete across replicas",
         ],
         optionsHe: [
-          "kubectl label pod <כל-pod-פרונטאנד> role=frontend  (תייג מחדש Pods בודדים אחד אחד, שביר ונמחק באתחול)",
+          "kubectl label pod <כל-pod-פרונטאנד> role=frontend  (תייג מחדש כל Pod בודד בנפרד אחד אחד, שביר ונמחק באתחול, לא עמיד ל-scale)",
           "kubectl patch networkpolicy allow-frontend -n production -p '{\"spec\":{\"ingress\":[{\"from\":[{\"podSelector\":{\"matchLabels\":{\"app\":\"frontend\"}}}]}]}}'",
           "kubectl delete networkpolicy deny-all-ingress  (הסר את ה-default-deny לחלוטין, חושף את כל ה-Pods לכל תעבורה)",
-          "הוסף `role=frontend` ל-pod template של frontend Deployment והמתן ל-rollout מלא שיסתיים על כל הרפליקות",
+          "הוסף `role=frontend` ל-pod template labels של frontend Deployment והמתן ל-rollout מלא שיסתיים על כל הרפליקות בכל ה-Nodes",
         ],
         answer: 1,
         explanation:

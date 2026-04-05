@@ -383,13 +383,13 @@ export const TOPICS = [
             {
               q: "מה ephemeral container ב-Kubernetes?",
               options: [
-              "קונטיינר זמני שמוסיפים ל-Pod רץ לצורך debugging",
               "Pod זמני שנוצר אוטומטית כש-Deployment מתזמן על Node חדש",
               "גרסה מוקטנת של Pod שמשמשת ל-batch jobs קצרים",
               "init container שמוגדר עם TTL קצוב לניקוי אוטומטי",
+              "קונטיינר זמני שמוסיפים ל-Pod רץ לצורך debugging",
 ],
               hint: "חשבו על איך עושים debug ל-Pod שכבר רץ.",
-              answer: 0,
+              answer: 3,
               explanation:
                 "\u200FEphemeral container\u200F הוא קונטיינר זמני שמוסיפים ל-Pod קיים לצורכי \u200Fdebugging\u200F או \u200Ftroubleshooting\u200F.\nבניגוד לקונטיינרים רגילים:\n• הוא לא מוגדר ב-\u200FPod spec\u200F המקורי\n• הוא מתווסף ל-Pod שכבר רץ\n• הוא מיועד ל-\u200Fdebugging\u200F בלבד, לא להרצת האפליקציה\n• הוא משתף את סביבת ה-Pod (כמו \u200Fnetwork\u200F ו-\u200Fnamespaces\u200F)\nכך ניתן לבדוק בעיות בתוך ה-Pod מבלי לשנות או להפעיל מחדש את הקונטיינרים הקיימים.",
             },
@@ -495,12 +495,12 @@ export const TOPICS = [
               q: "What is an ephemeral container in Kubernetes?",
               options: [
               "A temporary Pod automatically created when a Deployment targets a new Node",
-              "A temporary container added to a running Pod for debugging",
               "A stripped-down Pod variant used for short-lived batch jobs",
               "An init container configured with a TTL for automatic cleanup",
+              "A temporary container added to a running Pod for debugging",
 ],
               hint: "Think about how to debug a running Pod without restarting it.",
-              answer: 1,
+              answer: 3,
               explanation:
                 "An ephemeral container is a temporary container that is added to an existing Pod for debugging or troubleshooting purposes.\nUnlike regular containers:\n• It is not defined in the original Pod spec\n• It is added to an already running Pod\n• It is intended for debugging only, not for running the application\n• It shares the Pod environment (such as network and namespaces)\nThis allows you to test problems within the Pod without changing or restarting the existing containers.",
             },
@@ -764,13 +764,13 @@ export const TOPICS = [
               q: "איזה Service מתאים לגישה חיצונית ב-cloud?",
               tags: ["service-types"],
               options: [
-              "ClusterIP:\u200E מספק IP פנימי שנגיש מכל Node ב-Cluster",
-              "ExternalName:\u200E ממפה ל-DNS חיצוני ומאפשר גישה דרך CNAME",
               "LoadBalancer:\u200E יוצר Load Balancer ב-cloud ומקצה IP חיצוני",
+              "ExternalName:\u200E ממפה ל-DNS חיצוני ומאפשר גישה דרך CNAME",
+              "ClusterIP:\u200E מספק IP פנימי שנגיש מכל Node ב-Cluster",
               "NodePort:\u200E חושף port על כל Node לגישה ממחשבים חיצוניים",
 ],
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
-              answer: 2,
+              answer: 0,
               explanation:
                 "LoadBalancer מבקש מה-cloud provider ליצור LB חיצוני עם IP ציבורי.\nמנתב traffic מהאינטרנט לכל ה-Nodes דרך NodePort.\nמתאים ל-production כשצריך גישה חיצונית ישירה.",
             },
@@ -807,12 +807,12 @@ export const TOPICS = [
               tags: ["port-mapping"],
               options: [
               "targetPort משמש ל-HTTP בלבד, port משמש לכל הפרוטוקולים",
-              "port הוא לתנועה חיצונית, targetPort לתנועה פנימית בין Services",
               "port הוא הפורט של ה-Service, targetPort הוא הפורט של הקונטיינר",
+              "port הוא לתנועה חיצונית, targetPort לתנועה פנימית בין Services",
               "אין הבדל, שניהם מגדירים את הפורט שה-Service מאזין עליו",
 ],
               hint: "חשבו על מי מתרגם שמות שירותים לכתובות.",
-              answer: 2,
+              answer: 1,
               explanation:
                 "port = הפורט שה-Service חושף. targetPort = הפורט שהקונטיינר מאזין עליו.\nהם יכולים להיות שונים. Service על 80, קונטיינר על 8080.\nה-Service מתרגם בין port ל-targetPort אוטומטית.",
             },
@@ -1408,10 +1408,10 @@ export const TOPICS = [
             {
               q: "A Pod cannot reach the internet.\n\nCommand:\n\n```\nkubectl exec -- curl https://google.com\n```\n\nResult: timeout\n\nNetworkPolicy:\n\n```yaml\nspec:\n  podSelector:\n    matchLabels:\n      app: worker\n  policyTypes: [Egress]\n  egress:\n    - to:\n        - podSelector: {}\n```\n\nWhat is missing?",
               options: [
-              "A LoadBalancer Service in the Namespace",
+              "A LoadBalancer Service exposing port 443 in the Namespace",
               "An egress rule with `ipBlock: {cidr: 0.0.0.0/0}` to allow external IPs",
-              "An ingress rule to allow response traffic",
-              "Setting `hostNetwork: true` in the Pod spec",
+              "An ingress rule with ipBlock: {cidr: 0.0.0.0/0} to allow response traffic back",
+              "Setting `hostNetwork: true` and `dnsPolicy: ClusterFirstWithHostNet` in the Pod spec",
 ],
               hint: "Think about network-level traffic rules inside the Cluster.",
               answer: 1,
@@ -2260,13 +2260,13 @@ export const TOPICS = [
             {
               q: "Are Secrets fully encrypted by default?",
               options: [
-              "Yes, with AES-256 configured automatically during cluster installation",
+              "No, only base64 encoded by default",
               "Yes, Kubernetes always encrypts Secrets at rest with AES-256 by default",
               "Depends on the Kubernetes version. Encrypted automatically from v1.25 onwards",
-              "No, only base64 encoded by default",
+              "Yes, with AES-256 configured automatically during cluster installation",
 ],
               hint: "Think about how configuration gets into the container.",
-              answer: 3,
+              answer: 0,
               explanation:
                 "Secrets in Kubernetes are not encrypted by default.\nTheir values are only encoded using Base64 when stored in the API and in etcd.\nBase64 is encoding, not encryption.\nAnyone who has access to the Secret can easily decode it and see the original value.\nFor this reason, in production environments it is recommended to add an additional security layer, for example:\n• Encryption at Rest - encrypts Secrets inside etcd\n• External Secret Manager - such as AWS Secrets Manager, HashiCorp Vault, or 1Password\n• Sealed Secrets - encrypts Secrets before committing them to Git",
             },
@@ -2301,12 +2301,12 @@ export const TOPICS = [
               q: "What does RBAC stand for?",
               options: [
               "Resource Based Auth Configuration: a cloud-level permission mechanism",
-              "Recursive Binding Access Control: hierarchical binding management",
-              "Runtime Binary Access Control: runtime security for binaries",
               "Role Based Access Control",
+              "Runtime Binary Access Control: runtime security for binaries",
+              "Recursive Binding Access Control: hierarchical binding management",
 ],
               hint: "Think about linking permissions, roles, and identities.",
-              answer: 3,
+              answer: 1,
               explanation:
                 "RBAC (Role Based Access Control) is Kubernetes' authorization mechanism.\nIt defines who can perform which actions on which resources in the Kubernetes API.\nRBAC consists of three main components:\n• Roles / ClusterRoles - define permissions (e.g., get, list, create on Pods)\n• Subjects - users, groups, or service accounts\n• RoleBindings / ClusterRoleBindings - connect subjects to roles\nThis enables fine-grained access control following the principle of least privilege.",
             },
@@ -2315,11 +2315,11 @@ export const TOPICS = [
               options: [
               "Limits DNS queries from Pods within the Namespace",
               "Monitors logs and sends alerts when CPU exceeds a threshold",
-              "Limits the number of Nodes that Pods in the Namespace can run on",
               "Sets default and maximum CPU/Memory for Pods and containers in a Namespace",
+              "Limits the number of Nodes that Pods in the Namespace can run on",
 ],
               hint: "Think about defaults and constraints for new Pods.",
-              answer: 3,
+              answer: 2,
               explanation:
                 "LimitRange is a Kubernetes object that defines limits on CPU and Memory resources within a Namespace.\nIt can define:\n• minimum and maximum resource values for containers or Pods\n• default requests and limits if they are not specified\nWhen a Pod is created, Kubernetes checks whether it complies with the LimitRange constraints. If it does not, the Pod will not be created.",
             },
@@ -2693,13 +2693,13 @@ export const TOPICS = [
             {
               q: "What is the Least Privilege principle?",
               options: [
-              "Use Pod Security Standards at the restricted level only",
               "Grant only the minimum necessary permissions for each role",
+              "Use Pod Security Standards at the restricted level only",
               "Grant ClusterRole permissions to every ServiceAccount by default",
               "Block all network traffic between Namespaces by default",
 ],
               hint: "Think carefully about what each option describes.",
-              answer: 1,
+              answer: 0,
               explanation:
                 "Every entity gets only the exact permissions it needs. Nothing more.\nPrefer a scoped Role in one Namespace over cluster-admin.\nIf compromised, minimal permissions limit the blast radius.",
             },
@@ -2707,12 +2707,12 @@ export const TOPICS = [
               q: "What is Encryption at Rest?",
               options: [
               "Encrypting log files stored on Persistent Volumes",
-              "Encrypting etcd data that stores secrets and resources on disk",
               "Encrypting container images in the Registry before deployment",
+              "Encrypting etcd data that stores secrets and resources on disk",
               "Encrypting network traffic between Pods via automatic mTLS",
 ],
               hint: "Think carefully about what each option describes.",
-              answer: 1,
+              answer: 2,
               explanation:
                 "Encryption at Rest encrypts data stored in etcd.\nThis protects sensitive data such as Secrets even if someone gains access to the database files.\nBase64 is only encoding, not encryption.\nEncryption at Rest adds real encryption before data is written to etcd.",
             },
@@ -2721,12 +2721,12 @@ export const TOPICS = [
               tags: ["sealed-secrets"],
               options: [
               "Sharing encrypted Secrets between different Clusters using a shared key",
-              "Storing encrypted secrets in git safely as SealedSecret resources",
-              "Auto-creating Kubernetes Secrets from environment variables at deploy time",
               "Encrypting network traffic between Pods using keys stored in etcd",
+              "Auto-creating Kubernetes Secrets from environment variables at deploy time",
+              "Storing encrypted secrets in git safely as SealedSecret resources",
 ],
               hint: "Think about storing and injecting sensitive data.",
-              answer: 1,
+              answer: 3,
               explanation:
                 "Sealed Secrets allows you to store encrypted Secrets in Git.\nThe Secret is encrypted into a SealedSecret file using the cluster's public key.\nInside the cluster, the controller decrypts the SealedSecret\nand creates a regular Kubernetes Secret from it.\nThis allows you to store secrets in Git securely.",
             },
@@ -2830,11 +2830,11 @@ export const TOPICS = [
               hint: "חשבו כמה Nodes יכולים לגשת ל-Volume ובאיזה אופן.",
               options: [
               "קריאה וכתיבה מכל ה-Nodes במקביל",
-              "קריאה בלבד מ-Node אחד בלבד",
               "קריאה וכתיבה מ-Node אחד בלבד",
+              "קריאה בלבד מ-Node אחד בלבד",
               "כתיבה מ-Node אחד, קריאה מכולם",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה מ-Node אחד בלבד.\nמספר Pods על אותו Node יכולים להשתמש ב-Volume.\nלהשוואה:\nReadWriteMany (RWX) - קריאה וכתיבה ממספר Nodes (דורש NFS/EFS).\nReadOnlyMany (ROX) - קריאה בלבד ממספר Nodes.",
             },
@@ -2856,12 +2856,12 @@ export const TOPICS = [
               q: "מה הפקודה להתקנת Helm Chart\u200F?",
               hint: "חשבו על הפעולה הבסיסית שמפעילה Chart בפעם הראשונה.",
               options: [
-              "helm upgrade",
-              "helm template",
               "helm install",
+              "helm template",
+              "helm upgrade",
               "helm create",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "`helm install` מתקין Helm Chart ויוצר Release ב-cluster.\nהפקודה מרנדרת את ה-templates ומיישמת את ה-Kubernetes manifests.\nפקודות קשורות:\n\u200F• `helm upgrade` – מעדכן Release\n\u200F• `helm template` – מייצר YAML בלבד\n\u200F• `helm create` – יוצר Chart חדש",
             },
@@ -3035,12 +3035,12 @@ export const TOPICS = [
               tags: ["dynamic-provisioning"],
               hint: "חשבו מה קורה ברגע שמישהו מגדיר בקשת אחסון חדשה.",
               options: [
-              "הקצאת CPU דינמית ל-Pods לפי עומס שמדווח מ-metrics-server",
-              "שינוי גודל אוטומטי של PVC קיים לפי צריכת הדיסק בפועל",
               "PV ודיסק פיזי נוצרים אוטומטית כשנוצר PVC עם StorageClass",
+              "שינוי גודל אוטומטי של PVC קיים לפי צריכת הדיסק בפועל",
+              "הקצאת CPU דינמית ל-Pods לפי עומס שמדווח מ-metrics-server",
               "העברת Pod אוטומטית ל-Node אחר כשה-Node הנוכחי מתמלא",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "כש-PVC נוצר עם StorageClass, ה-provisioner יוצר PV ודיסק אמיתי אוטומטית.\nשינוי גודל דיסק קיים נעשה דרך Volume Expansion, לא דרך Dynamic Provisioning.\nזו הגישה הסטנדרטית בכל Cluster ענן, והיא חוסכת יצירת PV ידנית.",
             },
@@ -3062,11 +3062,11 @@ export const TOPICS = [
               hint: "חשבו על דגל CLI שמאפשר לשנות ערכים בודדים.",
               options: [
               "helm template --set key=value",
-              "helm rollback --set key=value",
               "helm install --set key=value",
+              "helm rollback --set key=value",
               "helm show values --set key=value",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "\u200F`--set` עוקף ערכים מ־values.yaml בזמן install או upgrade.\nמשמש לשינוי ערכים מהיר מה־CLI.\nלשינויים גדולים משתמשים בקובץ values נוסף (`-f`).",
             },
@@ -3391,12 +3391,12 @@ export const TOPICS = [
               q: "What is a VolumeSnapshot?",
               options: [
               "A backup of ConfigMaps and Secrets in a Namespace for future restore",
-              "A point-in-time backup of a PersistentVolume from which a new PVC can be restored",
               "A full backup of the Cluster including etcd, Pods, and ConfigMaps",
+              "A point-in-time backup of a PersistentVolume from which a new PVC can be restored",
               "A snapshot of a Pod's container filesystem and memory state",
 ],
               hint: "Think about storage challenges when Pods move between Nodes.",
-              answer: 1,
+              answer: 2,
               explanation:
                 "VolumeSnapshot creates a point-in-time copy of a PersistentVolume's data.\nYou can restore a new PVC from it. Useful before risky DB migrations.\nRequires a snapshot-controller and a CSI driver with snapshot support.",
             },
@@ -3404,13 +3404,13 @@ export const TOPICS = [
               q: "How does a StatefulSet manage storage?",
               tags: ["statefulset-storage"],
               options: [
-              "All Pods in the StatefulSet share a single PVC for storing data",
               "Each Pod gets its own unique PVC via volumeClaimTemplates",
+              "All Pods in the StatefulSet share a single PVC for storing data",
               "StatefulSet only uses emptyDir volumes that are deleted with the Pod",
               "StatefulSet does not support storage and relies on ConfigMaps for state",
 ],
               hint: "Think about how each Pod in a StatefulSet gets its own storage.",
-              answer: 1,
+              answer: 0,
               explanation:
                 "volumeClaimTemplates creates a unique PVC per Pod. Pod-0 gets data-myapp-0 and so on.\nEach PVC stays bound to its Pod across restarts. How databases keep persistent data.\nScaling down doesn't delete PVCs; scaling up reconnects the existing ones.",
             },
@@ -3445,12 +3445,12 @@ export const TOPICS = [
               q: "Command:\n\n```\nhelm upgrade\n```\n\nThe upgrade failed midway.\nRelease status: failed.\nA ConfigMap is half-updated.\n\nWhat is the next step?",
               options: [
               "Run `helm upgrade` again with the same parameters",
-              "Run `helm rollback` to the last working revision",
               "Delete the Release and reinstall from scratch",
               "Delete the ConfigMap and try again",
+              "Run `helm rollback` to the last working revision",
 ],
               hint: "Think about what happens when some resources updated and some did not.",
-              answer: 1,
+              answer: 3,
               explanation:
                 "When `helm upgrade` fails, some resources may remain in an inconsistent state.\n`helm rollback` restores the Release to a previous working revision.\nYou can view the list of revisions with `helm history` and choose which one to roll back to.",
             },
@@ -3513,13 +3513,13 @@ export const TOPICS = [
             {
               q: "מה מציגה הפקודה\n\n```\n$ kubectl get events\n```",
               options: [
-              "אירועים מה-Namespace הנוכחי: scheduling, image pull, probe failures",
               "רק Pod logs מכל ה-Pods שרצים כרגע ב-Namespace הנוכחי",
+              "אירועים מה-Namespace הנוכחי: scheduling, image pull, probe failures",
               "רק שגיאות קריטיות שדורשות התערבות מיידית של המפעיל",
               "רק Node events כמו disk pressure, memory pressure, PID pressure",
 ],
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
-              answer: 0,
+              answer: 1,
               explanation:
                 "מציג את כל האירועים ב-Namespace הנוכחי: scheduling, image pull, probe failures.\nEvents מגיעים מ-Kubernetes עצמו, בניגוד ל-logs שמגיעים מהאפליקציה.\nהוסף --sort-by=.metadata.creationTimestamp לסדר לפי זמן.",
             },
@@ -3553,13 +3553,13 @@ export const TOPICS = [
             {
               q: "מה מציגה הפקודה `kubectl top nodes`",
               options: [
-              "שימוש ב-CPU/Memory של כל Node בזמן אמת (דורש metrics-server)",
               "רשימת כל ה-Nodes ב-Cluster כולל Status ו-Roles",
               "לוגים של kubelet מכל Node ב-Cluster",
+              "שימוש ב-CPU/Memory של כל Node בזמן אמת (דורש metrics-server)",
               "רשימת Nodes עם Conditions חריגות כמו DiskPressure או MemoryPressure",
 ],
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
-              answer: 0,
+              answer: 2,
               explanation:
                 "מציג צריכת CPU ו-Memory בזמן אמת של כל Node, כולל אחוז ניצול.\nדורש metrics-server מותקן ב-Cluster.\n`kubectl top pods` מציג את אותו מידע ברמת Pod.",
             },
@@ -3579,13 +3579,13 @@ export const TOPICS = [
             {
               q: "מה תפקיד הפקודה `kubectl config get-contexts`?",
               options: [
-              "מציג את כל ה-kubeconfig contexts: cluster, user, ו-namespace מוגדרים",
               "מציג את כל ה-Docker contexts שמוגדרים ב-daemon המקומי",
               "מציג את כל ה-Namespaces ב-Cluster הנוכחי",
               "מציג את ה-context של כל Node כולל ה-kubelet configuration",
+              "מציג את כל ה-kubeconfig contexts: cluster, user, ו-namespace מוגדרים",
 ],
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
-              answer: 0,
+              answer: 3,
               explanation:
                 "מציג את כל ה-contexts ב-kubeconfig. כל context מכיל cluster, user, ו-namespace.\nהנוכחי מסומן בכוכבית (*). use-context מחליף context, set-context משנה namespace.",
             },
@@ -3927,10 +3927,10 @@ export const TOPICS = [
             {
               q: "לאחר Deployment, ה-Pods החדשים ב-CrashLoopBackOff.\nהגרסה הקודמת עבדה מצוין.\n\nמה שתי פעולות ה-debug הראשונות שלך?",
               options: [
-              "Scale down ל-0 ו-redeploy מחדש",
-              "מחק את כל ה-Pods ותן ל-Kubernetes ליצור אותם מחדש",
+              "Scale down ל-0 replicas ו-redeploy מחדש עם אותו manifest",
+              "מחק את כל ה-Pods הקורסים ותן ל-Kubernetes ליצור אותם מחדש אוטומטית",
               "kubectl logs <new-pod> --previous\nו-kubectl describe pod <new-pod>",
-              "kubectl rollout undo\nמיד לגרסה הקודמת",
+              "kubectl rollout undo deployment/<name>\nמיד לגרסה הקודמת ללא בדיקה",
 ],
               hint: "חשבו על איך לחקור Pod שקורס שוב ושוב.",
               answer: 2,
@@ -4397,10 +4397,10 @@ export const TOPICS = [
           {
             q: "שרת production רושם לוגים לקובץ בגודל 2GB.\nפורמט כל שורה:\n\n```\n2025-03-28 14:23:01 ERROR Connection refused to database\n```\n\nצריך למצוא את כל שורות ה-ERROR מהשעה האחרונה.\n\nאיזו פקודה הכי מתאימה",
             options: [
-              "`cat log.txt | grep ERROR`",
+              "`cat log.txt | grep ERROR | sort -t' ' -k1,2`",
               "`grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"`",
-              "`head -1000 log.txt | grep ERROR`",
-              "`tail -f log.txt | grep ERROR`"],
+              "`head -1000 log.txt | grep ERROR | tail -50`",
+              "`tail -f log.txt | grep ERROR --line-buffered`"],
             hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
             answer: 1,
             explanation: "בקובץ לוג של `2GB`, סינון כפול חוסך עיבוד מיותר.\ngrep ERROR מסנן רק שורות שגיאה, ו-grep עם `date` מצמצם לשעה האחרונה לפי פורמט ה-timestamp.\ngrep ישירות על הקובץ (בלי `cat`) יעיל יותר כי לא יוצר pipe מיותר.\n`cat | grep` קורא את כל `2GB` בלי סינון זמן.\n`tail -f` עוקב אחרי שורות חדשות בזמן אמת ולא מחפש בהיסטוריה.\n`head -1000` מציג רק את תחילת הקובץ (השורות הישנות ביותר).",
@@ -4492,10 +4492,10 @@ export const TOPICS = [
           {
             q: "A production server writes logs to a 2GB file.\nEach line format:\n\n```\n2025-03-28 14:23:01 ERROR Connection refused to database\n```\n\nYou need to find all ERROR lines from the last hour.\n\nWhich command is most appropriate",
             options: [
-              "`cat log.txt | grep ERROR`",
+              "`cat log.txt | grep ERROR | sort -t' ' -k1,2`",
               "`grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"`",
-              "`head -1000 log.txt | grep ERROR`",
-              "`tail -f log.txt | grep ERROR`"],
+              "`head -1000 log.txt | grep ERROR | tail -50`",
+              "`tail -f log.txt | grep ERROR --line-buffered`"],
             hint: "Think carefully about what each option describes.",
             answer: 1,
             explanation: "For a 2GB log file, double filtering avoids unnecessary processing.\ngrep ERROR filters only error lines, and grep with date narrows to the last hour based on the timestamp format.\ngrep directly on the file (without cat) is more efficient as it avoids an unnecessary pipe.\ncat | grep reads all 2GB without time filtering.\ntail -f follows new lines in real time and does not search history.\nhead -1000 shows only the start of the file (the oldest lines).",
@@ -5013,13 +5013,13 @@ export const TOPICS = [
           {
             q: "ArgoCD Application נמחק מהקלאסטר.\nהמשאבים שהוא ניהל (Deployment, Service) עדיין רצים.\n\nלמה?",
             options: [
-              "ה-Application הוגדר בלי finalizer של cascading delete",
               "המשאבים הוגדרו כ-immutable",
               "ArgoCD לא יכול למחוק משאבים שיש להם traffic פעיל",
               "צריך למחוק את ה-Application דרך CLI ולא דרך UI",
+              "ה-Application הוגדר בלי finalizer של cascading delete",
             ],
             hint: "חשבו על GitOps וסנכרון Git עם ה-Cluster.",
-            answer: 0,
+            answer: 3,
             explanation: "ברירת המחדל ב-ArgoCD - מחיקת Application לא מוחקת את המשאבים בקלאסטר.\nכדי לאפשר cascading delete, צריך להוסיף finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n    - resources-finalizer.argocd.argoproj.io\n```\n\nבלי זה, המשאבים נשארים גם אחרי מחיקת ה-Application.",
           },
           {
@@ -5112,13 +5112,13 @@ export const TOPICS = [
           {
             q: "An ArgoCD Application was deleted from the cluster.\nThe resources it managed (Deployment, Service) are still running.\n\nWhy",
             options: [
-              "The Application was configured without a cascading delete finalizer",
               "The resources were configured as immutable",
               "ArgoCD cannot delete resources that have active traffic",
               "The Application must be deleted via CLI, not via UI",
+              "The Application was configured without a cascading delete finalizer",
             ],
             hint: "Think about GitOps and syncing Git state with the Cluster.",
-            answer: 0,
+            answer: 3,
             explanation: "By default in ArgoCD, deleting an Application does not delete the managed resources in the cluster.\nTo enable cascading delete, you need to add a finalizer:\n\n```yaml\nmetadata:\n  finalizers:\n    - resources-finalizer.argocd.argoproj.io\n```\n\nWithout it, the resources remain even after the Application is deleted.",
           },
           {
