@@ -79,9 +79,31 @@ A Kubernetes/Linux/DevOps statement appears incorrect or misleading.
 ### 7. duplicate_content
 Two or more questions test the exact same concept with nearly identical wording.
 
+### 8. answer_distribution
+Check if correct answer indices (0-3) are distributed roughly evenly within each file or topic level. If one index accounts for more than 35% of answers in a group of 10+ questions, flag it.
+
+For each file (and for each topic level in topics.js), count how many times each index (0, 1, 2, 3) is the correct answer. Report the distribution and flag imbalances.
+
+Severity: **low** if one index is 35-45%, **medium** if one index is 45%+.
+
+### 9. cross_language_consistency
+Compare Hebrew and English versions of the same question. Note that options are intentionally shuffled between languages, so the answer INDEX will differ -- this is by design.
+
+Flag if:
+- The correct answer TEXT (the option the index points to) differs in meaning between He and En for the same question position.
+- The number of questions differs between He and En for the same topic/level.
+- An option concept exists in one language but is missing or replaced with a different concept in the other.
+- The hint text differs in meaning (not just translation) between languages.
+
+Only applies to topics.js (questions vs questionsEn) and incidents.js (options vs optionsHe).
+
+Severity: **high** if correct answer meaning differs, **medium** if an option concept drifts significantly.
+
 ## Output format
 
-Write your report to `agents/content-audit/reports/audit-report.md`.
+Write TWO report files:
+1. `agents/content-audit/reports/audit-report.md` -- human-readable markdown
+2. `agents/content-audit/reports/audit-report.json` -- machine-readable JSON
 
 Use this format for EVERY finding:
 
@@ -109,6 +131,8 @@ Use this format for EVERY finding:
 
 ## Report structure
 
+### Markdown report (audit-report.md)
+
 ```markdown
 # KubeQuest Content Audit Report
 
@@ -116,6 +140,17 @@ Use this format for EVERY finding:
 **Files scanned:** <list>
 **Total findings:** N
 **By severity:** high: N, medium: N, low: N
+
+## Answer Distribution
+
+| File / Topic Level | 0 | 1 | 2 | 3 | Total | Flags |
+|---------------------|---|---|---|---|-------|-------|
+| topics.js/workloads/easy | N | N | N | N | N | (flag if imbalanced) |
+| ... | | | | | | |
+
+## Cross-Language Consistency
+
+<list any mismatches found, or "No mismatches found.">
 
 ## Summary
 
@@ -137,6 +172,34 @@ Use this format for EVERY finding:
 ...
 ```
 
+### JSON report (audit-report.json)
+
+```json
+{
+  "date": "YYYY-MM-DD",
+  "files_scanned": ["path1", "path2"],
+  "total_findings": N,
+  "by_severity": { "high": N, "medium": N, "low": N },
+  "answer_distribution": {
+    "file/topic/level": { "0": N, "1": N, "2": N, "3": N, "total": N, "flagged": true|false }
+  },
+  "cross_language_mismatches": [],
+  "findings": [
+    {
+      "id": N,
+      "file": "path",
+      "question": "first 60 chars",
+      "severity": "low|medium|high",
+      "category": "ambiguity|fairness|weak_distractor|hint_leakage|explanation_clarity|technical_accuracy|duplicate_content|answer_distribution|cross_language_consistency",
+      "confidence": "low|medium|high",
+      "measurements": { "correct_len": N, "distractor_avg": N, "ratio": N, "gap_to_2nd": N },
+      "problem": "description",
+      "suggested_fix": "suggestion"
+    }
+  ]
+}
+```
+
 ## How to run
 
 1. Read each content file fully
@@ -149,9 +212,25 @@ Use this format for EVERY finding:
 
 Focus audit effort in this order:
 1. technical_accuracy (high impact on learning)
-2. hint_leakage (breaks assessment validity)
-3. fairness (correct answer guessable by length)
-4. ambiguity (confusing for learners)
-5. weak_distractor (reduces question difficulty)
-6. duplicate_content (wastes learner time)
-7. explanation_clarity (nice to improve but lower priority)
+2. cross_language_consistency (answer index mismatch = wrong answer shown)
+3. hint_leakage (breaks assessment validity)
+4. fairness (correct answer guessable by length)
+5. ambiguity (confusing for learners)
+6. weak_distractor (reduces question difficulty)
+7. duplicate_content (wastes learner time)
+8. answer_distribution (statistical bias in answer placement)
+9. explanation_clarity (nice to improve but lower priority)
+
+## Scope filtering
+
+When invoked with a scope argument, audit ONLY the specified subset:
+
+- `--file topics.js` -- audit only topics.js
+- `--file dailyQuestions.js` -- audit only dailyQuestions.js
+- `--file incidents.js` -- audit only incidents.js
+- `--topic networking` -- audit only the "networking" topic in topics.js
+- `--level hard` -- audit only hard-level questions
+- `--check fairness` -- run only the fairness check
+- `--check hint_leakage,fairness` -- run only specified checks
+
+If no scope is specified, audit everything (full scan).

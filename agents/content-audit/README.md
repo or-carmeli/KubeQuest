@@ -1,42 +1,55 @@
 # Content Audit Agent
 
-A minimal Claude Code agent that audits KubeQuest quiz and incident content for quality issues.
+A Claude Code agent that audits KubeQuest quiz and incident content for quality issues.
 
 ## Folder structure
 
 ```
 agents/content-audit/
-  CLAUDE.md        -- Agent system prompt (quality checks, rules, output format)
-  run-audit.md     -- Reusable prompt to trigger a full audit
-  README.md        -- This file
-  reports/         -- Generated reports (gitignored)
+  CLAUDE.md              -- Agent system prompt (quality checks, rules, output format)
+  run-audit.md           -- Reusable prompt to trigger audits (supports scope filtering)
+  validate-content.mjs   -- Mechanical validation script (runs in CI)
+  README.md              -- This file
+  reports/               -- Generated reports (gitignored)
     audit-report.md
+    audit-report.json
 ```
 
 ## How to run
 
-### Option A: From the project root with Claude Code
+### Full audit (Claude Code agent)
 
-```bash
-claude --agent-prompt agents/content-audit/CLAUDE.md "$(cat agents/content-audit/run-audit.md)"
-```
-
-### Option B: Inside a Claude Code session
-
-Paste or reference the prompt from `run-audit.md`:
+From a Claude Code session:
 
 ```
 Read agents/content-audit/CLAUDE.md for instructions, then run a full content audit.
-Read all files under src/content/ and produce a report at agents/content-audit/reports/audit-report.md.
+Read all files under src/content/ and produce reports at agents/content-audit/reports/.
 ```
 
-### Option C: Using the Claude Code Agent tool
-
-From another Claude Code session, launch a subagent:
+### Scoped audit
 
 ```
-Use the Agent tool to run a content audit.
-Prompt: the contents of agents/content-audit/run-audit.md
+Run a content audit. --file dailyQuestions.js
+Run a content audit. --topic networking --level hard
+Run a content audit. --check fairness,hint_leakage
+Run a content audit. --check answer_distribution
+Run a content audit. --check cross_language_consistency
+```
+
+### Mechanical validation (CI / local)
+
+```bash
+# Fails on high-severity issues (answer index out of bounds, 1.8x+ fairness ratio)
+node agents/content-audit/validate-content.mjs
+
+# Also fails on medium-severity issues
+node agents/content-audit/validate-content.mjs --strict
+```
+
+### From the CLI (one-shot)
+
+```bash
+claude --agent-prompt agents/content-audit/CLAUDE.md "$(cat agents/content-audit/run-audit.md)"
 ```
 
 ## What it checks
@@ -44,28 +57,37 @@ Prompt: the contents of agents/content-audit/run-audit.md
 | # | Category | Description |
 |---|----------|-------------|
 | 1 | ambiguity | Unclear or confusing question/answer wording |
-| 2 | fairness | Correct answer noticeably longer than distractors |
+| 2 | fairness | Correct answer noticeably longer than distractors (mechanical 1.4x ratio threshold) |
 | 3 | weak_distractor | Obviously wrong options that anyone could eliminate |
 | 4 | hint_leakage | Hints that reveal the correct answer |
 | 5 | explanation_clarity | Explanations that are too long, vague, or confusing |
 | 6 | technical_accuracy | Incorrect Kubernetes/Linux/DevOps statements |
 | 7 | duplicate_content | Near-duplicate questions testing the same concept |
+| 8 | answer_distribution | Correct answer index clustering (e.g., always option 2) |
+| 9 | cross_language_consistency | Hebrew/English version drift (different correct answer, missing options) |
+
+## CI integration
+
+The workflow `.github/workflows/content-audit.yml` runs `validate-content.mjs` on every PR that touches `src/content/`. It checks:
+
+- Answer indices within bounds (0-3)
+- Exactly 4 non-empty options per question
+- No high-severity fairness violations (1.8x+ ratio or 40+ char gap)
+- Answer distribution not heavily skewed (>45% on one index)
+- Question count matches between Hebrew and English
+
+## Output formats
+
+### Markdown (audit-report.md)
+Human-readable report with findings grouped by severity, answer distribution table, and cross-language consistency section.
+
+### JSON (audit-report.json)
+Machine-readable output for programmatic consumption. Includes all findings, measurements, and metadata.
 
 ## Design notes
 
 - **Report only** -- the agent never modifies source files
 - **Conservative** -- flags real issues, not stylistic preferences
 - **Hebrew-aware** -- preserves RTL readability, keeps K8s terms in English
-- **Minimal** -- no frameworks, no dependencies, just a system prompt and a run prompt
-- The CLAUDE.md file serves as both documentation and the agent's system prompt
-- Reports are written to a separate directory to keep source clean
-
-## Suggested improvements for v2
-
-- **Scope filtering:** Add flags to audit only a specific file or topic (e.g., `--file topics.js --topic networking`)
-- **Diff mode:** Compare current content against the last audit report and only flag new/changed issues
-- **CI integration:** Run the audit on PRs that touch `src/content/` and post findings as PR comments
-- **Severity thresholds:** Fail CI if any high-severity findings exist
-- **Answer distribution analysis:** Check if correct answers cluster on a specific index (e.g., always option 2)
-- **Cross-language consistency:** Compare Hebrew and English versions of the same question for drift
-- **Machine-readable output:** Add JSON output alongside markdown for programmatic consumption
+- **Minimal** -- no frameworks, no dependencies, just a system prompt and a validation script
+- Options are intentionally shuffled between Hebrew and English versions, so answer indices naturally differ between languages
