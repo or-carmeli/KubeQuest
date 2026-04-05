@@ -2606,7 +2606,7 @@ export const TOPICS = [
               hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
               answer: 1,
               explanation:
-                "Encryption at Rest מצפין נתונים שנשמרים ב-etcd.\nכך מידע רגיש כמו Secrets מוגן גם אם יש גישה לקבצי ה-database.\nBase64 הוא רק קידוד, לא הצפנה.\nEncryption at Rest מוסיף הצפנה אמיתית לפני השמירה.",
+                "Encryption at Rest מצפין נתונים רגישים שנשמרים ב-etcd, כמו Secrets.\nכך גם אם יש גישה לקבצי ה-database, התוכן לא ניתן לקריאה ללא מפתח ההצפנה.\nBase64 הוא קידוד בלבד שניתן לפענוח בקלות.\nEncryption at Rest מצפין את הנתונים לפני שהם נשמרים ב-etcd.",
             },
             {
               q: "מה Sealed Secrets מאפשר?",
@@ -2714,7 +2714,7 @@ export const TOPICS = [
               hint: "Think carefully about what each option describes.",
               answer: 2,
               explanation:
-                "Encryption at Rest encrypts data stored in etcd.\nThis protects sensitive data such as Secrets even if someone gains access to the database files.\nBase64 is only encoding, not encryption.\nEncryption at Rest adds real encryption before data is written to etcd.",
+                "Encryption at Rest encrypts sensitive data stored in etcd, such as Secrets.\nThis ensures that even if someone gains access to the database files, the content cannot be read without the encryption key.\nBase64 is only an encoding and can be easily decoded.\nEncryption at Rest encrypts the data before it is stored in etcd.",
             },
             {
               q: "What does Sealed Secrets allow?",
@@ -2836,7 +2836,7 @@ export const TOPICS = [
 ],
               answer: 1,
               explanation:
-                "ReadWriteOnce (RWO) מאפשר mount לקריאה וכתיבה מ-Node אחד בלבד.\nמספר Pods על אותו Node יכולים להשתמש ב-Volume.\nלהשוואה:\nReadWriteMany (RWX) - קריאה וכתיבה ממספר Nodes (דורש NFS/EFS).\nReadOnlyMany (ROX) - קריאה בלבד ממספר Nodes.",
+                "ReadWriteOnce (RWO) מאפשר ל-Volume להיות מחובר לקריאה וכתיבה מ-Node אחד בלבד.\nעם זאת, מספר Pods על אותו Node יכולים להשתמש באותו Volume.\nלהשוואה:\nReadWriteMany (RWX) - קריאה וכתיבה ממספר Nodes.\nReadOnlyMany (ROX) - קריאה בלבד ממספר Nodes.",
             },
             {
               q: "מה תפקיד Helm Chart\u200F?",
@@ -2889,7 +2889,7 @@ export const TOPICS = [
 ],
               answer: 3,
               explanation:
-                "StorageClass מגדיר כיצד Kubernetes יוצר volumes באופן דינמי.\nהוא כולל את סוג ה-provisioner (למשל aws-ebs, gce-pd) ואת פרמטרי האחסון.\nכאשר PVC מציין storageClassName, קוברנטיס יוצר אוטומטית PersistentVolume מתאים.",
+                "StorageClass מגדיר כיצד Kubernetes יוצר PersistentVolumes באופן דינמי כאשר נוצר PVC.\nהוא כולל את סוג ה-provisioner (למשל aws-ebs או gce-pd) ואת פרמטרי האחסון.\nכאשר PVC מציין storageClassName, Kubernetes יוצר עבורו PersistentVolume אוטומטית.",
             },
             {
               q: "מה קורה לנתונים ב-emptyDir כש-Pod נמחק?",
@@ -2943,7 +2943,7 @@ export const TOPICS = [
 ],
               answer: 2,
               explanation:
-                "ReadWriteOnce (RWO) allows read/write mount from a single Node at a time.\nMultiple Pods on the same Node can use the volume.\nFor comparison:\nReadWriteMany (RWX) - read/write from multiple Nodes (requires NFS/EFS).\nReadOnlyMany (ROX) - read-only from multiple Nodes.",
+                "ReadWriteOnce (RWO) allows a Volume to be mounted for read and write by a single Node only.\nHowever, multiple Pods on that same Node can use the same Volume.\nFor comparison:\nReadWriteMany (RWX) - read and write from multiple Nodes.\nReadOnlyMany (ROX) - read-only access from multiple Nodes.",
             },
             {
               q: "What is a Helm Chart?",
@@ -2996,7 +2996,7 @@ export const TOPICS = [
 ],
               answer: 0,
               explanation:
-                "StorageClass defines how Kubernetes creates volumes dynamically.\nIt includes the provisioner type (e.g., aws-ebs, gce-pd) and storage parameters.\nWhen a PVC specifies a storageClassName, Kubernetes automatically creates an appropriate PersistentVolume.",
+                "StorageClass defines how Kubernetes dynamically creates PersistentVolumes when a PVC is created.\nIt includes the type of provisioner (for example aws-ebs or gce-pd) and the storage parameters.\nWhen a PVC specifies storageClassName, Kubernetes automatically creates a PersistentVolume for it.",
             },
             {
               q: "What happens to emptyDir data when a Pod is deleted?",
@@ -3074,12 +3074,12 @@ export const TOPICS = [
               q: "כיצד מגדילים את נפח האחסון של PVC קיים ב-Kubernetes",
               hint: "חשבו איזה שדה ב-PVC קובע את גודל האחסון המבוקש.",
               options: [
-              "מעדכנים את שדה `capacity.storage` ישירות ב-PV המחובר ל-PVC",
+              "יוצרים PVC נוסף ומאחדים את שני הנפחים באמצעות kubectl merge-pvc",
+              "מגדילים את spec.resources.requests.storage ב-PVC עם StorageClass תואם",
+              "מעדכנים את שדה capacity.storage ישירות ב-PV המחובר ל-PVC",
               "מוחקים את ה-PVC ויוצרים חדש עם גודל גדול יותר באותו StorageClass",
-              "מגדילים את `spec.resources.requests.storage` ב-PVC כש-StorageClass תומך בהרחבה",
-              "יוצרים PVC נוסף ומאחדים את שני הנפחים באמצעות `kubectl merge-pvc`",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "כדי להרחיב PVC, ה-StorageClass חייב להגדיר `allowVolumeExpansion: true`.\nאחרי שזה מוגדר, מגדילים את הערך של `spec.resources.requests.storage` ב-PVC:\n```yaml\nspec:\n  resources:\n    requests:\n      storage: 20Gi\n```\nה-provisioner מרחיב את הדיסק אוטומטית. הקטנה לא נתמכת, ובחלק מה-backends נדרש Pod restart.",
             },
@@ -3087,12 +3087,12 @@ export const TOPICS = [
               q: "מה הפקודה\n\n```\nhelm template\n```\n\nעושה?",
               hint: "חשבו מה קורה כשרוצים לראות את התוצאה בלי לפרוס בפועל.",
               options: [
-              "יוצרת Helm Chart חדש מתוך תבנית ברירת מחדל",
-              "שומרת גרסה של ה-Chart לצורך rollback עתידי",
-              "ממירה את ה-Chart לקבצי YAML מבלי להחיל אותם על הקלאסטר",
-              "מעדכנת את קובץ values.yaml מתוך מאגר מרוחק",
+              "ממירה את ה-Chart לקבצי YAML בלי להחיל אותם על הקלאסטר",
+              "יוצרת Helm Chart חדש מתוך תבנית ברירת מחדל של Kubernetes",
+              "שומרת גרסה של ה-Chart לצורך rollback עתידי במקרה כשל",
+              "מעדכנת את קובץ values.yaml מתוך מאגר מרוחק של Charts",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "הפקודה helm template מבצעת rendering ל-Chart, כלומר מחליפה את המשתנים בתבניות בערכים מתוך values.yaml, ומפיקה קובצי Kubernetes YAML כפי שהם ייראו בפריסה בפועל.\n\nבניגוד ל-helm install הפקודה לא שולחת את ה-YAML ל-API server ולא יוצרת משאבים בקלאסטר.\n\nהפקודה שימושית לצורכי בדיקה, debug, ולתהליכי CI/CD או GitOps, כאשר רוצים לראות או לשמור את ה-YAML המלא לפני פריסה.",
             },
@@ -3182,12 +3182,12 @@ export const TOPICS = [
               q: "How do you increase the storage size of an existing PVC in Kubernetes",
               hint: "Think about which PVC field controls the requested storage size.",
               options: [
-              "Update the `capacity.storage` field directly on the PV bound to the PVC",
+              "Create an additional PVC and merge both volumes using kubectl merge-pvc",
+              "Increase spec.resources.requests.storage in the PVC with a compatible StorageClass",
+              "Update the capacity.storage field directly on the PV bound to the PVC",
               "Delete the PVC and recreate it with a larger size in the same StorageClass",
-              "Increase `spec.resources.requests.storage` in the PVC if StorageClass allows expansion",
-              "Create an additional PVC and merge both volumes using `kubectl merge-pvc`",
 ],
-              answer: 2,
+              answer: 1,
               explanation:
                 "To expand a PVC, the StorageClass must have `allowVolumeExpansion: true`.\nOnce that is set, increase the value of `spec.resources.requests.storage` in the PVC:\n```yaml\nspec:\n  resources:\n    requests:\n      storage: 20Gi\n```\nThe provisioner resizes the disk automatically. Shrinking is not supported, and some backends require a Pod restart.",
             },
@@ -3195,12 +3195,12 @@ export const TOPICS = [
               q: "What does the command\n\n```\nhelm template\n```\n\ndo?",
               hint: "Think about what happens when you want to see the output without deploying.",
               options: [
-              "Creates a new Helm Chart from a default template",
-              "Saves a version of the Chart for future rollback",
               "Converts the Chart to YAML files without applying them to the cluster",
-              "Updates the values.yaml file from a remote repository",
+              "Creates a new Helm Chart from a default Kubernetes template",
+              "Saves a version of the Chart for future rollback if needed",
+              "Updates the values.yaml file from a remote Chart repository",
 ],
-              answer: 2,
+              answer: 0,
               explanation:
                 "The helm template command performs rendering, converting the Chart to Kubernetes YAML files as they would appear in an actual deployment, without sending them to the cluster.\n\nUseful for testing, debugging, CI/CD pipelines, and GitOps workflows that need the full YAML stored in git.",
             },
@@ -3255,12 +3255,12 @@ export const TOPICS = [
               tags: ["storage-interface"],
               hint: "חשבו איך ספקי אחסון חיצוניים מתממשקים עם Kubernetes.",
               options: [
-              "Cluster Sync Interface:\u200E סטנדרט לסנכרון נתונים בין Clusters",
-              "Container Storage Interface:\u200E סטנדרט פתוח שמאפשר ל-vendors לכתוב storage drivers לקוברנטיס",
               "Cloud Storage Integration:\u200E שכבת חיבור ל-cloud object storage כמו S3",
+              "Cluster Sync Interface:\u200E סטנדרט לסנכרון נתונים בין Kubernetes Clusters",
+              "Container Storage Interface:\u200E סטנדרט פתוח ל-vendors לכתוב storage drivers",
               "Container Security Interface:\u200E סטנדרט לסריקת images ואכיפת מדיניות אבטחה",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
                 "CSI (Container Storage Interface) הוא סטנדרט שמאפשר לחבר מערכות אחסון חיצוניות ל-Kubernetes בצורה אחידה.\nבמקום ש-Kubernetes יטמיע תמיכה מובנית בכל סוג אחסון, ספקים (vendors) יכולים לכתוב CSI drivers שמטפלים ביצירה, חיבור וניהול של volumes.\nהדרייברים האלו (למשל AWS EBS, Azure Disk, Ceph) רצים בתוך הקלאסטר ומבצעים את פעולות האחסון בפועל.\nכך ניתן להוסיף או להחליף פתרונות אחסון בלי לשנות את Kubernetes עצמו.",
             },
@@ -3268,12 +3268,12 @@ export const TOPICS = [
               q: "מה התפקיד של Helm Hook?",
               hint: "חשבו על פעולות שצריכות לרוץ לפני או אחרי שלב מסוים ב-deploy.",
               options: [
-              "כלי לניפוי שגיאות (debug) של templates לפני פריסה",
-              "הרצת משאב (לרוב Job) בנקודה מסוימת במחזור החיים של Release",
-              "מנגנון לביצוע rollback לגרסה קודמת של Release",
-              "סוג Chart שמכיל רק dependencies ללא templates",
+              "מנגנון לביצוע rollback אוטומטי לגרסה קודמת של Release",
+              "כלי לניפוי שגיאות ובדיקת templates לפני פריסה לקלאסטר",
+              "הרצת משאב (לרוב Job) בנקודה מסוימת במחזור חיי Release",
+              "סוג Chart שמכיל dependencies בלבד ומנהל תלויות בין Charts",
 ],
-              answer: 1,
+              answer: 2,
               explanation:
                 "Helm Hooks מאפשרים להריץ משאבים של Kubernetes בנקודות מוגדרות במחזור החיים של Release, כמו לפני או אחרי פעולות install, upgrade או delete.\n\nברוב המקרים מדובר ב-Job שמבצע פעולה חד-פעמית, למשל:\nהרצת database migrations לפני deploy (pre-install, pre-upgrade)\nבדיקות או התראות לאחר deploy (post-install, post-upgrade)\n\nה-Hook מוגדר באמצעות annotation ב-YAML, ו-Helm מפעיל אותו אוטומטית בשלב המתאים.\n\nאיך זה נראה טכנית?\nמגדירים ב-YAML:\n\n```yaml\nannotations:\n  \"helm.sh/hook\": pre-install\n```\n\nואז Helm יודע להריץ את המשאב הזה בזמן המתאים.",
             },
@@ -3305,18 +3305,18 @@ export const TOPICS = [
                 "volumeClaimTemplates יוצר PVC ייחודי לכל Pod. Pod-0 מקבל data-myapp-0 וכן הלאה.\nכל PVC נשאר קשור ל-Pod שלו גם אחרי restart. כך databases שומרים נתונים.\nscale down לא מוחק PVCs; scale up מקשר PVCs ישנים מחדש.",
             },
             {
-              q: "מה volume binding mode WaitForFirstConsumer?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
+              q: "מה ההשפעה של \u200EvolumeBindingMode: WaitForFirstConsumer\u200F ב-StorageClass?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
               tags: ["wait-for-consumer"],
               options: [
-              "ממתין לאישור Admin ב-RBAC לפני יצירת PV חדש",
-              "ממתין לסיום replication בין Zones לפני binding של ה-PVC",
-              "ממתין שה-StorageClass יסיים health check לפני הקצאת Volume",
-              "ממתין ש-Pod יתזמן לפני יצירת PV. כדי ליצור PV באותה Zone כמו ה-Pod",
+              "ה-PV נוצר מיד עם ה-PVC אך מחובר ל-Node רק אחרי scheduling",
+              "יצירת ה-PV מתעכבת עד ש-Pod שצורך את ה-PVC מתזמן ל-Node",
+              "ה-PVC ממתין לאישור ידני של Admin לפני שה-PV נוצר",
+              "ה-PV נוצר בכל ה-Zones במקביל וה-Pod בוחר את הקרוב",
 ],
-              hint: "חשבו על הגדרת סוג ואיכות האחסון.",
-              answer: 3,
+              hint: "חשבו מתי בדיוק ה-PV נוצר ולמה זה חשוב בסביבת multi-AZ.",
+              answer: 1,
               explanation:
-                "Immediate יוצר PV מיד, אך הוא עלול להיווצר ב-Zone שונה מה-Pod.\nWaitForFirstConsumer מעכב יצירת PV עד שה-Pod מתזמן ל-Node, ויוצר PV באותה Zone.\nקריטי בסביבות multi-AZ כמו AWS EKS.",
+                "Immediate יוצר PV מיד עם ה-PVC, אך הוא עלול להיווצר ב-Zone שונה מה-Pod.\nWaitForFirstConsumer מעכב את יצירת ה-PV עד שה-Pod מתזמן ל-Node, כך שה-PV נוצר באותה Zone.\nקריטי בסביבות multi-AZ כמו AWS EKS.",
             },
             {
               q: "ה-PVC נשאר במצב Pending.\n\n```\nkubectl describe pvc\n\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nמה הבעיה",
@@ -3345,7 +3345,7 @@ export const TOPICS = [
                 "כאשר `helm upgrade` נכשל, חלק מהמשאבים עלולים להישאר במצב לא עקבי.\n`helm rollback` מחזיר את ה-Release לגרסה קודמת שעבדה.\nניתן לראות את רשימת הגרסאות עם `helm history` ולבחור לאיזו גרסה לחזור.",
             },
             {
-              q: "Pod עם PVC ב-AWS EKS עובר ל-Node שנמצא ב-Availability Zone אחרת.\nה-PVC נמצא במצב Bound, אבל ה-Pod לא מצליח לעלות.\n\nמה הסיבה הסבירה ביותר",
+              q: "Pod עם PVC ב-AWS EKS עובר ל-Node\nשנמצא ב-Availability Zone אחרת.\n\nה-PVC נמצא במצב Bound,\nאבל ה-Pod לא מצליח לעלות.\n\nמה הסיבה הסבירה ביותר",
               tags: ["storage-zone"],
               options: [
               "ה-PV נמחק אוטומטית כשה-Pod עבר Node ונוצר PV חדש ריק",
@@ -3356,7 +3356,7 @@ export const TOPICS = [
               hint: "חשבו על מגבלות פיזיות של דיסקים בענן.",
               answer: 1,
               explanation:
-                "EBS Volumes הם single-AZ ולא ניתן לחבר אותם ל-Node ב-AZ אחר.\nה-PVC מראה Bound כי ה-PV קיים, אבל ה-attach נכשל בגלל מגבלת ה-AZ.\nהפתרון: להגדיר StorageClass עם volumeBindingMode: WaitForFirstConsumer כדי שה-PV ייווצר באותו AZ כמו ה-Pod.",
+                "EBS volumes הם single-AZ ויכולים להתחבר רק ל-Node באותו AZ.\nכאן ה-PVC כבר Bound ל-PV ב-AZ מסוים.\nכאשר ה-Pod מתוזמן ל-Node ב-AZ אחר, ה-Volume לא יכול לבצע attach ולכן ה-Pod נכשל.\nWaitForFirstConsumer מונע מצב כזה בכך שהוא יוצר את ה-PV רק אחרי שה-Pod מתוזמן.",
             },
         ],
         questionsEn: [
@@ -3364,13 +3364,13 @@ export const TOPICS = [
               q: "What is CSI?",
               tags: ["storage-interface"],
               options: [
-              "Container Storage Interface: an open standard for writing storage drivers for Kubernetes",
-              "Container Security Interface: a standard for scanning images and enforcing security policies",
-              "Cluster Sync Interface: a standard for syncing data between Clusters",
               "Cloud Storage Integration: a layer for connecting to cloud object storage like S3",
+              "Container Security Interface: a standard for scanning images and enforcing security policies",
+              "Container Storage Interface: an open standard for vendors to write storage drivers",
+              "Cluster Sync Interface: a standard for syncing data between Kubernetes Clusters",
 ],
               hint: "Think carefully about what each option describes.",
-              answer: 0,
+              answer: 2,
               explanation:
                 "CSI (Container Storage Interface) is a standard that allows external storage systems to integrate with Kubernetes in a consistent way.\nInstead of Kubernetes having built-in support for every storage type, vendors can write CSI drivers that handle creating, attaching, and managing volumes.\nThese drivers (for example AWS EBS, Azure Disk, Ceph) run inside the cluster and perform the actual storage operations.\nThis allows adding or replacing storage solutions without modifying Kubernetes itself.",
             },
@@ -3378,12 +3378,12 @@ export const TOPICS = [
               q: "What is the role of a Helm Hook?",
               options: [
               "A tool for debugging and validating Chart templates before deployment",
-              "Running a resource (usually a Job) at a specific point in the Release lifecycle",
               "A mechanism for rolling back to a previous Release version automatically",
+              "Running a resource (usually a Job) at a specific point in the Release lifecycle",
               "A Chart type that contains only shared dependencies without any templates",
 ],
               hint: "Think about a package manager for Kubernetes resources.",
-              answer: 1,
+              answer: 2,
               explanation:
                 "Helm Hooks allow running Kubernetes resources at defined points in the Release lifecycle, such as before or after install, upgrade, or delete operations.\n\nTypically this is a Job performing a one-time action, for example:\nRunning database migrations before deploy (pre-install, pre-upgrade)\nTests or notifications after deploy (post-install, post-upgrade)\n\nThe Hook is defined via an annotation in YAML, and Helm triggers it automatically at the right stage.\n\nHow does it look technically?\nDefine in YAML:\n\n```yaml\nannotations:\n  \"helm.sh/hook\": pre-install\n```\n\nThen Helm knows to run this resource at the appropriate time.",
             },
@@ -3415,18 +3415,18 @@ export const TOPICS = [
                 "volumeClaimTemplates creates a unique PVC per Pod. Pod-0 gets data-myapp-0 and so on.\nEach PVC stays bound to its Pod across restarts. How databases keep persistent data.\nScaling down doesn't delete PVCs; scaling up reconnects the existing ones.",
             },
             {
-              q: "What does volume binding mode WaitForFirstConsumer do?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
+              q: "What is the effect of volumeBindingMode: WaitForFirstConsumer in a StorageClass?\n\n```yaml\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast-ssd\nvolumeBindingMode: WaitForFirstConsumer\n```",
               tags: ["wait-for-consumer"],
               options: [
               "Waits for Admin RBAC approval before creating a new PV for the claim",
+              "Waits for the StorageClass to finish a health check before allocating a Volume",
               "Waits for a Pod to be scheduled before creating the PV in the same Zone",
               "Waits for cross-Zone replication to complete before binding the PVC to a PV",
-              "Waits for the StorageClass to finish a health check before allocating a Volume",
 ],
-              hint: "Think about defining the type and quality of storage.",
-              answer: 1,
+              hint: "Think about when exactly the PV is created and why that matters in multi-AZ.",
+              answer: 2,
               explanation:
-                "Immediate creates a PV right away, but it might end up in a different Zone than the Pod.\nWaitForFirstConsumer delays PV creation until the Pod is scheduled, then creates it in the same Zone.\nCritical in multi-AZ environments like AWS EKS.",
+                "Immediate creates a PV right away with the PVC, but it might end up in a different Zone than the Pod.\nWaitForFirstConsumer delays PV creation until the Pod is scheduled to a Node, so the PV is created in the same Zone.\nCritical in multi-AZ environments like AWS EKS.",
             },
             {
               q: "A PVC stays in Pending state.\n\n```\nkubectl describe pvc\n\nEvents:\n  Warning  ProvisioningFailed\n  storageclass.storage.k8s.io\n  'fast-ssd' not found\n```\n\nWhat is wrong",
@@ -3466,7 +3466,7 @@ export const TOPICS = [
               hint: "Think about physical limitations of cloud disks.",
               answer: 1,
               explanation:
-                "EBS volumes are single-AZ and cannot be attached to a Node in a different AZ.\nThe PVC shows Bound because the PV exists, but the attach fails due to the AZ constraint.\nThe fix is to configure the StorageClass with volumeBindingMode: WaitForFirstConsumer so the PV is created in the same AZ as the Pod.",
+                "EBS volumes are single-AZ and can only be attached to a Node in the same Availability Zone.\nIn this case, the PVC is already Bound to a PV in a specific AZ.\nWhen the Pod is scheduled to a Node in a different AZ, the Volume cannot be attached, so the Pod fails to start.\nWaitForFirstConsumer prevents this situation by creating the PV only after the Pod is scheduled.",
             },
         ],
       },
@@ -3587,7 +3587,7 @@ export const TOPICS = [
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
               answer: 3,
               explanation:
-                "מציג את כל ה-contexts ב-kubeconfig. כל context מכיל cluster, user, ו-namespace.\nהנוכחי מסומן בכוכבית (*). use-context מחליף context, set-context משנה namespace.",
+                "ה-context ב-Kubernetes מגדיר את סביבת העבודה שלך, הכוללת 3 מרכיבים:\n* Cluster \u2013 הקישור ל-API server של ה-cluster.\n* User \u2013 המשתמש או המפתח שמבצע את החיבור.\n* Namespace \u2013 תחום העבודה בתוך ה-cluster (למשל: default).\nה-context מאפשר לך לעבוד עם ה-cluster וה-namespace המתאימים, ולבצע פקודות בקלות. ניתן לעבור בין contexts עם הפקודה kubectl config use-context.",
             },
         ],
         questionsEn: [
@@ -3694,7 +3694,7 @@ export const TOPICS = [
               hint: "Think about what the command does behind the scenes.",
               answer: 3,
               explanation:
-                "Lists all contexts in kubeconfig. Each bundles a cluster, user, and default namespace.\nCurrent context is marked with *. use-context switches context, set-context changes namespace.",
+                "A context in Kubernetes defines your working environment, consisting of three components:\n* Cluster \u2013 The connection to the API server of the cluster.\n* User \u2013 The user or credentials used for the connection.\n* Namespace \u2013 The scope within the cluster (e.g., default).\nThe context allows you to work with the appropriate cluster and namespace, making it easier to execute commands. You can switch between contexts using the kubectl config use-context command.",
             },
         ],
       },
@@ -3807,7 +3807,7 @@ export const TOPICS = [
               hint: "חשבו על הפקודה ומה היא עושה מאחורי הקלעים.",
               answer: 2,
               explanation:
-                "kubelet מזהה שה-disk מגיע לסף מלאות.\nסיבות נפוצות: logs שהצטברו, images ישנים, ו-emptyDir volumes גדולים.\nנקו עם docker image prune ו-journalctl --vacuum-time=2d, או הרחיבו את ה-disk.",
+                "kubelet מזהה שה-disk מגיע לסף מלאות.\nסיבות נפוצות: logs שהצטברו, images ישנים, ו-emptyDir volumes גדולים.\nנקו עם docker image prune ו-journalctl --vacuum-time=2d או הרחיבו את ה-disk.",
             },
         ],
         questionsEn: [
@@ -3928,14 +3928,14 @@ export const TOPICS = [
               q: "לאחר Deployment, ה-Pods החדשים ב-CrashLoopBackOff.\nהגרסה הקודמת עבדה מצוין.\n\nמה שתי פעולות ה-debug הראשונות שלך?",
               options: [
               "Scale down ל-0 replicas ו-redeploy מחדש עם אותו manifest",
-              "מחק את כל ה-Pods הקורסים ותן ל-Kubernetes ליצור אותם מחדש אוטומטית",
               "kubectl logs <new-pod> --previous\nו-kubectl describe pod <new-pod>",
+              "מחק את כל ה-Pods הקורסים ותן ל-Kubernetes ליצור אותם מחדש אוטומטית",
               "kubectl rollout undo deployment/<name>\nמיד לגרסה הקודמת ללא בדיקה",
 ],
               hint: "חשבו על איך לחקור Pod שקורס שוב ושוב.",
-              answer: 2,
+              answer: 1,
               explanation:
-                "לפני rollback חשוב להבין מה השתנה.\nlogs --previous מציג output מה-crash, ו-describe pod מציג Events.\nרק אחרי שמבינים את הסיבה, מחליטים לתקן code או לעשות rollout undo.",
+                "לפני שעושים rollback, חשוב להבין למה ה-Pod קורס.\nהצעד הראשון הוא להריץ:\nkubectl logs <new-pod> --previous\nפקודה זו מציגה את הלוגים מה-container שקרס, כך שאפשר לראות את השגיאה שגרמה לקריסה.\nלאחר מכן מריצים:\nkubectl describe pod <new-pod>\nפקודה זו מציגה את ה-Events של ה-Pod, כולל סיבות כמו image pull failure, OOMKilled, או שגיאת קונפיגורציה.\nרק אחרי שמבינים את הסיבה, מחליטים אם לתקן את הקוד או לעשות rollout undo.",
             },
             {
               q: "Node במצב NotReady ו-Pods מתחילים להתפנות ממנו. מה הפעולות הראשונות לבדיקה",
@@ -3974,7 +3974,7 @@ export const TOPICS = [
               hint: "חשבו על תרגום שמות לכתובות בתוך ה-Cluster.",
               answer: 3,
               explanation:
-                "התשובה הנכונה: הרצת `nslookup` מתוך Pod מוודאת ש-CoreDNS מגיב לבקשות.\n\nאם הבדיקה נכשלת:\n1. ודאו שה-CoreDNS Pods רצים: `kubectl get pods -n kube-system -l k8s-app=kube-dns`\n2. בדקו לוגים: `kubectl logs <coredns-pod> -n kube-system`\n3. ודאו שה-Service קיים: `kubectl get svc kube-dns -n kube-system`",
+                "התשובה הנכונה: הרצת `nslookup` מתוך Pod מוודאת ש-CoreDNS מגיב לבקשות.\n\nאם הבדיקה נכשלת:\n1. ודאו שה-CoreDNS Pods רצים:\nkubectl get pods -n kube-system -l k8s-app=kube-dns\n2. בדקו לוגים:\nkubectl logs <coredns-pod> -n kube-system\n3. ודאו שה-Service קיים:\nkubectl get svc kube-dns -n kube-system",
             },
             {
               q: "מה הפקודה לגיבוי etcd?",
@@ -4026,22 +4026,22 @@ export const TOPICS = [
               hint: "חשבו על מה גורם ל-Node להפסיק לקבל עומסים.",
               answer: 3,
               explanation:
-                "ב-Cluster חדש, NotReady כמעט תמיד אומר ש-CNI plugin לא הותקן.\nKubernetes דורש CNI כדי להגדיר networking ל-Pods. בלעדיו Node לא יהיה Ready.\nהתקינו CNI (Calico/Flannel/Cilium) וה-Node יעבור ל-Ready.",
+                "ה\u2011Node במצב NotReady מכיוון ש\u2011CNI plugin (כגון Flannel או Calico) לא מותקן. יש להתקין את ה\u2011CNI plugin על ה\u2011Node, ולוודא שה\u2011Pods יוכלו לתקשר ביניהם.\nבנוסף, יש לוודא שה\u2011etcd database פועל ושה\u2011API server פעיל.\nבצע את הצעדים הבאים:\nהתקן את ה\u2011CNI plugin (Flannel או Calico).\nודא שה\u2011Node במצב Ready על ידי הרצת הפקודה:\nkubectl get nodes\nאם יש בעיה ב\u2011etcd או ב\u2011API server, בדוק את מצבם עם הפקודות המתאימות:\nkubectl get pod -n kube-system\nאחר כך, ה\u2011Node אמור לחזור למצב Ready ו\u2011Pods יתחילו לתפקד.",
             },
         ],
         questionsEn: [
             {
               q: "After a Deployment, the new Pods are in CrashLoopBackOff.\nThe previous version worked fine.\n\nWhat are your first two debugging steps?",
               options: [
-              "kubectl logs <new-pod> --previous\nand kubectl describe pod <new-pod>",
-              "Delete all pods and wait for the controller to recreate them",
-              "kubectl rollout undo immediately to restore the previous version",
               "Scale down the Deployment to 0 replicas and then redeploy",
+              "Delete all pods and wait for the controller to recreate them",
+              "kubectl logs <new-pod> --previous\nand kubectl describe pod <new-pod>",
+              "kubectl rollout undo immediately to restore the previous version",
 ],
               hint: "Think about how to investigate a Pod that keeps crashing.",
-              answer: 0,
+              answer: 2,
               explanation:
-                "Before rollback, understand what changed.\nlogs --previous shows the crash output, describe pod shows the Events timeline.\nOnly after understanding the cause. Decide to fix code or run rollout undo.",
+                "Before performing a rollback, it is important to understand why the Pod is crashing.\nThe first step is to run:\nkubectl logs <new-pod> --previous\nThis command shows the logs from the crashed container, so you can see the error that caused the crash.\nThen run:\nkubectl describe pod <new-pod>\nThis command shows the Pod Events, including reasons such as image pull failure, OOMKilled, or a configuration error.\nOnly after understanding the root cause should you decide whether to fix the code or run rollout undo.",
             },
             {
               q: "A Node is in NotReady state and Pods are being evicted from it. What are the first troubleshooting steps",
@@ -4132,7 +4132,7 @@ export const TOPICS = [
               hint: "Think about what causes a Node to stop accepting workloads.",
               answer: 0,
               explanation:
-                "On a fresh cluster, NotReady almost always means the CNI plugin hasn't been installed.\nKubernetes requires CNI for Pod networking. Without it, the Node can't become Ready.\nInstall a CNI plugin (Calico/Flannel/Cilium) and the Node will transition to Ready.",
+                "The Node is in NotReady state because the CNI plugin (such as Flannel or Calico) is not installed. You need to install the CNI plugin on the Node to ensure the Pods can communicate with each other.\nAdditionally, make sure that the etcd database is running and the API server is active.\nFollow these steps:\nInstall the CNI plugin (Flannel or Calico).\nCheck the Node status with:\nkubectl get nodes\nIf there are issues with etcd or the API server, check their status with the following command:\nkubectl get pod -n kube-system\nOnce done, the Node should return to the Ready state and Pods will begin functioning.",
             },
         ],
       },
@@ -4160,7 +4160,7 @@ export const TOPICS = [
               "free -m | grep Mem"],
             hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
             answer: 2,
-            explanation: "כשיש חשד ל-memory leak או צריכת RAM חריגה, קודם מזהים את התהליך שצורך הכי הרבה זיכרון.\n\u200Eps aux --sort=-%mem ממיין תהליכים לפי שימוש בזיכרון.\nhead מציג את התהליכים המובילים בצריכה.\nאחרי שמזהים את ה-PID אפשר להמשיך בדיבוג עם כלים כמו pmap, top, או smem.",
+            explanation: "כשיש חשד ל-\u200Ememory leak או צריכת RAM חריגה, קודם מזהים את התהליך שצורך הכי הרבה זיכרון.\n`ps aux --sort=-%mem` ממיין תהליכים לפי שימוש בזיכרון.\n`head` מציג את התהליכים המובילים בצריכה.\nאחרי שמזהים את ה-PID אפשר להמשיך בדיבוג עם כלים כמו `pmap`, `top`, או `smem`.",
           },
           {
             q: "הרצת:\n\n```\ndf -h\n```\n\nפלט:\n\n```\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   48G  2.0G  96% /\n```\n\nמה הבעיה ומה הצעד הראשון?",
@@ -4170,9 +4170,9 @@ export const TOPICS = [
               "הדיסק כמעט מלא - יש למחוק את כל \u2066/var/log\u2069 ולהפעיל מחדש",
               "השימוש בדיסק תקין - ערך של 96% סביר לשרת ייצור",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "96% תפוסה זה הרבה. מה הצעד הראשון לפני שמוחקים משהו",
             answer: 0,
-            explanation: "הפלט מראה שהדיסק ב-96% תפוסה, נשארו רק `2GB` מתוך `50GB`.\nב-100% שירותים יפסיקו לכתוב לוגים, databases עלולים לקרוס, ואפילו SSH עלול להפסיק לעבוד.\nהצעד הראשון הוא לזהות מה תופס מקום באמצעות הפקודה du -sh /* שמציגה את הגודל של כל תיקייה ברמה העליונה.\nבדרך כלל הצרכנים הגדולים הם /var/log או /tmp.\nfsck מתקן שגיאות במערכת קבצים ולא משחרר מקום, ומחיקה גורפת של /var/log עלולה להרוס לוגים קריטיים.",
+            explanation: "הפלט מראה שהדיסק ב-96% תפוסה, נשארו רק `2GB` מתוך `50GB`.\nב-100% שירותים יפסיקו לכתוב לוגים, \u200Edatabases עלולים לקרוס, ואפילו SSH עלול להפסיק לעבוד.\nהצעד הראשון הוא לזהות מה תופס מקום באמצעות הפקודה\ndu -sh /*\nשמציגה את הגודל של כל תיקייה ברמה העליונה.\nבדרך כלל הצרכנים הגדולים הם `/var/log` או `/tmp`.\n`fsck` מתקן שגיאות במערכת קבצים ולא משחרר מקום, ומחיקה גורפת של `/var/log` עלולה להרוס לוגים קריטיים.",
           },
           {
             q: "שירות לא עולה אחרי הפעלה מחדש של השרת.\n\nאיזו פקודה תראה את הלוגים של השירות?",
@@ -4181,7 +4181,7 @@ export const TOPICS = [
               "cat /etc/systemd/system/service-name.service",
               "dmesg | tail",
               "journalctl -u service-name --no-pager -n 50"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "צריך לראות לוגים של השירות עצמו, לא של הקרנל ולא להפעיל מחדש.",
             answer: 3,
             explanation: "כדי להבין למה השירות לא עולה, צריך לבדוק את הלוגים שלו.\nהפקודה \u200Ejournalctl -u service-name --no-pager -n 50 מציגה את הלוגים של השירות מ-systemd (מערכת הניהול של שירותים בלינוקס) ומאפשרת לראות את שגיאת ההפעלה.\nהאופציה \u200E-n 50 מגבילה את הפלט ל-50 השורות האחרונות, שהן בדרך כלל הרלוונטיות לכשל האחרון.\nכך ניתן לזהות בעיות כמו פורט תפוס, שגיאת קונפיגורציה או קריסה של התהליך.\nפקודות כמו systemctl restart לא עוזרות לדיבוג, ו-dmesg (פקודה שמציגה הודעות מהקרנל של מערכת ההפעלה) מציגה לוגים של הקרנל ולא של השירות עצמו.",
           },
@@ -4192,7 +4192,7 @@ export const TOPICS = [
               "systemctl status nginx",
               "top -u nginx",
               "netstat -tlnp"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "חפשו פקודה שנותנת תמונה מלאה של מצב השירות בפקודה אחת.",
             answer: 1,
             explanation: "systemctl status מציג את מצב השירות: האם הוא active, inactive או failed.\nבנוסף מוצגים ה-PID, זמן הפעילות, ושורות לוג אחרונות.\nזה נותן תמונה מלאה בפקודה אחת.\n\u200Ecat /var/log/nginx/error.log מציג שגיאות היסטוריות אבל לא אומר אם השירות רץ כרגע.\ntop (כלי לצפייה בתהליכים בזמן אמת) ו-netstat (כלי להצגת חיבורי רשת ופורטים פתוחים) נותנים מידע חלקי ולא מזהים בוודאות את מצב השירות.",
           },
@@ -4204,7 +4204,7 @@ export const TOPICS = [
               "tail -f /var/log/syslog",
               "head -100 /var/log/syslog",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "מעקב בזמן אמת דורש שהפקודה תמשיך לרוץ ולא תצא.",
             answer: 2,
             explanation: "\u200Etail -f משאיר את הקובץ פתוח ומציג שורות חדשות ברגע שנכתבות.\nזה הכלי הסטנדרטי למעקב אחרי לוגים בזמן deploy או בזמן דיבוג.\nאפשר לשלב עם סינון: \u200Etail -f /var/log/syslog | grep ERROR\n\u200Ecat מדפיס את כל התוכן ויוצא, בלי להמשיך לעקוב.\n\u200Egrep מחפש ויוצא, ו-\u200Ehead מציג שורות מתחילת הקובץ (הישנות ביותר).",
           },
@@ -4216,9 +4216,9 @@ export const TOPICS = [
               "התהליך תקוע בלולאה אינסופית שצורכת CPU מקסימלי",
               "התהליך הוא zombie שממתין לאיסוף ע\"י תהליך האב",
               "התהליך ממתין לפעולת I/O שלא מסתיימת, כמו דיסק או NFS"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "מצב D קשור לפעולה שהקרנל לא יכול לבטל באמצע.",
             answer: 3,
-            explanation: "מצב D (\u200EUninterruptible Sleep) בלינוקס מציין שתהליך ממתין לפעולת I/O ברמת הקרנל (\u200EKernel I/O wait).\nבמצב זה הקרנל לא מאפשר לשלוח לתהליך signals רגילים כדי לעצור אותו, אפילו לא \u200ESIGKILL.\nהמצב מופיע בדרך כלל כאשר תהליך מחכה למשאב מערכת כמו: גישה לדיסק, מערכת קבצים מרוחקת כמו \u200ENFS, בעיה בדרייבר storage, או \u200Eblock device איטי או תקוע.\nבגלל שהקרנל לא יכול להפסיק את פעולת ה-I/O באמצע, גם \u2066kill -9\u2069 לא יהרוג את התהליך עד שהפעולה תסתיים או שהמשאב יחזור לעבוד.",
+            explanation: "מצב D (\u200EUninterruptible Sleep) בלינוקס מציין שתהליך ממתין לפעולת I/O ברמת הקרנל (\u200EKernel I/O wait).\nבמצב זה הקרנל לא מאפשר לשלוח לתהליך signals רגילים כדי לעצור אותו, אפילו לא \u200ESIGKILL.\nהמצב מופיע בדרך כלל כאשר תהליך מחכה למשאב מערכת כמו: גישה לדיסק, מערכת קבצים מרוחקת כמו \u200ENFS, בעיה בדרייבר storage, או \u200Eblock device איטי או תקוע.\nבגלל שהקרנל לא יכול להפסיק את פעולת ה-I/O באמצע, גם `kill -9` לא יהרוג את התהליך עד שהפעולה תסתיים או שהמשאב יחזור לעבוד.",
           },
           {
             q: "שירות API לא מגיב. הרצת מהשרת המקומי:\n\n```\n$ curl -v http://remote-server:8080\n```\n\n```\nError: connect to remote-server port 8080 failed: Connection refused\n```\n\nמה אפשר להסיק מהשגיאה הזו?",
@@ -4229,9 +4229,9 @@ export const TOPICS = [
               "יש בעיית DNS ושם השרת לא מצליח להתפענח",
               "תעודת TLS לא תקינה והחיבור נדחה בשלב ה-handshake",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "Connection refused אומר שהחבילה הגיעה לשרת. מה זה אומר על הרשת",
             answer: 1,
-            explanation: "\u200EConnection refused אומר שהשרת היה נגיש ברשת, אבל דחה את החיבור באופן אקטיבי.\nברמת TCP, הלקוח שלח \u200ESYN והשרת הגיב ב-\u200ERST (Reset) במקום \u200ESYN-ACK.\nזה קורה כשאין תהליך שמאזין על הפורט, השירות למטה, או ש-firewall דוחה עם RST.\nהשוואה לשגיאות אחרות:\n\u200EConnection timed out = packets לא חוזרים, בעיית רשת או firewall שעושה drop.\n\u200ECould not resolve host = בעיית DNS.\n\u200ESSL/TLS errors = קורים רק אחרי שחיבור TCP הצליח.\nצעד ראשון לדיבוג: \u200Ess -tlnp | grep 8080 כדי לבדוק אם יש תהליך שמאזין על הפורט.",
+            explanation: "\u200EConnection refused אומר שהשרת נגיש ברשת, אבל אין תהליך שמאזין על הפורט.\nברמת TCP הלקוח שולח \u200ESYN, והשרת מחזיר \u200ERST במקום \u200ESYN-ACK.\nזה קורה כאשר:\n· אין שירות שמאזין על הפורט\n· השירות לא רץ\n· לפעמים \u200Efirewall מחזיר \u200ERST\nבדיקה ראשונה:\nss -tlnp | grep 8080\nכדי לראות אם יש תהליך שמאזין לפורט.",
           },
           {
             q: "מחקת קבצי לוג גדולים מ-/var/log אבל df -h עדיין מראה שהדיסק מלא.\n\nהרצת:\n\n```\n$ lsof +D /var/log/ | head -20\n```\n\nמה הפקודה הזו עוזרת לך לזהות?",
@@ -4241,9 +4241,9 @@ export const TOPICS = [
               "תהליכים שמחזיקים קבצים פתוחים בתיקייה",
               "קבצים שגדלו מעבר למגבלת ה-quota של המחיצה",
               "תהליכים שצורכים הכי הרבה I/O לדיסק"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "lsof מציג קבצים פתוחים. חשבו מה קורה כשמוחקים קובץ שתהליך עדיין כותב אליו.",
             answer: 1,
-            explanation: "\u200Elsof (List Open Files) מציג קבצים פתוחים במערכת.\nהאופציה \u200E+D מחפשת קבצים פתוחים בתוך תיקייה ספציפית.\nבלינוקס, כשמוחקים קובץ שתהליך עדיין כותב אליו, הקובץ נעלם מ-ls אבל ה-inode נשאר תפוס.\nהדיסק לא מתפנה כל עוד התהליך מחזיק את ה-file descriptor.\n\u200Elsof +D /var/log עוזר לזהות איזה תהליך מחזיק את הקובץ כדי לסגור את ה-handle.",
+            explanation: "\u200Elsof מציג קבצים פתוחים במערכת.\nהאפשרות \u200E+D מציגה קבצים פתוחים בתוך תיקייה מסוימת (כולל תתי\u2011תיקיות).\nבלינוקס, אם קובץ נמחק בזמן שתהליך עדיין משתמש בו, הקובץ נעלם מה\u2011filesystem אבל המקום בדיסק לא מתפנה עד שהתהליך סוגר את הקובץ.\nלכן משתמשים בפקודה:\nlsof +D /var/log\nכדי למצוא איזה תהליך עדיין מחזיק קובץ לוג פתוח.\nלאחר שמזהים את התהליך, ניתן להפעיל אותו מחדש או לעצור אותו כדי לשחרר את המקום בדיסק.",
           },
         ],
         questionsEn: [
@@ -4268,7 +4268,7 @@ export const TOPICS = [
             ],
             hint: "Think carefully about what each option describes.",
             answer: 0,
-            explanation: "The output shows 96% disk usage on root, only 2GB left out of 50GB.\nAt 100%, services stop writing logs, databases may crash, and SSH can go down.\nThe first step is to identify what is consuming space using the command du -sh /*, which shows the size of each top-level directory.\nCommon culprits are /var/log or /tmp.\nfsck repairs filesystem errors and does not free space, and deleting all of /var/log risks destroying critical logs.",
+            explanation: "The output shows 96% disk usage on root, only 2GB left out of 50GB.\nAt 100%, services stop writing logs, databases may crash, and SSH can go down.\nThe first step is to identify what is consuming space using the command\ndu -sh /*\nwhich shows the size of each top-level directory.\nCommon culprits are /var/log or /tmp.\nfsck repairs filesystem errors and does not free space, and deleting all of /var/log risks destroying critical logs.",
           },
           {
             q: "A service won't start after a server reboot.\n\nWhich command will show the service logs?",
@@ -4327,7 +4327,7 @@ export const TOPICS = [
             ],
             hint: "Think carefully about what each option describes.",
             answer: 1,
-            explanation: "Connection refused means the server was reachable on the network, but actively rejected the connection.\nAt the TCP level, the client sent a SYN and the server responded with RST (Reset) instead of SYN-ACK.\nThis happens when no process is listening on the port, the service is down, or a firewall is rejecting with RST.\nComparison to other errors:\nConnection timed out = packets are not coming back, network issue or firewall doing drop.\nCould not resolve host = DNS issue.\nSSL/TLS errors = only happen after a TCP connection succeeds.\nFirst debugging step: ss -tlnp | grep 8080 to check if a process is listening on the port.",
+            explanation: "Connection refused means the server is reachable on the network, but no process is listening on the port.\nAt the TCP level, the client sends a SYN, and the server responds with RST instead of SYN-ACK.\nThis happens when:\n· No service is listening on the port\n· The service is not running\n· Sometimes a firewall responds with RST\nFirst check:\nss -tlnp | grep 8080\nto see if a process is listening on the port.",
           },
           {
             q: "You deleted large log files from /var/log but df -h still shows the disk is full.\n\nYou ran:\n\n```\n$ lsof +D /var/log/ | head -20\n```\n\nWhat does this command help you identify?",
@@ -4339,7 +4339,7 @@ export const TOPICS = [
               "Processes that are consuming the most disk I/O"],
             hint: "Think carefully about what each option describes.",
             answer: 1,
-            explanation: "lsof (List Open Files) shows files that are currently open on the system.\nThe +D option searches for open files under a specific directory.\nIn Linux, when you delete a file that a process is still writing to, the file disappears from ls but the inode remains occupied.\nThe disk space is not freed as long as the process holds the file descriptor.\nlsof +D /var/log helps identify which process is holding the file so you can close the handle.",
+            explanation: "lsof lists open files in the system.\nThe +D option shows open files within a specific directory (including its subdirectories).\nIn Linux, if a file is deleted while a process is still using it, the file disappears from the filesystem but the disk space is not freed until the process closes the file.\nTherefore, the command:\nlsof +D /var/log\nis used to find which process is still holding an open log file.\nOnce the process is identified, it can be restarted or stopped to release the disk space.",
           },
         ],
       },
@@ -4354,12 +4354,12 @@ export const TOPICS = [
               "ערך %id נמוך (5.0%) - המעבד כמעט לא פנוי",
               "ערך %ni גבוה (0.3%) - תהליכים עם עדיפות שונה",
               "ערך %si גבוה (0.2%) - פסיקות תוכנה תכופות"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "id מייצג את הזמן שבו ה-CPU לא עושה כלום.",
             answer: 1,
-            explanation: "הפלט של `top` מציג כיצד זמן ה-CPU מתחלק בין סוגי פעילות שונים.\nבשורה זו:\nus + sy = 90.5% זמן CPU משמש לעבודה אמיתית (תהליכים + kernel).\nid = 5.0% בלבד, כלומר רק 5% מהזמן ה-CPU פנוי.\nלכן ניתן להסיק שהשרת תחת עומס CPU גבוה.\nus - זמן CPU עבור תהליכים במרחב משתמש (user space)\nsy - זמן CPU עבור kernel\nid - זמן CPU פנוי\nwa - זמן המתנה ל-I/O (דיסק/רשת)",
+            explanation: "פלט של `top` מציג כיצד זמן ה-CPU מתחלק בין סוגי פעילות שונים.\nבשורה הזו `id = 5%`, כלומר רק 5% מה-CPU פנוי.\nרוב זמן ה-CPU מנוצל לעבודה (`us + sy ≈ 90%`), ולכן ניתן להסיק שיש עומס CPU גבוה.\nכלל אצבע:\n· `id` גבוה - CPU פנוי\n· `id` נמוך - CPU עמוס\nפירוש המדדים העיקריים:\n· `us` - זמן CPU של תוכנות (\u200Euser space)\n· `sy` - זמן CPU של הקרנל\n· `id` - זמן CPU פנוי\n· `wa` - זמן המתנה ל-I/O (דיסק/רשת)",
           },
           {
-            q: "שרת production מגיב לאט. בודקים את מצב הזיכרון:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n               total        used        free      shared  buff/cache   available\nMem:            16G         15G        200M       100M        800M        500M\n```\n\nמה הפרשנות הנכונה למצב הזיכרון",
+            q: "שרת production מגיב לאט. בודקים את מצב הזיכרון:\n\n```\nfree -h\n```\n\nפלט:\n\n```\n         total  used  free  shared  buff/cache  available\nMem:       16G   15G  200M    100M        800M       500M\n```\n\nמה הפרשנות הנכונה למצב הזיכרון",
             tags: ["memory-available"],
             options: [
               "הזיכרון כמעט אזל - `available` רק `500M` מתוך `16G`",
@@ -4367,9 +4367,9 @@ export const TOPICS = [
               "צריך restart כדי לשחרר את ה-`800M` שתפוסים ב-buff/cache",
               "המצב תקין - `used` כולל cache שישוחרר אוטומטית בעת הצורך",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "ב-Linux, העמודה free מטעה. איזו עמודה מציגה כמה זיכרון באמת פנוי",
             answer: 0,
-            explanation: "בפלט `free`, העמודה הקריטית היא `available`, לא `free`.\n`available` (`500M` מתוך `16G`, כ-3%) מציג כמה זיכרון באמת פנוי לתהליכים חדשים, כולל cache שניתן לשחרר.\nזה מצב מסוכן - המערכת עלולה להתחיל להשתמש ב-swap או להפעיל OOM Killer.\n`free` (`200M`) מטעה כי Linux מנצל RAM פנוי ל-cache, ולכן `free` נמוך זה נורמלי.\nאבל כאן גם `available` נמוך, מה שאומר שגם אחרי שחרור cache אין מספיק זיכרון.\nfree - זיכרון RAM שלא בשימוש כלל\nbuff/cache - cache של ה-kernel, ניתן לשחרור כשצריך\navailable - הזיכרון שבאמת פנוי לאפליקציות (המדד החשוב)",
+            explanation: "בפלט `free`, העמודה הקריטית היא `available`, לא `free`.\n`available` (`500M` מתוך `16G`, כ-3%) מציג כמה זיכרון באמת פנוי לתהליכים חדשים, כולל cache שניתן לשחרר.\nזה מצב מסוכן - המערכת עלולה להתחיל להשתמש ב-swap או להפעיל \u200EOOM Killer.\n`free` (`200M`) מטעה כי Linux מנצל RAM פנוי ל-cache, ולכן `free` נמוך זה נורמלי.\nאבל כאן גם `available` נמוך, מה שאומר שגם אחרי שחרור cache אין מספיק זיכרון.\n· `free` - זיכרון RAM שלא בשימוש כלל\n· `buff/cache` - cache של ה-kernel, ניתן לשחרור כשצריך\n· `available` - הזיכרון שבאמת פנוי לאפליקציות (המדד החשוב)",
           },
           {
             q: "הרצת:\n\n```\nuptime\n```\n\nפלט:\n\n```\n 14:23:01 up 3 days,  2:15,  2 users,  load average: 12.50, 11.80, 8.20\n```\n\nהשרת הוא `4-core`.\nמה אומר ה-load average על מצב השרת",
@@ -4378,7 +4378,7 @@ export const TOPICS = [
               "העומס נגרם מ-2 משתמשים מחוברים במקביל",
               "load average לא קשור למספר ליבות המעבד",
               "עומס חמור - יש ביקוש פי 3 מקיבולת ה-CPU"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "load average שווה למספר הליבות = ניצולת מלאה. כמה פעמים הוא עולה על 4",
             answer: 3,
             explanation: "load average מודד כמה תהליכים רצים או ממתינים ל-CPU בכל רגע.\nשלושת המספרים מייצגים ממוצע של דקה, 5 דקות ו-15 דקות.\nהכלל: load average השווה למספר הליבות = ניצולת מלאה.\nבשרת `4-core`, load של `4.0` = 100% ניצולת.\nload של `12.5` = כ-312%, עומס חמור, תהליכים ממתינים בתור.\nהמגמה עולה (`8.2` \u2190 `11.8` \u2190 `12.5`), המצב מחמיר.\nמספר המשתמשים המחוברים (2) לא קשור ל-load.\n\nLoad Average - כלל אצבע:\nload = מספר תהליכים שרצים או מחכים ל-CPU.\n`1.0` על 1 ליבה \u2190 ניצולת מלאה.\n`4.0` על 4 ליבות \u2190 ניצולת מלאה.\n`12.5` על 4 ליבות \u2190 ביקוש פי 3 מהקיבולת.",
           },
@@ -4390,12 +4390,12 @@ export const TOPICS = [
               "יש בעיית firewall שחוסמת גישה לפורטים 80 ו-443",
               "nginx מאזין רק על localhost ולא נגיש מבחוץ",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "שימו לב לכתובת 0.0.0.0 ולמצב LISTEN. מה זה אומר",
             answer: 0,
             explanation: "הפלט מראה ש-nginx מאזין על פורטים 80 ו-443.\nהכתובת 0.0.0.0 אומרת שהשירות מאזין על כל ממשקי הרשת, כלומר נגיש מבחוץ.\nLISTEN מוכיח שהשירות פועל ומחכה לחיבורים נכנסים.\nאם הכתובת הייתה 127.0.0.1 זה היה רק localhost, לא נגיש מבחוץ.\nss לא מציג חוקי firewall, לכן נגישות מבחוץ צריכה בדיקה נפרדת.",
           },
           {
-            q: "שרת production רושם לוגים לקובץ בגודל 2GB.\nפורמט כל שורה:\n\n```\n2025-03-28 14:23:01 ERROR Connection refused to database\n```\n\nצריך למצוא את כל שורות ה-ERROR מהשעה האחרונה.\n\nאיזו פקודה הכי מתאימה",
+            q: "יש לך קובץ לוג בגודל `2GB` שבו כל שורה מתחילה ב-timestamp בפורמט:\n\n\u200EYYYY-MM-DD HH:MM:SS\n\nלדוגמה:\n\n```\n2025-03-28 14:23:01 ERROR Connection refused to database\n```\n\nצריך למצוא את כל שורות ה-\u200EERROR מהשעה האחרונה.\n\nאיזו פקודה היא היעילה ביותר",
             options: [
               "`cat log.txt | grep ERROR | sort -t' ' -k1,2`",
               "`grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"`",
@@ -4403,7 +4403,7 @@ export const TOPICS = [
               "`tail -f log.txt | grep ERROR --line-buffered`"],
             hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
             answer: 1,
-            explanation: "בקובץ לוג של `2GB`, סינון כפול חוסך עיבוד מיותר.\ngrep ERROR מסנן רק שורות שגיאה, ו-grep עם `date` מצמצם לשעה האחרונה לפי פורמט ה-timestamp.\ngrep ישירות על הקובץ (בלי `cat`) יעיל יותר כי לא יוצר pipe מיותר.\n`cat | grep` קורא את כל `2GB` בלי סינון זמן.\n`tail -f` עוקב אחרי שורות חדשות בזמן אמת ולא מחפש בהיסטוריה.\n`head -1000` מציג רק את תחילת הקובץ (השורות הישנות ביותר).",
+            explanation: "הקובץ גדול (`2GB`), ולכן חשוב לעבוד בצורה יעילה.\n`grep` יכול לחפש ישירות בתוך הקובץ בלי להשתמש ב-`cat`.\nלאחר מכן ניתן לסנן רק שורות מהשעה האחרונה לפי ה-timestamp באמצעות `date`.\nפקודות אחרות אינן מתאימות:\n· `cat log.txt | grep ERROR` - קורא את כל הקובץ ומייצר pipe מיותר.\n· `tail -f` - מיועד למעקב אחרי לוגים בזמן אמת.\n· `head` - מציג רק את תחילת הקובץ.",
           },
           {
             q: "הרצת:\n\n```\nps aux\n```\n\nאתה רואה תהליך במצב Z (zombie).\n\nמה הדרך הנכונה לטפל בו?",
@@ -4413,7 +4413,7 @@ export const TOPICS = [
               "לשלוח `kill -9` ישירות לתהליך ה-zombie עצמו",
               "להפעיל מחדש את השרת כדי לנקות את טבלת התהליכים",
               "להתעלם מהתהליך כי zombies נעלמים מעצמם תמיד"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "תהליך zombie כבר מת. אי אפשר להרוג אותו שוב. מי אחראי לנקות אותו",
             answer: 0,
             explanation: "תהליך zombie (Z) כבר סיים לרוץ, אבל הרשומה שלו נשארת בטבלת התהליכים.\nהסיבה: תהליך האב לא קרא `wait()` (פונקציית מערכת שמחכה לסיום תהליך בן ואוספת את קוד היציאה שלו) כדי לאסוף את ה-\u2066exit status\u2069.\nהפתרון הוא לזהות את תהליך האב ולהפעיל אותו מחדש כדי שיטפל ב-zombies.\n`kill -9` על zombie לא עובד כי התהליך כבר מת, אין מה להרוג.\nzombies לא נעלמים מעצמם ודורשים טיפול של תהליך האב.",
           },
@@ -4421,12 +4421,12 @@ export const TOPICS = [
             q: "הרצת:\n\n```\niostat -x 1 3\n```\n\nפלט:\n\n```\nDevice    r/s      w/s    rkB/s     wkB/s   await   %util\nsda      5.00   450.00    20.00  51200.00  250.00   99.80\n```\n\nמה המסקנה",
             options: [
               "הבעיה היא רק בכמות הכתיבות הגבוהה לדיסק",
-              "כמות הקריאות נמוכה (\u20665/s\u2069) ומעידה על בעיית ביצועים",
-              "הדיסק תקין - ערכי \u2066%util\u2069 גבוהים זה רגיל בשרת עמוס",
-              "הדיסק רווי \u2066(%util = 99.8%)\u2069 עם \u2066await\u2069 גבוה של \u2066250ms\u2069"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+              "כמות הקריאות נמוכה (`5/s`) ומעידה על בעיית ביצועים",
+              "הדיסק תקין - ערכי `%util` גבוהים זה רגיל בשרת עמוס",
+              "הדיסק רווי (`%util = 99.8%`) עם `await` גבוה של `250ms`"],
+            hint: "חפשו שילוב של שני מדדים שיחד מעידים על בעיה: ניצולת גבוהה וזמן המתנה גבוה.",
             answer: 3,
-            explanation: "\u2066%util = 99.8%\u2069 אומר שהדיסק עסוק כמעט כל הזמן, כלומר הוא רווי.\n\u2066await = 250ms\u2069 אומר שכל פעולת \u2066I/O\u2069 לוקחת רבע שנייה. ל-SSD תקין הערך הוא מתחת ל-\u20661ms\u2069.\nהשילוב של \u2066%util\u2069 גבוה ו-\u2066await\u2069 גבוה מצביע על דיסק שלא מספיק לעמוס.\nהכתיבות \u2066(450/s, ~50MB/s)\u2069 הן הגורם העיקרי, לא הקריאות \u2066(5/s)\u2069.\nכל תהליך שניגש לדיסק יואט עד שהעומס יפחת.",
+            explanation: "הפלט של `iostat` מציג את מצב ה-I/O של הדיסק.\nבשורה הזו:\n· `%util = 99.8%` - הדיסק כמעט תמיד עסוק\n· `await = 250ms` - זמן ההמתנה לכל פעולת I/O גבוה מאוד\nשילוב של `%util` גבוה ו-`await` גבוה מצביע בדרך כלל על דיסק עמוס או איטי.\nבנוסף, יש הרבה יותר כתיבות מאשר קריאות (`w/s` גבוה), ולכן ייתכן שעומס הכתיבה הוא הגורם לעומס על הדיסק.",
           },
           {
             q: "קונטיינר נהרג באופן בלתי צפוי.\n\nהרצת:\n\n```\ndmesg | tail -20\n```\n\nפלט:\n\n```\n[  512.123] Out of memory: Killed process 4521 (java)\n            total-vm:4048576kB, anon-rss:3145728kB\n```\n\nמה קרה ומה הפתרון?",
@@ -4436,9 +4436,9 @@ export const TOPICS = [
               "התהליך קרס בגלל segfault עקב גישה לזיכרון לא חוקי",
               "OOM Killer הרג את התהליך כי חרג ממגבלת הזיכרון",
               "התהליך נהרג כי ה-swap נגמר והמערכת ביצעה graceful shutdown"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "שימו לב להודעה Out of memory. מי הורג תהליכים כשנגמר הזיכרון",
             answer: 2,
-            explanation: "ההודעה Out of memory: Killed process ב-dmesg מציינת שה-OOM Killer (Out Of Memory Killer) של הקרנל הרג את התהליך בגלל מחסור בזיכרון.\nכאשר המערכת נגמרת מ-RAM ואין מספיק זיכרון פנוי, הקרנל בוחר תהליך שמנצל הרבה זיכרון ומסיים אותו כדי לפנות משאבים.\nבשורה המוצגת רואים שהתהליך java נהרג, והערך anon-rss מציין כמה זיכרון RAM בפועל התהליך השתמש.\nמצב כזה יכול להתרחש כאשר התהליך צורך יותר מדי זיכרון, או כאשר מוגדר לו memory limit נמוך מדי (למשל בקונטיינר).",
+            explanation: "ההודעה ב-`dmesg` מציינת שהמערכת נגמרה לה הזיכרון.\nכאשר ה-RAM כמעט מלא ואין מספיק זיכרון פנוי, הקרנל מפעיל את \u200EOOM Killer.\nהמנגנון בוחר תהליך שצורך הרבה זיכרון והורג אותו (\u200ESIGKILL) כדי לשחרר RAM.\nלכן ההודעה:\n`Out of memory: Killed process 4521 (java)`\nמציינת שהתהליך `java` נהרג על ידי ה-\u200EOOM Killer.",
           },
         ],
         questionsEn: [
@@ -4451,10 +4451,10 @@ export const TOPICS = [
               "High %si (0.2%) - frequent software interrupts"],
             hint: "Think carefully about what each option describes.",
             answer: 1,
-            explanation: "top output shows how CPU time is distributed across different types of activity.\nIn this line:\nus + sy = 90.5% of CPU time is used for actual work (processes + kernel).\nid = 5.0%, meaning only 5% of the CPU time is idle.\nTherefore the system is under high CPU load.\nus - CPU time spent running user processes\nsy - CPU time spent in the kernel\nid - idle CPU time\nwa - time waiting for I/O (disk/network)",
+            explanation: "The output of `top` shows how CPU time is divided between different types of activity.\nIn this line, id = 5%, which means only 5% of the CPU is idle.\nMost of the CPU time is used for work (us + sy ≈ 90%), indicating high CPU load.\nRule of thumb:\n· High id - CPU is mostly idle\n· Low id - CPU is under heavy load\nMeaning of the main metrics:\n· us - CPU time used by user processes (user space)\n· sy - CPU time used by the kernel\n· id - CPU idle time\n· wa - time spent waiting for I/O (disk/network)",
           },
           {
-            q: "A production server is responding slowly. You check memory usage:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n               total        used        free      shared  buff/cache   available\nMem:            16G         15G        200M       100M        800M        500M\n```\n\nWhat is the correct interpretation of the memory state",
+            q: "A production server is responding slowly. You check memory usage:\n\n```\nfree -h\n```\n\nOutput:\n\n```\n         total  used  free  shared  buff/cache  available\nMem:       16G   15G  200M    100M        800M       500M\n```\n\nWhat is the correct interpretation of the memory state",
             tags: ["memory-available"],
             options: [
               "Memory is nearly exhausted - only 500M available out of 16G",
@@ -4490,7 +4490,7 @@ export const TOPICS = [
             explanation: "The output shows nginx listening on ports 80 and 443.\nThe address 0.0.0.0 means the service is listening on all network interfaces, so it is externally accessible.\nLISTEN state proves the service is running and waiting for incoming connections.\nIf the address were 127.0.0.1, it would be localhost only, not externally accessible.\nss does not show firewall rules, so external access requires separate verification.",
           },
           {
-            q: "A production server writes logs to a 2GB file.\nEach line format:\n\n```\n2025-03-28 14:23:01 ERROR Connection refused to database\n```\n\nYou need to find all ERROR lines from the last hour.\n\nWhich command is most appropriate",
+            q: "You have a 2GB log file where each line starts with a timestamp in the format:\n\nYYYY-MM-DD HH:MM:SS\n\nFor example:\n\n```\n2025-03-28 14:23:01 ERROR Connection refused to database\n```\n\nYou need to find all ERROR lines from the last hour.\n\nWhich command is the most efficient",
             options: [
               "`cat log.txt | grep ERROR | sort -t' ' -k1,2`",
               "`grep ERROR log.txt | grep \"$(date -d '1 hour ago' '+%Y-%m-%d %H')\"`",
@@ -4498,7 +4498,7 @@ export const TOPICS = [
               "`tail -f log.txt | grep ERROR --line-buffered`"],
             hint: "Think carefully about what each option describes.",
             answer: 1,
-            explanation: "For a 2GB log file, double filtering avoids unnecessary processing.\ngrep ERROR filters only error lines, and grep with date narrows to the last hour based on the timestamp format.\ngrep directly on the file (without cat) is more efficient as it avoids an unnecessary pipe.\ncat | grep reads all 2GB without time filtering.\ntail -f follows new lines in real time and does not search history.\nhead -1000 shows only the start of the file (the oldest lines).",
+            explanation: "The file is large (2GB), so it is important to work efficiently.\n`grep` can search directly inside the file without using `cat`.\nThen you can filter only lines from the last hour by timestamp using `date`.\nOther commands are not suitable:\n· `cat log.txt | grep ERROR` - reads the entire file and creates an unnecessary pipe.\n· `tail -f` - designed for following logs in real time.\n· `head` - shows only the beginning of the file.",
           },
           {
             q: "You ran:\n\n```\nps aux\n```\n\nYou see a process in Z state (zombie).\n\nWhat is the correct way to handle it?",
@@ -4521,7 +4521,7 @@ export const TOPICS = [
               "Disk is saturated (%util 99.8%) with high await of 250ms"],
             hint: "Think carefully about what each option describes.",
             answer: 3,
-            explanation: "%util of 99.8% means the disk is busy nearly all the time, indicating saturation.\nawait of 250ms means each I/O operation takes a quarter second. Normal SSD is under 1ms.\nThe combination of high %util and high await indicates the disk cannot keep up with the load.\nWrites (450/s, about 50MB/s) are the main contributor, not reads (5/s).\nEvery process accessing the disk will slow down until the load decreases.",
+            explanation: "The output of `iostat` shows the I/O status of the disk.\nIn this line:\n· `%util = 99.8%` - the disk is busy almost all the time\n· `await = 250ms` - the wait time for each I/O operation is very high\nA combination of high `%util` and high `await` usually indicates a busy or slow disk.\nAdditionally, there are far more writes than reads (`w/s` is high), so the write load is likely the cause of the disk bottleneck.",
           },
           {
             q: "A container was unexpectedly killed.\n\nYou ran:\n\n```\ndmesg | tail -20\n```\n\nOutput:\n\n```\n[  512.123] Out of memory: Killed process 4521 (java)\n            total-vm:4048576kB, anon-rss:3145728kB\n```\n\nWhat happened and what is the solution?",
@@ -4533,16 +4533,16 @@ export const TOPICS = [
               "The process was killed because swap ran out and the system shut it down"],
             hint: "Think carefully about what each option describes.",
             answer: 2,
-            explanation: "The message Out of memory: Killed process in dmesg indicates that the kernel OOM Killer terminated the process due to memory exhaustion.\nWhen the system runs out of available RAM, the kernel selects a memory-hungry process and kills it to free resources.\nIn the output we see that the java process was terminated, and the anon-rss value shows how much RAM the process was actually using.\nThis situation can happen when a process consumes too much memory or when its memory limit is set too low, such as inside a container.",
+            explanation: "The message in `dmesg` indicates that the system ran out of memory.\nWhen RAM is nearly full and there is not enough free memory, the kernel triggers the OOM Killer.\nThe mechanism selects a process that consumes a lot of memory and kills it (SIGKILL) to free RAM.\nTherefore the message:\n`Out of memory: Killed process 4521 (java)`\nindicates that the `java` process was killed by the OOM Killer.",
           },
         ],
       },
       hard: {
-        theory: "אבחון מערכת מתקדם וניתוח ביצועים ברמת kernel.\n🔹 `strace -c -p PID`\nסיכום system calls לפי זמן, מזהה צווארי בקבוק (`futex` = lock contention)\n🔹 `perf top`\nprofiling בזמן אמת, מציג פונקציות שצורכות הכי הרבה CPU\n🔹 `/proc/net/sockstat`\nמצב TCP stack - orphans, TIME_WAIT, צריכת זיכרון\n🔹 `/proc/buddyinfo`\nmemory fragmentation - בלוקים פנויים ב-buddy allocator\n🔹 `/proc/PID/fd`\nfile descriptors פתוחים - זיהוי FD leaks\n🔹 `sar -n DEV`\nסטטיסטיקות רשת - bandwidth, drops, packets per second\n🔹 `errno.h`\nקודי שגיאה ב-kernel - `ENOMEM`=`-12`, `EACCES`=`-13`, `EINVAL`=`-22`\nCODE:\nstrace -c -p 1234\nperf top\nperf record -g -a sleep 10 && perf report\ncat /proc/net/sockstat\nls /proc/1234/fd | wc -l\nsar -n DEV 1 5",
+        theory: "אבחון מערכת מתקדם וניתוח ביצועים ברמת kernel.\n🔹 `strace -c -p PID` - סיכום קריאות מערכת לפי זמן. מזהה צווארי בקבוק כמו `futex` (תחרות על locks)\n🔹 `perf top` - פרופיילינג בזמן אמת. מציג פונקציות שצורכות הכי הרבה CPU\n🔹 `/proc/net/sockstat` - מצב TCP: חיבורי orphan, מצב \u200ETIME_WAIT, צריכת זיכרון\n🔹 `/proc/buddyinfo` - פיצול זיכרון: בלוקים פנויים ב-\u200Ebuddy allocator\n🔹 `/proc/PID/fd` - רשימת file descriptors פתוחים. מזהה דליפות FD\n🔹 `sar -n DEV` - סטטיסטיקות רשת: רוחב פס, חבילות שנזרקו, חבילות לשנייה\n🔹 `errno.h` - קודי שגיאה של הקרנל: `ENOMEM`=`-12`, `EACCES`=`-13`, `EINVAL`=`-22`\nCODE:\nstrace -c -p 1234\nperf top\nperf record -g -a sleep 10 && perf report\ncat /proc/net/sockstat\nls /proc/1234/fd | wc -l\nsar -n DEV 1 5",
         theoryEn: "Advanced system diagnostics and kernel-level performance analysis.\n🔹 `strace -c -p PID`\nSummarize system calls by time, identifies bottlenecks (futex = lock contention)\n🔹 `perf top`\nReal-time profiling, shows functions consuming the most CPU\n🔹 `/proc/net/sockstat`\nTCP stack state - orphans, TIME_WAIT, memory usage\n🔹 `/proc/buddyinfo`\nMemory fragmentation - free blocks in the buddy allocator\n🔹 `/proc/PID/fd`\nOpen file descriptors - detecting FD leaks\n🔹 `sar -n DEV`\nNetwork statistics - bandwidth, drops, packets per second\n🔹 `errno.h`\nKernel error codes - ENOMEM=-12, EACCES=-13, EINVAL=-22\nCODE:\nstrace -c -p 1234\nperf top\nperf record -g -a sleep 10 && perf report\ncat /proc/net/sockstat\nls /proc/1234/fd | wc -l\nsar -n DEV 1 5",
         questions: [
           {
-            q: "תהליך מסוים רץ לאט.\nהפקודה `strace -c` מסכמת כמה זמן התהליך מבלה בכל system call.\n\nהרצת:\n\n```\nstrace -c -p 1234\n```\n\nפלט:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nמה הממצא העיקרי",
+            q: "תהליך מסוים רץ לאט.\nהרצת הפקודה הבאה מציגה סיכום של הזמן שהתהליך מבלה בכל \u200Esystem call:\nשימו לב ש-`futex` הוא \u200Esystem call המשמש לנעילות בין \u200Ethreads.\n\n```\nstrace -c -p 1234\n```\n\nפלט:\n\n```\n% time   seconds   calls   syscall\n 85.20  4.260000    1200   futex\n  8.30  0.415000     500   read\n  3.10  0.155000     200   write\n```\n\nמה ניתן להסיק מהפלט",
             options: [
               "התהליך מבזבז זמן על קריאות read בגלל חוסר caching",
               "התהליך ממתין ל-locks רוב הזמן בגלל תחרות בין threads",
@@ -4550,7 +4550,7 @@ export const TOPICS = [
               "התהליך פועל כרגיל ואין כאן בעיית ביצועים"],
             hint: "שימו לב לאיזה system call התהליך מבלה את רוב הזמן.",
             answer: 1,
-            explanation: "הפקודה `strace -c` מסכמת את ה-system calls של תהליך לפי זמן.\nfutex הוא ה-system call שמשמש לנעילות (locks) בין threads.\nכאשר תהליך מבלה 85% מהזמן על futex, המשמעות היא שהוא ממתין לנעילות במקום לעשות עבודה אמיתית.\nזה מצביע על lock contention - מצב שבו threads חוסמים אחד את השני.",
+            explanation: "הפקודה `strace -c` מציגה כמה זמן התהליך מבלה בכל \u200Esystem call.\nבפלט רואים ש-85% מהזמן הוא ב-`futex`.\n`futex` הוא \u200Esystem call שמשמש לנעילות (locks) בין \u200Ethreads.\nכאשר רוב הזמן הולך ל-`futex`, זה אומר שה-threads של התהליך מחכים לנעילה שתשתחרר במקום לבצע עבודה אמיתית.\nמצב כזה נקרא \u200Elock contention - כאשר כמה \u200Ethreads מנסים להשתמש באותו משאב בו-זמנית.\n· `futex` גבוה - threads מחכים ל-lock",
           },
           {
             q: "שרת מדווח על latency גבוה לבקשות רשת.\n\nהרצת:\n\n```\ncat /proc/net/sockstat\n```\n\nפלט:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nמה הבעיה?",
@@ -4560,7 +4560,7 @@ export const TOPICS = [
               "מספר ה-TCP connections (28542) נמוך מדי עבור שרת פעיל",
               "צריכת הזיכרון של ה-TCP stack (95000 pages) היא תקינה",
               "orphan (12500) ו-TIME_WAIT (65000) מצביעים על חיבורים שלא נסגרים"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "orphan ו-TIME_WAIT הם מצבים של חיבורים שנסגרו אבל עדיין תופסים משאבים.",
             answer: 3,
             explanation: "/proc/net/sockstat מציג סטטיסטיקות על מצב חיבורי ה-TCP במערכת.\nהערכים tw 65000 ו-orphan 12500 גבוהים מאוד ומעידים על מספר גדול של חיבורים שלא נסגרו בצורה תקינה.\nTIME_WAIT (tw) הוא מצב שבו חיבור TCP נשאר פתוח לזמן קצר אחרי סגירה כדי למנוע בעיות בפרוטוקול. מספר גדול מאוד של חיבורים במצב זה בדרך כלל מעיד על קצב גבוה של חיבורים קצרים.\norphan sockets הם חיבורים שאין להם תהליך שמנהל אותם יותר. מצב כזה יכול להיווצר כאשר תהליך נסגר לפני שהחיבור נסגר בצורה תקינה.\nכאשר יש הרבה TIME_WAIT ו-orphan sockets, זה יכול לגרום לעומס על ה-TCP stack ולפגוע בביצועי הרשת, ולכן זו כנראה הסיבה ל-latency הגבוה.",
           },
@@ -4572,7 +4572,7 @@ export const TOPICS = [
               "הזיכרון הפיזי ריק לגמרי ויש צורך להוסיף RAM",
               "יש בעיית swap שגורמת לפיצול דפים בזיכרון",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "המספרים מייצגים בלוקים פנויים בגדלים עולים. כמה אפסים יש ברצף",
             answer: 0,
             explanation: "ב-Linux, ה-buddy allocator מנהל זיכרון פיזי בבלוקים בגדלים עולים: order 0 = `4KB`, עד order 10 = `4MB`.\n`/proc/buddyinfo` מציג כמה בלוקים פנויים יש בכל order.\nבפלט הזה יש רק בלוק אחד של `4KB` פנוי, כל שאר ה-orders באפס.\nזה fragmentation קיצוני: הזיכרון לא ריק, אבל כל הבלוקים הגדולים מפוצלים לחתיכות קטנות.\nהקצאות שדורשות דפים רציפים (huge pages, DMA buffers) ייכשלו.\nבמצב בריא רואים מספרים חיוביים בכל ה-orders.",
           },
@@ -4584,60 +4584,61 @@ export const TOPICS = [
               "מספר כזה של FDs פתוחים הוא תקין לשרת תחת עומס",
               "התהליך מתקרב למגבלה (45,892 מתוך 65,536) ויכשל עם EMFILE",
               "הפער בין soft limit ל-hard limit הוא שגורם לבעיה"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "45,892 מתוך 65,536 זה כ-70%. מה קורה כשמגיעים ל-100%",
             answer: 2,
             explanation: "לתהליך יש 45,892 FDs פתוחים מתוך מגבלה של 65,536 (כ-70%).\nשרת בריא מחזיק בדרך כלל מאות עד אלפים בודדים, 45,892 מעיד על דליפה.\nכשהתהליך יגיע למגבלה, כל `open()`, `socket()` או `accept()` ייכשל עם שגיאת EMFILE.\nהגדלת ה-limit לא פותרת, רק דוחה את הקריסה.\nצריך לזהות ולתקן את מקור הדליפה.",
           },
           {
-            q: "הרצת:\n\n```\nsar -n DEV 1 5\n```\n\nפלט (ממוצע):\n\n```\nIFACE   rxpck/s  txpck/s   rxkB/s   txkB/s  rxdrop/s  txdrop/s\neth0    95000    92000    115000    110000     850       0\n```\n\nכרטיס הרשת הוא 1Gbps. מה הבעיה?",
+            q: "שרת חווה \u200Epacket loss בעומס גבוה.\nכרטיס הרשת הוא `1 Gbps`.\n\nהפקודה `sar` (System Activity Reporter) אוספת סטטיסטיקות מערכת.\nהאופציה `-n DEV` מציגה נתוני רשת לכל ממשק.\n\nהרצת:\n\n```\nsar -n DEV 1 5\n```\n\n```\nIFACE   rxpck/s   txpck/s   rxkB/s   txkB/s   rxdrop/s   txdrop/s\neth0    95000     92000     115000   110000   850        0\n```\n\nרמזים:\n· `1 Gbps` ≈ `125 MB/s`\n· `rxdrop` מציין \u200Epackets שנזרקו בצד הקליטה של ה-NIC.\n\nמה המסקנה הסבירה ביותר",
             options: [
               "ה-throughput קרוב למגבלת ה-NIC של 1Gbps - כרטיס הרשת רווי ומאבד מנות",
               "הפרוטוקול הוא TCP - מעבר ל-UDP יפחית את ה-overhead ויפתור את הבעיה",
               "הבעיה היא ב-packet drops בצד ה-tx - צריך לבדוק את ה-txdrop counter",
               "הערכים תקינים לשרת בעומס גבוה - אין כאן חריגה מהנורמה",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "השוו את rxkB/s למגבלת ה-NIC. האם יש גם drops",
             answer: 0,
-            explanation: "rxkB/s של 115MB/s מתקרב למגבלת 1Gbps (כ-125MB/s), כלומר הכרטיס ב-92% ניצולת.\nrxdrop/s של 850 מצביע על איבוד מנות בצד הקליטה בגלל ring buffer מלא.\ntxdrop/s של 0 אומר שהבעיה בקליטה, לא בשליחה.\nהשילוב של throughput קרוב למגבלה ואיבוד מנות מעיד על NIC saturation.\nזו בעיית bandwidth, לא פרוטוקול ולא כמות מנות.",
+            explanation: "הערך `rxkB/s` הוא בערך `115 MB/s`.\nמכיוון ש-`1 Gbps` שווה בערך `125 MB/s`, הכרטיס מנצל כ-92% מרוחב הפס שלו.\nבנוסף, הערך `rxdrop/s = 850` מצביע על כך ש-packets נזרקים בצד הקליטה של כרטיס הרשת.\nהשילוב של \u200Ethroughput גבוה ו-packet drops מצביע על כך שכרטיס הרשת קרוב למגבלת הקיבולת שלו (\u200ENIC saturation).\nזו בעיית \u200Ebandwidth, לא בעיית פרוטוקול.",
           },
           {
-            q: "הרצת:\n\n```\nperf top\n```\n\nפלט:\n\n```\n  35.2%  [kernel]        [k] _raw_spin_lock\n  18.1%  [kernel]        [k] copy_user_generic_unrolled\n  12.4%  libc.so.6       [.] __memcpy_avx2\n   8.3%  myapp           [.] parse_request\n```\n\nמה המסקנה?",
+            q: "תהליך רץ לאט.\nהרצת הפקודה הבאה מציגה אילו פונקציות משתמשות הכי הרבה בזמן CPU:\n\n```\nperf top\n```\n\n```\n35.2%  [kernel]   _raw_spin_lock\n18.1%  [kernel]   copy_user_generic_unrolled\n12.4%  libc.so.6  __memcpy_avx2\n 8.3%  myapp      parse_request\n```\n\n`spinlock` הוא מנגנון נעילה שה-kernel משתמש בו כדי למנוע מכמה CPU cores לגשת לאותו נתון בו-זמנית.\nכאשר הרבה זמן CPU נצרך על \u200Espinlock, זה בדרך כלל אומר ש-cores מחכים לנעילה במקום לבצע עבודה.\n\nמה המסקנה הסבירה ביותר",
             options: [
               "kernel functions תמיד מובילות ב-perf והמצב תקין",
               "12% על memcpy מצביע על העתקות זיכרון לא יעילות",
               "parse_request הוא צוואר הבקבוק כפונקציה היחידה מהאפליקציה",
               "35% על spinlock מצביע על contention חמור בין cores"],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "spinlock הוא busy-wait. 35% מזמן ה-CPU על פונקציה אחת בקרנל זה נורמלי",
             answer: 3,
-            explanation: "perf top מראה איפה ה-CPU מבלה את רוב הזמן.\n35% על _raw_spin_lock מצביע על contention חמור בין cores.\nspinlock הוא busy-wait: cores מסתובבים בלולאה ושורפים CPU במקום לעבוד.\nלרוב זה קשור ל-networking stack, I/O scheduler, או מבנה נתונים משותף.\nבעומס רגיל kernel functions לא אמורות להוביל, וכאן spinlock גדול פי 4 מכל פונקציה אחרת.",
+            explanation: "`perf top` מציג אילו פונקציות משתמשות הכי הרבה בזמן CPU.\nבפלט רואים ש-`_raw_spin_lock` משתמש בכ-35% מזמן ה-CPU.\n`spinlock` הוא מנגנון נעילה שבו ה-kernel משתמש כדי למנוע מכמה cores לגשת לאותו נתון בו-זמנית.\nכאשר core אחד מחזיק את הנעילה, cores אחרים לא יכולים לעבוד עם אותו נתון.\nבמקום להמשיך לעבוד, הם פשוט מחכים בלולאה עד שהנעילה תשתחרר.\nכאשר הרבה זמן CPU מבוזבז על \u200Espinlock, זה אומר ש-cores רבים מחכים לאותה נעילה.\nזה מצביע על עומס ותחרות (\u200Econtention) על משאב משותף.",
           },
           {
-            q: "שרת לא מצליח ליצור חיבורי רשת חדשים.\n\nהרצת:\n\n```\nsysctl net.ipv4.ip_local_port_range\n```\n\nפלט:\n\n```\nnet.ipv4.ip_local_port_range = 32768    60999\n```\n\nוגם:\n\n```\nss -s\n```\n\nפלט:\n\n```\nTCP:   28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nמה הבעיה?",
+            tags: ["ephemeral-port-exhaustion"],
+            q: "שרת Linux שמריץ service עם הרבה \u200Eoutbound connections מתחיל להחזיר שגיאות:\n\n```\nconnect: Cannot assign requested address\n```\n\nבדיקות על השרת מראות:\n\n```\n$ sysctl net.ipv4.ip_local_port_range\nnet.ipv4.ip_local_port_range = 32768 60999\n```\n\n```\n$ ss -s\nTCP: 28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nמה הסיבה הסבירה ביותר",
             options: [
               "מספר ה-orphaned connections גבוה מדי וצורך משאבים",
               "טווח הפורטים (28,232) כמעט מלא עם 28,231 חיבורים פעילים",
               "25,000 established connections חורגים מיכולת השרת",
               "הגדרות ה-TCP stack תקינות והבעיה היא ב-DNS resolution"],
-            hint: "חשבו על הקצאת אחסון שנשמר מעבר לחיי Pod.",
+            hint: "כמה פורטים בטווח 32768-60999 וכמה חיבורים פעילים יש כרגע",
             answer: 1,
-            explanation: "טווח הפורטים הזמין הוא 32768-60999, כלומר 28,232 פורטים בסך הכל.\nss -s מראה 28,231 חיבורים פעילים, נשאר פורט אחד בלבד.\nחיבור חדש ייכשל עם EADDRNOTAVAIL כי אין פורטים פנויים.\nהפתרון המיידי הוא להרחיב את הטווח או להפעיל tcp_tw_reuse.\nלטווח ארוך, connection pooling מונע מצב שבו כל בקשה פותחת חיבור חדש.",
+            explanation: "טווח הפורטים הזמניים הוא:\n`32768-60999`\nכלומר:\n≈ `28,232` פורטים זמינים\nבפלט של `ss -s` רואים:\nTCP: 28,231 חיבורים\nכלומר כמעט כל הפורטים הזמניים כבר בשימוש.\nכאשר אין יותר פורטים זמינים, המערכת לא יכולה ליצור חיבורי TCP חדשים.\nזה נקרא:\n\u200EEphemeral port exhaustion",
           },
           {
-            q: "אתה בודק שגיאות בלוגים של הקרנל ומריץ:\n\n```\ndmesg | grep -i error\n```\n\nפלט:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של הקרנל, מספרים שליליים מייצגים קודי שגיאה מוגדרים (\u2066errno\u2069).\n\nמה `error -12` מציין ככל הנראה",
+            q: "בעת בדיקת \u200Ekernel logs במערכת Linux מופיעה ההודעה הבאה:\n\n```\ndmesg | grep -i error\n```\n\n```\nACPI Error: AE_NOT_FOUND, Evaluating _STA\nnouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nבלוגים של ה-kernel בלינוקס, \u200Edrivers מחזירים לעיתים ערכי \u200Eerrno שליליים כאשר פעולת אתחול או טעינה נכשלת.\n\nלאיזה קוד \u200Eerrno מתאים הערך `-12`",
             options: [
               "\u2066ENOMEM\u2069 - הקרנל לא הצליח להקצות זיכרון עבור ה-\u2066driver\u2069",
               "\u2066EACCES\u2069 - ה-\u2066driver\u2069 דורש הרשאות \u2066root\u2069 כדי להיטען",
               "\u2066EIO\u2069 - שגיאת חומרה פיזית בכרטיס הגרפי",
               "\u2066ENOENT\u2069 - קובץ ה-\u2066driver\u2069 לא נמצא במערכת",
             ],
-            hint: "חשבו בזהירות על מה כל אפשרות מתארת.",
+            hint: "errno -12 הוא אחד מקודי השגיאה הנפוצים ביותר בקרנל. חשבו על משאב בסיסי שנגמר.",
             answer: 0,
             explanation: "בקרנל, \u2066drivers\u2069 מחזירים ערכי \u2066errno\u2069 שליליים כקודי שגיאה. הערך \u2066-12\u2069 מתאים ל-\u2066ENOMEM\u2069, כלומר הקרנל לא הצליח להקצות זיכרון.\nזה קורה כשה-\u2066driver\u2069 מנסה לאתחל חומרה ולא מצליח להקצות את הזיכרון הדרוש.\n\nקודי \u2066errno\u2069 נפוצים:\n```\n-1   EPERM    (operation not permitted)\n-2   ENOENT   (no such file)\n-5   EIO      (I/O error)\n-12  ENOMEM   (out of memory)\n-13  EACCES   (permission denied)\n```",
           },
         ],
         questionsEn: [
           {
-            q: "A process is running slowly.\nThe command `strace -c` summarizes how much time a process spends in each system call.\n\nYou ran:\n\n```\nstrace -c -p 1234\n```\n\nOutput:\n\n```\n% time    seconds  calls  syscall\n------ ---------- ------ --------\n 85.20   4.260000   1200  futex\n  8.30   0.415000    500  read\n  3.10   0.155000    200  write\n```\n\nWhat is the main finding",
+            q: "A process is running slowly.\nThe following command shows a summary of the time the process spends in each system call:\nNote that `futex` is a system call used for locking between threads.\n\n```\nstrace -c -p 1234\n```\n\nOutput:\n\n```\n% time   seconds   calls   syscall\n 85.20  4.260000    1200   futex\n  8.30  0.415000     500   read\n  3.10  0.155000     200   write\n```\n\nWhat can you conclude from the output",
             options: [
               "The process wastes time on read calls due to poor caching",
               "The process spends most of its time waiting for locks between threads",
@@ -4645,7 +4646,7 @@ export const TOPICS = [
               "The process is running normally with no performance issue"],
             hint: "Notice which system call the process spends most of its time on.",
             answer: 1,
-            explanation: "The command `strace -c` summarizes a process's system calls by time.\nfutex is the system call used for locking (locks) between threads.\nWhen a process spends 85% of its time on futex, it means it is waiting for locks instead of doing real work.\nThis indicates lock contention - a situation where threads are blocking each other.",
+            explanation: "The `strace -c` command shows how much time a process spends in each system call.\nIn the output, 85% of the time is spent in `futex`.\n`futex` is a system call used for locks between threads.\nWhen most of the time is spent in `futex`, it usually means the process threads are waiting for a lock to be released instead of doing actual work.\nThis situation is called lock contention, where multiple threads compete for the same resource.\n· High `futex` - threads waiting on locks",
           },
           {
             q: "A server reports high latency for network requests.\n\nYou ran:\n\n```\ncat /proc/net/sockstat\n```\n\nOutput:\n\n```\nTCP: inuse 28542 orphan 12500 tw 65000 alloc 29000 mem 95000\n```\n\nWhat is the problem?",
@@ -4684,7 +4685,7 @@ export const TOPICS = [
             explanation: "The process has 45,892 open FDs out of a 65,536 limit (about 70%).\nA healthy server typically holds hundreds to low thousands, so 45,892 indicates a leak.\nWhen the limit is reached, every open(), socket(), or accept() call will fail with EMFILE.\nRaising the limit does not fix the problem, it only delays the crash.\nThe root cause (the leak) must be identified and fixed.",
           },
           {
-            q: "You ran:\n\n```\nsar -n DEV 1 5\n```\n\nOutput (average):\n\n```\nIFACE   rxpck/s  txpck/s   rxkB/s   txkB/s  rxdrop/s  txdrop/s\neth0    95000    92000    115000    110000     850       0\n```\n\nThe network card is 1Gbps. What is the problem?",
+            q: "A server is experiencing packet loss under high load.\nThe network interface card (NIC) is `1 Gbps`.\n\nThe `sar` (System Activity Reporter) command collects system statistics.\nThe `-n DEV` option shows network data for each interface.\n\nYou ran:\n\n```\nsar -n DEV 1 5\n```\n\n```\nIFACE   rxpck/s   txpck/s   rxkB/s   txkB/s   rxdrop/s   txdrop/s\neth0    95000     92000     115000   110000   850        0\n```\n\nHints:\n· `1 Gbps` ≈ `125 MB/s`\n· `rxdrop` indicates packets dropped on the receive side of the NIC.\n\nWhat is the most likely conclusion",
             options: [
               "rxkB/s (115MB/s) approaches 1Gbps capacity with 850 drops/s",
               "The packet count (95,000/s) is too high and overloading the NIC",
@@ -4693,10 +4694,10 @@ export const TOPICS = [
             ],
             hint: "Think carefully about what each option describes.",
             answer: 0,
-            explanation: "rxkB/s of 115MB/s approaches the 1Gbps limit (about 125MB/s), meaning the card is at 92% utilization.\nrxdrop/s of 850 indicates packet loss on the receive side due to a full ring buffer.\ntxdrop/s of 0 means the problem is on the receive side, not the send side.\nThe combination of throughput near the limit and packet drops indicates NIC saturation.\nThis is a bandwidth issue, not a protocol or packet count issue.",
+            explanation: "The value `rxkB/s` is about `115 MB/s`.\nSince `1 Gbps` ≈ `125 MB/s`, the NIC is utilizing roughly 92% of its capacity.\nAdditionally, `rxdrop/s = 850` indicates packets are being dropped on the receive side of the NIC.\nThe combination of high throughput and packet drops suggests the NIC is close to its capacity limit (NIC saturation).\nThis is a bandwidth limitation, not a protocol issue.",
           },
           {
-            q: "You ran:\n\n```\nperf top\n```\n\nOutput:\n\n```\n  35.2%  [kernel]        [k] _raw_spin_lock\n  18.1%  [kernel]        [k] copy_user_generic_unrolled\n  12.4%  libc.so.6       [.] __memcpy_avx2\n   8.3%  myapp           [.] parse_request\n```\n\nWhat is the conclusion?",
+            q: "A process is running slowly.\nThe following command shows which functions consume the most CPU time:\n\n```\nperf top\n```\n\n```\n35.2%  [kernel]   _raw_spin_lock\n18.1%  [kernel]   copy_user_generic_unrolled\n12.4%  libc.so.6  __memcpy_avx2\n 8.3%  myapp      parse_request\n```\n\nA `spinlock` is a kernel locking mechanism used to prevent multiple CPU cores from accessing the same shared data at the same time.\nWhen a lot of CPU time is spent on spinlocks, it usually means cores are waiting for a lock instead of doing useful work.\n\nWhat is the most likely conclusion",
             options: [
               "Kernel functions always lead in perf and the situation is normal",
               "12% on memcpy indicates inefficient memory copy operations",
@@ -4704,10 +4705,11 @@ export const TOPICS = [
               "35% on spinlock indicates severe contention between cores"],
             hint: "Think carefully about what each option describes.",
             answer: 3,
-            explanation: "perf top shows where the CPU spends most of its time.\n35% on _raw_spin_lock indicates severe contention between cores.\nSpinlock is busy-wait: cores spin in a loop burning CPU instead of doing work.\nThis is usually related to the networking stack, I/O scheduler, or shared data structures.\nUnder normal load kernel functions should not lead, and here spinlock is 4x higher than any other function.",
+            explanation: "`perf top` shows which functions consume the most CPU time.\nIn the output, `_raw_spin_lock` uses about 35% of the CPU time.\nA `spinlock` is a kernel locking mechanism used to prevent multiple CPU cores from accessing the same shared data at the same time.\nWhen one core holds the lock, other cores cannot proceed.\nInstead of doing useful work, they repeatedly check the lock until it becomes available.\nIf a large portion of CPU time is spent in spinlocks, it means many cores are waiting for the same lock.\nThis indicates high contention on a shared resource.",
           },
           {
-            q: "A server cannot create new network connections.\n\nYou ran:\n\n```\nsysctl net.ipv4.ip_local_port_range\n```\n\nOutput:\n\n```\nnet.ipv4.ip_local_port_range = 32768    60999\n```\n\nAnd:\n\n```\nss -s\n```\n\nOutput:\n\n```\nTCP:   28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nWhat is the problem?",
+            tags: ["ephemeral-port-exhaustion"],
+            q: "A Linux server running a service with many outbound connections starts returning errors:\n\n```\nconnect: Cannot assign requested address\n```\n\nChecks on the server show:\n\n```\n$ sysctl net.ipv4.ip_local_port_range\nnet.ipv4.ip_local_port_range = 32768 60999\n```\n\n```\n$ ss -s\nTCP: 28231 (estab 25000, closed 0, orphaned 0, tw 3200)\n```\n\nWhat is the most likely cause of the problem",
             options: [
               "Too many orphaned connections are consuming server resources",
               "The port range (28,232) is almost exhausted with 28,231 active connections",
@@ -4715,10 +4717,10 @@ export const TOPICS = [
               "TCP stack settings are fine and the issue is DNS resolution"],
             hint: "Think about storage that persists beyond a Pod's lifetime.",
             answer: 1,
-            explanation: "The available port range is 32768-60999, which is 28,232 ports total.\nss -s shows 28,231 active connections, leaving only one port available.\nNew connections will fail with EADDRNOTAVAIL because there are no free ports.\nThe immediate fix is to expand the range or enable tcp_tw_reuse.\nLong term, connection pooling prevents the situation where every request opens a new connection.",
+            explanation: "The ephemeral port range is:\n`32768-60999`\nWhich means:\n≈ `28,232` available ports\nIn the `ss -s` output:\nTCP: 28,231 connections\nAlmost all ephemeral ports are already in use.\nWhen no more ports are available, the system cannot create new TCP connections.\nThis is called:\nEphemeral port exhaustion",
           },
           {
-            q: "You are investigating kernel errors on a Linux system and run:\n\n```\ndmesg | grep -i error\n```\n\nOutput:\n\n```\n[    2.145] ACPI Error: AE_NOT_FOUND, Evaluating _STA (20230331/nseval-\n[    2.301] nouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nIn Linux kernel logs, negative numbers often correspond to errno error codes.\n\nWhat does error -12 most likely indicate?",
+            q: "While troubleshooting a Linux system, the following message appears in the kernel logs:\n\n```\ndmesg | grep -i error\n```\n\n```\nACPI Error: AE_NOT_FOUND, Evaluating _STA\nnouveau: probe of 0000:01:00.0 failed with error -12\n```\n\nIn Linux kernel logs, drivers often return negative errno values when initialization fails.\n\nWhich errno value corresponds to `-12`",
             options: [
               "ENOMEM - the kernel failed to allocate memory for the driver",
               "EACCES - the driver requires root permissions to load",

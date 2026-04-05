@@ -33,7 +33,7 @@ export const INCIDENTS = [
         prompt:
           "#staging-alerts | PagerDuty\npayment-service v2.4.1 deployed to staging-west 10 min ago.\nAll 3 replicas now in CrashLoopBackOff. Deploy pipeline was green.\nNamespace: staging\n\nYou are on-call. Where do you start?",
         promptHe:
-          "#staging-alerts | PagerDuty\npayment-service v2.4.1 הוצב ל-staging-west לפני 10 דקות.\nכל 3 הרפליקות כעת ב-CrashLoopBackOff. ה-pipeline עבר בהצלחה.\nNamespace: staging\n\nאת/ה בתורנות. מאיפה מתחילים?",
+          "#staging-alerts | PagerDuty\npayment-service v2.4.1 הוצב ל-staging-west לפני 10 דקות.\nכל 3 הרפליקות כעת ב-CrashLoopBackOff. ה-pipeline עבר בהצלחה.\nNamespace: staging\n\nאת/ה בתורנות ומקבל/ת את ההתראה הזו. מהו צעד הבדיקה הראשון שלך",
         options: [
           "kubectl get pods -n staging",
           "kubectl rollout undo deployment/payment-service -n staging  (roll back immediately)",
@@ -78,7 +78,6 @@ export const INCIDENTS = [
       {
         prompt:
           "Missing Config File on Startup\n\n• Logs show: `FATAL config file '/etc/app/config.yaml' not found`\n• App expects a mounted config file at `/etc/app/config.yaml`\n\nWhat is your next step?",
-        tags: ["config-mount"],
         promptHe:
           "קובץ Config חסר בהפעלה\n\n• לוגים מציגים: `FATAL config file '/etc/app/config.yaml' not found`\n• האפליקציה מצפה לקובץ config ב-`/etc/app/config.yaml`\n\nמה הצעד הבא?",
         options: [
@@ -199,9 +198,9 @@ export const INCIDENTS = [
       },
       {
         prompt:
-          "Unauthorized Error from Registry\n\n• Image: `registry.company.com/myapp:v2.1`\n• Error: `unauthorized: authentication required`\n• Pod cannot pull the image\n\nWhat does this error indicate?",
+          "Unauthorized Error from Registry\n\nkubectl describe pod myapp-7d4b9-abc12 -n default\n\nEvents:\n  Warning  Failed  kubelet  Error: ImagePullBackOff\n  Warning  Failed  kubelet  Failed to pull image\n    \"registry.company.com/myapp:v2.1\":\n    unauthorized: authentication required\n\nWhat does this error indicate?",
         promptHe:
-          "שגיאת Unauthorized מה-Registry\n\n• Image: \u200F`registry.company.com/myapp:v2.1`\n• שגיאה: \u200F`unauthorized: authentication required`\n• ה-Pod לא מצליח למשוך את ה-image\n\nמה מציינת שגיאה זו?",
+          "שגיאת \u200EUnauthorized מה-Registry\n\nkubectl describe pod myapp-7d4b9-abc12 -n default\n\nEvents:\n  Warning  Failed  kubelet  Error: ImagePullBackOff\n  Warning  Failed  kubelet  Failed to pull image\n    \"registry.company.com/myapp:v2.1\":\n    unauthorized: authentication required\n\nמה מציינת שגיאה זו",
         options: [
           "The image tag `v2.1` does not exist in the registry at all",
           "The registry requires credentials but the pod has none configured",
@@ -264,7 +263,7 @@ export const INCIDENTS = [
         explanation:
           "✓ `kubectl create secret docker-registry` creates a Secret with the correct type and `.dockerconfigjson` format.\n→ This is the official command for registry auth secrets.\n✗ Never store credentials in ConfigMaps or env vars. Secrets are namespace-scoped - can't reference kube-system from default.",
         explanationHe:
-          "✓ `kubectl create secret docker-registry` יוצר Secret עם הסוג הנכון ופורמט `.dockerconfigjson`.\nזו הפקודה הרשמית ליצירת secret אימות registry.\n✗ לעולם אל תאחסנו אישורים ב-ConfigMaps או env vars. Secrets מוגדרים לפי namespace, לא ניתן להפנות ל-kube-system מ-default.",
+          "✓ הפקודה `kubectl create secret docker-registry` יוצרת Secret מסוג `kubernetes.io/dockerconfigjson`, שהוא הפורמט הנכון לאימות מול registry.\nזו הדרך הרשמית ליצור secret שמכיל פרטי גישה ל-registry.\nלמה האחרות לא מתאימות:\n· לעולם אל תאחסנו אישורים ב-ConfigMaps או ב-env vars.\n· Secrets מוגדרים לפי namespace, לא ניתן להשתמש ב-Secret מ-kube-system ב-default.",
       },
       {
         prompt:

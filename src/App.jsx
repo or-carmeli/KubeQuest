@@ -3744,7 +3744,7 @@ export default function K8sQuestApp() {
     const totalSteps = incidentSteps?.length || selectedIncident.steps.length;
     const maxScore = totalSteps * 10;
     const time = formatIncidentTime(incidentElapsed);
-    return `Master Kubernetes through real-world scenarios\nTry KubeQuest: https://kubequest.online/\n\n${selectedIncident.title}\nScore: ${incidentScore}/${maxScore} · Time: ${time}`;
+    return `I just resolved a Kubernetes incident simulation!\n\n${selectedIncident.title}\nScore: ${incidentScore}/${maxScore} · Time: ${time}\n\nPractice real-world K8s troubleshooting: https://kubequest.online/`;
   };
 
   const handleIncidentShare = () => {
